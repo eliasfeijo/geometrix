@@ -190,4 +190,4 @@ ADRs a propor e aprovar:
 - **Transporte e deploy** ([ADR-0005](../../adr/0005-deploy-mvp-vps-websocket.md)): recomendação de WebSocket.
 
 ## 10. Perguntas abertas
-- D1 a D8 da seção 3.
+Nenhuma no momento.

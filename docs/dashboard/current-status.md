@@ -26,8 +26,6 @@ por um portão de aprovação ou quando surgir um bloqueio.
 
 ## Pendências e pontos a esclarecer
 
-- **Spec §10 × §3:** a §10 ainda lista "D1 a D8 da seção 3" como perguntas abertas, mas a §3 diz que foram aceitas
-  pelo dono em 2026-11-13. Aguarda o dono confirmar para tirar o item da §10.
 - **`npm audit`:** aviso moderado (ReDoS no `minimatch`, dentro do typescript-eslint, só em dev). Sem correção
   que não quebre; reavaliar quando o typescript-eslint atualizar.
 - **TypeScript fixado em `~6.0`:** o typescript-eslint ainda não suporta o TS 7.
