@@ -48,6 +48,7 @@ const schema = {
     },
     cap: positive,
   },
+  teams: { initialStock: cost },
   dna: { square: dna, triangle: dna, circle: dna },
   movementPermille: {
     road: positive,
