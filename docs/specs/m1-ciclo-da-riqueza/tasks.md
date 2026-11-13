@@ -5,7 +5,7 @@ Marque `[x]` ao concluir. Cada task deve terminar com os testes verdes. Referên
 
 ## F0 — Bootstrap
 - [x] `git init`, `.gitignore`, `.nvmrc`, `package.json` raiz com workspaces
-- [ ] `tsconfig.base.json` (`strict`, `erasableSyntaxOnly`, ESM) + tsconfig de cada pacote; o do `sim` sem DOM e sem `@types/node`
+- [x] `tsconfig.base.json` (`strict`, `erasableSyntaxOnly`, ESM) + tsconfig de cada pacote; o do `sim` sem DOM e sem `@types/node`
 - [ ] ESLint + Prettier; regras de determinismo no `sim` (plan §2)
 - [ ] Vitest configurado nos workspaces
 - [ ] CI no GitHub Actions: typecheck, lint, test

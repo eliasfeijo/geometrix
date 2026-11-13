@@ -9,5 +9,12 @@
   ],
   "engines": {
     "node": "^26"
+  },
+  "scripts": {
+    "typecheck": "npm run typecheck --workspaces"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "typescript": "~6.0.3"
   }
 }
