@@ -1,0 +1,51 @@
+# 03 — Economia, transporte e impostos
+
+## Decidido
+- Há dois níveis de economia:
+  - **individual:** o inventário de cada creep;
+  - **do time:** o tesouro público.
+- Todo recurso e moeda precisa ser **transportado fisicamente** até a base, por creeps ou mulas.
+- O "estado" da base cobra um **imposto**, com taxa votada pelo time, e o valor vai para o tesouro público.
+- O tesouro reflete os recursos de fato coletados e a diplomacia com as tribos.
+- A riqueza pode ser investida em upgrades, fortificações, itens individuais e na produção de creeps.
+- **Direção para o M1: dois recursos, matéria + cristal** (descritos abaixo). Os valores são provisórios.
+
+## Proposta
+
+### Recursos se definem por eixos, não por nome
+Primeiro escolhemos que **problemas logísticos** queremos criar. O nome e o tema vêm depois.
+
+| Eixo | Pergunta |
+|---|---|
+| Origem | Onde nasce? Perto da base, na jungle, só em território disputado? |
+| Renovação | Regenera ou se esgota? |
+| Peso | Quanto ocupa no inventário? (define quantas viagens ou mulas são necessárias) |
+| Valor por unidade | Vale a pena emboscar? |
+| Perecibilidade | Estraga em trânsito ou parado? |
+| Uso | O que desbloqueia? |
+
+Um conjunto mínimo para o M1 com problemas opostos:
+- **Matéria:** pesada, de pouco valor, abundante perto da base e renovável. Serve para construir e produzir
+  creeps. *Problema: volume.*
+- **Cristal:** leve, valioso, raro, em pontos disputados da jungle e esgotável. Serve para evolução, skills e
+  ultimates. *Problema: risco; é o alvo natural de emboscadas.*
+
+Candidato para depois do M1:
+- **Energia:** perecível, é a manutenção dos creeps e o limitador de população. *Problema: fluxo contínuo.*
+
+### Recurso × moeda (o dono ainda não está convencido)
+- **A moeda só existe depois que a base "cunha".** Recursos entregues ao estado viram moeda (o imposto é cobrado
+  nessa conversão).
+- A moeda é leve e fácil de carregar. Serve para pagar creeps, comprar itens individuais e negociar com tribos.
+- O recurso bruto é o que se transporta na jungle; a moeda é o que circula dentro e entre as economias.
+
+### Sumidouros
+Uma partida de dias precisa de sumidouros para a economia não inflacionar: manutenção, desgaste de estruturas,
+consumo de cristal em evoluções.
+
+## Perguntas abertas
+- Validar os eixos de recurso.
+- Recurso × moeda: moeda cunhada, ou recurso e moeda são a mesma coisa? **Não bloqueia o M1**, que pode rodar
+  só com matéria e cristal, sem moeda. Decidir quando impostos e comércio entrarem (M3).
+- O creep pode gastar o próprio inventário sem passar pelo tesouro (comprar item para si)?
+- Existe comércio entre times, ou com tribos?
