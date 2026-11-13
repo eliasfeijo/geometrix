@@ -1,13 +1,6 @@
-import { readFileSync } from "node:fs";
 import { describe, expect, test } from "vitest";
 import { ParamsError, parseParams, type Params } from "../src/params.ts";
-
-const defaultParamsUrl = new URL(
-  "../../../params/default.json",
-  import.meta.url,
-);
-const loadDefault = (): unknown =>
-  JSON.parse(readFileSync(defaultParamsUrl, "utf8"));
+import { readDefaultParamsJson as loadDefault } from "./helpers.ts";
 
 function issuesOf(input: unknown): readonly string[] {
   try {
