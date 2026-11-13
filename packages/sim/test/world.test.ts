@@ -1,17 +1,9 @@
-import { readFileSync } from "node:fs";
 import { describe, expect, test } from "vitest";
 import { generateMap } from "../src/map.ts";
-import { parseParams } from "../src/params.ts";
 import { createWorld, SIM_VERSION } from "../src/world.ts";
+import { loadDefaultParams } from "./helpers.ts";
 
-const params = parseParams(
-  JSON.parse(
-    readFileSync(
-      new URL("../../../params/default.json", import.meta.url),
-      "utf8",
-    ),
-  ),
-);
+const params = loadDefaultParams();
 
 describe("createWorld", () => {
   const world = createWorld(42, params);

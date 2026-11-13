@@ -1,4 +1,3 @@
-import { readFileSync } from "node:fs";
 import { describe, expect, test } from "vitest";
 import {
   crossingColumns,
@@ -9,16 +8,10 @@ import {
   type GameMap,
   type MapLayout,
 } from "../src/map.ts";
-import { parseParams, type Params } from "../src/params.ts";
+import type { Params } from "../src/params.ts";
+import { loadDefaultParams } from "./helpers.ts";
 
-const params = parseParams(
-  JSON.parse(
-    readFileSync(
-      new URL("../../../params/default.json", import.meta.url),
-      "utf8",
-    ),
-  ),
-);
+const params = loadDefaultParams();
 const SEEDS = Array.from({ length: 500 }, (_, i) => i);
 const layouts = new Map<number, MapLayout>(
   SEEDS.map((seed) => [seed, generateMap(seed, params).layout]),
