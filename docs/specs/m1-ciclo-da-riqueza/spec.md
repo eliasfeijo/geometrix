@@ -139,6 +139,7 @@ Todos ficam num arquivo de parâmetros versionado, nunca no código.
 | Mapa | 64 × 64 células; rio na linha central; 3 travessias |
 | População inicial | 6 creeps (2 de cada DNA) |
 | Teto de população | 30 |
+| Estoque inicial do time | 0 matéria · 0 cristal (decidido pelo dono em 2026-11-13) |
 | Capacidade de carga ■ / ▲ / ● | 30 / 20 / 10 |
 | Velocidade em células por minuto ■ / ▲ / ● | 2 / 3 / 5 |
 | Multiplicador de velocidade | estrada ×2 · jungle ×1 · travessia ×0,5 · carregado ×0,8 |

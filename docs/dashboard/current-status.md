@@ -27,11 +27,6 @@ por um portão de aprovação ou quando surgir um bloqueio.
 
 ## Pendências e pontos a esclarecer
 
-- **Estoque inicial dos times** (`teams.initialStock`): a spec não define. Está em 0 (valor neutro), aguardando o
-  dono confirmar.
-- **`step` muta o estado in place** em vez de devolver um estado novo (o ADR-0003 fala em "estado + comandos → novo
-  estado"). Motivo: copiar o estado a cada tick não cabe no orçamento de 3 dias em menos de 10 min. A pureza
-  continua (sem I/O, sem relógio). Aguardando o dono confirmar.
 - **Chutes de geração de mapa a calibrar no F5:** `map.crossingWidth`, `map.core`, `map.rocks`,
   `deposits.materia.{perSide, min/maxCoreDistance}`, `deposits.cristal.{minCoreDistance, contested*}`. Aprovados
   pelo dono como provisórios.
