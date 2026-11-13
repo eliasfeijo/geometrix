@@ -3,7 +3,13 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "bin": {
+    "geo": "./src/main.ts"
+  },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@geometrix/sim": "*"
   }
 }
