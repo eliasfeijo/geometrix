@@ -10,6 +10,7 @@ fica no `tasks.md`; a estrutura do repositório, no `plan.md` §1.
 
 | O quê | Onde |
 |---|---|
+| **Onde estamos e próximos passos** | `docs/dashboard/current-status.md` (leia primeiro) |
 | O que o jogo é e não é | `docs/PILLARS.md` |
 | Vocabulário | `docs/GLOSSARY.md` |
 | Design por sistema | `docs/gdd/` (um arquivo por sistema) |
