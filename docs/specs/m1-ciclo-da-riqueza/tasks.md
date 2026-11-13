@@ -17,7 +17,7 @@ Marque `[x]` ao concluir. Cada task deve terminar com os testes verdes. Referên
 - [x] Tipos de `WorldState` e `createWorld(seed, params)`
 - [x] Geração de mapa com simetria de ponto, rio, travessias, rochas e depósitos + validação de conectividade (teste de propriedade com 500 seeds)
 - [x] `serialize` canônico e `restore`
-- [ ] `step(state, commands)` com o pipeline vazio e `tick++`
+- [x] `step(state, commands)` com o pipeline vazio e `tick++`
 - [ ] `geo verify` mínimo (2 execuções + snapshot→restore), rodando no CI
 
 ## F2 — Movimento
