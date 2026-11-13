@@ -26,3 +26,6 @@ jobs:
       - run: npm run lint
       - run: npm run format:check
       - run: npm test
+      - name: Determinism (geo verify)
+        # 649 exercises the map regeneration path (seed + 1).
+        run: for seed in 1 42 649; do npm run -s geo -- verify --seed "$seed"; done
