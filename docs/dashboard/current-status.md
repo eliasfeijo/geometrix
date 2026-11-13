@@ -1,6 +1,6 @@
 # Status atual
 
-**Atualizado:** 2026-11-13 · **Marco:** M1 — O ciclo da riqueza · **Fase:** F0 concluída, F1 a iniciar
+**Atualizado:** 2026-11-13 · **Marco:** M1 — O ciclo da riqueza · **Fase:** F1 concluída, F2 a iniciar
 
 Resumo de bolso. A fonte de verdade continua nos docs linkados. Atualize este arquivo ao fechar uma fase, ao passar
 por um portão de aprovação ou quando surgir um bloqueio.
@@ -13,18 +13,28 @@ por um portão de aprovação ou quando surgir um bloqueio.
 | M1 — spec | ✅ Aprovada (2026-11-13). Decisões de escopo D1–D10 | [spec.md](../specs/m1-ciclo-da-riqueza/spec.md) |
 | M1 — plan | ✅ Aprovado (2026-11-13), com P1–P6 decididas | [plan.md](../specs/m1-ciclo-da-riqueza/plan.md) |
 | M1 — F0 Bootstrap | ✅ Concluída, merge em `main`. Workspaces, TS strict, ESLint com as regras de determinismo, Vitest, CI | [tasks.md §F0](../specs/m1-ciclo-da-riqueza/tasks.md) |
-| M1 — F1 Núcleo do sim | ⏭️ Próxima. Checkpoint: `geo verify` verde | [tasks.md §F1](../specs/m1-ciclo-da-riqueza/tasks.md) |
-| M1 — F2…F9 | ⬜ Pendentes. Checkpoints: F5 primeiro relatório de 3 dias bot×bot; F7 playtest local; F9 playtest comprimido | [plan.md §13](../specs/m1-ciclo-da-riqueza/plan.md) |
+| M1 — F1 Núcleo do sim | ✅ Concluída, merge em `main`. RNG, params, mapa simétrico, `WorldState`, serialize/restore, `step` vazio, `geo verify` no CI | [tasks.md §F1](../specs/m1-ciclo-da-riqueza/tasks.md) · `packages/sim/src/` |
+| M1 — F2 Movimento | ⏭️ Próxima. Pontos de movimento, A*, ordens `moveTo`/`stop` | [tasks.md §F2](../specs/m1-ciclo-da-riqueza/tasks.md) · [plan.md §3, §5](../specs/m1-ciclo-da-riqueza/plan.md) |
+| M1 — F3…F9 | ⬜ Pendentes. Checkpoints: F5 primeiro relatório de 3 dias bot×bot; F7 playtest local; F9 playtest comprimido | [plan.md §13](../specs/m1-ciclo-da-riqueza/plan.md) |
 | M2–M4 | ⬜ Não iniciados | [ROADMAP](../ROADMAP.md) |
 
 ## Próximos passos imediatos
 
 1. **Publicar o repo no GitHub** (dono). Ainda não há remote, então o CI ([ci.yml](../../.github/workflows/ci.yml))
    nunca rodou fora da máquina local.
-2. **F1:** criar a branch `m1/f1-<slug>` a partir de `main` e seguir as tasks de [tasks.md §F1](../specs/m1-ciclo-da-riqueza/tasks.md),
-   começando pelo RNG xoshiro128**.
+2. **F2:** criar a branch `m1/f2-movement` a partir de `main` e seguir [tasks.md §F2](../specs/m1-ciclo-da-riqueza/tasks.md).
+   As velocidades e os modificadores já estão em `params/default.json` (`dna.*.cellsPerMinute`, `movementPermille`).
 
 ## Pendências e pontos a esclarecer
+
+- **Estoque inicial dos times** (`teams.initialStock`): a spec não define. Está em 0 (valor neutro), aguardando o
+  dono confirmar.
+- **`step` muta o estado in place** em vez de devolver um estado novo (o ADR-0003 fala em "estado + comandos → novo
+  estado"). Motivo: copiar o estado a cada tick não cabe no orçamento de 3 dias em menos de 10 min. A pureza
+  continua (sem I/O, sem relógio). Aguardando o dono confirmar.
+- **Chutes de geração de mapa a calibrar no F5:** `map.crossingWidth`, `map.core`, `map.rocks`,
+  `deposits.materia.{perSide, min/maxCoreDistance}`, `deposits.cristal.{minCoreDistance, contested*}`. Aprovados
+  pelo dono como provisórios.
 
 - **`npm audit`:** aviso moderado (ReDoS no `minimatch`, dentro do typescript-eslint, só em dev). Sem correção
   que não quebre; reavaliar quando o typescript-eslint atualizar.
