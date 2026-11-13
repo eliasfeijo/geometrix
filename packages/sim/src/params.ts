@@ -24,6 +24,21 @@ const schema = {
     height: positive,
     riverRows: positive,
     crossings: positive,
+    crossingWidth: positive,
+    /** Core zone, in rows counted from the team's own map edge. */
+    core: {
+      minRow: nonNegative,
+      maxRow: nonNegative,
+      minCol: nonNegative,
+      maxCol: nonNegative,
+    },
+    rocks: {
+      clustersPerSide: nonNegative,
+      minCells: positive,
+      maxCells: positive,
+      /** No rock within this Manhattan distance of a core. */
+      coreClearance: nonNegative,
+    },
   },
   population: {
     initial: {
@@ -44,8 +59,19 @@ const schema = {
     materia: {
       amount: positive,
       regen: { amount: nonNegative, everySeconds: positive },
+      perSide: nonNegative,
+      minCoreDistance: nonNegative,
+      maxCoreDistance: nonNegative,
     },
-    cristal: { amount: positive, perSide: nonNegative, contested: nonNegative },
+    cristal: {
+      amount: positive,
+      perSide: nonNegative,
+      minCoreDistance: nonNegative,
+      /** Total across both sides; half on each side, near a crossing. */
+      contested: nonNegative,
+      contestedMaxCrossingDistance: positive,
+      contestedMaxRiverDistance: positive,
+    },
   },
   creep: { cost, productionSeconds: positive },
   road: { cost, buildSeconds: positive },
@@ -138,6 +164,30 @@ function checkConsistency(p: Params, issues: string[]): void {
   if (p.map.riverRows % 2 !== 0) issues.push("map.riverRows: must be even");
   if (p.map.riverRows >= p.map.height) {
     issues.push("map.riverRows: must be smaller than map.height");
+    return;
+  }
+  // An odd crossing count puts one crossing on the center line, which is only
+  // symmetric with an even width.
+  if (p.map.crossingWidth % 2 !== 0) {
+    issues.push("map.crossingWidth: must be even");
+  }
+  if (p.deposits.cristal.contested % 2 !== 0) {
+    issues.push("deposits.cristal.contested: must be even (half per side)");
+  }
+  const sideRows = (p.map.height - p.map.riverRows) / 2;
+  const { core, rocks } = p.map;
+  if (core.minRow > core.maxRow || core.maxRow >= sideRows) {
+    issues.push("map.core: rows must satisfy minRow <= maxRow < side height");
+  }
+  if (core.minCol > core.maxCol || core.maxCol >= p.map.width) {
+    issues.push("map.core: cols must satisfy minCol <= maxCol < map.width");
+  }
+  if (rocks.minCells > rocks.maxCells) {
+    issues.push("map.rocks: minCells must be <= maxCells");
+  }
+  const { materia } = p.deposits;
+  if (materia.minCoreDistance > materia.maxCoreDistance) {
+    issues.push("deposits.materia: minCoreDistance must be <= maxCoreDistance");
   }
 }
 
