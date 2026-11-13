@@ -7,7 +7,7 @@ Marque `[x]` ao concluir. Cada task deve terminar com os testes verdes. Referên
 - [x] `git init`, `.gitignore`, `.nvmrc`, `package.json` raiz com workspaces
 - [x] `tsconfig.base.json` (`strict`, `erasableSyntaxOnly`, ESM) + tsconfig de cada pacote; o do `sim` sem DOM e sem `@types/node`
 - [x] ESLint + Prettier; regras de determinismo no `sim` (plan §2)
-- [ ] Vitest configurado nos workspaces
+- [x] Vitest configurado nos workspaces
 - [ ] CI no GitHub Actions: typecheck, lint, test
 - [ ] Atualizar o CLAUDE.md com os comandos essenciais
 
