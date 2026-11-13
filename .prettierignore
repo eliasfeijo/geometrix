@@ -1,0 +1,6 @@
+# Markdown docs keep their hand-written layout.
+*.md
+package-lock.json
+runs/
+coverage/
+dist/

@@ -45,6 +45,8 @@ playtests indicarem.
 | D6 | Times | 2 times. Cada um com 0 a 3 humanos; um time sem humanos roda só com piloto automático | Permite testar humano × bot e bot × bot. |
 | D7 | Moeda, impostos, tesouro | Fora. O estoque entregue no Núcleo é do time | A dúvida sobre moeda fica para o M3. |
 | D8 | Inventário individual | O creep carrega a carga até entregar; não existe gasto individual | O inventário individual só ganha sentido com itens (M3+). |
+| D9 | Forma do mapa | Grid de células, movimento em 4 direções. Aprovado com o [plan](plan.md) (§3, P6) em 2026-11-13 | Mais simples para estradas, determinismo e SVG. |
+| D10 | Regras sem domínio | Qualquer jogador do time edita as regras de qualquer creep do time; o controle direto exige domínio. Aprovado com o [plan](plan.md) (P4) em 2026-11-13 | Resolvia uma pergunta aberta desta spec. |
 
 ## 4. Escopo
 
@@ -189,7 +191,3 @@ ADRs a propor e aprovar:
 
 ## 10. Perguntas abertas
 - D1 a D8 da seção 3.
-- O mapa é em grid de células, ou contínuo com navmesh? *(Proposta: grid no M1. É mais simples para estradas,
-  determinismo e SVG.)*
-- O jogador pode dar comandos a creeps livres sem dominá-los (mudar as regras deles), ou só ao creep dominado?
-  *(Proposta: pode editar as regras de qualquer creep do time; o controle direto exige domínio.)*
