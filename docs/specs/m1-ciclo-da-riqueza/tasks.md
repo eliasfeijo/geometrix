@@ -14,7 +14,7 @@ Marque `[x]` ao concluir. Cada task deve terminar com os testes verdes. Referên
 ## F1 — Núcleo do sim
 - [x] RNG xoshiro128** com seed, cujo estado é serializável (teste: a sequência é estável)
 - [x] Schema de parâmetros + `params/default.json` com os valores da spec §6
-- [ ] Tipos de `WorldState` e `createWorld(seed, params)`
+- [x] Tipos de `WorldState` e `createWorld(seed, params)`
 - [x] Geração de mapa com simetria de ponto, rio, travessias, rochas e depósitos + validação de conectividade (teste de propriedade com 500 seeds)
 - [ ] `serialize` canônico e `restore`
 - [ ] `step(state, commands)` com o pipeline vazio e `tick++`

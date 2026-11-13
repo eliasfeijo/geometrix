@@ -30,6 +30,12 @@
     },
     "cap": 30
   },
+  "teams": {
+    "initialStock": {
+      "materia": 0,
+      "cristal": 0
+    }
+  },
   "dna": {
     "square": {
       "capacity": 30,
