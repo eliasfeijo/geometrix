@@ -1,11 +1,12 @@
 # Plan M1 — O ciclo da riqueza
 
-**Status:** Rascunho · **Data:** 2026-11-13
+**Status:** Aprovado (2026-11-13) · **Data:** 2026-11-13
 **Spec:** [spec.md](spec.md) · **ADRs:** [0001](../../adr/0001-mundo-e-batalha-separados.md) ·
 [0002](../../adr/0002-tudo-e-comando.md) · [0003](../../adr/0003-stack-typescript-node.md) ·
 [0004](../../adr/0004-persistencia-sqlite-log-de-comandos.md) · [0005](../../adr/0005-deploy-mvp-vps-websocket.md)
 
-Este documento descreve **como** construir a spec. As decisões marcadas com ⚠️ precisam do OK do dono (seção 12).
+Este documento descreve **como** construir a spec. As decisões P1–P6 (seção 12) foram aprovadas pelo dono junto
+com o plano.
 
 ## 1. Estrutura do repositório
 
@@ -48,9 +49,9 @@ O `sim` não depende de nada. É a peça que um dia pode virar a "engine" extra�
 | Linguagem | TypeScript `strict`, `erasableSyntaxOnly`, ESM. O Node roda `.ts` direto |
 | Testes | Vitest |
 | Lint/format | ESLint (flat config, typescript-eslint) + Prettier |
-| Cliente | Vite + **Preact** + `@preact/signals` ⚠️ |
+| Cliente | Vite + **Preact** + `@preact/signals` (P1) |
 | Validação de rede | zod (só em `protocol`) |
-| SQLite | `better-sqlite3` ⚠️ |
+| SQLite | `better-sqlite3` (P2) |
 | WebSocket | `ws` |
 
 ### Determinismo garantido por ferramenta, não por disciplina
@@ -94,7 +95,7 @@ Os comandos **externos** são os únicos que entram no log:
 | `dominate {creepId}` | jogador do time | Libera o domínio anterior (D-2). Recusa se outro jogador já domina (D-3). |
 | `release {}` | jogador que domina | Também é emitido **pelo adaptador do servidor** em caso de desconexão ou de inatividade em tempo real, e entra no log como qualquer outro. Assim o timeout não quebra o determinismo. |
 | `order {creepId, order}` | só quem domina o creep | `order` ∈ `moveTo{x,y}` · `gather{depositId}` · `deliver` · `buildRoad{x,y}` · `stop` |
-| `setRules {creepId, rules}` · `applyPreset {creepId, preset}` | qualquer jogador do time | Responde à pergunta aberta da spec: dá para editar regras sem dominar ⚠️ |
+| `setRules {creepId, rules}` · `applyPreset {creepId, preset}` | qualquer jogador do time | Responde à pergunta aberta da spec: dá para editar regras sem dominar (P4) |
 | `produce {dna}` · `buyUpgrade {id}` | qualquer jogador do time | |
 
 - `validate(state, cmd, playerId) → ok | motivo`: a validação **semântica** fica no `sim`. A validação
@@ -143,7 +144,7 @@ flowchart TD
   gravado no log (uma transação por tick) → entra na fila. O cliente recebe `ack` ou `reject{motivo}`.
 - **Broadcast:** o mapa estático vai uma vez, no `welcome`. Depois vai o **estado dinâmico completo**
   (creeps, estoques, depósitos, estradas novas) após cada tick, **limitado a no máximo 5 envios por segundo** em
-  tempo real. São ~3–5 KB por mensagem. Deltas só se a medição mostrar necessidade ⚠️.
+  tempo real. São ~3–5 KB por mensagem. Deltas só se a medição mostrar necessidade (P3).
 - **Sessão do jogador:** token aleatório (o hash vai para o SQLite; o cliente guarda no `localStorage`).
   Reconexão automática com o mesmo token.
 
@@ -210,9 +211,12 @@ metrics   (world_id, tick, team_id, sample_json)
   - **Deploy manual** (`workflow_dispatch`): imagem para o GHCR, depois SSH com `docker compose pull && up -d`.
 - `docs/PLAYTEST.md`: como expor a máquina de dev por túnel, o protocolo e o questionário.
 
-## 12. Decisões que precisam do OK do dono ⚠️
+## 12. Decisões aprovadas
 
-| # | Decisão | Proposta | Alternativa |
+Aprovadas pelo dono em 2026-11-13, junto com o plano. A coluna "Alternativa" fica como registro do que foi
+descartado.
+
+| # | Decisão | Escolha | Alternativa descartada |
 |---|---|---|---|
 | P1 | Biblioteca de UI do cliente | **Preact + signals** (~5 KB, JSX que a IA domina bem, SVG declarativo) | DOM e SVG puros, sem biblioteca: zero dependências, mais código manual nos painéis |
 | P2 | Driver SQLite | **better-sqlite3**: maduro e síncrono; é módulo nativo, mas tem binários prontos | `node:sqlite`: zero dependências, API ainda amadurecendo |
