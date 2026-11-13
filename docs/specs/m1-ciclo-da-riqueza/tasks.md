@@ -8,7 +8,7 @@ Marque `[x]` ao concluir. Cada task deve terminar com os testes verdes. Referên
 - [x] `tsconfig.base.json` (`strict`, `erasableSyntaxOnly`, ESM) + tsconfig de cada pacote; o do `sim` sem DOM e sem `@types/node`
 - [x] ESLint + Prettier; regras de determinismo no `sim` (plan §2)
 - [x] Vitest configurado nos workspaces
-- [ ] CI no GitHub Actions: typecheck, lint, test
+- [x] CI no GitHub Actions: typecheck, lint, test
 - [ ] Atualizar o CLAUDE.md com os comandos essenciais
 
 ## F1 — Núcleo do sim
