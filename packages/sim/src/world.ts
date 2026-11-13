@@ -5,7 +5,11 @@ import { generateMap, type Cell, type GameMap } from "./map.ts";
 import { DNAS, type Dna, type Params, type Resource } from "./params.ts";
 import type { RngState } from "./rng.ts";
 
-/** Bump when a rule change makes old snapshots or replays invalid (ADR-0004). */
+/**
+ * Bump when a rule or state change makes old snapshots or replays invalid
+ * (ADR-0004). Nothing is persisted before the server exists (F6), so until then
+ * it stays at 1 and only the golden hash test is updated.
+ */
 export const SIM_VERSION = 1;
 
 export type Stock = Record<Resource, number>;
