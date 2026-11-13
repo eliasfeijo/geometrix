@@ -3,8 +3,8 @@
 Jogo multiplayer de navegador: **mundo persistente de estratégia/economia (RTS + sandbox + construção)** com
 **batalhas em tempo real estilo MOBA** como tempero. Visual 100% geométrico (SVG/Canvas, formas como linguagem).
 
-**Fase atual: design.** Ainda não há código. Nada de implementação até a spec da primeira fatia vertical estar
-aprovada (ver `docs/ROADMAP.md`).
+**Fase atual: M1 em implementação.** Spec, plan e tasks aprovados em `docs/specs/m1-ciclo-da-riqueza/`. O progresso
+fica no `tasks.md`; a estrutura do repositório, no `plan.md` §1.
 
 ## Fontes de verdade
 
@@ -16,6 +16,21 @@ aprovada (ver `docs/ROADMAP.md`).
 | Decisões de arquitetura | `docs/adr/` |
 | Specs de fatias (spec → plan → tasks) | `docs/specs/` |
 | Ordem de construção | `docs/ROADMAP.md` |
+| Skills do workflow (commit, ADR, GDD, fatia) | `.claude/skills/` |
+
+## Comandos
+
+Node 26 (`.nvmrc`). O Node roda `.ts` direto; só o cliente tem build (Vite).
+
+| Comando | O quê |
+|---|---|
+| `npm install` | Instala as dependências de todos os workspaces |
+| `npm run check` | Tudo o que o CI roda: typecheck, lint, format:check e testes. **Verde antes de concluir uma task.** |
+| `npm run typecheck` | `tsc` em cada workspace |
+| `npm run lint` | ESLint, incluindo as regras de determinismo do `sim` |
+| `npm run format` | Prettier (não mexe em Markdown) |
+| `npm test` | Vitest em todos os workspaces |
+| `npm test -- --project @geometrix/sim` | Vitest num workspace só |
 
 ## Regras de trabalho
 

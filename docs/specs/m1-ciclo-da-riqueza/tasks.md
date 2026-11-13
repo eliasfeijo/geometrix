@@ -9,7 +9,7 @@ Marque `[x]` ao concluir. Cada task deve terminar com os testes verdes. Referên
 - [x] ESLint + Prettier; regras de determinismo no `sim` (plan §2)
 - [x] Vitest configurado nos workspaces
 - [x] CI no GitHub Actions: typecheck, lint, test
-- [ ] Atualizar o CLAUDE.md com os comandos essenciais
+- [x] Atualizar o CLAUDE.md com os comandos essenciais
 
 ## F1 — Núcleo do sim
 - [ ] RNG xoshiro128** com seed, cujo estado é serializável (teste: a sequência é estável)
