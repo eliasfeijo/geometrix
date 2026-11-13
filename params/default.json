@@ -1,0 +1,111 @@
+{
+  "world": {
+    "durationSeconds": 259200,
+    "tickSeconds": 1
+  },
+  "map": {
+    "width": 64,
+    "height": 64,
+    "riverRows": 2,
+    "crossings": 3,
+    "crossingWidth": 2,
+    "core": {
+      "minRow": 4,
+      "maxRow": 12,
+      "minCol": 16,
+      "maxCol": 47
+    },
+    "rocks": {
+      "clustersPerSide": 8,
+      "minCells": 3,
+      "maxCells": 10,
+      "coreClearance": 2
+    }
+  },
+  "population": {
+    "initial": {
+      "square": 2,
+      "triangle": 2,
+      "circle": 2
+    },
+    "cap": 30
+  },
+  "teams": {
+    "initialStock": {
+      "materia": 0,
+      "cristal": 0
+    }
+  },
+  "dna": {
+    "square": {
+      "capacity": 30,
+      "cellsPerMinute": 2
+    },
+    "triangle": {
+      "capacity": 20,
+      "cellsPerMinute": 3
+    },
+    "circle": {
+      "capacity": 10,
+      "cellsPerMinute": 5
+    }
+  },
+  "movementPermille": {
+    "road": 2000,
+    "jungle": 1000,
+    "crossing": 500,
+    "loaded": 800
+  },
+  "deposits": {
+    "materia": {
+      "amount": 500,
+      "regen": {
+        "amount": 1,
+        "everySeconds": 60
+      },
+      "perSide": 3,
+      "minCoreDistance": 3,
+      "maxCoreDistance": 8
+    },
+    "cristal": {
+      "amount": 300,
+      "perSide": 3,
+      "minCoreDistance": 12,
+      "contested": 2,
+      "contestedMaxCrossingDistance": 4,
+      "contestedMaxRiverDistance": 3
+    }
+  },
+  "creep": {
+    "cost": {
+      "materia": 40,
+      "cristal": 10
+    },
+    "productionSeconds": 600
+  },
+  "road": {
+    "cost": {
+      "materia": 5,
+      "cristal": 0
+    },
+    "buildSeconds": 120
+  },
+  "upgrade": {
+    "capacity": {
+      "cost": {
+        "materia": 0,
+        "cristal": 150
+      },
+      "bonusPermille": 500
+    }
+  },
+  "domination": {
+    "cost": {
+      "materia": 0,
+      "cristal": 0
+    },
+    "timeoutSeconds": 300,
+    "cooldownSeconds": 0,
+    "maxDistanceCells": 0
+  }
+}

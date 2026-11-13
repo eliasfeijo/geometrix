@@ -32,6 +32,7 @@ Node 26 (`.nvmrc`). O Node roda `.ts` direto; só o cliente tem build (Vite).
 | `npm run format` | Prettier (não mexe em Markdown) |
 | `npm test` | Vitest em todos os workspaces |
 | `npm test -- --project @geometrix/sim` | Vitest num workspace só |
+| `npm run geo -- verify --seed 42` | Determinismo: 2 execuções + snapshot → restore têm de dar o mesmo hash |
 
 ## Regras de trabalho
 
