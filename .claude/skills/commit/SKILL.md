@@ -12,7 +12,10 @@ Regras de commit do geometrix. Fontes: o pedido do dono (Conventional Commits, u
 
 - `main` é a branch padrão. Nela não se commita trabalho de fase.
 - Cada fase do `tasks.md` tem a sua branch: `m<marco>/f<fase>-<slug>` (ex.: `m1/f0-bootstrap`).
-- No fim da fase, a branch entra em `main` por merge.
+- No fim da fase, com `npm run check` verde, a branch entra em `main` com **`git merge --no-ff`** (nunca squash
+  nem rebase): cada fase vira um merge commit, `git log --first-parent main` mostra uma linha por fase, e os
+  commits por unidade lógica ficam preservados. Mensagem: `merge: m1/f0-bootstrap (M1 F0 — Bootstrap)`.
+- Antes do merge, atualize `docs/dashboard/current-status.md` na própria branch da fase.
 - Antes de commitar, confira a branch atual. Se o trabalho não pertence a nenhuma fase (ex.: docs de design entre
   fases) e não houver branch para ele, **pergunte ao dono** onde commitar.
 
