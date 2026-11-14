@@ -7,7 +7,7 @@ import { listWorlds } from "./api.ts";
 import { browserDeps, Connection, socketUrl } from "./connection.ts";
 import { GameContext, type Game as GameValue } from "./context.ts";
 import { FATAL_TEXTS, REJECT_TEXTS } from "./format.ts";
-import { handleKey, select } from "./interaction.ts";
+import { handleKey, order, select } from "./interaction.ts";
 import { ModeBanner } from "./mode-banner.tsx";
 import { CoreDock } from "./panels/core-panel.tsx";
 import { Inspector } from "./panels/inspector.tsx";
@@ -44,6 +44,16 @@ export function Game({ session, onLeave, onInvalid }: Props) {
   );
   useEffect(() => () => connection.close(), []);
   useEffect(() => fetchNamesWhenMissing(store, session.worldId), []);
+  // Road mode ends with the domination it needs.
+  useEffect(
+    () =>
+      effect(() => {
+        if (store.mode.value.type === "road" && store.myCreep.value === null) {
+          store.mode.value = { type: "select" };
+        }
+      }),
+    [],
+  );
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (handleKey(store, session.team, e)) e.preventDefault();
@@ -74,6 +84,9 @@ export function Game({ session, onLeave, onInvalid }: Props) {
         <div class="game-body">
           <MapView
             onSelect={(point) => select(store, point, performance.now())}
+            onOrder={(point) =>
+              order(store, point, game.send, performance.now())
+            }
           >
             <CreepLayer />
           </MapView>

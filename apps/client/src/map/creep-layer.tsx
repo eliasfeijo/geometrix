@@ -135,6 +135,9 @@ export function CreepLayer() {
       {selected !== undefined && (
         <SelectionRing center={centers.get(selected.id)!} />
       )}
+      {store.ping.value !== null && (
+        <Ping key={store.ping.value.id} cell={store.ping.value.cell} />
+      )}
       {selection !== null && selection.kind !== "creep" && (
         <CellSelection
           cell={
@@ -146,6 +149,21 @@ export function CreepLayer() {
         />
       )}
     </g>
+  );
+}
+
+/** A ring that shrinks and fades where an order was given. */
+function Ping({ cell }: { cell: Cell }) {
+  return (
+    <circle
+      class="ping"
+      cx={cell.x + 0.5}
+      cy={cell.y + 0.5}
+      r="0.5"
+      fill="none"
+      stroke={COLORS.selection}
+      stroke-width="0.1"
+    />
   );
 }
 

@@ -684,3 +684,25 @@ h3 {
   z-index: 3;
   max-width: calc(100% - 32px);
 }
+
+.map.mode-pickCell,
+.map.mode-road {
+  cursor: crosshair;
+}
+
+.ping {
+  animation: ping 0.7s ease-out forwards;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+@keyframes ping {
+  from {
+    transform: scale(1.6);
+    opacity: 1;
+  }
+  to {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+}

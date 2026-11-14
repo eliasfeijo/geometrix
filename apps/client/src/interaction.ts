@@ -1,8 +1,10 @@
-// Mouse and keyboard on the map: a left click selects (owner decision, F7),
-// Esc clears, F centers the view on the selection.
+// Mouse and keyboard on the map (owner decision, F7): a left click selects,
+// a right click orders the dominated creep, R toggles road mode, Esc
+// cancels, F centers the view on the selection.
 
 import { centersNow } from "./map/creep-layer.tsx";
-import { pickAt } from "./map/pick.ts";
+import type { ClientCommand } from "@geometrix/protocol";
+import { orderAt, pickAt } from "./map/pick.ts";
 import { cellAt, centerOn, type Point } from "./map/view.ts";
 import type { GameStore } from "./store.ts";
 
@@ -23,6 +25,43 @@ export function select(store: GameStore, point: Point, now: number): void {
     info.cores,
     store.selection.value,
   );
+}
+
+let pings = 0;
+
+/** Right click: an order for the creep this player dominates. */
+export function order(
+  store: GameStore,
+  point: Point,
+  send: (command: ClientCommand) => Promise<boolean>,
+  now: number,
+): void {
+  const state = store.current.value?.state;
+  const me = store.me.value;
+  if (state === undefined || me === null) return;
+  const creep = store.myCreep.value;
+  if (creep === null) {
+    store.notify("Domine um creep para dar ordens com o botão direito.", now);
+    return;
+  }
+  const roadMode = store.mode.value.type === "road";
+  if (roadMode) store.mode.value = { type: "select" };
+  const input = orderAt(
+    point,
+    state.deposits,
+    state.teams[me.team]!.core,
+    roadMode,
+  );
+  store.ping.value = { cell: cellAt(point), id: ++pings };
+  void send({ type: "order", creepId: creep.id, order: input });
+}
+
+/** Road mode is for the dominated creep: on with one, off otherwise. */
+export function toggleRoadMode(store: GameStore): void {
+  store.mode.value =
+    store.mode.value.type !== "road" && store.myCreep.value !== null
+      ? { type: "road" }
+      : { type: "select" };
 }
 
 /** The cell of the selection, or of this player's core when none. */
@@ -58,6 +97,11 @@ export function handleKey(
       } else {
         store.selection.value = null;
       }
+      return true;
+    case "r":
+    case "R":
+      if (store.myCreep.value === null) return false;
+      toggleRoadMode(store);
       return true;
     case "f":
     case "F": {

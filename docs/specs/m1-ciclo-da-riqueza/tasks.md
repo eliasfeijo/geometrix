@@ -65,7 +65,7 @@ Marque `[x]` ao concluir. Cada task deve terminar com os testes verdes. Referên
 - [x] Inspetor do creep; dominar e liberar
 - [x] Painel do Núcleo
 - [x] Editor de regras e presets
-- [ ] Controle direto (moveTo, gather, deliver, modo estrada)
+- [x] Controle direto (moveTo, gather, deliver, modo estrada)
 - [ ] **Checkpoint:** sessão do dono: interface, legibilidade, editor de regras, domínio, multi-cliente local
   (spec §8, revista em 2026-11-14)
 
