@@ -6,7 +6,6 @@
 
 import { parseParams, ParamsError, SIM_VERSION } from "@geometrix/sim";
 import type {
-  Cell,
   Command,
   Params,
   Refusal,
@@ -163,17 +162,21 @@ export type WorldSummary = {
   players: { id: number; team: number; name: string; bot: boolean }[];
 };
 
-/** The static map, sent once in the welcome. */
-export function toStaticMap(state: WorldState): WelcomeMessage["map"] {
-  const { width, height, terrain } = state.map;
-  return { width, height, terrain: [...terrain] };
+/**
+ * The map size, the only part of the map in the welcome: the terrain comes in
+ * the view, as far as the team explored it (fog spec N-1).
+ */
+export function mapSize(state: WorldState): WelcomeMessage["map"] {
+  return { width: state.map.width, height: state.map.height };
 }
 
 export type WorldStatus = "running" | "ended";
 
 /**
  * Server -> client: the start of a team stream (M1.5 plan section 4), on
- * connecting and on a resync. The static map goes only here.
+ * connecting and on a resync. With fog of war (fog plan section 8) it tells
+ * only the map size: no terrain, no cores and no seed, which would rebuild the
+ * whole map; the view brings what the team knows.
  */
 export type WelcomeMessage = {
   type: "welcome";
@@ -184,8 +187,7 @@ export type WelcomeMessage = {
   status: WorldStatus;
   multiplier: number;
   params: Params;
-  map: { width: number; height: number; terrain: number[] };
-  cores: Cell[];
+  map: { width: number; height: number };
   /**
    * The team stream, new in each server process. A client resuming after a
    * drop sends it back with its seq: a seq of another stream (the server

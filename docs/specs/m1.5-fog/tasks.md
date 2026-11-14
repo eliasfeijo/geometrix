@@ -49,13 +49,14 @@ na sua branch (plan §12, skill `commit`), com merge `--no-ff` em `main`.
       Feita na F1, junto com a `view` filtrada: sem ela o teste de propriedade da rede quebrava
 - [x] Teste de propriedade de 6 h × seeds 1, 42 e 649 com o fog. Já rodava com o fog desde a F1; ganhou as asserções
       de creep inimigo entrando na visão e do Núcleo inimigo descoberto pelos dois times
-- [ ] `welcome` sem terreno e sem `cores`; `PROTOCOL_VERSION` 3
+- [x] `welcome` sem terreno e sem `cores`; `PROTOCOL_VERSION` 3. O cliente passou a desenhar o terreno a partir de
+      `known` (nunca visto como selva, sem a névoa ainda) e a ler os Núcleos da visão
 - [ ] `WorldSummary.seed` `null` em mundo vivo; replay de mundo vivo → 409 (spec D9, D10, N9)
 - [ ] **Checkpoint:** `geo net --seed 42 --days 3` contra os alvos da spec da rede §7
 
 ## F4 — Cliente (`m1.5/fog-f4-client`)
 
-- [ ] Terreno a partir de `known`; camada de névoa com os três estados; depósitos e obras lembrados sob o véu (spec
+- [ ] Terreno a partir de `known` (feito na F3, com o `welcome` sem terreno); camada de névoa com os três estados; depósitos e obras lembrados sob o véu (spec
       C-1)
 - [ ] Estrangeiros: creep e Núcleo inimigos só com o que a visão traz; painéis sem dados do time inimigo (spec C-2)
 - [ ] Cursor e traçado de estrada pelo mapa conhecido (spec C-3)

@@ -66,7 +66,7 @@ async function setup(config: Parameters<typeof testApp>[0] = {}) {
 }
 
 describe("WebSocket", () => {
-  test("welcomes with the static map and the team's view, then deltas", async () => {
+  test("welcomes with the map size and the team's view, then deltas", async () => {
     const { base, token, playerId, host } = await setup();
     const client = await connect(base, token);
     const welcome: WelcomeMessage = await client.next("welcome");
@@ -80,8 +80,13 @@ describe("WebSocket", () => {
       seq: 0,
     });
     expect(welcome.stream).toMatch(/^[0-9a-f-]{36}$/);
-    expect(welcome.map.terrain).toHaveLength(64 * 64);
-    expect(welcome.cores).toEqual(host.state.teams.map((t) => t.core));
+    // Fog spec N-1: the size only; the terrain comes in the view, as far as
+    // the team explored it, and the enemy core stays unknown.
+    expect(welcome.map).toEqual({ width: 64, height: 64 });
+    expect(welcome).not.toHaveProperty("cores");
+    expect(JSON.stringify(welcome)).not.toMatch(/seed/i);
+    expect(welcome.view.known).toContain(-1);
+    expect(welcome.view.teams[1]).toEqual({ id: 1, core: null });
     expect(welcome.view.tick).toBe(1);
     expect(welcome.view.team).toBe(0);
     expect(welcome.view.creeps[0]).not.toHaveProperty("path");

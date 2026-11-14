@@ -42,6 +42,15 @@ describe("pickAt", () => {
     expect(pickAt({ x: 30, y: 30 }, markers, deposits, cores)).toBeNull();
   });
 
+  it("keeps the team of a core when the other core is unknown", () => {
+    const fog = [null, { x: 20, y: 20 }];
+    expect(pickAt({ x: 20.5, y: 20.5 }, [], [], fog)).toEqual({
+      kind: "core",
+      team: 1,
+    });
+    expect(pickAt({ x: 10.5, y: 10.5 }, [], [], fog)).toBeNull();
+  });
+
   it("tells side-by-side creeps apart by where the click lands", () => {
     const markers = [creep(3, 5.25, 5.5, 0.5), creep(7, 5.75, 5.5, 0.5)];
     expect(pickAt({ x: 5.2, y: 5.5 }, markers, [], [])).toEqual({
