@@ -33,6 +33,9 @@ Node 26 (`.nvmrc`). O Node roda `.ts` direto; só o cliente tem build (Vite).
 | `npm test` | Vitest em todos os workspaces |
 | `npm test -- --project @geometrix/sim` | Vitest num workspace só |
 | `npm run geo -- verify --seed 42` | Determinismo: 2 execuções + snapshot → restore têm de dar o mesmo hash |
+| `npm run server` | Servidor em `http://localhost:8080` (`GEO_PORT`, `GEO_DB`, `GEO_PARAMS`); serve o build do cliente |
+| `npm run build` | Build do cliente (Vite) em `apps/client/dist`, que o servidor serve |
+| `npm run client` | Dev server do Vite (porta 5173) com proxy de `/api` e `/ws` para o servidor no `GEO_PORT` |
 
 ## Convenções do `sim`
 
