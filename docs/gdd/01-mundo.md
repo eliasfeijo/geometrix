@@ -14,6 +14,8 @@
   - **Quem dá visão:** o Núcleo e cada creep do time, num raio Manhattan, como o resto do `sim`. O raio do creep
     depende do DNA ([02](02-creeps-e-dominio.md)): círculo 6, triângulo 4, quadrado 3; o Núcleo vê 8. Números
     provisórios, nos params.
+  - **Pedras bloqueiam a visão** (spec do fog, D1): a pedra é vista, o que está atrás dela não. Rio e vaus não
+    bloqueiam.
   - **Névoa negra:** fora da própria visão, o time não conhece nada no início da partida: nem o terreno, nem os
     depósitos, nem o Núcleo inimigo.
   - **Do inimigo, dentro da visão:** os creeps (posição, DNA e carga), as estradas e as obras. Estoque, produção,

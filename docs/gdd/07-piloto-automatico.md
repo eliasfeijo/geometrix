@@ -15,6 +15,11 @@
   depósito que o time nunca viu.
 - **Ação "explorar"** (M1.5, 2026-11-14): ir até a célula nunca vista mais próxima. Nenhum depósito é garantido à
   vista do Núcleo no início: os creeps começam explorando.
+  - **Como começam** (spec do fog, D3): o preset coletor ganha "explorar" logo depois de "coletar", e a regra só
+    vale quando o time não conhece depósito do recurso. Um preset novo, **batedor**, só explora; sem nada a
+    explorar, volta ao Núcleo.
+  - **Alvo** (spec do fog, D4): a célula nunca vista mais próxima que nenhum outro creep do time já tenha como
+    alvo; desempate no referencial do time, para os dois lados ficarem equivalentes no mapa espelhado.
 
 ## Proposta
 - Humanos, macros, piloto automático e bots emitem os **mesmos comandos** ([ADR-0002](../adr/0002-tudo-e-comando.md)).
@@ -28,7 +33,4 @@
 ## Perguntas abertas
 - Onde fica o piloto automático: por creep, por grupo de creeps, ou por jogador?
 - A complexidade permitida (número de regras, CPU do script) é uma mecânica de progressão?
-- **Como os creeps começam explorando** (M1.5)? Uma regra "explorar" no preset coletor, para quando o time não
-  conhece depósito do recurso; um preset "batedor" à parte; ou os dois? E o desempate entre células nunca vistas à
-  mesma distância.
 - Qual é a diferença entre uma macro de cliente (só quando você está online) e o piloto automático (no servidor)?
