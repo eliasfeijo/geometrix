@@ -11,6 +11,7 @@ import type { Order } from "./orders.ts";
 import type { PathCache } from "./pathfinding.ts";
 import type { RngState } from "./rng.ts";
 import { createStats, type Activity, type Stats, type Trip } from "./stats.ts";
+import { createMemory, updateVision, type TeamMemory } from "./vision.ts";
 
 /**
  * Bump when a rule or state change makes old snapshots or replays invalid
@@ -91,6 +92,8 @@ export type WorldState = {
   deposits: Deposit[];
   /** Segments under construction, by id. */
   roadJobs: RoadJob[];
+  /** What each team has seen and remembers, by team id (fog plan N1). */
+  memory: TeamMemory[];
   nextId: number;
   /** Accumulators behind the metrics (spec section 7). */
   stats: Stats;
@@ -129,7 +132,7 @@ export function createWorld(seed: number, params: Params): WorldState {
     }
   }
 
-  return {
+  const state: WorldState = {
     simVersion: SIM_VERSION,
     seed,
     mapSeed,
@@ -143,9 +146,13 @@ export function createWorld(seed: number, params: Params): WorldState {
     creeps,
     deposits,
     roadJobs: [],
+    memory: createMemory(teams, layout.map),
     nextId,
     stats: createStats(teams, deposits),
   };
+  // The vision of tick 0 (fog plan N10).
+  updateVision(state);
+  return state;
 }
 
 /**

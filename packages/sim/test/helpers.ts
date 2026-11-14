@@ -8,6 +8,7 @@ import {
 } from "../src/params.ts";
 import { createStats } from "../src/stats.ts";
 import { step } from "../src/step.ts";
+import { createMemory, updateVision } from "../src/vision.ts";
 import {
   createWorld,
   type Creep,
@@ -114,6 +115,8 @@ export function textWorld(
     Object.assign(creep, world.teams[creep.team]!.core);
     creep.rules = [];
   }
+  world.memory = createMemory(world.teams, world.map);
+  updateVision(world);
   return world;
 }
 

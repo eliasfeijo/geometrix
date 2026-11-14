@@ -7,6 +7,7 @@ import {
   type GameMap,
 } from "../src/map.ts";
 import { findPath, pathTo, stepCost } from "../src/pathfinding.ts";
+import { createMemory } from "../src/vision.ts";
 import { createWorld } from "../src/world.ts";
 import { loadTestParams, parseMap } from "./helpers.ts";
 
@@ -163,6 +164,7 @@ describe("pathTo (cache)", () => {
   function setup() {
     const world = createWorld(42, params);
     world.map = parseMap([".......", ".......", "......."]);
+    world.memory = createMemory(world.teams, world.map);
     const creep = world.creeps[0]!;
     creep.x = 0;
     creep.y = 2;
