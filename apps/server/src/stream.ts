@@ -14,12 +14,19 @@ import {
   type WorldStatus,
 } from "@geometrix/protocol";
 import { view, type TeamView, type WorldState } from "@geometrix/sim";
+import { viewHash } from "./hash.ts";
+
+export type StreamOptions = {
+  /** A delta whose tick reaches a multiple of this carries the view hash. */
+  hashEveryTicks: number;
+};
 
 export class TeamStream {
   /** New in each server process: a seq means nothing across restarts. */
   readonly id: string;
   readonly team: number;
   private readonly sent: Sent = emptySent();
+  private readonly options: StreamOptions;
   private seqNow = 0;
   private status: WorldStatus;
 
@@ -27,11 +34,13 @@ export class TeamStream {
     state: WorldState,
     team: number,
     status: WorldStatus,
+    options: StreamOptions,
     id: string = randomUUID(),
   ) {
     this.id = id;
     this.team = team;
     this.status = status;
+    this.options = options;
     // The base: what a welcome carries before the first delta.
     diffView(this.sent, view(state, team));
   }
@@ -41,14 +50,28 @@ export class TeamStream {
     return this.seqNow;
   }
 
-  /** The delta message from the last view sent to the state now. */
+  /**
+   * The delta message from the last view sent to the state now. It carries
+   * the view hash when the ticks it covers reach a multiple of
+   * hashEveryTicks: every N ticks at ×1, and still once per N ticks when a
+   * send covers several (spec S-4).
+   */
   advance(state: WorldState, status: WorldStatus): string {
-    const delta = diffView(this.sent, view(state, this.team));
+    const { hashEveryTicks } = this.options;
+    const before = this.sent.tick;
+    const seen = view(state, this.team);
+    const delta = diffView(this.sent, seen);
     this.seqNow += 1;
     const message: DeltaMessage = { type: "delta", seq: this.seqNow, delta };
     if (status !== this.status) {
       message.status = status;
       this.status = status;
+    }
+    if (
+      Math.floor(seen.tick / hashEveryTicks) >
+      Math.floor(before / hashEveryTicks)
+    ) {
+      message.hash = viewHash(seen);
     }
     return JSON.stringify(message);
   }

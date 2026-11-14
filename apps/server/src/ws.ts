@@ -34,6 +34,8 @@ export type WsContext = {
   worlds: Worlds;
   timers: Timers;
   broadcastIntervalMs: number;
+  viewHashEveryTicks: number;
+  deltaBufferMs: number;
   /** Told about connections and inputs (domination release, F6). */
   presence?: Presence;
 };
@@ -45,7 +47,7 @@ export function attachWebSocket(server: Server, context: WsContext) {
   const broadcasterOf = (host: WorldHost) => {
     let b = broadcasters.get(host.id);
     if (b === undefined) {
-      b = new Broadcaster(host, context.timers, context.broadcastIntervalMs);
+      b = new Broadcaster(host, context);
       broadcasters.set(host.id, b);
     }
     return b;
@@ -164,12 +166,13 @@ class Broadcaster {
   private lastSent = -Infinity;
   private pending: unknown = null;
 
-  constructor(host: WorldHost, timers: Timers, intervalMs: number) {
+  constructor(host: WorldHost, context: WsContext) {
     this.host = host;
-    this.timers = timers;
-    this.intervalMs = intervalMs;
+    this.timers = context.timers;
+    this.intervalMs = context.broadcastIntervalMs;
+    const options = { hashEveryTicks: context.viewHashEveryTicks };
     this.streams = host.state.teams.map(
-      (team) => new TeamStream(host.state, team.id, host.status),
+      (team) => new TeamStream(host.state, team.id, host.status, options),
     );
     host.onTick(() => this.ticked());
   }
