@@ -1,6 +1,7 @@
 # Status atual
 
-**Atualizado:** 2026-11-14 · **Marco:** M1 — O ciclo da riqueza · **Fase:** F7 (cliente) em preparação, branch `m1/f7-client`
+**Atualizado:** 2026-11-14 · **Marco:** M1 — O ciclo da riqueza · **Fase:** F7 (cliente) implementado, aguardando o
+checkpoint (sessão do dono) para o merge; branch `m1/f7-client`
 
 Resumo de bolso. A fonte de verdade continua nos docs linkados. Atualize este arquivo ao fechar uma fase, ao passar
 por um portão de aprovação ou quando surgir um bloqueio.
@@ -20,7 +21,8 @@ por um portão de aprovação ou quando surgir um bloqueio.
 | M1 — F5 Harness | ✅ Concluída, merge em `main`. Checkpoint revisado pelo dono (2026-11-13): a economia precisa de balanceamento. Stats + `sampleMetrics`, estrategista `balanced`, `geo sim`/`report`/`sweep`, `geo verify` com bots e replay do log, orçamento de 6 h no CI. Detalhes decididos pelo dono no [plan §9](../specs/m1-ciclo-da-riqueza/plan.md) | [tasks.md §F5](../specs/m1-ciclo-da-riqueza/tasks.md) · `apps/cli/src/` · `packages/sim/src/stats.ts` |
 | M1 — Balanceamento 1 | ✅ Decidido pelo dono (2026-11-14): candidato B no `params/default.json` provisório; DNAs economicamente equivalentes de propósito; playtest humano e deploy saem do M1. Assimetria entre os times corrigida (desempate do A*). Na branch `m1/f6-server` | [balance.md](../specs/m1-ciclo-da-riqueza/balance.md) |
 | M1 — F6 Servidor | ✅ Concluída, merge em `main`. SQLite (log de comandos, snapshots, métricas), loop de tick com multiplicador, HTTP (criar, listar, entrar), WebSocket com ack/reject e broadcast ≤5/s, `release` automático, bots e limite de humanos, recuperação após restart. Detalhes decididos pelo dono na [spec §5](../specs/m1-ciclo-da-riqueza/spec.md) | [tasks.md §F6](../specs/m1-ciclo-da-riqueza/tasks.md) · `apps/server/src/` · `packages/protocol/src/` |
-| M1 — F7, F8 | ⬜ Pendentes; o F7 é o próximo. Checkpoint do F7: sessão do dono (interface e legibilidade). O M1 fecha com o critério da [spec §8](../specs/m1-ciclo-da-riqueza/spec.md) | [plan.md §13](../specs/m1-ciclo-da-riqueza/plan.md) |
+| M1 — F7 Cliente | 🟨 Tasks concluídas na branch `m1/f7-client`, **sem merge**: falta o checkpoint (sessão do dono: interface, legibilidade, editor de regras, domínio, multi-cliente local). Lobby, mapa SVG com pan/zoom, creeps interpolados, inspetor, dominar/liberar, painel do Núcleo, editor de regras e presets, controle direto pelo botão direito. Detalhes decididos pelo dono na [spec §5](../specs/m1-ciclo-da-riqueza/spec.md) | [tasks.md §F7](../specs/m1-ciclo-da-riqueza/tasks.md) · `apps/client/src/` |
+| M1 — F8 | ⬜ Pendente (replay no navegador, Safari/JSC, `dev:multi`). O M1 fecha com o critério da [spec §8](../specs/m1-ciclo-da-riqueza/spec.md) | [plan.md §13](../specs/m1-ciclo-da-riqueza/plan.md) |
 | ~~M1 — F9~~ | Deploy e playtest comprimido saíram do M1 (dono, 2026-11-14): abrem o M2 | [ROADMAP](../ROADMAP.md) |
 | M2–M4 | ⬜ Não iniciados | [ROADMAP](../ROADMAP.md) |
 
@@ -28,33 +30,55 @@ por um portão de aprovação ou quando surgir um bloqueio.
 
 1. **Publicar o repo no GitHub** (dono). Ainda não há remote, então o CI ([ci.yml](../../.github/workflows/ci.yml))
    nunca rodou fora da máquina local.
-2. **F7 (cliente):** branch `m1/f7-client`. Ela já tem a decisão da coleta com depósitos zerados (dono,
-   2026-11-14, [GDD 07](../gdd/07-piloto-automatico.md)): o creep fica com o depósito escolhido até encher e espera
-   a regeneração ali (`SIM_VERSION` 2). No fim de jogo, a maioria dos creeps fica parada em volta dos depósitos,
-   com o anel de carga enchendo devagar: o cliente deve mostrar isso como espera, não como travamento. O que o F7
-   precisa saber do servidor:
-   - `npm run server` sobe em `http://localhost:8080` e serve `apps/client/dist` como estáticos. Variáveis:
-     `GEO_PORT`, `GEO_DB` (padrão `data/geometrix.db`, ignorado pelo git), `GEO_PARAMS` (padrão
-     `params/default.json`), `GEO_STATIC`. O dev server do Vite precisa de proxy para `/api` e `/ws`.
-   - **HTTP:** `POST /api/worlds` `{seed?, multiplier?, botTeams?}` → `201 {id}`; `GET /api/worlds` →
-     `WorldSummary[]`; `POST /api/worlds/:id/join` `{name, team}` → `201 {playerId, team, token}`, ou `409
-     {error: "teamFull" | ...}`. Erros sempre como `{error}`.
-   - **WebSocket** `/ws?token=...`: o servidor manda `welcome` (params, mapa estático, Núcleos e o estado
-     dinâmico) e depois `state {state, status}` no máximo 5 vezes por segundo. O cliente manda `{type: "command",
-     ref, command}` e recebe `ack {ref, tick}` ou `reject {ref, reason}`. Token inválido fecha com 4401; mundo não
-     hospedado, com 4404. Tipos e validação (zod) em `@geometrix/protocol`.
-   - O token é a única credencial: guardado no cliente, reconecta o mesmo jogador. O `join` entra no tick
-     seguinte, então logo após o `welcome` o jogador pode ainda não estar em `state.players`.
-   - O estado dinâmico vai inteiro em cada mensagem: creeps sem `path`, estradas como índices de célula.
-   - **Medições do F6:** mensagem de estado com 6,7 KB (12 creeps), 13,7 KB (28) e 26,9 KB (60). Tick + commit no
-     SQLite: 0,08 ms no ext4 e 1,7 ms no `/mnt/c` (WSL), contra 28 ms por tick no ×36. 3 dias bot×bot do seed 42
-     com o `default.json` atual: 12,1 s; com a coleta que espera a regeneração, 3,9 s.
-   - **Efeito da coleta que espera** (3 dias bot×bot, seeds 42, 1 e 2): viagem média de 61–69 para 22–28 células;
-     andando vazio de 22–34% para 13–19%; parado (inclui esperar no depósito) de 1% para 52–66%; todos os 12
-     depósitos de matéria são usados; matéria entregue +16 a +28%.
+2. **Checkpoint do F7 (dono):** a sessão de interface e legibilidade. Roteiro:
+   - `npm run build && npm run server` e abrir `http://localhost:8080` (ou `npm run server` + `npm run client` e
+     abrir `http://localhost:5173`, com recarga automática do cliente).
+   - No lobby: nome, "Criar" (padrão ×36 com bot no Laranja), "Entrar" no Azul.
+   - Mapa: arrastar com o botão esquerdo (ou setas), roda do mouse para zoom, `0` para ver o mapa todo, `F` para
+     centralizar na seleção. Clique esquerdo seleciona (clicar de novo numa pilha alterna entre os creeps);
+     `Esc` limpa.
+   - Creep: "Dominar", depois botão direito no mapa (`moveTo`), num depósito (`gather`) ou no seu Núcleo
+     (`deliver`); `R` liga o modo estrada para o próximo clique direito. Editar regras e aplicar presets no
+     inspetor (o "Construtor de estrada…" pede o ponto no mapa).
+   - Núcleo (painel à esquerda): produzir, "repetir", upgrade.
+   - Multi-cliente local: outra aba com `?slot=2` é outro jogador no mesmo navegador (o token fica por mundo e
+     slot).
+   - Depois do OK: marcar o checkpoint no `tasks.md`, merge em `main` e seguir para o F8.
+3. **F8 (replay e multi-cliente):** o que ele precisa saber do F7:
+   - O cliente é Vite + Preact + signals em `apps/client/src/`. O estado da tela é o `GameStore` (`store.ts`);
+     o mapa recebe `DynamicState` + a parte estática do `welcome`. O replay pode alimentar o mesmo `GameStore`
+     com `receive()` a partir do `sim` rodando no navegador (sem `Connection`).
+   - `?slot=N` já separa sessões no mesmo navegador: o `dev:multi -- --clients K` pode abrir K abas com slots
+     diferentes, entrando por `POST /api/worlds/:id/join` e gravando o token no `localStorage`
+     (`geometrix:session:<slot>:<world>`), ou deixando cada aba entrar pelo lobby.
+   - Os screenshots do F7 usaram o Chromium headless do cache do Playwright (`~/.cache/ms-playwright`) com o
+     `playwright-core` instalado só no scratchpad; o repo continua sem Playwright (plan §10).
+   - **Medições do F7:** 60 fps estáveis com 60 creeps no Chromium headless (mediana 16,7 ms por frame, nenhuma
+     long task); bundle de 72,6 KB (26,2 KB gzip). 50 testes no cliente (1952 no total).
 
 ## Pendências e pontos a esclarecer
 
+- **Interpretações do F7 a validar na sessão do dono** (a spec e o plan não fixam):
+  - o lobby cria mundos (seed, multiplicador, bot por time; padrão ×36 com bot no Laranja) e entra com nome de
+    convidado; o token fica no `localStorage` por mundo e por slot da URL;
+  - interpolação um estado atrás: o creep desliza entre os dois últimos estados no intervalo entre as mensagens;
+    um salto de mais de 4 células é instantâneo; a ×1 o creep anda uma célula em ~1 s e espera a próxima;
+  - zoom afastado aumenta creeps e depósitos até 2× (mínimo de 22 px na tela); creeps na mesma célula se
+    espalham em volta dela, a 70% do tamanho;
+  - "esperando o depósito regenerar" = ordem `gather`, parado na célula do depósito, depósito com 0; o creep
+    ganha uma ampulheta e o inspetor diz isso em amarelo;
+  - o botão direito sempre ordena o creep que o jogador domina, esteja ele selecionado ou não; sem domínio, um
+    aviso. O modo estrada vale para um clique e termina se o domínio acabar. Núcleo inimigo vira `moveTo`;
+  - além do clique direito, o inspetor tem "Parar" e "Entregar" (ordens do vocabulário);
+  - o painel do próprio Núcleo fica fixo à esquerda; o Núcleo, os creeps e as regras do outro time aparecem só
+    para leitura (sem fog, D5);
+  - o editor de regras trabalha num rascunho local e envia a lista inteira com "Aplicar"; avisa se as regras
+    mudaram no servidor no meio; um preset aplica na hora e descarta o rascunho. Valores iniciais ao trocar a
+    condição: raio 10, quantidade 100 (padrões do editor, não balanceamento); regra nova = "sempre → entregar";
+  - os nomes dos jogadores vêm do `GET /api/worlds` (o estado só tem ids);
+  - os botões de produção usam o `productionRefusal` do `sim` (alargado para aceitar o estado da rede).
+- **Servidor no `/mnt/c`:** subir o `npm run server` às vezes leva mais de 5 s (WSL). Scripts que sobem o
+  servidor devem esperar a porta responder, não um `sleep` fixo.
 - **Interpretações do F6 a validar** (o plan não fixa):
   - a recuperação restaura o último snapshot e reaplica os comandos do log com `tick >=` o do snapshot até o
     último tick gravado (`worlds.tick`, coluna além do esquema do plan, como `players.bot`);
