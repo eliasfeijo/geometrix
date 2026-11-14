@@ -3,9 +3,9 @@ import { Terrain, type GameMap } from "../src/map.ts";
 import { CELL_COST, cellModifier, movePointsPerTick } from "../src/movement.ts";
 import type { Dna } from "../src/params.ts";
 import type { Creep } from "../src/world.ts";
-import { loadDefaultParams } from "./helpers.ts";
+import { loadTestParams } from "./helpers.ts";
 
-const params = loadDefaultParams();
+const params = loadTestParams();
 
 // One row: jungle, crossing, jungle+road, crossing+road, river, rock.
 const map: GameMap = {

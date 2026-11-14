@@ -3,9 +3,9 @@ import { validate, type Command, type CommandInput } from "../src/commands.ts";
 import { serialize } from "../src/serialize.ts";
 import { step } from "../src/step.ts";
 import { createWorld, type WorldState } from "../src/world.ts";
-import { loadDefaultParams, run, textWorld } from "./helpers.ts";
+import { loadTestParams, run, textWorld } from "./helpers.ts";
 
-const params = loadDefaultParams();
+const params = loadTestParams();
 
 /** Players 1 and 2 on team 0, player 3 on team 1, joined through step. */
 function world(): WorldState {

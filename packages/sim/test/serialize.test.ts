@@ -7,9 +7,9 @@ import {
   SnapshotVersionError,
 } from "../src/serialize.ts";
 import { createWorld, SIM_VERSION } from "../src/world.ts";
-import { loadDefaultParams } from "./helpers.ts";
+import { loadTestParams } from "./helpers.ts";
 
-const params = loadDefaultParams();
+const params = loadTestParams();
 const sha256 = (text: string) =>
   createHash("sha256").update(text).digest("hex");
 

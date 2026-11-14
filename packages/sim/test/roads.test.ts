@@ -5,13 +5,13 @@ import { step } from "../src/step.ts";
 import { createWorld, type WorldState } from "../src/world.ts";
 import {
   creepOf,
-  loadDefaultParams,
+  loadTestParams,
   paramsWith,
   run,
   textWorld,
 } from "./helpers.ts";
 
-const params = loadDefaultParams();
+const params = loadTestParams();
 
 /** The map rows with `r` where a road is built (cores and deposits as `.`). */
 function roads(world: WorldState): string[] {

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { ParamsError, parseParams, type Params } from "../src/params.ts";
-import { readDefaultParamsJson as loadDefault } from "./helpers.ts";
+import { readDefaultParamsJson, readTestParamsJson } from "./helpers.ts";
 
 function issuesOf(input: unknown): readonly string[] {
   try {
@@ -12,9 +12,9 @@ function issuesOf(input: unknown): readonly string[] {
   return [];
 }
 
-/** Deep copy of the default params with one leaf replaced. */
+/** Deep copy of the test params with one leaf replaced. */
 function withLeaf(path: string, value: unknown): unknown {
-  const copy = loadDefault() as Record<string, unknown>;
+  const copy = readTestParamsJson() as Record<string, unknown>;
   const keys = path.split(".");
   let node = copy;
   for (const key of keys.slice(0, -1)) {
@@ -26,9 +26,13 @@ function withLeaf(path: string, value: unknown): unknown {
 
 describe("parseParams", () => {
   test("accepts params/default.json", () => {
-    const params: Params = parseParams(loadDefault());
-    expect(params.creep.cost.materia).toBe(40);
+    const params: Params = parseParams(readDefaultParamsJson());
     expect(params.world.durationSeconds).toBe(3 * 24 * 60 * 60);
+  });
+
+  test("accepts test/params.json", () => {
+    const params: Params = parseParams(readTestParamsJson());
+    expect(params.creep.cost.materia).toBe(40);
   });
 
   test.each([
