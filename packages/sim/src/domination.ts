@@ -5,7 +5,8 @@
 // are releases emitted by the server (plan section 4), so the sim keeps no
 // clock for them.
 
-import { canAfford, debit, findDeposit } from "./economy.ts";
+import { canAfford, debit } from "./economy.ts";
+import { memoryOf } from "./known.ts";
 import { isInMap, manhattan, type Cell } from "./map.ts";
 import type { Order } from "./orders.ts";
 import { buildRoadOrder } from "./roads.ts";
@@ -33,7 +34,6 @@ export type OrderInput =
 export type DominationRefusal =
   | "unknownPlayer"
   | "unknownCreep"
-  | "notYourTeam"
   | "alreadyDominating"
   | "dominatedByOther"
   | "cooldown"
@@ -88,9 +88,13 @@ export function join(
   state.players.splice(at < 0 ? state.players.length : at, 0, player);
 }
 
-export type TeamCreepRefusal = "unknownPlayer" | "unknownCreep" | "notYourTeam";
+export type TeamCreepRefusal = "unknownPlayer" | "unknownCreep";
 
-/** Checks that the player exists and the creep belongs to the player's team. */
+/**
+ * Checks that the player exists and the creep belongs to the player's team. A
+ * creep of another team is refused as if it did not exist, so the refusal
+ * tells nothing the team's view does not (fog spec D6).
+ */
 export function teamCreepRefusal(
   state: WorldState,
   playerId: number,
@@ -100,7 +104,7 @@ export function teamCreepRefusal(
   if (player === undefined) return "unknownPlayer";
   const creep = findCreep(state, creepId);
   if (creep === undefined) return "unknownCreep";
-  return creep.team === player.team ? null : "notYourTeam";
+  return creep.team === player.team ? null : "unknownCreep";
 }
 
 export function dominateRefusal(
@@ -164,25 +168,31 @@ export function release(state: WorldState, playerId: number): void {
   dominatedCreep(state, playerId)!.dominatedBy = null;
 }
 
-/** Only the dominating player orders a creep (D-1). */
+/**
+ * Only the dominating player orders a creep (D-1). A deposit the team does
+ * not remember is refused as one that does not exist (fog spec D6).
+ */
 export function orderRefusal(
   state: WorldState,
   playerId: number,
   creepId: number,
   order: OrderInput,
 ): DominationRefusal | null {
-  if (findPlayer(state, playerId) === undefined) return "unknownPlayer";
-  const creep = findCreep(state, creepId);
-  if (creep === undefined) return "unknownCreep";
+  const refusal = teamCreepRefusal(state, playerId, creepId);
+  if (refusal !== null) return refusal;
+  const player = findPlayer(state, playerId)!;
+  const creep = findCreep(state, creepId)!;
   if (creep.dominatedBy !== playerId) return "notDominating";
   switch (order.type) {
     case "stop":
     case "deliver":
       return null;
     case "gather":
-      return findDeposit(state, order.depositId) === undefined
-        ? "invalidOrder"
-        : null;
+      return memoryOf(state, player.team).deposits.some(
+        (d) => d.id === order.depositId,
+      )
+        ? null
+        : "invalidOrder";
     case "moveTo":
     case "explore":
     case "buildRoad":
