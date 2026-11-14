@@ -113,5 +113,13 @@
     },
     "cooldownSeconds": 0,
     "maxDistanceCells": 0
+  },
+  "vision": {
+    "core": 8,
+    "dna": {
+      "square": 3,
+      "triangle": 4,
+      "circle": 6
+    }
   }
 }

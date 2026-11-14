@@ -13,7 +13,7 @@ na sua branch (plan §12, skill `commit`), com merge `--no-ff` em `main`.
 
 ## F1 — Visão e memória no `sim` (`m1.5/fog-f1-vision`)
 
-- [ ] Params `vision` no `schema`, no `default.json` e no `test/params.json` (plan §2)
+- [x] Params `vision` no `schema`, no `default.json` e no `test/params.json` (plan §2)
 - [ ] `vision.ts`: linha de visão (Bresenham inteiro no referencial do time), com testes em mapas de texto: atrás da
       pedra não, a pedra sim, rio não bloqueia, espelho igual nos dois times (plan §3, N2)
 - [ ] `TeamMemory` no `WorldState`, `createMemory` no `createWorld`, `updateVision` como estágio 6 do `step` e no
