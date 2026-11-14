@@ -47,7 +47,8 @@ describe("gather", () => {
     run(world, 1);
     expect(creep.cargo).toEqual({ materia: 30, cristal: 0 });
     expect(creep.order).toEqual({ type: "stop" });
-    expect(deposit.amount).toBe(470);
+    // 500 - 30, plus 1 regenerated at the end of the first world minute.
+    expect(deposit.amount).toBe(471);
   });
 
   test.each(DNAS)("a %s stops at its capacity", (dna) => {
@@ -209,5 +210,62 @@ describe("deliver", () => {
     creep.order = { type: "deliver" };
     run(world, 15);
     expect(world.teams[0]!.stock.materia).toBe(10);
+  });
+});
+
+describe("deposits over time", () => {
+  test("materia regains 1 unit per world minute", () => {
+    const world = textWorld(["Am.c...B"]);
+    const materia = depositAt(world, 1);
+    materia.amount = 100;
+    run(world, 59);
+    expect(materia.amount).toBe(100);
+    run(world, 1);
+    expect(materia.amount).toBe(101);
+    run(world, 600);
+    expect(materia.amount).toBe(111);
+  });
+
+  test("materia regenerates up to its initial amount", () => {
+    const world = textWorld(["Am.....B"]);
+    const materia = depositAt(world, 1);
+    materia.amount = 499;
+    run(world, 180);
+    expect(materia.amount).toBe(500);
+  });
+
+  test("an empty materia deposit comes back", () => {
+    const world = textWorld(["Am.....B"]);
+    const materia = depositAt(world, 1);
+    materia.amount = 0;
+    run(world, 60);
+    expect(materia.amount).toBe(1);
+  });
+
+  test("cristal never regenerates and stays on the map when exhausted", () => {
+    const world = textWorld(["Ac.....B"]);
+    const cristal = depositAt(world, 1);
+    const creep = creepOf(world, 0, "circle");
+    Object.assign(creep, { x: 1 });
+    cristal.amount = 5;
+    creep.order = { type: "gather", depositId: cristal.id };
+    run(world, 3600);
+    expect(cristal.amount).toBe(0);
+    expect(world.deposits).toContain(cristal);
+  });
+
+  test("follows the regen params", () => {
+    const custom = structuredClone(params) as typeof params & {
+      deposits: {
+        materia: { regen: { amount: number; everySeconds: number } };
+      };
+    };
+    custom.deposits.materia.regen.amount = 3;
+    custom.deposits.materia.regen.everySeconds = 10;
+    const world = textWorld(["Am.....B"], custom);
+    const materia = depositAt(world, 1);
+    materia.amount = 0;
+    run(world, 30);
+    expect(materia.amount).toBe(9);
   });
 });

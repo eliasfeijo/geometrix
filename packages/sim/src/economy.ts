@@ -62,3 +62,21 @@ export function unload(creep: Creep, team: Team): void {
   creep.cargo.materia = 0;
   creep.cargo.cristal = 0;
 }
+
+/**
+ * Stage 5: every regen.everySeconds of world time, materia deposits gain
+ * regen.amount, up to their initial amount. Cristal never regenerates (R-2):
+ * an exhausted cristal deposit stays on the map at 0.
+ */
+export function regenerate(state: WorldState): void {
+  const { materia } = state.params.deposits;
+  const elapsed = (state.tick + 1) * state.params.world.tickSeconds;
+  if (elapsed % materia.regen.everySeconds !== 0) return;
+  for (const deposit of state.deposits) {
+    if (deposit.kind !== "materia") continue;
+    deposit.amount = Math.min(
+      deposit.amount + materia.regen.amount,
+      materia.amount,
+    );
+  }
+}

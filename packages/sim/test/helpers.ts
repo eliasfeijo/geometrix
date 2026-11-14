@@ -29,6 +29,15 @@ export function loadDefaultParams(): Params {
   return parseParams(readDefaultParamsJson());
 }
 
+type Mutable<T> = { -readonly [K in keyof T]: Mutable<T[K]> };
+
+/** params/default.json changed by `edit`, then validated. */
+export function paramsWith(edit: (params: Mutable<Params>) => void): Params {
+  const params = readDefaultParamsJson() as Mutable<Params>;
+  edit(params);
+  return parseParams(params);
+}
+
 /** `.` jungle · `r` road on jungle · `=` crossing · `~` river · `#` rock */
 export function parseMap(rows: string[]): GameMap {
   const terrainOf: Record<string, number> = {
