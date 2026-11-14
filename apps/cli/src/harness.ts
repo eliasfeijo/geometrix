@@ -9,6 +9,7 @@ import {
   strategistActs,
   strategistCommands,
   validate,
+  view,
   type Command,
   type CommandInput,
   type Params,
@@ -48,7 +49,12 @@ export function botCommands(
   }
   if (!strategistActs(state.tick)) return [];
   return bots.flatMap((bot) =>
-    strategistCommands(bot.strategist, state, bot.team).map((command) => ({
+    strategistCommands(
+      bot.strategist,
+      view(state, bot.team),
+      state.map,
+      state.params,
+    ).map((command) => ({
       playerId: bot.playerId,
       command,
     })),

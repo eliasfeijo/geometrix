@@ -1,6 +1,6 @@
 # Status atual
 
-**Atualizado:** 2026-11-14 · **Marco:** M1.5 — A névoa, fatia de rede · **Fase:** F0 ✅ concluída · **Próximo:** F1 (visão no `sim`)
+**Atualizado:** 2026-11-14 · **Marco:** M1.5 — A névoa, fatia de rede · **Fase:** F1 ✅ concluída · **Próximo:** F2 (delta no `protocol`)
 
 Resumo de bolso. A fonte de verdade continua nos docs linkados. Atualize este arquivo ao fechar uma fase, ao passar
 por um portão de aprovação ou quando surgir um bloqueio.
@@ -28,6 +28,7 @@ por um portão de aprovação ou quando surgir um bloqueio.
 | M1.5 rede — spec | ✅ Aprovada (2026-11-14). Decisões D1–D8; critérios de viabilidade na §7 | [spec.md](../specs/m1.5-rede/spec.md) |
 | M1.5 rede — plan | ✅ Aprovado (2026-11-14), com R1–R7 decididas | [plan.md](../specs/m1.5-rede/plan.md) |
 | M1.5 rede — F0 Spike | ✅ Concluída, merge em `main`. Diff à mão em JSON por uma visão com cópia rasa: ~41 µs por mundo por envio (2 times), ~257 bytes por delta; o schema do Colyseus funciona, mas não foi adotado (R1) | [plan §1](../specs/m1.5-rede/plan.md) · [tasks.md](../specs/m1.5-rede/tasks.md) |
+| M1.5 rede — F1 Visão no `sim` | ✅ Concluída, merge em `main`. `view(state, team)` e `TeamView`; o estrategista decide pela visão do time + mapa estático + parâmetros; hash de 6 h travado em teste e o de 3 dias (`10662729…`) inalterado | [tasks.md](../specs/m1.5-rede/tasks.md) · `packages/sim/src/view.ts` |
 | M2–M4 | ⬜ Não iniciados | [ROADMAP](../ROADMAP.md) |
 
 ## Próximos passos imediatos
@@ -36,31 +37,27 @@ por um portão de aprovação ou quando surgir um bloqueio.
 ([spec](../specs/m1.5-rede/spec.md) · [plan](../specs/m1.5-rede/plan.md) · [tasks](../specs/m1.5-rede/tasks.md)),
 depois a de fog of war. O repo está no GitHub e o CI passa lá.
 
-1. **F1 — Visão no `sim`**, pela skill `implement-phase`, na branch `m1.5/f1-view` (criar a partir de `main`).
-   O que a F1 precisa saber:
-   - **Trave o comportamento antes de mexer:** hoje só o mundo inicial tem hash fixo
-     (`packages/sim/test/serialize.test.ts`). A 1ª task cria um teste com o hash de um mundo bot × bot de 6 h do
-     seed 42 (o caminho do harness: `botsFor` + `stepWithBots` de `apps/cli/src/harness.ts`; no `sim` não há
-     harness, então o teste pode montar o laço com `strategistCommands` + `validate` + `step`). Esse hash não
-     pode mudar na fase inteira (spec D4).
-   - **O estrategista** (`packages/sim/src/strategist.ts`) usa `productionRefusal` (já aceita o tipo estrutural
-     `ProductionView`, do F7), `nextSegment` (`roads.ts`: precisa de `map` com terreno e camada de estradas,
-     `params` e o que o `canBuildRoad` olhar) e `canonicalJson` nas regras. Ele não lê `path`, `movePoints` nem
-     `trip`. R3: ele recebe a visão + o mapa (estradas montadas a partir de `view.roads`) + os parâmetros.
-   - **A visão é cópia rasa** (plan §3): objetos novos no 1º nível, aninhados compartilhados com o estado. O
-     `step` muta o estado in place.
-   - **Achado do spike:** o piloto automático cria a cada tick um objeto de ordem novo e igual ao anterior em
-     todo creep livre; as regras só são substituídas inteiras. Isso importa na F2 (ordem por valor, regras por
-     referência, R4) e vira convenção no `CLAUDE.md` na última task da F1.
-   - O código do spike ficou fora do repositório; a técnica está no plan §1 e §4.
-2. **F2 — Delta no `protocol`**, com o checkpoint do `geo net` (banda, CPU e propriedade contra a spec §7).
-3. **Rodada de design do fog**, em paralelo, pela skill `gdd-decision`: as perguntas do [GDD 01](../gdd/01-mundo.md)
+1. **F2 — Delta no `protocol`**, pela skill `implement-phase`, na branch `m1.5/f2-delta` (criar a partir de `main`),
+   com o checkpoint do `geo net` (banda, CPU e propriedade contra a spec §7). O que a F2 precisa saber:
+   - **A visão** está em `packages/sim/src/view.ts`: `view(state, team)` → `TeamView`, com `CreepView` sem `path`,
+     `movePoints` e `trip`. Todas as entidades (creeps, times, depósitos, obras, jogadores) são objetos novos a
+     cada chamada; os aninhados são os do estado (`stock`, `upgrades`, `production`, `core`, `cargo`, `order`,
+     `rules`).
+   - **Aninhados que o `step` muta in place:** `team.stock`, `team.production.remainingSeconds` e `creep.cargo`.
+     O `Sent` tem de copiar valores (plan §5), nunca guardar esses objetos.
+   - **Ordem por valor, regras por referência** (R4, agora no `CLAUDE.md`): o piloto automático recria o objeto
+     da ordem a cada tick; as regras só mudam por `setRules`/presets, que atribuem um array novo.
+   - **O `protocol` ainda tem `DynamicState`/`toDynamicState`** (servidor, cliente, replay). A troca pelas
+     mensagens novas é da F3/F4; a F2 só acrescenta o `delta.ts`.
+   - **Para a propriedade e o `geo net`:** o laço bot × bot está em `apps/cli/src/harness.ts` (`botsFor`,
+     `stepWithBots`); no `sim`, `packages/sim/test/bot-world.test.ts` monta o mesmo laço sem a CLI.
+2. **Rodada de design do fog**, em paralelo, pela skill `gdd-decision`: as perguntas do [GDD 01](../gdd/01-mundo.md)
    (o que dá visão e até onde, o que se vê do outro time, se o piloto automático respeita o fog, se o que já foi
    visto continua visível). Precisa estar decidida antes da spec da fatia de fog.
-4. **Depois do M1.5, o M2 (A emboscada):** deploy e playtest de diversão primeiro (lista em "Fora do M1" no
+3. **Depois do M1.5, o M2 (A emboscada):** deploy e playtest de diversão primeiro (lista em "Fora do M1" no
    [tasks.md do M1](../specs/m1-ciclo-da-riqueza/tasks.md)), com uma rodada agrupada sobre as perguntas abertas de
    batalha antes da spec.
-5. **Olhos novos na legibilidade:** o roteiro e o questionário do [PLAYTEST.md](../PLAYTEST.md) servem de base
+4. **Olhos novos na legibilidade:** o roteiro e o questionário do [PLAYTEST.md](../PLAYTEST.md) servem de base
    para os playtests do M1.5 e do M2, com pessoas que nunca viram o jogo.
 
 **Push:** o Git do WSL não tem credencial do GitHub; o dono faz o push pelo PowerShell (`git push origin main`).
@@ -76,6 +73,16 @@ Um item por problema: o que a pessoa não entendeu ou não conseguiu, a tarefa o
   item 3).
 
 ## Pendências e pontos a esclarecer
+
+- **Interpretações da F1 do M1.5** (o plan não fixa):
+  - a trava de 6 h (`packages/sim/test/bot-world.test.ts`) roda com o `test/params.json`, não com o
+    `default.json`: assim ela não quebra a cada balanceamento. O `default.json` continua coberto pelo hash de 3
+    dias do `geo verify`/`geo sim`;
+  - a cópia rasa da visão vale para todas as entidades (times, depósitos, obras e jogadores também são objetos
+    novos), não só para os creeps;
+  - o estrategista recebe `(id, visão, mapa estático, parâmetros)`; ele ignora a camada de estradas do mapa que
+    recebe e a remonta a partir de `view.roads` (o servidor e o harness passam o `state.map` direto).
+- **Medição da F1:** `geo sim` de 3 dias do seed 42 em 4,4 s (antes 4,3 s), hash `10662729…`. 2042 testes.
 
 - **Interpretações da F9** (o plan fixa o quê, não estes detalhes):
   - o `+N`/`−N` sobe do Núcleo com a **variação líquida** do estoque entre dois estados (5 por segundo): uma
