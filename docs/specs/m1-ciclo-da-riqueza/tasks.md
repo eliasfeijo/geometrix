@@ -62,7 +62,7 @@ Marque `[x]` ao concluir. Cada task deve terminar com os testes verdes. Referên
 - [x] Vite + Preact; conexão, `welcome`, reconexão
 - [x] Mapa SVG com camadas estática e dinâmica; pan e zoom
 - [x] Creeps por DNA e time, anel de carga, halo de domínio, interpolação
-- [ ] Inspetor do creep; dominar e liberar
+- [x] Inspetor do creep; dominar e liberar
 - [ ] Painel do Núcleo
 - [ ] Editor de regras e presets
 - [ ] Controle direto (moveTo, gather, deliver, modo estrada)

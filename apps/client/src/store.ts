@@ -13,6 +13,7 @@ import type {
   FatalReason,
   WorldMessage,
 } from "./connection.ts";
+import type { Selection } from "./map/pick.ts";
 import type { Size, View } from "./map/view.ts";
 
 /** A dynamic state and when it arrived (performance.now(), ms). */
@@ -40,6 +41,7 @@ export class GameStore {
   /** Pan and zoom; null until the map element has a size. */
   readonly view = signal<View | null>(null);
   readonly mapSize = signal<Size>({ width: 0, height: 0 });
+  readonly selection = signal<Selection | null>(null);
 
   /** This player, once the join is in the state (the tick after joining). */
   readonly me = computed(() => {
@@ -84,6 +86,13 @@ export class GameStore {
   dismiss(id: number): void {
     this.notices.value = this.notices.value.filter((n) => n.id !== id);
   }
+
+  /** The creep this player dominates (at most one, D-2). */
+  readonly myCreep = computed(() => {
+    const id = this.info.value?.playerId;
+    const state = this.current.value?.state;
+    return state?.creeps.find((c) => c.dominatedBy === id) ?? null;
+  });
 
   /** Whether some player in the state has no known name yet. */
   missingNames(): boolean {

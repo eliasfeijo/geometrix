@@ -2,11 +2,13 @@
 // then cristal, as a share of the capacity), a halo while someone dominates
 // it, and an hourglass while it waits at a drained deposit.
 
-import { capacity, type Params, type Team } from "@geometrix/sim";
+import type { DynamicState } from "@geometrix/protocol";
+import { capacity, type Cell, type Params, type Team } from "@geometrix/sim";
 import { useSignal } from "@preact/signals";
 import { useEffect } from "preact/hooks";
 import { useGame } from "../context.ts";
 import { creepStatus, type Creep } from "../creep-status.ts";
+import type { GameStore } from "../store.ts";
 import { COLORS, teamColor } from "./colors.ts";
 import { DnaShape } from "./creep-shape.tsx";
 import { creepPositions, crowdOffsets, glideProgress } from "./interpolate.ts";
@@ -74,6 +76,29 @@ function useGlide(): number {
   return t.value;
 }
 
+/** Drawn creep centers for glide progress `t`. */
+export function centersFor(store: GameStore, t: number) {
+  const current = store.current.value;
+  if (current === null) return new Map<number, Point & { scale: number }>();
+  const positions = creepPositions(
+    store.previous.value?.state ?? null,
+    current.state,
+    t,
+  );
+  return drawnCenters(
+    current.state.creeps,
+    positions,
+    markerScale(store.view.value?.scale ?? 1),
+  );
+}
+
+/** Drawn creep centers right now, for picking with the pointer. */
+export function centersNow(store: GameStore, now: number) {
+  const current = store.current.value;
+  if (current === null) return new Map<number, Point & { scale: number }>();
+  return centersFor(store, glideProgress(store.previous.value, current, now));
+}
+
 export function CreepLayer() {
   const { store, session } = useGame();
   const t = useGlide();
@@ -81,15 +106,21 @@ export function CreepLayer() {
   const info = store.info.value;
   if (current === null || info === null) return null;
   const { state } = current;
-  const positions = creepPositions(
-    store.previous.value?.state ?? null,
-    state,
-    t,
-  );
-  const zoom = markerScale(store.view.value?.scale ?? 1);
-  const centers = drawnCenters(state.creeps, positions, zoom);
+  const centers = centersFor(store, t);
+  const selection = store.selection.value;
+  const selected =
+    selection?.kind === "creep"
+      ? state.creeps.find((c) => c.id === selection.id)
+      : undefined;
   return (
     <g class="creep-layer">
+      {selected !== undefined && (
+        <OrderLine
+          creep={selected}
+          from={centers.get(selected.id)!}
+          state={state}
+        />
+      )}
       {state.creeps.map((creep) => (
         <CreepMark
           key={creep.id}
@@ -101,6 +132,90 @@ export function CreepLayer() {
           waiting={creepStatus(creep, state.deposits) === "waiting"}
         />
       ))}
+      {selected !== undefined && (
+        <SelectionRing center={centers.get(selected.id)!} />
+      )}
+      {selection !== null && selection.kind !== "creep" && (
+        <CellSelection
+          cell={
+            selection.kind === "core"
+              ? state.teams[selection.team]?.core
+              : state.deposits.find((d) => d.id === selection.id)
+          }
+          size={selection.kind === "core" ? 2.6 : 1.1}
+        />
+      )}
+    </g>
+  );
+}
+
+function SelectionRing({ center }: { center: Point & { scale: number } }) {
+  return (
+    <circle
+      class="selection-ring"
+      cx={center.x}
+      cy={center.y}
+      r={0.66 * center.scale}
+      fill="none"
+      stroke={COLORS.selection}
+      stroke-width={0.07 * Math.max(center.scale, 1)}
+      stroke-dasharray={`${0.25 * center.scale} ${0.12 * center.scale}`}
+    />
+  );
+}
+
+function CellSelection({ cell, size }: { cell?: Cell; size: number }) {
+  if (cell === undefined) return null;
+  return (
+    <rect
+      x={cell.x + 0.5 - size / 2}
+      y={cell.y + 0.5 - size / 2}
+      width={size}
+      height={size}
+      fill="none"
+      stroke={COLORS.selection}
+      stroke-width="0.08"
+      stroke-dasharray="0.25 0.12"
+    />
+  );
+}
+
+/** The cell an order heads to, or null for stop. */
+export function orderTarget(creep: Creep, state: DynamicState): Cell | null {
+  const { order } = creep;
+  switch (order.type) {
+    case "stop":
+      return null;
+    case "moveTo":
+    case "buildRoad":
+      return { x: order.x, y: order.y };
+    case "gather":
+      return state.deposits.find((d) => d.id === order.depositId) ?? null;
+    case "deliver":
+      return state.teams[creep.team]?.core ?? null;
+  }
+}
+
+/** Dashed line from the selected creep to where its order takes it. */
+function OrderLine(props: { creep: Creep; from: Point; state: DynamicState }) {
+  const target = orderTarget(props.creep, props.state);
+  if (target === null) return null;
+  const x2 = target.x + 0.5;
+  const y2 = target.y + 0.5;
+  if (Math.hypot(x2 - props.from.x, y2 - props.from.y) < 0.5) return null;
+  return (
+    <g class="order-line">
+      <line
+        x1={props.from.x}
+        y1={props.from.y}
+        x2={x2}
+        y2={y2}
+        stroke={COLORS.selection}
+        stroke-opacity="0.8"
+        stroke-width="0.06"
+        stroke-dasharray="0.2 0.15"
+      />
+      <circle cx={x2} cy={y2} r="0.12" fill={COLORS.selection} />
     </g>
   );
 }
