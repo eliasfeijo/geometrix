@@ -12,4 +12,4 @@ Regra: a spec é a fonte de verdade. Diante de uma ambiguidade não coberta, par
 
 | Spec | Status |
 |---|---|
-| [M1 — O ciclo da riqueza](m1-ciclo-da-riqueza/spec.md) | Spec, plan e tasks aprovados · em implementação (F0) |
+| [M1 — O ciclo da riqueza](m1-ciclo-da-riqueza/spec.md) | Concluída (2026-11-14) |
