@@ -4,7 +4,7 @@
 // types: the server builds them, so there is nothing to check. The replay file
 // is here too, at the end: it is checked like a client message.
 
-import { parseParams, ParamsError } from "@geometrix/sim";
+import { parseParams, ParamsError, SIM_VERSION } from "@geometrix/sim";
 import type {
   Cell,
   Command,
@@ -284,7 +284,13 @@ export function parseReplay(input: unknown): Replay {
   if (!result.success) {
     const issue = result.error.issues[0]!;
     const path = issue.path.map(String).join(".") || "(root)";
-    throw new ReplayError(`invalid replay at ${path}: ${issue.message}`);
+    // An older file usually fails because the command vocabulary changed.
+    const version = (input as { simVersion?: unknown } | null)?.simVersion;
+    const note =
+      typeof version === "number" && version !== SIM_VERSION
+        ? ` (sim version ${version}; this build runs ${SIM_VERSION})`
+        : "";
+    throw new ReplayError(`invalid replay at ${path}: ${issue.message}${note}`);
   }
   const data = result.data;
   let params: Params;

@@ -79,4 +79,14 @@ describe("parseReplay", () => {
       /invalid replay at seed/,
     );
   });
+
+  test("names the sim version of a file it cannot read", () => {
+    const old = replay({
+      simVersion: 1,
+      commands: [
+        { tick: 0, seq: 0, playerId: 1, command: { type: "join", team: 0 } },
+      ],
+    });
+    expect(() => parseReplay(old)).toThrow(/sim version 1; this build runs/);
+  });
 });
