@@ -64,7 +64,8 @@ na sua branch (plan §12, skill `commit`), com merge `--no-ff` em `main`.
 - [x] Estrangeiros: creep e Núcleo inimigos só com o que a visão traz; painéis sem dados do time inimigo (spec C-2).
       Os painéis reduzidos vieram da F1; a F4 testou o creep inimigo (sem regras, ordem nem atividade; capacidade
       base) e trocou "não existe mais" por "saiu da visão do seu time"
-- [ ] Cursor e traçado de estrada pelo mapa conhecido (spec C-3)
+- [x] Cursor e traçado de estrada pelo mapa conhecido (spec C-3). O traçado já usava o mapa conhecido desde a F3;
+      sobre célula nunca vista, o rótulo diz "nunca vista · custo desconhecido" e o traçado continua desenhado
 - [ ] Editor de regras: ação explorar, condição "não conhece depósito de X", preset batedor (spec C-4)
 - [ ] Replay com `fullView`, sem névoa (spec C-5)
 

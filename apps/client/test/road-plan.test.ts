@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { parseParams, Terrain, type Cell } from "@geometrix/sim";
 import params from "../../../packages/sim/test/params.json" with { type: "json" };
 import { roadPlan, roadPlanLabel } from "../src/map/road-plan.ts";
+import { knownTerrain } from "../src/map/terrain.ts";
 
 const testParams = parseParams(params);
 
@@ -79,6 +80,18 @@ describe("roadPlan", () => {
     });
   });
 
+  it("plans through what the team knows: a rock never seen is jungle", () => {
+    const { map, state } = world(["C#."]);
+    // The client's map from the view's known array (store.map).
+    const dark = { ...map, terrain: knownTerrain([0, -1, 0]) };
+    const through = roadPlan(dark, state, testParams, 0, { x: 2, y: 0 });
+    expect(through).toMatchObject({ kind: "plan", paid: [1, 2] });
+    const lit = { ...map, terrain: knownTerrain([0, Terrain.rock, 0]) };
+    expect(roadPlan(lit, state, testParams, 0, { x: 2, y: 0 })).toEqual({
+      kind: "unreachable",
+    });
+  });
+
   it("tells a cell with no path", () => {
     expect(plan(["C.#."], { x: 3, y: 0 })).toEqual({ kind: "unreachable" });
     expect(plan(["C.#."], { x: 2, y: 0 })).toEqual({ kind: "unreachable" });
@@ -113,6 +126,14 @@ describe("roadPlanLabel", () => {
     ]);
     expect(roadPlanLabel(plan(["C#"], { x: 1, y: 0 }), stock)).toEqual([
       "sem caminho",
+      false,
+    ]);
+  });
+
+  it("shows no cost over a cell the team never saw (fog spec C-3)", () => {
+    const over = plan(["Cr..."], { x: 3, y: 0 });
+    expect(roadPlanLabel(over, stock, false)).toEqual([
+      "nunca vista · custo desconhecido",
       false,
     ]);
   });
