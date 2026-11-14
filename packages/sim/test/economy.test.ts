@@ -148,3 +148,66 @@ describe("gather", () => {
     expect(creep.x).toBe(0);
   });
 });
+
+describe("deliver", () => {
+  test("walks to the core and unloads into the team stock on arrival", () => {
+    const world = textWorld(NEXT_TO_MATERIA);
+    const creep = creepOf(world, 0, "square");
+    Object.assign(creep, { x: 1, cargo: { materia: 20, cristal: 5 } });
+    creep.order = { type: "deliver" };
+    // Loaded square: 1600 points per tick, 37.5 ticks per cell.
+    run(world, 37);
+    expect(creep.x).toBe(1);
+    run(world, 1);
+    expect(creep).toMatchObject({
+      x: 0,
+      cargo: { materia: 0, cristal: 0 },
+      order: { type: "stop" },
+    });
+    expect(world.teams[0]!.stock).toEqual({ materia: 20, cristal: 5 });
+    expect(world.teams[1]!.stock).toEqual({ materia: 0, cristal: 0 });
+  });
+
+  test("a creep on the core unloads at once", () => {
+    const world = textWorld(NEXT_TO_MATERIA);
+    const creep = creepOf(world, 1, "circle");
+    creep.cargo.cristal = 7;
+    world.teams[1]!.stock.cristal = 3;
+    creep.order = { type: "deliver" };
+    run(world, 1);
+    expect(world.teams[1]!.stock.cristal).toBe(10);
+    expect(creep.order).toEqual({ type: "stop" });
+  });
+
+  test("delivers to its own core only", () => {
+    const world = textWorld(["A....B"]);
+    const creep = creepOf(world, 1, "circle");
+    creep.cargo.materia = 4;
+    creep.order = { type: "deliver" };
+    run(world, 200);
+    expect(creep.x).toBe(5);
+    expect(world.teams[1]!.stock.materia).toBe(4);
+    expect(world.teams[0]!.stock.materia).toBe(0);
+  });
+
+  test("an unreachable core turns into stop and keeps the cargo", () => {
+    const world = textWorld(["A#.m..B"]);
+    const creep = creepOf(world, 0, "circle");
+    Object.assign(creep, { x: 3, cargo: { materia: 4, cristal: 0 } });
+    creep.order = { type: "deliver" };
+    run(world, 1);
+    expect(creep.order).toEqual({ type: "stop" });
+    expect(creep.cargo.materia).toBe(4);
+  });
+
+  test("gather then deliver fills the stock", () => {
+    const world = textWorld(NEXT_TO_MATERIA);
+    const creep = creepOf(world, 0, "circle");
+    creep.order = { type: "gather", depositId: depositAt(world, 1).id };
+    run(world, 12 + 10);
+    expect(creep.cargo.materia).toBe(10);
+    creep.order = { type: "deliver" };
+    run(world, 15);
+    expect(world.teams[0]!.stock.materia).toBe(10);
+  });
+});
