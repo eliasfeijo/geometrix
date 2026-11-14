@@ -40,6 +40,8 @@ const creep = (dna: Dna, materia = 0, cristal = 0): Creep => ({
   path: null,
   rules: [],
   dominatedBy: null,
+  activity: "idle",
+  trip: null,
 });
 
 describe("cellModifier", () => {
