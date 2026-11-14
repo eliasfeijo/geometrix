@@ -5,6 +5,7 @@
 // deltas it missed (spec C-4, plan R5); a refused token or an unhosted world
 // is final.
 
+import { NetStats, type WelcomeCause } from "./net-stats.ts";
 import {
   PROTOCOL_VERSION,
   type ClientCommand,
@@ -55,6 +56,8 @@ export type ConnectionDeps = {
   openSocket(url: string, handlers: SocketHandlers): SocketHandle;
   setTimeout(fn: () => void, ms: number): unknown;
   clearTimeout(handle: unknown): void;
+  /** Milliseconds, for the bytes per second of the network panel. */
+  now(): number;
 };
 
 export const RECONNECT_MIN_MS = 500;
@@ -81,11 +84,21 @@ export class Connection {
    * in between are dropped, and a reconnect then asks for a welcome.
    */
   private synced = false;
+  /** Why the next welcome comes; "join" until the first one. */
+  private nextWelcome: WelcomeCause = "join";
+  /** Counters for the network panel (spec D8). */
+  readonly stats: NetStats;
 
-  constructor(url: string, events: ConnectionEvents, deps: ConnectionDeps) {
+  constructor(
+    url: string,
+    events: ConnectionEvents,
+    deps: ConnectionDeps,
+    stats: NetStats = new NetStats(),
+  ) {
     this.url = url;
     this.events = events;
     this.deps = deps;
+    this.stats = stats;
     this.connect();
   }
 
@@ -109,6 +122,8 @@ export class Connection {
   resync(reason: ResyncReason): void {
     if (!this.synced || this.socket === null || !this.isOpen) return;
     this.synced = false;
+    this.nextWelcome = "resync";
+    this.stats.resyncs[reason]++;
     const message: ClientMessage = { type: "resync", reason, seq: this.seq };
     this.socket.send(JSON.stringify(message));
     this.events.resync?.(reason, this.seq);
@@ -149,6 +164,7 @@ export class Connection {
   }
 
   private received(data: string): void {
+    this.stats.received(data.length, this.deps.now());
     let message: ServerMessage;
     try {
       message = JSON.parse(data) as ServerMessage;
@@ -168,6 +184,9 @@ export class Connection {
         this.synced = true;
         this.stream = message.stream;
         this.seq = message.seq;
+        this.stats.welcomes[this.nextWelcome]++;
+        this.stats.seq = message.seq;
+        this.nextWelcome = "reconnect";
         this.resuming = false;
         this.opened();
         this.events.message(message);
@@ -179,7 +198,12 @@ export class Connection {
           this.resync("seqGap");
           return;
         }
+        // The server took the resume: deltas came with no welcome first.
+        if (this.resuming) this.stats.resumes++;
+        this.resuming = false;
         this.seq = message.seq;
+        this.stats.seq = message.seq;
+        this.stats.deltas++;
         this.events.message(message);
         break;
       case "ack":
@@ -249,6 +273,7 @@ export const browserDeps: ConnectionDeps = {
   openSocket: browserSocket,
   setTimeout: (fn, ms) => window.setTimeout(fn, ms),
   clearTimeout: (handle) => window.clearTimeout(handle as number),
+  now: () => performance.now(),
 };
 
 /** The WebSocket URL on the page's own host (the Vite dev server proxies it). */

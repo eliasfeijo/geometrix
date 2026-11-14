@@ -16,6 +16,7 @@ import type {
 } from "./connection.ts";
 import type { Cell, TeamView } from "@geometrix/sim";
 import { viewHash } from "./hash.ts";
+import { NetStats } from "./net-stats.ts";
 import type { Selection } from "./map/pick.ts";
 import type { Point, Size, View } from "./map/view.ts";
 
@@ -83,6 +84,8 @@ export class GameStore {
       this.status.value === "running",
   );
 
+  /** Network counters (spec D8): the connection's, plus the hash checks. */
+  readonly net = new NetStats();
   /** Called when a delta's view hash does not match ours (spec C-3). */
   hashMismatch: (() => void) | null = null;
   /** Bumped by each welcome: a hash check of an older base is moot. */
@@ -111,7 +114,13 @@ export class GameStore {
   private async checkHash(view: TeamView, expected: string): Promise<void> {
     const base = this.base;
     const hash = await viewHash(view);
-    if (base === this.base && hash !== expected) this.hashMismatch?.();
+    if (base !== this.base) return;
+    if (hash === expected) {
+      this.net.hashes.ok++;
+    } else {
+      this.net.hashes.mismatch++;
+      this.hashMismatch?.();
+    }
   }
 
   /**
