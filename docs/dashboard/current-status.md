@@ -35,8 +35,7 @@ por um portão de aprovação ou quando surgir um bloqueio.
      abrir `http://localhost:5173`, com recarga automática do cliente).
    - No lobby: nome, "Criar" (padrão ×36 com bot no Laranja), "Entrar" no Azul.
    - Mapa: arrastar com o botão esquerdo (ou setas), roda do mouse para zoom, `0` para ver o mapa todo, `F` para
-     centralizar na seleção. Clique esquerdo seleciona (clicar de novo numa pilha alterna entre os creeps);
-     `Esc` limpa.
+     centralizar na seleção. Clique esquerdo seleciona; numa pilha, abre a lista dos creeps dela; `Esc` limpa.
    - Creep: "Dominar", depois botão direito no mapa (`moveTo`), num depósito (`gather`) ou no seu Núcleo
      (`deliver`); `R` liga o modo estrada para o próximo clique direito. Editar regras e aplicar presets no
      inspetor (o "Construtor de estrada…" pede o ponto no mapa).
@@ -63,8 +62,12 @@ por um portão de aprovação ou quando surgir um bloqueio.
     convidado; o token fica no `localStorage` por mundo e por slot da URL;
   - interpolação um estado atrás: o creep desliza entre os dois últimos estados no intervalo entre as mensagens;
     um salto de mais de 4 células é instantâneo; a ×1 o creep anda uma célula em ~1 s e espera a próxima;
-  - zoom afastado aumenta creeps e depósitos até 2× (mínimo de 22 px na tela); creeps na mesma célula se
-    espalham em volta dela, a 70% do tamanho;
+  - zoom afastado aumenta creeps e depósitos até 2× (mínimo de 22 px na tela);
+  - creeps na mesma célula (pergunta aberta no GDD 02) continuam individuais: com zoom aproximado ficam lado a
+    lado numa grade de posições dentro da célula; quando cada posição teria menos de 18 px na tela, a célula vira
+    uma pilha com contador, que mostra o creep selecionado, ou o seu dominado, ou o de menor id. Clicar na pilha
+    abre a lista dos creeps dela; o inspetor tem "Nesta célula ◀ ▶". Com a célula cheia, os creeps cobrem o
+    depósito que está embaixo;
   - "esperando o depósito regenerar" = ordem `gather`, parado na célula do depósito, depósito com 0; o creep
     ganha uma ampulheta e o inspetor diz isso em amarelo;
   - o botão direito sempre ordena o creep que o jogador domina, esteja ele selecionado ou não; sem domínio, um
