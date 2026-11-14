@@ -89,3 +89,24 @@ export function debit(stock: Stock, cost: Cost): void {
   stock.materia -= cost.materia;
   stock.cristal -= cost.cristal;
 }
+
+export type UpgradeRefusal = "owned" | "stock";
+
+/**
+ * Buys a team upgrade, paying its cost; it applies at once to every creep of
+ * the team (spec I-3). Returns why it was refused, or null; a refusal changes
+ * nothing.
+ */
+export function buyUpgrade(
+  state: WorldState,
+  teamId: number,
+  upgrade: UpgradeId,
+): UpgradeRefusal | null {
+  const team = state.teams[teamId]!;
+  const { cost } = state.params.upgrade[upgrade];
+  if (team.upgrades[upgrade]) return "owned";
+  if (!canAfford(team.stock, cost)) return "stock";
+  debit(team.stock, cost);
+  team.upgrades[upgrade] = true;
+  return null;
+}
