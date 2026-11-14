@@ -81,11 +81,17 @@ export function roadPlan(
   };
 }
 
-/** The text over the cell and whether the stock is short for it. */
+/**
+ * The text over the cell and whether the stock is short for it. Over a cell
+ * the team never saw there is no cost (fog spec C-3): the dark counts as
+ * jungle, and what is really there shows only as the road gets near.
+ */
 export function roadPlanLabel(
   plan: RoadPlan,
   stock: { materia: number; cristal: number } | undefined,
+  seen = true,
 ): [string, boolean] {
+  if (!seen) return ["nunca vista · custo desconhecido", false];
   if (plan.kind === "unreachable") return ["sem caminho", false];
   const cells = plan.paid.length + plan.free.length;
   if (cells === 0) {

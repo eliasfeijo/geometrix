@@ -31,7 +31,8 @@ export function RoadPreviewLayer() {
   const team = state.teams[viewer.team];
   const stock = team !== undefined && isOwnTeam(team) ? team.stock : undefined;
   const fontSize = TEXT_PX / (store.view.value?.scale ?? 1);
-  const [text, short] = roadPlanLabel(plan, stock);
+  const seen = state.known[cell.y * width + cell.x] !== -1;
+  const [text, short] = roadPlanLabel(plan, stock, seen);
   return (
     <g class="road-preview">
       {plan.kind === "plan" &&
