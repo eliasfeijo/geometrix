@@ -148,6 +148,8 @@ flowchart TD
 - **Broadcast:** o mapa estático vai uma vez, no `welcome`. Depois vai o **estado dinâmico completo**
   (creeps, estoques, depósitos, estradas novas) após cada tick, **limitado a no máximo 5 envios por segundo** em
   tempo real. São ~3–5 KB por mensagem. Deltas só se a medição mostrar necessidade (P3).
+  **Medido no F6:** 6,7 KB com 12 creeps, 13,7 KB com 28 e 26,9 KB com 60. O dono (2026-11-14) manteve o estado
+  completo no M1, que roda local; deltas se decidem no deploy do M2.
 - **Configuração do servidor** (não é balanceamento, não vai para os parâmetros do `sim`): timeout de domínio de
   5 min reais e carência de reconexão de 15 s reais (spec §5, detalhes do F6), porta, caminho do SQLite,
   `snapshot_every`.

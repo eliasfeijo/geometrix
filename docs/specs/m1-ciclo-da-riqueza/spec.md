@@ -152,6 +152,9 @@ Formato: *Quando [gatilho], o sistema deve [resposta].*
 - **Regras de nascença:** os creeps iniciais e os produzidos nascem com o preset *coletor de matéria*.
 - **Vocabulário (P-2):** "mais próximo" e "raio R" usam a distância Manhattan a partir do creep, só contam
   depósitos com quantidade > 0, e o empate vai para o menor id. "Cheio" = carga ≥ capacidade; "vazio" = carga 0.
+- **Coletar com os depósitos zerados** (dono, 2026-11-14, antes do F7): o creep escolhe o depósito não vazio mais
+  próximo e fica com ele até encher, sem trocar de alvo no caminho. Se o depósito zerar, espera ali a regeneração;
+  se for cristal esgotado (não regenera), escolhe outro, e sem outro a ação é impossível.
 - **Presets (P-3):**
   - *Coletor de matéria:* cheio → entregar; sempre → coletar matéria; sempre → entregar (a última entrega a
     sobra quando não há depósito).
