@@ -11,7 +11,7 @@ import {
 } from "@geometrix/sim";
 import { stateHash } from "../src/hash.ts";
 import { hashToken } from "../src/http.ts";
-import { testApp } from "./helpers.ts";
+import { testApp, testParams } from "./helpers.ts";
 
 let close: (() => Promise<void>) | null = null;
 afterEach(async () => {
@@ -19,14 +19,14 @@ afterEach(async () => {
   close = null;
 });
 
-async function setup(config = {}) {
-  const t = await testApp(config);
+async function setup(config = {}, params = testParams()) {
+  const t = await testApp(config, undefined, params);
   close = t.app.close;
   return t;
 }
 
 describe("HTTP", () => {
-  test("creates a world with bots and lists it", async () => {
+  test("creates a world with bots and lists it, without the seed while it runs", async () => {
     const { post, get } = await setup();
     const created = await post("/api/worlds", {
       seed: 7,
@@ -38,7 +38,7 @@ describe("HTTP", () => {
     expect(list).toEqual([
       {
         id: 1,
-        seed: 7,
+        seed: null,
         multiplier: 36,
         status: "running",
         tick: 0,
@@ -117,8 +117,13 @@ describe("HTTP", () => {
     expect((await get("/api/nothing")).status).toBe(404);
   });
 
-  test("exports a world as a replay that rebuilds its state", async () => {
-    const { post, get, app } = await setup();
+  test("exports an ended world as a replay that rebuilds its state", async () => {
+    const params = testParams();
+    const short = {
+      ...params,
+      world: { ...params.world, durationSeconds: 250 },
+    };
+    const { post, get, app } = await setup({}, short);
     await post("/api/worlds", { seed: 5, botTeams: [0, 1] });
     const joined = await post("/api/worlds/1/join", { name: "Ana", team: 0 });
     const { playerId } = joined.body as { playerId: number };
@@ -128,8 +133,20 @@ describe("HTTP", () => {
     expect(
       host.submit(playerId, { type: "dominate", creepId: creep.id }),
     ).toBeNull();
-    for (let i = 0; i < 50; i++) host.tick();
+    for (let i = 0; i < 49; i++) host.tick();
 
+    // Running: no replay and no seed (fog spec D9, D10).
+    expect(host.status).toBe("running");
+    const running = await get("/api/worlds/1/replay");
+    expect(running.status).toBe(409);
+    expect(await running.res.json()).toEqual({ error: "worldRunning" });
+
+    host.tick();
+    expect(host.status).toBe("ended");
+    const [summary] = (await (await get("/api/worlds")).res.json()) as {
+      seed: number | null;
+    }[];
+    expect(summary!.seed).toBe(5);
     const res = await get("/api/worlds/1/replay");
     expect(res.status).toBe(200);
     const replay = parseReplay(await res.res.json());

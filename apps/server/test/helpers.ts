@@ -58,6 +58,7 @@ export class FakeTimers {
 export async function testApp(
   config: Partial<ServerConfig> = {},
   store = new Store(":memory:"),
+  params = testParams(),
 ) {
   const timers = new FakeTimers();
   const logs: string[] = [];
@@ -65,7 +66,7 @@ export async function testApp(
     store,
     config: { ...DEFAULT_CONFIG, port: 0, dbFile: ":memory:", ...config },
     timers,
-    params: testParams(),
+    params,
     clock: () => "2026-11-14T00:00:00.000Z",
     log: (line) => logs.push(line),
   });

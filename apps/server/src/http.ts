@@ -1,6 +1,6 @@
 // HTTP (plan section 7): create and list worlds, join one (name + team ->
-// session token), export one as a replay (plan section 8, F8 details), and the
-// built client as static files.
+// session token), export an ended one as a replay (plan section 8, F8
+// details; fog spec D10), and the built client as static files.
 
 import { createHash, randomBytes } from "node:crypto";
 import { existsSync, readFileSync, statSync } from "node:fs";
@@ -114,11 +114,12 @@ function listWorlds(context: HttpContext): WorldSummary[] {
   return context.store.worlds().map((row) => {
     const host = context.worlds.get(row.id);
     const { durationSeconds, tickSeconds } = row.params.world;
+    const status = host?.status ?? row.status;
     return {
       id: row.id,
-      seed: row.seed,
+      seed: status === "ended" ? row.seed : null,
       multiplier: row.multiplier,
-      status: host?.status ?? row.status,
+      status,
       tick: host?.state.tick ?? row.tick,
       durationTicks: Math.floor(durationSeconds / tickSeconds),
       players: context.store
@@ -129,16 +130,21 @@ function listWorlds(context: HttpContext): WorldSummary[] {
 }
 
 /**
- * A hosted world as a replay, in the format of geo sim's replay.json: the
+ * An ended world as a replay, in the format of geo sim's replay.json: the
  * world's seed and params rebuild its initial snapshot, then the whole log up
  * to the tick it reached. Reading the state and the log in one synchronous
- * call keeps them in step (the commands of a tick are stored with it).
+ * call keeps them in step (the commands of a tick are stored with it). A
+ * running world is refused (fog spec D10): its log and seed show the whole
+ * world, through the fog.
  */
 function exportReplay(context: HttpContext, worldId: number): Replay {
   const host = context.worlds.get(worldId);
   const row = context.store.world(worldId);
   if (host === undefined || row === undefined) {
     throw new HttpError(404, { error: "unknownWorld" });
+  }
+  if (host.status !== "ended") {
+    throw new HttpError(409, { error: "worldRunning" });
   }
   return {
     simVersion: row.simVersion,
