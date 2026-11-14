@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
-import { parseParams } from "@geometrix/sim";
-import { botsFor, runBots } from "../src/harness.ts";
+import { botsFor, parseParams } from "@geometrix/sim";
+import { runBots } from "../src/harness.ts";
 import { describe, expect, test } from "vitest";
 import { stateHash } from "../src/hash.ts";
 import { run, type Output } from "../src/main.ts";

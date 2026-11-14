@@ -23,11 +23,12 @@ na sua branch `m1.5/f<n>-<slug>` (skill `commit`), com merge `--no-ff` em `main`
 
 ## F2 — Delta no `protocol` (`m1.5/f2-delta`)
 
-- [ ] `delta.ts`: `Sent`, `diffView`, `applyDelta`, `viewJson`, com os casos pequenos do plan §8
-- [ ] Teste de propriedade: 6 h × seeds 1, 42 e 649, comparando cópias em JSON canônico (plan §7)
-- [ ] `geo net --seed --days`: bytes e CPU por delta (mediana, p95), propriedade em todo tick, `runs/<id>/net.md`
-- [ ] **Checkpoint:** `geo net` de 3 dias no seed 42: banda, CPU e propriedade contra os alvos da spec §7; hash de 3
-      dias igual a `10662729…`
+- [x] `delta.ts`: `Sent`, `diffView`, `applyDelta`, `viewJson`, com os casos pequenos do plan §8
+- [x] Teste de propriedade: 6 h × seeds 1, 42 e 649, comparando cópias em JSON canônico (plan §7)
+- [x] `geo net --seed --days`: bytes e CPU por delta (mediana, p95), propriedade em todo tick, `runs/<id>/net.md`
+- [x] **Checkpoint:** `geo net` de 3 dias no seed 42: banda, CPU e propriedade contra os alvos da spec §7; hash de 3
+      dias igual a `10662729…` (2026-11-14: 227 B/s, 83 µs por envio, 0 divergências em 518 400 verificações, hash
+      igual)
 
 ## F3 — Servidor (`m1.5/f3-server`)
 

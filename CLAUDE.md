@@ -3,7 +3,7 @@
 Jogo multiplayer de navegador: **mundo persistente de estratégia/economia (RTS + sandbox + construção)** com
 **batalhas em tempo real estilo MOBA** como tempero. Visual 100% geométrico (SVG/Canvas, formas como linguagem).
 
-**Fase atual: M1.5 (A névoa), fatia de rede: F1 concluída, próxima F2.** A fatia está em `docs/specs/m1.5-rede/`. O M1
+**Fase atual: M1.5 (A névoa), fatia de rede: F2 concluída, próxima F3.** A fatia está em `docs/specs/m1.5-rede/`. O M1
 está em `docs/specs/m1-ciclo-da-riqueza/` (o histórico fica no `tasks.md`; a estrutura do repositório, no `plan.md` §1).
 
 ## Fontes de verdade
@@ -33,6 +33,7 @@ Node 26 (`.nvmrc`). O Node roda `.ts` direto; só o cliente tem build (Vite).
 | `npm test` | Vitest em todos os workspaces |
 | `npm test -- --project @geometrix/sim` | Vitest num workspace só |
 | `npm run geo -- verify --seed 42` | Determinismo: 2 execuções + snapshot → restore têm de dar o mesmo hash |
+| `npm run geo -- net --seed 42 --days 3` | Banda e CPU dos deltas da visão contra os alvos da spec M1.5 §7, com a propriedade do diff em todo tick. Relatório em `runs/<id>/net.md` |
 | `npm run server` | Servidor em `http://localhost:8080` (`GEO_PORT`, `GEO_DB`, `GEO_PARAMS`); serve o build do cliente |
 | `npm run build` | Build do cliente (Vite) em `apps/client/dist`, que o servidor serve |
 | `npm run client` | Dev server do Vite (porta 5173) com proxy de `/api` e `/ws` para o servidor no `GEO_PORT` |

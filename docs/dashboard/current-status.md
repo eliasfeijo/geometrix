@@ -1,6 +1,6 @@
 # Status atual
 
-**Atualizado:** 2026-11-14 · **Marco:** M1.5 — A névoa, fatia de rede · **Fase:** F1 ✅ concluída · **Próximo:** F2 (delta no `protocol`)
+**Atualizado:** 2026-11-14 · **Marco:** M1.5 — A névoa, fatia de rede · **Fase:** F2 ✅ concluída · **Próximo:** F3 (servidor)
 
 Resumo de bolso. A fonte de verdade continua nos docs linkados. Atualize este arquivo ao fechar uma fase, ao passar
 por um portão de aprovação ou quando surgir um bloqueio.
@@ -29,6 +29,7 @@ por um portão de aprovação ou quando surgir um bloqueio.
 | M1.5 rede — plan | ✅ Aprovado (2026-11-14), com R1–R7 decididas | [plan.md](../specs/m1.5-rede/plan.md) |
 | M1.5 rede — F0 Spike | ✅ Concluída, merge em `main`. Diff à mão em JSON por uma visão com cópia rasa: ~41 µs por mundo por envio (2 times), ~257 bytes por delta; o schema do Colyseus funciona, mas não foi adotado (R1) | [plan §1](../specs/m1.5-rede/plan.md) · [tasks.md](../specs/m1.5-rede/tasks.md) |
 | M1.5 rede — F1 Visão no `sim` | ✅ Concluída, merge em `main`. `view(state, team)` e `TeamView`; o estrategista decide pela visão do time + mapa estático + parâmetros; hash de 6 h travado em teste e o de 3 dias (`10662729…`) inalterado | [tasks.md](../specs/m1.5-rede/tasks.md) · `packages/sim/src/view.ts` |
+| M1.5 rede — F2 Delta no `protocol` | ✅ Concluída, merge em `main`. `diffView`/`applyDelta`/`viewJson`, propriedade de 6 h × 3 seeds no CI, `geo net`. **Checkpoint** (3 dias, seed 42): 227 B/s por cliente a ×1 (alvo ≤ 2 KB/s), 83 µs por envio (alvo ≤ 250 µs), 0 divergências em 518 400 verificações, hash `10662729…` igual | [tasks.md](../specs/m1.5-rede/tasks.md) · `packages/protocol/src/delta.ts` · `apps/cli/src/net.ts` |
 | M2–M4 | ⬜ Não iniciados | [ROADMAP](../ROADMAP.md) |
 
 ## Próximos passos imediatos
@@ -37,20 +38,20 @@ por um portão de aprovação ou quando surgir um bloqueio.
 ([spec](../specs/m1.5-rede/spec.md) · [plan](../specs/m1.5-rede/plan.md) · [tasks](../specs/m1.5-rede/tasks.md)),
 depois a de fog of war. O repo está no GitHub e o CI passa lá.
 
-1. **F2 — Delta no `protocol`**, pela skill `implement-phase`, na branch `m1.5/f2-delta` (criar a partir de `main`),
-   com o checkpoint do `geo net` (banda, CPU e propriedade contra a spec §7). O que a F2 precisa saber:
-   - **A visão** está em `packages/sim/src/view.ts`: `view(state, team)` → `TeamView`, com `CreepView` sem `path`,
-     `movePoints` e `trip`. Todas as entidades (creeps, times, depósitos, obras, jogadores) são objetos novos a
-     cada chamada; os aninhados são os do estado (`stock`, `upgrades`, `production`, `core`, `cargo`, `order`,
-     `rules`).
-   - **Aninhados que o `step` muta in place:** `team.stock`, `team.production.remainingSeconds` e `creep.cargo`.
-     O `Sent` tem de copiar valores (plan §5), nunca guardar esses objetos.
-   - **Ordem por valor, regras por referência** (R4, agora no `CLAUDE.md`): o piloto automático recria o objeto
-     da ordem a cada tick; as regras só mudam por `setRules`/presets, que atribuem um array novo.
-   - **O `protocol` ainda tem `DynamicState`/`toDynamicState`** (servidor, cliente, replay). A troca pelas
-     mensagens novas é da F3/F4; a F2 só acrescenta o `delta.ts`.
-   - **Para a propriedade e o `geo net`:** o laço bot × bot está em `apps/cli/src/harness.ts` (`botsFor`,
-     `stepWithBots`); no `sim`, `packages/sim/test/bot-world.test.ts` monta o mesmo laço sem a CLI.
+1. **F3 — Servidor**, pela skill `implement-phase`, na branch `m1.5/f3-server` (criar a partir de `main`). O que a F3
+   precisa saber:
+   - **O delta** (`packages/protocol/src/delta.ts`): `emptySent()`, `diffView(sent, view)` (avança o `sent` e
+     devolve o `Delta`), `applyDelta(view, delta)`, `viewJson(view)` (JSON canônico, para o hash). O `Delta` leva o
+     `tick` dentro dele; a mensagem `delta` do plan §4 pode levar só `seq`, `delta`, `status?` e `hash?`. O delta
+     compartilha objetos com o estado: serialize antes do próximo `step`.
+   - **Base do stream:** para o `welcome` partir de uma base certa, `diffView(emptySent(), view)` uma vez ao
+     hospedar o mundo (o delta é descartado) e guarde `viewJson`/`JSON.stringify` da visão como `lastView`, com
+     `seq` 0. Assim faz o `geo net`.
+   - **Custos medidos** (`geo net`, 3 dias, 60 creeps): visão 11 µs, diff 58 µs, `stringify` 1 µs por envio
+     (2 times); o hash (`viewJson` + SHA-256) custa ~390 µs, por isso só a cada `viewHashEveryTicks`. A visão
+     completa de um `welcome` tem ~23 KB no fim do mundo.
+   - **Times sem socket** também calculam o delta (R7). O `Broadcaster` de hoje está em `apps/server/src/ws.ts`
+     (um por mundo, `toDynamicState`, teto de 5 envios/s).
 2. **Rodada de design do fog**, em paralelo, pela skill `gdd-decision`: as perguntas do [GDD 01](../gdd/01-mundo.md)
    (o que dá visão e até onde, o que se vê do outro time, se o piloto automático respeita o fog, se o que já foi
    visto continua visível). Precisa estar decidida antes da spec da fatia de fog.
@@ -74,6 +75,22 @@ Um item por problema: o que a pessoa não entendeu ou não conseguiu, a tarefa o
 
 ## Pendências e pontos a esclarecer
 
+- **Interpretações da F2 do M1.5** (o plan não fixa):
+  - o `Delta` leva o `tick`; a entidade nova vai inteira no `upsert`, a existente como `{id, ...campos}`; campos
+    aninhados (`cargo`, `order`, `stock`, `upgrades`, `production`, `core`) vão inteiros quando mudam. Uma estrada
+    que some faz o `diffView` lançar erro (no M1 estrada não some);
+  - o teste de propriedade compara as visões como JSON simples em todo tick (mais estrito que o canônico e ~8×
+    mais rápido) e como `viewJson` a cada minuto de mundo. Roda com o `test/params.json`; levou o `npm run check`
+    de ~28 s para ~39 s;
+  - `geo net`: um envio por tick (o caso ×1); os bytes são da mensagem inteira (`{type, seq, delta, hash?}`); a
+    CPU não inclui o hash, que entra amortizado; sai com código 1 se um alvo falhar; grava também `net.json`;
+    `--hash-every` (padrão 60);
+  - `botsFor`/`botCommands` saíram do harness da CLI para o `sim` (`strategist.ts`), usados pelos testes do
+    `sim`, do `protocol`, do cliente e pela CLI.
+- **Medições da F2** (`geo net --seed 42 --days 3`, `runs/m1.5-f2-checkpoint-s42/`): 227 B por delta em média
+  (mediana 111, p95 601, pico 4,6 KB); 0,8% dos deltas passam de 2 KB, todos no tick da regeneração dos depósitos
+  (~50 creeps voltam a coletar juntos: carga e atividade). CPU por envio: mediana 70,5 µs (85 µs com 60 creeps),
+  p95 127 µs, + 12,9 µs do hash amortizado. 72 s reais com a verificação do cliente. 2062 testes.
 - **Interpretações da F1 do M1.5** (o plan não fixa):
   - a trava de 6 h (`packages/sim/test/bot-world.test.ts`) roda com o `test/params.json`, não com o
     `default.json`: assim ela não quebra a cada balanceamento. O `default.json` continua coberto pelo hash de 3
