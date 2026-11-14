@@ -288,4 +288,5 @@ interface**. Detalhes em [tasks.md](tasks.md).
 | F6 | Servidor: HTTP, WebSocket, loop de tick, persistência, recuperação | |
 | F7 | Cliente: mapa, painéis, controle direto, interpolação | **Sessão do dono** (interface e legibilidade) |
 | F8 | Replay no navegador; comando de multi-cliente local | |
-| ~~F9~~ | Deploy e playtest comprimido: **saem do M1** (dono, 2026-11-14) e viram a primeira etapa antes do playtest do M2. O §11 continua valendo | |
+| F9 | Legibilidade e playtest: teste de resistência comprimido (`npm run soak`), ajustes de legibilidade do mapa e feedback visual, roteiro de playtest local (dono, 2026-11-14) | **Playtest humano de legibilidade e mecânica** |
+| — | Deploy e playtest de diversão: **saem do M1** (dono, 2026-11-14) e viram a primeira etapa antes do playtest do M2. O §11 continua valendo | |

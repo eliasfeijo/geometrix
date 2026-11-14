@@ -1,6 +1,6 @@
 # Status atual
 
-**Atualizado:** 2026-11-14 · **Marco:** M1 — O ciclo da riqueza · **Fase:** F8 (replay e multi-cliente) concluída; falta o mundo de 24 h para fechar o M1
+**Atualizado:** 2026-11-14 · **Marco:** M1 — O ciclo da riqueza · **Fase:** F9 (legibilidade e playtest) em andamento
 
 Resumo de bolso. A fonte de verdade continua nos docs linkados. Atualize este arquivo ao fechar uma fase, ao passar
 por um portão de aprovação ou quando surgir um bloqueio.
@@ -22,23 +22,33 @@ por um portão de aprovação ou quando surgir um bloqueio.
 | M1 — F6 Servidor | ✅ Concluída, merge em `main`. SQLite (log de comandos, snapshots, métricas), loop de tick com multiplicador, HTTP (criar, listar, entrar), WebSocket com ack/reject e broadcast ≤5/s, `release` automático, bots e limite de humanos, recuperação após restart. Detalhes decididos pelo dono na [spec §5](../specs/m1-ciclo-da-riqueza/spec.md) | [tasks.md §F6](../specs/m1-ciclo-da-riqueza/tasks.md) · `apps/server/src/` · `packages/protocol/src/` |
 | M1 — F7 Cliente | ✅ Concluída, merge em `main`. Checkpoint aprovado pelo dono (2026-11-14). Lobby, mapa SVG com pan/zoom, creeps interpolados com nomes gerados, pilhas de creeps com lista para escolher, inspetor, dominar/liberar, painel do Núcleo, editor de regras e presets, controle direto pelo botão direito. Detalhes decididos pelo dono na [spec §5](../specs/m1-ciclo-da-riqueza/spec.md) | [tasks.md §F7](../specs/m1-ciclo-da-riqueza/tasks.md) · `apps/client/src/` |
 | M1 — F8 Replay e multi-cliente | ✅ Concluída, merge em `main`. Replay no navegador (arquivo do `geo sim` ou `GET /api/worlds/:id/replay`) com velocidades, linha do tempo e hash ✓/✗; hash confere no WebKit/JSC; `npm run dev:multi`. Detalhes decididos pelo dono no [plan §8](../specs/m1-ciclo-da-riqueza/plan.md) | [tasks.md §F8](../specs/m1-ciclo-da-riqueza/tasks.md) · `apps/client/src/replay/` · `apps/server/src/dev-multi*.ts` |
-| ~~M1 — F9~~ | Deploy e playtest comprimido saíram do M1 (dono, 2026-11-14): abrem o M2 | [ROADMAP](../ROADMAP.md) |
+| M1 — F9 Legibilidade e playtest | 🔄 Decidida pelo dono (2026-11-14) e em andamento na branch `m1/f9-legibility`: teste de resistência comprimido no lugar do mundo de 24 h, ajustes de legibilidade e feedback visual, playtest humano local. Fecha o M1 | [tasks.md §F9](../specs/m1-ciclo-da-riqueza/tasks.md) · [spec §8](../specs/m1-ciclo-da-riqueza/spec.md) |
+| Deploy e playtest de diversão | Saíram do M1 (dono, 2026-11-14): abrem o M2 | [ROADMAP](../ROADMAP.md) |
 | M2–M4 | ⬜ Não iniciados | [ROADMAP](../ROADMAP.md) |
 
 ## Próximos passos imediatos
 
-1. **Publicar o repo no GitHub** (dono). Ainda não há remote, então o CI ([ci.yml](../../.github/workflows/ci.yml))
+1. **F9 (legibilidade e playtest):** branch `m1/f9-legibility`. O dono decidiu (2026-11-14, fim do F8):
+   - **o mundo de 24 h sai** e entra o **teste de resistência comprimido** (`npm run soak`, spec §8 item 3): 24 h
+     reais de economia sem combate não testam nada que o relógio acrescente. Um mundo bot × bot inteiro pelo loop
+     real do servidor (ex.: ×360, ~12 min), `kill -9` em momentos sorteados (ex.: 5) com restart, um SIGTERM
+     limpo, e no fim o replay exportado refeito no Node e no navegador com o hash do servidor; registra memória
+     do processo, tamanho do SQLite e atraso do loop;
+   - **uma rodada de legibilidade e playtest humano** antes do M2 (spec §8 item 4), sem deploy. Itens do dono:
+     - **estrada × pedra:** a estrada (`road` `#7c766a`, borda `#a39b8a`) e a pedra (`rock` `#4a4e57`) são cinzas
+       parecidos e se confundem (caminho × obstáculo); `apps/client/src/map/colors.ts`;
+     - **custo da estrada:** feedback visual do custo (antes de mandar, ao pagar, obra em andamento);
+     - **carga cheia:** sinal claro de que o creep atingiu a capacidade máxima;
+     - **entrega no Núcleo:** feedback visual do depósito;
+     - **nome do creep no mapa:** em cima ou embaixo da forma, com uma fonte apropriada in-game (hoje o nome só
+       aparece no inspetor e na lista da pilha);
+     - "e coisas do tipo": o playtest gera a lista seguinte. Mudanças de **regra** (não só de tela) vão para o
+       GDD como proposta (skill `gdd-decision`).
+2. **Validações do dono do F8:** `npm run dev:multi -- --clients 3` abriu as 3 abas no Chrome (perfil da última
+   janela) e cada aba tirou o token da URL ✓. Rodar o cliente (`npm run build && npm run server`) ✓.
+   **Pendente:** "Assistir replay" (arquivo do `geo sim` e mundo do servidor); entra no checkpoint da F9.
+3. **Publicar o repo no GitHub** (dono). Ainda não há remote, então o CI ([ci.yml](../../.github/workflows/ci.yml))
    nunca rodou fora da máquina local.
-2. **Mundo de 24 h** (spec §8, último critério do M1, dono): um mundo em tempo real com multiplicador baixo na
-   máquina de dev, para persistência, recuperação e estabilidade. Ex.: `npm run server` e criar no lobby um mundo
-   ×1 com bot nos dois times. Ao fim, o "Assistir replay" do lobby refaz o mundo no navegador e confere o hash. Com ele verde, o M1 fecha e o M2 começa
-   pelo deploy e o playtest comprimido (ex-F9, [ROADMAP](../ROADMAP.md)).
-3. **Experimentar o F8** (dono): `npm run dev:multi -- --clients 3` abre 3 abas no navegador padrão (pelo
-   `cmd.exe /c start` no WSL; o escape da URL foi conferido com `echo`, mas a abertura das abas não foi vista);
-   `npm run geo -- sim --hours 6` e "Assistir replay" no lobby com o `runs/<id>/replay.json`.
-4. **Rodar o cliente:** `npm run build && npm run server` e abrir `http://localhost:8080`, ou `npm run server` +
-   `npm run client` e abrir `http://localhost:5173` (recarga automática). Outra aba com `?slot=2` é outro jogador
-   no mesmo navegador.
 
 ## Pendências e pontos a esclarecer
 
