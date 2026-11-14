@@ -4,7 +4,7 @@ Jogo multiplayer de navegador: **mundo persistente de estratégia/economia (RTS 
 **batalhas em tempo real estilo MOBA** como tempero. Visual 100% geométrico (SVG/Canvas, formas como linguagem).
 
 **Fase atual: M1.5 (A névoa): fatia de rede concluída (`docs/specs/m1.5-rede/`); fatia de fog
-(`docs/specs/m1.5-fog/`) com F1–F2 concluídas, próxima F3.** O M1 está em `docs/specs/m1-ciclo-da-riqueza/` (o histórico fica no `tasks.md`; a estrutura do repositório, no `plan.md` §1).
+(`docs/specs/m1.5-fog/`) com F1–F3 concluídas, próxima F4.** O M1 está em `docs/specs/m1-ciclo-da-riqueza/` (o histórico fica no `tasks.md`; a estrutura do repositório, no `plan.md` §1).
 
 ## Fontes de verdade
 

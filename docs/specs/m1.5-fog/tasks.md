@@ -47,14 +47,19 @@ na sua branch (plan §12, skill `commit`), com merge `--no-ff` em `main`.
 
 - [x] Delta com `known` (pares novos), `visible` (`add`/`remove`) e os tipos estrangeiros; testes pequenos (plan §8).
       Feita na F1, junto com a `view` filtrada: sem ela o teste de propriedade da rede quebrava
-- [ ] Teste de propriedade de 6 h × seeds 1, 42 e 649 com o fog
-- [ ] `welcome` sem terreno e sem `cores`; `PROTOCOL_VERSION` 3
-- [ ] `WorldSummary.seed` `null` em mundo vivo; replay de mundo vivo → 409 (spec D9, D10, N9)
-- [ ] **Checkpoint:** `geo net --seed 42 --days 3` contra os alvos da spec da rede §7
+- [x] Teste de propriedade de 6 h × seeds 1, 42 e 649 com o fog. Já rodava com o fog desde a F1; ganhou as asserções
+      de creep inimigo entrando na visão e do Núcleo inimigo descoberto pelos dois times
+- [x] `welcome` sem terreno e sem `cores`; `PROTOCOL_VERSION` 3. O cliente passou a desenhar o terreno a partir de
+      `known` (nunca visto como selva, sem a névoa ainda) e a ler os Núcleos da visão
+- [x] `WorldSummary.seed` `null` em mundo vivo; replay de mundo vivo → 409 (spec D9, D10, N9). O lobby só mostra
+      a seed e o botão "Assistir replay" de mundo encerrado
+- [x] **Checkpoint:** `geo net --seed 42 --days 3` contra os alvos da spec da rede §7. Os três verdes (2026-11-14):
+      195 B/s por cliente (antes do fog 227), 121 µs por envio na mediana (antes 83; alvo 250), 0 divergências em
+      518 400 verificações; hash `a6bde918…`, o mesmo da F2 (`runs/m1.5-fog-f3-checkpoint-net/net.md`)
 
 ## F4 — Cliente (`m1.5/fog-f4-client`)
 
-- [ ] Terreno a partir de `known`; camada de névoa com os três estados; depósitos e obras lembrados sob o véu (spec
+- [ ] Terreno a partir de `known` (feito na F3, com o `welcome` sem terreno); camada de névoa com os três estados; depósitos e obras lembrados sob o véu (spec
       C-1)
 - [ ] Estrangeiros: creep e Núcleo inimigos só com o que a visão traz; painéis sem dados do time inimigo (spec C-2)
 - [ ] Cursor e traçado de estrada pelo mapa conhecido (spec C-3)

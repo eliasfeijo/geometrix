@@ -1,6 +1,11 @@
-// The static map as few SVG elements: runs of equal terrain along each row.
+// The map the team knows as few SVG elements: runs of equal terrain along each row.
 
 import { Terrain } from "@geometrix/sim";
+
+/** Terrain per cell from a view's known array: never seen is jungle. */
+export function knownTerrain(known: readonly number[]): Terrain[] {
+  return known.map((t) => (t < 0 ? Terrain.jungle : (t as Terrain)));
+}
 
 export type Run = { terrain: Terrain; x: number; y: number; length: number };
 

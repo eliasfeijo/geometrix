@@ -108,7 +108,9 @@ Perguntas abertas:
 
 Pendente desde o F8. Depois da sessão:
 
-1. No lobby, em qualquer mundo, clique em **"Assistir replay"** (ou abra `/?replay=<id>`).
+1. No lobby, num mundo **encerrado**, clique em **"Assistir replay"** (ou abra `/?replay=<id>`). Desde o fog, mundo
+   rodando não tem replay (o log mostraria o mundo inteiro, através da névoa); um mundo curto: `--mult` alto no
+   `dev:multi`, ou o do `npm run soak`.
 2. **Reproduzir**, troque a **velocidade** (1, 60, 600, 3600, máx) e arraste a **linha do tempo** para trás e
    para frente.
 3. Troque o time em "Ver como" e confira o painel do Núcleo de cada lado.

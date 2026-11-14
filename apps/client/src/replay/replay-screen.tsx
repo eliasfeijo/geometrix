@@ -59,6 +59,11 @@ export function ReplayScreen({ source, onLeave }: Props) {
 
 async function fetchReplay(worldId: number): Promise<Replay> {
   const res = await fetch(`/api/worlds/${worldId}/replay`);
+  if (res.status === 409) {
+    throw new Error(
+      "o mundo ainda está rodando; o replay abre quando ele acabar",
+    );
+  }
   if (!res.ok) throw new Error(`o servidor respondeu ${res.status}`);
   return parseReplay(await res.json());
 }

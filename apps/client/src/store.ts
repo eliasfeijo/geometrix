@@ -1,5 +1,5 @@
 // Client state for one connected world, as signals: what the server sent (the
-// static part from the welcome, the two latest views of the team for
+// part that does not change from the welcome, the two latest views of the team for
 // interpolation, rebuilt from the deltas) plus what is local to this client
 // (selection, notices).
 
@@ -18,6 +18,7 @@ import {
   type TeamView,
 } from "@geometrix/sim";
 import { viewHash } from "./hash.ts";
+import { knownTerrain } from "./map/terrain.ts";
 import { NetStats } from "./net-stats.ts";
 import type { Selection } from "./map/pick.ts";
 import type { Point, Size, View } from "./map/view.ts";
@@ -69,6 +70,28 @@ export class GameStore {
   readonly pointerCell = signal<Cell | null>(null);
   /** Last order target, drawn briefly as feedback. */
   readonly ping = signal<{ cell: Cell; id: number } | null>(null);
+
+  /**
+   * The view's known array: computed only so that `map` changes when the
+   * team explores, not on every delta (applyDelta keeps the array otherwise).
+   */
+  private readonly known = computed(() => this.current.value?.state.known);
+
+  /**
+   * The map as the team knows it (fog plan section 9): the terrain of the
+   * cells explored, and jungle where never seen, as the sim's paths count it.
+   */
+  readonly map = computed(() => {
+    const info = this.info.value;
+    const known = this.known.value;
+    if (info === null || known === undefined) return null;
+    return { ...info.map, terrain: knownTerrain(known) };
+  });
+
+  /** Each team's core by team id, null while the team has not seen it. */
+  readonly cores = computed(
+    () => this.current.value?.state.teams.map((t) => t.core) ?? [],
+  );
 
   /** This player, once the join is in the state (the tick after joining). */
   readonly me = computed(() => {
