@@ -23,7 +23,8 @@ por um portão de aprovação ou quando surgir um bloqueio.
 
 1. **Publicar o repo no GitHub** (dono). Ainda não há remote, então o CI ([ci.yml](../../.github/workflows/ci.yml))
    nunca rodou fora da máquina local.
-2. **F3:** criar a branch `m1/f3-economy` a partir de `main` e seguir [tasks.md §F3](../specs/m1-ciclo-da-riqueza/tasks.md).
+2. **F3:** a branch `m1/f3-economy` já existe (por enquanto só com commits de harness). Use a skill
+   `implement-phase` e siga [tasks.md §F3](../specs/m1-ciclo-da-riqueza/tasks.md).
    As novas ordens (`gather`, `deliver`, `buildRoad`) entram em `orders.ts`; uma estrada concluída deve incrementar
    `state.roadRevision` para invalidar os caminhos em cache.
 
@@ -45,5 +46,6 @@ por um portão de aprovação ou quando surgir um bloqueio.
 
 - Branch por fase (`m<marco>/f<fase>-<slug>`), Conventional Commits por unidade lógica, merge `--no-ff` em `main`:
   skill [`commit`](../../.claude/skills/commit/SKILL.md).
+- Implementar uma fase: skill `implement-phase`. Convenções de código: "Convenções do `sim`" no CLAUDE.md.
 - Outras skills: `adr`, `gdd-decision`, `spec-slice`. Skills novas só quando uma necessidade aparecer na prática.
 - Comandos: seção "Comandos" do [CLAUDE.md](../../CLAUDE.md). `npm run check` = o que o CI roda.
