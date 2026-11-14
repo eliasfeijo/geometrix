@@ -16,7 +16,7 @@ na sua branch (plan §12, skill `commit`), com merge `--no-ff` em `main`.
 - [x] Params `vision` no `schema`, no `default.json` e no `test/params.json` (plan §2)
 - [x] `vision.ts`: linha de visão (Bresenham inteiro no referencial do time), com testes em mapas de texto: atrás da
       pedra não, a pedra sim, rio não bloqueia, espelho igual nos dois times (plan §3, N2)
-- [ ] `TeamMemory` no `WorldState`, `createMemory` no `createWorld`, `updateVision` como estágio 6 do `step` e no
+- [x] `TeamMemory` no `WorldState`, `createMemory` no `createWorld`, `updateVision` como estágio 6 do `step` e no
       fim do `createWorld`; estrada própria entra na memória em `completeRoadJob`; testes de memória (último valor,
       obra esquecida, estrada nunca some, Núcleo lembrado) (plan §3, N1, N10)
 - [ ] `view` filtrada (próprio inteiro, estrangeiros com os campos de D7, memória, `known`, `visible`), guardas
