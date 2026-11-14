@@ -21,3 +21,7 @@
 - Onde fica o piloto automático: por creep, por grupo de creeps, ou por jogador?
 - A complexidade permitida (número de regras, CPU do script) é uma mecânica de progressão?
 - Qual é a diferença entre uma macro de cliente (só quando você está online) e o piloto automático (no servidor)?
+- **Coletar com os depósitos zerados.** "Coletar no depósito não vazio mais próximo" faz o creep correr atrás de
+  cada unidade que regenera, em qualquer depósito, e vagar entre eles (passada de balanceamento 1,
+  [balance.md](../specs/m1-ciclo-da-riqueza/balance.md) §5). Fica assim, ou a coleta espera a regeneração no
+  depósito em que está?
