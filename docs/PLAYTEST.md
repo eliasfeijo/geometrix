@@ -1,8 +1,9 @@
 # Playtest
 
-Como rodar uma sessão de playtest do geometrix. Hoje cobre só o **playtest de legibilidade e mecânica do M1**
-(F9, [spec M1 §8 item 4](specs/m1-ciclo-da-riqueza/spec.md)). O playtest de diversão, com deploy e túnel, entra
-aqui antes do M2 ([tasks M1](specs/m1-ciclo-da-riqueza/tasks.md), "Fora do M1").
+Como rodar uma sessão de playtest do geometrix. Hoje cobre o **playtest de legibilidade e mecânica do M1** (F9,
+[spec M1 §8 item 4](specs/m1-ciclo-da-riqueza/spec.md)) e o **da névoa do M1.5** (seção "Névoa (M1.5)", [spec do
+fog §8](specs/m1.5-fog/spec.md)). O playtest de diversão, com deploy e túnel, entra aqui antes do M2
+([tasks M1](specs/m1-ciclo-da-riqueza/tasks.md), "Fora do M1").
 
 ## Objetivo
 
@@ -103,6 +104,59 @@ Perguntas abertas:
 - O que você queria ver na tela e não achou?
 - Teve algo que você tentou fazer e o jogo não deixou (ou não explicou por quê)?
 - Coletar, transportar e investir já é interessante sozinho? Por quê?
+
+## Névoa (M1.5)
+
+Desde o M1.5 cada time vê só o que o Núcleo e os próprios creeps enxergam, e lembra o que já viu. A sessão testa
+a hipótese da [spec do fog](specs/m1.5-fog/spec.md): **esconder informação cria decisões interessantes (explorar,
+proteger rotas) sem tornar o mapa ilegível.** Ela entra depois das seções A–C acima (que continuam valendo, agora
+com a névoa) ou sozinha, para quem já jogou o M1.
+
+### Preparação
+
+O outro time precisa estar ativo, senão não há inimigo para achar. Duas formas:
+
+- **Duas pessoas**, uma em cada time: `npm run dev:multi -- --clients 2 --mult 36 --seed 42`.
+- **Uma pessoa contra um bot:** `npm run build` e `npm run server`, depois, no lobby, "Criar" com "Bot no
+  Laranja" e entre como Azul.
+
+Lembrete para o observador: todo creep nasce coletor de matéria, que só explora quando o time não conhece
+depósito do recurso. Se há matéria à vista do Núcleo, **ninguém explora sem uma ordem do jogador** (o preset
+**Batedor**, o coletor de cristal ou a ação "explorar" no editor). Não conte isso à pessoa: descobrir é parte do
+teste (tarefa N3).
+
+### D. Roteiro da névoa
+
+| # | Tarefa ou pergunta dita à pessoa | O que observar |
+|---|---|---|
+| N1 | "O que é a área preta? E a esmaecida?" (logo no começo, e de novo depois de ~10 min) | Distingue nunca visto, lembrado e visível? Entende que o esmaecido é antigo? |
+| N2 | "Até onde o seu time enxerga agora?" | Relaciona a área clara com o Núcleo e os creeps? Percebe que formas diferentes enxergam diferente? |
+| N3 | "Ache um depósito de cristal." | Acha o Batedor ou a ação explorar? Manda um creep andar no escuro? Quanto tempo leva? |
+| N4 | "Quanto tem naquele depósito?" (um depósito sob o véu) | Lê "último valor visto" no inspetor? Entende que pode ter mudado? |
+| N5 | "Onde está o inimigo agora?" | Procura creeps laranja; entende que, fora da visão, não sabe? |
+| N6 | "Onde fica o Núcleo do inimigo?" | Explora para achar? Depois de visto, entende que ele fica lembrado? |
+| N7 | Selecione um creep inimigo e diga o que dá para saber dele | DNA, carga e posição; sem regras nem ordem. Estranha? |
+| N8 | Construa uma estrada até um ponto no escuro | Lê "nunca vista · custo desconhecido"? Entende por que a estrada parou ou desviou ao revelar pedra ou rio? |
+| N9 | "Por que esse creep foi para lá?" (um creep explorando) | Lê a ordem "explorar (x, y)" no inspetor e a linha até o alvo? |
+
+### Questionário da névoa
+
+Mesma escala de 1 a 5, mais uma frase livre em cada uma.
+
+| # | Pergunta | Nota | Comentário |
+|---|---|---|---|
+| N1 | Dava para distinguir o que você nunca viu, o que já viu e o que vê agora? | | |
+| N2 | Você sabia até onde o seu time enxergava? | | |
+| N3 | Ficou claro como descobrir o mapa (explorar)? | | |
+| N4 | Ficou claro que os depósitos esmaecidos mostram o último valor visto, não o atual? | | |
+| N5 | Você conseguia saber onde o inimigo estava, ou que não sabia? | | |
+| N6 | Construir estrada no escuro fez sentido? | | |
+
+Perguntas abertas:
+
+- Não saber o mapa criou alguma decisão para você (para onde ir primeiro, o que proteger)? Qual?
+- Em algum momento a névoa atrapalhou entender o que estava acontecendo? Quando?
+- O que você queria saber do inimigo e não dava?
 
 ## Validar o replay (dono)
 
