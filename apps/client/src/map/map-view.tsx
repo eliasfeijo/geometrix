@@ -187,7 +187,7 @@ export function MapView({ onSelect, onOrder, children }: Props) {
   return (
     <div
       ref={element}
-      class="map"
+      class={`map mode-${store.mode.value.type}`}
       tabIndex={0}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}

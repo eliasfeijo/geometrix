@@ -3,6 +3,7 @@
 
 import { capacity, type Deposit } from "@geometrix/sim";
 import { useGame } from "../context.ts";
+import { toggleRoadMode } from "../interaction.ts";
 import { creepStatus, STATUS_TEXTS } from "../creep-status.ts";
 import {
   DNA_NAMES,
@@ -53,6 +54,7 @@ function CreepInspector({ id }: { id: number }) {
   const mine = creep.dominatedBy === session.playerId;
   const canAct = store.canAct.value;
   const status = creepStatus(creep, state.deposits);
+  const roadMode = store.mode.value.type === "road";
   return (
     <div class={`inspector team-${creep.team}`}>
       <h2 class="title">
@@ -108,10 +110,44 @@ function CreepInspector({ id }: { id: number }) {
             </button>
           )}
           {mine && (
-            <p class="hint muted">
-              Botão direito: ir até a célula · num depósito, coletar · no
-              Núcleo, entregar.
-            </p>
+            <>
+              <button
+                disabled={!canAct}
+                onClick={() =>
+                  void send({
+                    type: "order",
+                    creepId: creep.id,
+                    order: { type: "stop" },
+                  })
+                }
+              >
+                Parar
+              </button>
+              <button
+                disabled={!canAct}
+                onClick={() =>
+                  void send({
+                    type: "order",
+                    creepId: creep.id,
+                    order: { type: "deliver" },
+                  })
+                }
+              >
+                Entregar
+              </button>
+              <button
+                class={roadMode ? "active" : undefined}
+                disabled={!canAct}
+                title="Tecla R"
+                onClick={() => toggleRoadMode(store)}
+              >
+                Modo estrada (R)
+              </button>
+              <p class="hint muted">
+                Botão direito no mapa: ir até a célula · num depósito, coletar ·
+                no seu Núcleo, entregar.
+              </p>
+            </>
           )}
         </div>
       )}

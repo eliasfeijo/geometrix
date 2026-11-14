@@ -53,6 +53,8 @@ export class GameStore {
   readonly mapSize = signal<Size>({ width: 0, height: 0 });
   readonly selection = signal<Selection | null>(null);
   readonly mode = signal<Mode>({ type: "select" });
+  /** Last order target, drawn briefly as feedback. */
+  readonly ping = signal<{ cell: Cell; id: number } | null>(null);
 
   /** This player, once the join is in the state (the tick after joining). */
   readonly me = computed(() => {
