@@ -320,3 +320,5 @@ export function parseReplay(input: unknown): Replay {
   }
   return { ...data, params };
 }
+
+export * from "./delta.ts";
