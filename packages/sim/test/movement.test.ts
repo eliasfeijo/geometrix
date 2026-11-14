@@ -35,6 +35,7 @@ const creep = (dna: Dna, materia = 0, cristal = 0): Creep => ({
   x: 0,
   y: 0,
   cargo: { materia, cristal },
+  path: null,
 });
 
 describe("cellModifier", () => {

@@ -3,6 +3,7 @@
 
 import { generateMap, type Cell, type GameMap } from "./map.ts";
 import { DNAS, type Dna, type Params, type Resource } from "./params.ts";
+import type { PathCache } from "./pathfinding.ts";
 import type { RngState } from "./rng.ts";
 
 /**
@@ -22,6 +23,8 @@ export type Creep = {
   dna: Dna;
   /** What the creep carries. Any amount above 0 counts as loaded. */
   cargo: Stock;
+  /** Cached route; see pathTo. */
+  path: PathCache | null;
 } & Cell;
 
 export type Deposit = { id: number; kind: Resource; amount: number } & Cell;
@@ -37,6 +40,8 @@ export type WorldState = {
   tick: number;
   rng: RngState;
   map: GameMap;
+  /** Incremented when a road is completed: invalidates cached paths. */
+  roadRevision: number;
   teams: Team[];
   creeps: Creep[];
   deposits: Deposit[];
@@ -74,6 +79,7 @@ export function createWorld(seed: number, params: Params): WorldState {
           dna,
           ...team.core,
           cargo: { materia: 0, cristal: 0 },
+          path: null,
         });
       }
     }
@@ -87,6 +93,7 @@ export function createWorld(seed: number, params: Params): WorldState {
     tick: 0,
     rng,
     map: layout.map,
+    roadRevision: 0,
     teams,
     creeps,
     deposits,
