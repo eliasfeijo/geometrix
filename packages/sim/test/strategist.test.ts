@@ -1,12 +1,13 @@
 import { describe, expect, test } from "vitest";
 import type { Command } from "../src/commands.ts";
 import { collectorRules, roadBuilderRules } from "../src/presets.ts";
+import { Terrain } from "../src/map.ts";
 import { serialize } from "../src/serialize.ts";
 import { step } from "../src/step.ts";
 import { roadTarget, strategistCommands } from "../src/strategist.ts";
 import { view } from "../src/view.ts";
 import { createWorld, type WorldState } from "../src/world.ts";
-import { loadTestParams, revealWorld } from "./helpers.ts";
+import { loadTestParams, revealWorld, textWorld } from "./helpers.ts";
 
 const params = loadTestParams();
 
@@ -151,7 +152,24 @@ describe("balanced", () => {
     expect(decide(world, 0)).toEqual(first);
   });
 
-  test("sees roads through the view, not through the map it is given", () => {
+  test("plans on the terrain the view knows, unseen cells as jungle (fog spec B-1)", () => {
+    const world = textWorld(["A..m.......B"]);
+    const seen = view(world, 0);
+    const builders = () =>
+      strategistCommands("balanced", seen, world.map, world.params).filter(
+        (c) => c.type === "applyPreset" && c.preset === "roadBuilder",
+      );
+    expect(builders()).toMatchObject([{ target: { x: 3, y: 0 } }]);
+    // A view that knows a rock at x = 1 walls the materia off: no builder,
+    // whatever the world's map says.
+    seen.known = seen.known.map((t, i) => (i === 1 ? Terrain.rock : t));
+    expect(builders()).toEqual([]);
+    // A cell never seen counts as jungle: the deposit looks reachable again.
+    seen.known = seen.known.map((t, i) => (i === 1 ? -1 : t));
+    expect(builders()).toMatchObject([{ target: { x: 3, y: 0 } }]);
+  });
+
+  test("sees roads through the view", () => {
     const world = joined();
     const team = world.teams[0]!;
     const first = roadTarget(world, team)!;
