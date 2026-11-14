@@ -1,6 +1,6 @@
 # Status atual
 
-**Atualizado:** 2026-11-14 · **Marco:** M1.5 — A névoa, fatia de rede · **Fase:** F5 ✅ tasks concluídas, 🟡 checkpoint do dono pendente · **Próximo:** sessão do dono e decisão de viabilidade
+**Atualizado:** 2026-11-14 · **Marco:** M1.5 — A névoa · **Fatia de rede:** ✅ concluída (viabilidade aprovada) · **Próximo:** rodada de design do fog (GDD 01), depois a spec da fatia de fog
 
 Resumo de bolso. A fonte de verdade continua nos docs linkados. Atualize este arquivo ao fechar uma fase, ao passar
 por um portão de aprovação ou quando surgir um bloqueio.
@@ -24,7 +24,7 @@ por um portão de aprovação ou quando surgir um bloqueio.
 | M1 — F8 Replay e multi-cliente | ✅ Concluída, merge em `main`. Replay no navegador (arquivo do `geo sim` ou `GET /api/worlds/:id/replay`) com velocidades, linha do tempo e hash ✓/✗; hash confere no WebKit/JSC; `npm run dev:multi`. Detalhes decididos pelo dono no [plan §8](../specs/m1-ciclo-da-riqueza/plan.md) | [tasks.md §F8](../specs/m1-ciclo-da-riqueza/tasks.md) · `apps/client/src/replay/` · `apps/server/src/dev-multi*.ts` |
 | M1 — F9 Legibilidade e playtest | ✅ Concluída, merge em `main`. Fecha o M1. Feito: `npm run soak` (teste de resistência comprimido, no lugar do mundo de 24 h), estrada × pedra, nomes no mapa (Chakra Petch), carga cheia, `+N`/`−N` no Núcleo, custo da estrada sob o cursor e tempo da obra, [PLAYTEST.md](../PLAYTEST.md). **Checkpoint** (dono, 2026-11-14): playtest parcial e replay validados, sem achados | [tasks.md §F9](../specs/m1-ciclo-da-riqueza/tasks.md) · [spec §8](../specs/m1-ciclo-da-riqueza/spec.md) |
 | Deploy e playtest de diversão | Saíram do M1 (dono, 2026-11-14): abrem o M2 | [ROADMAP](../ROADMAP.md) |
-| M1.5 — A névoa | 🟡 Em andamento (dono, 2026-11-14). Duas fatias: rede (deltas da visão de cada time, [ADR-0006](../adr/0006-sync-do-mundo.md), aceito) e depois fog of war | [ROADMAP](../ROADMAP.md) |
+| M1.5 — A névoa | 🟡 Em andamento (dono, 2026-11-14). Duas fatias: rede (deltas da visão de cada time, [ADR-0006](../adr/0006-sync-do-mundo.md), aceito) ✅ concluída, e depois fog of war ⬜ (rodada de design primeiro) | [ROADMAP](../ROADMAP.md) |
 | M1.5 rede — spec | ✅ Aprovada (2026-11-14). Decisões D1–D8; critérios de viabilidade na §7 | [spec.md](../specs/m1.5-rede/spec.md) |
 | M1.5 rede — plan | ✅ Aprovado (2026-11-14), com R1–R7 decididas | [plan.md](../specs/m1.5-rede/plan.md) |
 | M1.5 rede — F0 Spike | ✅ Concluída, merge em `main`. Diff à mão em JSON por uma visão com cópia rasa: ~41 µs por mundo por envio (2 times), ~257 bytes por delta; o schema do Colyseus funciona, mas não foi adotado (R1) | [plan §1](../specs/m1.5-rede/plan.md) · [tasks.md](../specs/m1.5-rede/tasks.md) |
@@ -32,25 +32,35 @@ por um portão de aprovação ou quando surgir um bloqueio.
 | M1.5 rede — F2 Delta no `protocol` | ✅ Concluída, merge em `main`. `diffView`/`applyDelta`/`viewJson`, propriedade de 6 h × 3 seeds no CI, `geo net`. **Checkpoint** (3 dias, seed 42): 227 B/s por cliente a ×1 (alvo ≤ 2 KB/s), 83 µs por envio (alvo ≤ 250 µs), 0 divergências em 518 400 verificações, hash `10662729…` igual | [tasks.md](../specs/m1.5-rede/tasks.md) · `packages/protocol/src/delta.ts` · `apps/cli/src/net.ts` |
 | M1.5 rede — F3 Servidor | ✅ Concluída, merge em `main`. Protocolo 2: `welcome` com a última visão enviada ao time, `delta` numerado por time (inclusive sem socket), hash a cada 60 ticks, retomada pelo buffer de 30 s, `resync` com linha no log. O store do cliente já aplica os deltas (1ª task da F4) | [tasks.md](../specs/m1.5-rede/tasks.md) · `apps/server/src/{stream,ws}.ts` |
 | M1.5 rede — F4 Cliente | ✅ Concluída, merge em `main`. Retomada com `&stream=…&seq=…`, `resync` por `seqGap` e por hash divergente (Web Crypto), recarga com outra versão do protocolo, painel `?net=1`. Conferido no Chromium com `kill -9` + restart do servidor | [tasks.md](../specs/m1.5-rede/tasks.md) · `apps/client/src/{connection,store,net-panel}.ts*` |
-| M1.5 rede — F5 Soak e viabilidade | ✅ Tasks concluídas, merge em `main`. `npm run soak` com 2 clientes sem interface por time: 0 hashes divergentes, visões finais iguais à do servidor, retomadas pelo buffer e `welcome` depois de cada restart. **Todos os critérios da spec §7 verdes.** 🟡 Checkpoint do dono pendente | [viability.md](../specs/m1.5-rede/viability.md) · `apps/server/src/soak-client.ts` |
+| M1.5 rede — F5 Soak e viabilidade | ✅ Tasks concluídas, merge em `main`. `npm run soak` com 2 clientes sem interface por time: 0 hashes divergentes, visões finais iguais à do servidor, retomadas pelo buffer e `welcome` depois de cada restart. **Todos os critérios da spec §7 verdes.** **Checkpoint** (dono, 2026-11-14): sessão com `dev:multi --net` e reconexão ok; segue para o fog; id do stream na URL aprovado | [viability.md](../specs/m1.5-rede/viability.md) · `apps/server/src/soak-client.ts` |
 | M2–M4 | ⬜ Não iniciados | [ROADMAP](../ROADMAP.md) |
 
 ## Próximos passos imediatos
 
-**M1 concluído (2026-11-14).** **M1.5 aberto** ([ROADMAP](../ROADMAP.md)): primeiro a fatia de rede
-([spec](../specs/m1.5-rede/spec.md) · [plan](../specs/m1.5-rede/plan.md) · [tasks](../specs/m1.5-rede/tasks.md)),
-depois a de fog of war. O repo está no GitHub e o CI passa lá.
+**M1 concluído (2026-11-14).** **M1.5** ([ROADMAP](../ROADMAP.md)): a fatia de rede está concluída
+([spec](../specs/m1.5-rede/spec.md) · [plan](../specs/m1.5-rede/plan.md) · [tasks](../specs/m1.5-rede/tasks.md) ·
+[viability](../specs/m1.5-rede/viability.md)); falta a de fog of war. O repo está no GitHub e o CI passa lá.
 
-1. **Checkpoint da fatia de rede (dono):**
-   - ler o [viability.md](../specs/m1.5-rede/viability.md);
-   - sessão com `npm run dev:multi -- --clients 3 --net` (abas com o painel `?net=1`): a tela deve ser a do M1;
-     derrubar o servidor (Ctrl+C) e subir de novo com `npm run server` (mesmo `GEO_DB`) para ver a reconexão
-     (`welcome` por reconexão no painel, hashes ✓);
-   - decidir: (a) a viabilidade (segue para a fatia de fog, ou o ADR-0006 volta à mesa); (b) o id do stream na URL
-     de retomada (`&stream=…&seq=…`), que vai além da R5.
-2. **Rodada de design do fog**, em paralelo, pela skill `gdd-decision`: as perguntas do [GDD 01](../gdd/01-mundo.md)
-   (o que dá visão e até onde, o que se vê do outro time, se o piloto automático respeita o fog, se o que já foi
-   visto continua visível). Precisa estar decidida antes da spec da fatia de fog.
+1. **Rodada de design do fog** (próxima sessão), pela skill `gdd-decision`, numa pergunta agrupada ao dono, com
+   propostas visíveis. As perguntas do [GDD 01](../gdd/01-mundo.md) ("Fog of war" e "Perguntas abertas"):
+   - o que dá visão (creeps, Núcleo, estradas?) e até onde (raio em células, Manhattan como o resto do `sim`?);
+   - o que um time vê do outro: creeps, Núcleo, estoque, produção, upgrades, regras de piloto automático;
+   - se o piloto automático respeita o fog: hoje a condição `resourceInRange` (`packages/sim/src/autopilot.ts`)
+     olha o estado inteiro;
+   - se depósitos e estradas já vistos continuam visíveis (memória do time) e com que valor (o último visto?).
+   Nada disso está decidido; não promova a proposta do GDD sem o OK do dono.
+2. **Spec da fatia de fog** (`docs/specs/m1.5-fog/`, skill `spec-slice`), depois das decisões. O ROADMAP pede
+   playtest local de legibilidade ("esconder informação cria decisões sem tornar o mapa ilegível?"). O que a fatia
+   de rede deixou pronto:
+   - **só `view(state, team)` muda** (`packages/sim/src/view.ts`); hoje devolve tudo. Diff, protocolo, servidor,
+     cliente e o estrategista dos bots já trabalham com a visão de cada time (ADR-0006, regra 2);
+   - o `diffView` já remove entidades (`remove` por coleção), mas **lança erro se uma estrada some**
+     (`packages/protocol/src/delta.ts`): se estradas fora da visão saírem da visão, isso muda;
+   - o estrategista recebe o mapa estático e monta a camada de estradas de `seen.roads`; com fog, ele passa a
+     decidir com menos informação, e o hash de 3 dias (`10662729…`) e o de 6 h travado em
+     `packages/sim/test/bot-world.test.ts` vão mudar de propósito;
+   - memória do que já foi visto, se aprovada, é estado novo do time no `WorldState` (convenções do `CLAUDE.md`);
+   - `geo net` e `npm run soak` medem a banda e conferem cliente × servidor: rodar de novo no fim da fatia.
 3. **Depois do M1.5, o M2 (A emboscada):** deploy e playtest de diversão primeiro (lista em "Fora do M1" no
    [tasks.md do M1](../specs/m1-ciclo-da-riqueza/tasks.md)), com uma rodada agrupada sobre as perguntas abertas de
    batalha antes da spec.
@@ -99,7 +109,8 @@ Um item por problema: o que a pessoa não entendeu ou não conseguiu, a tarefa o
 - **Interpretações da F3 do M1.5** (o plan não fixa):
   - **o `welcome` leva um id do stream** (`stream`, novo a cada processo do servidor) e a retomada é
     `/ws?token=…&stream=…&seq=…`, não só `&seq=` (R5): sem o id, depois de um restart um `seq` antigo do cliente
-    poderia cair no buffer novo e o servidor mandaria deltas sobre a base errada. **Precisa do OK do dono**;
+    poderia cair no buffer novo e o servidor mandaria deltas sobre a base errada. **Aprovado pelo dono
+    (2026-11-14)**; plan R5 e regra 5 do ADR-0006 atualizados;
   - a troca de formato (protocolo, servidor e o store do cliente) foi num commit só, que também fez a 1ª task da
     F4;
   - os streams de um mundo nascem na primeira conexão a ele (a base é a visão daquele momento, `seq` 0); daí em

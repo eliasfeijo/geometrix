@@ -1,6 +1,6 @@
 # M1.5 rede — Viabilidade do ADR-0006
 
-**Data:** 2026-11-14 · **Status:** aguardando o dono (checkpoint da F5) · **Spec:** [§7](spec.md) ·
+**Data:** 2026-11-14 · **Status:** aprovado pelo dono (2026-11-14): segue para a fatia de fog · **Spec:** [§7](spec.md) ·
 **ADR:** [0006](../../adr/0006-sync-do-mundo.md), regra 10
 
 A regra 10 do ADR-0006 pede que os deltas da visão de cada time sejam validados localmente, antes do M2, contra os
@@ -18,6 +18,9 @@ critérios da spec §7. **Se algum reprovar, o ADR volta à mesa.** Este documen
 | Retomada | queda curta dentro do buffer retoma sem visão completa; depois de restart, visão completa | **11–13 retomadas por cliente** sem visão completa (quedas do próprio cliente); depois de cada um dos 6 restarts, um `welcome` de reconexão | ✓ | testes do servidor e do cliente; `npm run soak` |
 
 **Recomendação:** todos os critérios verdes. **Seguir para a fatia de fog**, mantendo o ADR-0006 como está (com o id do stream do ponto 2 da §5, se o dono aprovar). A decisão é do dono (spec §8).
+
+**Decisão do dono (2026-11-14):** sessão com `dev:multi` e reconexão ok; **segue para a fatia de fog**, com o
+ADR-0006 como está e o id do stream na URL aprovado (plan R5 e regra 5 do ADR atualizados).
 
 ## 2. Banda e CPU (`geo net`)
 
@@ -77,7 +80,7 @@ conferindo (9 ✓, 0 ✗). A tela é a do M1. Bundle principal do cliente: 111 K
 1. **Banda a velocidades altas.** O alvo é a ×1. A ×36 o navegador recebe ~2,9 KB/s, e a ×360 o soak mede
    12,9 KB/s em média por cliente (pico 48 KB/s): cada envio cobre vários ticks. No jogo real (×1) não importa; em mundos acelerados de teste, sim.
 2. **O id do stream na URL** (`&stream=…&seq=…`, não só `&seq=` como diz a R5) evita que, depois de um restart, um
-   `seq` antigo caia no buffer novo e o cliente aplique deltas sobre a base errada. Precisa do OK do dono.
+   `seq` antigo caia no buffer novo e o cliente aplique deltas sobre a base errada. Aprovado pelo dono (2026-11-14).
 3. **O custo do hash** cresce com a visão. Com fog a visão encolhe; sem fog, a ×1, é desprezível.
 4. **O que a fatia de fog muda:** só `view(state, team)` no `sim`. O diff, o protocolo, o servidor e o cliente já
    trabalham com uma visão por time, e o estrategista já decide só pelo que o time vê.

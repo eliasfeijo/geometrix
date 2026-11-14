@@ -53,5 +53,6 @@ na sua branch `m1.5/f<n>-<slug>` (skill `commit`), com merge `--no-ff` em `main`
       `summary.md`
 - [x] `npm run soak` completo; relatório de viabilidade em `viability.md` contra a spec §7
 - [x] Dashboard atualizado
-- [ ] **Checkpoint:** sessão do dono com `npm run dev:multi` e `?net=1` (tela igual à do M1, retomada ao derrubar o
-      servidor) e decisão sobre a viabilidade: segue para a fatia de fog, ou o ADR-0006 volta à mesa
+- [x] **Checkpoint:** sessão do dono com `npm run dev:multi` e `?net=1` (tela igual à do M1, retomada ao derrubar o
+      servidor) e decisão sobre a viabilidade: segue para a fatia de fog, ou o ADR-0006 volta à mesa (dono,
+      2026-11-14: sessão e reconexão ok; segue para o fog; id do stream na URL aprovado)

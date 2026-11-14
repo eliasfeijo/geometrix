@@ -1,6 +1,6 @@
 # Spec M1.5 — Rede: deltas da visão de cada time
 
-**Status:** Aprovada (2026-11-14) · **Data:** 2026-11-14 · **Marco:** M1.5 — A névoa ([ROADMAP](../../ROADMAP.md)), fatia 1 de 2
+**Status:** Concluída (2026-11-14) · **Data:** 2026-11-14 · **Marco:** M1.5 — A névoa ([ROADMAP](../../ROADMAP.md)), fatia 1 de 2
 **ADR:** [0006](../../adr/0006-sync-do-mundo.md) (`Accepted`, 2026-11-14) · **GDD relacionado:**
 [01](../../gdd/01-mundo.md) (fog of war, a fatia seguinte)
 
