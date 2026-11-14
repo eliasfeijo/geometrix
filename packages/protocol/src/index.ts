@@ -139,7 +139,10 @@ export type ServerMessage =
   | WelcomeMessage
   | { type: "state"; state: DynamicState; status: WorldStatus }
   | { type: "ack"; ref: number; tick: number }
-  | { type: "reject"; ref: number; reason: Refusal | "invalidMessage" };
+  | { type: "reject"; ref: number; reason: RejectReason };
+
+/** A sim refusal, or one from the server before the sim sees the command. */
+export type RejectReason = Refusal | "invalidMessage" | "worldEnded";
 
 // Compile-time check that the client vocabulary matches the sim's commands.
 type Same<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false;
