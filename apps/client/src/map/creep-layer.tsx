@@ -11,9 +11,11 @@ import { useEffect } from "preact/hooks";
 import { useGame } from "../context.ts";
 import { creepStatus, type Creep } from "../creep-status.ts";
 import type { GameStore } from "../store.ts";
-import { COLORS, teamColor } from "./colors.ts";
+import { creepName } from "../names.ts";
+import { COLORS, teamColor, teamTextColor } from "./colors.ts";
 import { DnaShape } from "./creep-shape.tsx";
 import { creepPositions, glideProgress } from "./interpolate.ts";
+import { nameFontSize } from "./labels.ts";
 import { layoutCreeps, markerOf, type Marker } from "./layout.ts";
 import { arcDash } from "./shapes.ts";
 import type { Point } from "./view.ts";
@@ -103,6 +105,24 @@ export function CreepLayer() {
   const hovered = store.hovered.value;
   const hoveredMarker =
     hovered === null ? undefined : markerOf(markers, hovered);
+  // Creeps per cell, for the room their names have.
+  const inCell = new Map<string, number>();
+  for (const c of state.creeps) {
+    const key = `${c.x},${c.y}`;
+    inCell.set(key, (inCell.get(key) ?? 0) + 1);
+  }
+  const viewScale = store.view.value?.scale ?? 1;
+  const named = (creep: Creep, center: Point & { scale: number }) => (
+    <CreepName
+      creep={creep}
+      center={center}
+      name={creepName(state.creeps, creep.id)}
+      fontSize={nameFontSize(
+        inCell.get(`${creep.x},${creep.y}`) ?? 1,
+        viewScale,
+      )}
+    />
+  );
   const mark = (creep: Creep, center: Point & { scale: number }) => (
     <CreepMark
       creep={creep}
@@ -131,6 +151,14 @@ export function CreepLayer() {
           </StackMark>
         ),
       )}
+      {/* Names over every creep, so a neighbor below does not hide them. */}
+      <g class="creep-names">
+        {markers.map((m) =>
+          m.kind === "creep" ? (
+            <g key={m.id}>{named(byId.get(m.id)!, m)}</g>
+          ) : null,
+        )}
+      </g>
       {hoveredMarker !== undefined && <HoverRing center={hoveredMarker} />}
       {selectedMarker !== undefined && (
         <SelectionRing center={selectedMarker} />
@@ -379,6 +407,31 @@ function CreepMark({ creep, center, team, params, mine, waiting }: MarkProps) {
         <Hourglass x={cx + ring * 0.75} y={cy - ring * 0.75} size={scale} />
       )}
     </g>
+  );
+}
+
+/** The creep's name under its shape (and halo), in the game font. */
+function CreepName(props: {
+  creep: Creep;
+  center: Point & { scale: number };
+  name: string;
+  fontSize: number | null;
+}) {
+  const { center, fontSize } = props;
+  if (fontSize === null) return null;
+  return (
+    <text
+      class="map-text creep-name"
+      x={center.x}
+      y={center.y + (CARGO_RADIUS + 0.16) * center.scale}
+      font-size={fontSize}
+      stroke-width={fontSize * 0.28}
+      fill={teamTextColor(props.creep.team)}
+      text-anchor="middle"
+      dominant-baseline="hanging"
+    >
+      {props.name}
+    </text>
   );
 }
 
