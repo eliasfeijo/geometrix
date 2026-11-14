@@ -18,6 +18,9 @@
 - **Os DNAs se equivalem no impacto econômico** (2026-11-14). Capacidade × velocidade dá praticamente a mesma
   vazão para os três (30 × 2, 20 × 3, 10 × 5, provisórios); a diferença entre eles aparece em outros sistemas, a
   partir do M2. Medição na [passada de balanceamento 1](../specs/m1-ciclo-da-riqueza/balance.md) §6.
+- **Visão por DNA** (M1.5, 2026-11-14): o círculo enxerga mais longe (raio 6), depois o triângulo (4) e o
+  quadrado (3), provisórios. O rápido e leve é o batedor natural; o quadrado de carga pesada é o mais cego. É a
+  primeira diferença entre os DNAs fora da economia. Fog of war no [01](01-mundo.md).
 
 ## Proposta
 - Dominar só troca **quem emite os comandos** do creep. Ver [ADR-0002](../adr/0002-tudo-e-comando.md).

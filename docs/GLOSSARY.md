@@ -15,4 +15,6 @@
 | **Nível de autoridade** | Quem pode tomar uma decisão coletiva: bots podem decidir / só humanos / unanimidade. |
 | **Tribo neutra** | Facção da jungle que pode virar aliada ou rival de qualquer time. |
 | **DNA** | A forma/arquétipo inato do creep (quadrado, círculo, triângulo), em oposição à evolução individual ao longo da partida. |
+| **Névoa** (fog of war) | O que o time não enxerga agora. Só o Núcleo e os creeps do time dão visão; fora dela, o time conhece só a própria memória (névoa negra no início da partida). |
+| **Memória do time** | O que o time já viu e continua conhecendo fora da visão: depósitos (com o último valor), estradas e obras. Creeps inimigos não ficam na memória. |
 | **Núcleo** | *(Proposta)* O coração da base de um time. Destruí-lo vence a partida. |
