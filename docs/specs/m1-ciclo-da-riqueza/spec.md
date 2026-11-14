@@ -101,6 +101,26 @@ Formato: *Quando [gatilho], o sistema deve [resposta].*
   deve debitar matéria do estoque do time e criar o segmento depois de um tempo de construção.
 - **I-3** Quando o upgrade de capacidade é comprado, todos os creeps do time devem passar a ter a capacidade nova.
 
+#### Detalhes de economia decididos pelo dono na F3 (2026-11-13)
+
+- **Coleta:** o creep vai até a célula do depósito e coleta `taxa` unidades por segundo até encher ou o depósito
+  zerar; depois para. A taxa é a mesma para todos os DNAs e os dois recursos. A capacidade conta matéria +
+  cristal somados (pode misturar). Vários creeps no mesmo depósito coletam cada um, o de menor id primeiro.
+- **Entrega:** instantânea ao chegar na célula do próprio Núcleo; toda a carga vai para o estoque e o creep para.
+- **Depósitos:** a matéria regenera até o teto do valor inicial. O cristal esgotado fica no mapa com 0.
+- **Produção:** um creep por vez por Núcleo, sem fila; um pedido com o Núcleo ocupado é recusado. O custo é
+  debitado ao iniciar. O teto de população conta os creeps vivos + o que está em produção. O creep nasce no Núcleo,
+  parado. **"Repetir"** (P5): ao terminar, recomeça o mesmo DNA; sem estoque ou sem espaço no teto, fica armado e
+  tenta de novo a cada tick. Desarmar é um comando do F4.
+- **Construção de estrada:** segmento = 1 célula. `buildRoad{x,y}` segue o caminho mais barato do próprio Núcleo
+  até P; o próximo segmento é a 1ª célula sem estrada nesse caminho. O creep vai até a célula; a matéria é debitada
+  ao começar; ele fica lá pelo tempo de construção e segue para o próximo segmento até P ter estrada. Sem matéria
+  no estoque, a ordem para. Se o construtor sai, a obra pausa (já paga) e quem voltar continua. Um construtor por
+  obra: um 2º creep na mesma célula não acelera.
+- **Estradas são neutras:** os dois times andam nelas. A conexão de I-2 vale para qualquer estrada ou para o
+  próprio Núcleo. Não dá para construir em travessia (ela continua lenta, gargalo para o M2) nem na célula de um
+  Núcleo.
+
 ### Domínio
 - **D-1** Quando um jogador domina um creep livre do próprio time, o creep deve passar a executar só os comandos
   desse jogador.
@@ -145,6 +165,7 @@ Todos ficam num arquivo de parâmetros versionado, nunca no código.
 | Multiplicador de velocidade | estrada ×2 · jungle ×1 · travessia ×0,5 · carregado ×0,8 |
 | Depósito de matéria | 500 unidades; regenera 1 por minuto |
 | Depósito de cristal | 300 unidades, esgotável; 3 por lado + 2 no centro |
+| Taxa de coleta | 1 unidade por segundo, igual para todos os DNAs (decidido pelo dono em 2026-11-13) |
 | Custo de um creep | 40 matéria + 10 cristal; 10 min para produzir |
 | Custo de um segmento de estrada | 5 matéria; 2 min para construir |
 | Upgrade de capacidade | 150 cristal; +50% de capacidade |
