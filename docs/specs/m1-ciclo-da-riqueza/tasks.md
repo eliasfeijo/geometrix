@@ -21,7 +21,7 @@ Marque `[x]` ao concluir. Cada task deve terminar com os testes verdes. Referên
 - [x] `geo verify` mínimo (2 execuções + snapshot→restore), rodando no CI
 
 ## F2 — Movimento
-- [ ] Pontos de movimento com modificadores de terreno, estrada e carga em ‰
+- [x] Pontos de movimento com modificadores de terreno, estrada e carga em ‰
 - [ ] A* em 4 direções com desempate determinístico e cache de caminho
 - [ ] Ordens `moveTo` e `stop`
 
