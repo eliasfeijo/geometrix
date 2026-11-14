@@ -46,3 +46,53 @@ export function roadRuns(
   }
   return runs;
 }
+
+/**
+ * Road cells with a road right below: the runs are horizontal, so these joins
+ * keep a vertical road one continuous strip (F9, owner decision).
+ */
+export function roadJoinsDown(
+  roads: readonly number[],
+  width: number,
+): { x: number; y: number }[] {
+  const set = new Set(roads);
+  return [...roads]
+    .sort((a, b) => a - b)
+    .filter((index) => set.has(index + width))
+    .map((index) => ({ x: index % width, y: Math.floor(index / width) }));
+}
+
+/** Width of a rock's lit and shaded edges, in cells. */
+export const ROCK_EDGE = 0.14;
+
+/**
+ * The relief of the rocks as two SVG paths (F9, owner decision): a lit edge
+ * on the sides that face up or left and a shaded one on those that face down
+ * or right, wherever the neighbor is not rock. The map's outside counts as
+ * rock, so the border gets no edge. Edges sit inside the rock cell.
+ */
+export function rockEdges(map: {
+  width: number;
+  height: number;
+  terrain: readonly number[];
+}): { lit: string; shade: string } {
+  const rock = (x: number, y: number) =>
+    x < 0 ||
+    y < 0 ||
+    x >= map.width ||
+    y >= map.height ||
+    map.terrain[y * map.width + x] === Terrain.rock;
+  const half = ROCK_EDGE / 2;
+  const lit: string[] = [];
+  const shade: string[] = [];
+  for (let y = 0; y < map.height; y++) {
+    for (let x = 0; x < map.width; x++) {
+      if (!rock(x, y)) continue;
+      if (!rock(x, y - 1)) lit.push(`M${x} ${y + half}h1`);
+      if (!rock(x - 1, y)) lit.push(`M${x + half} ${y}v1`);
+      if (!rock(x, y + 1)) shade.push(`M${x} ${y + 1 - half}h1`);
+      if (!rock(x + 1, y)) shade.push(`M${x + 1 - half} ${y}v1`);
+    }
+  }
+  return { lit: lit.join(""), shade: shade.join("") };
+}
