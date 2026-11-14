@@ -155,6 +155,11 @@ describe("runs/<id>/", () => {
       "Disputa",
       "Tempo de creeps dominados",
       "Presets aplicados",
+      // Fog (fog spec §7).
+      "1ª entrega (matéria / cristal) em",
+      "Núcleo inimigo visto em",
+      "Mapa explorado no fim",
+      "| Explorado | Explorando |",
     ]) {
       expect(report).toContain(metric);
     }
