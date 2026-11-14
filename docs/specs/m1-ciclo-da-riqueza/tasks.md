@@ -26,12 +26,12 @@ Marque `[x]` ao concluir. Cada task deve terminar com os testes verdes. Referên
 - [x] Ordens `moveTo` e `stop`
 
 ## F3 — Economia
-- [ ] Coleta com capacidade (DNA × upgrade) e taxa por tick
-- [ ] Entrega no Núcleo e estoque do time
-- [ ] Regeneração de matéria; esgotamento de cristal
-- [ ] Produção de creep: custo, tempo, teto de população, opção "repetir" (P5)
-- [ ] Upgrade de capacidade
-- [ ] `buildRoad`: segmentos conectados, débito de matéria, tempo de construção, invalidação de caminhos
+- [x] Coleta com capacidade (DNA × upgrade) e taxa por tick
+- [x] Entrega no Núcleo e estoque do time
+- [x] Regeneração de matéria; esgotamento de cristal
+- [x] Produção de creep: custo, tempo, teto de população, opção "repetir" (P5)
+- [x] Upgrade de capacidade
+- [x] `buildRoad`: segmentos conectados, débito de matéria, tempo de construção, invalidação de caminhos
 
 ## F4 — Piloto automático e domínio
 - [ ] `validate(state, cmd, playerId)` para todos os comandos externos (plan §4)

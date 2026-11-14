@@ -9,6 +9,11 @@
 - O tesouro reflete os recursos de fato coletados e a diplomacia com as tribos.
 - A riqueza pode ser investida em upgrades, fortificações, itens individuais e na produção de creeps.
 - **Direção para o M1: dois recursos, matéria + cristal** (descritos abaixo). Os valores são provisórios.
+- **Regras de economia do M1** (2026-11-13, na F3; detalhes na
+  [spec M1 §5](../specs/m1-ciclo-da-riqueza/spec.md)): coleta de 1 unidade/s (provisório), com a capacidade
+  contando os dois recursos somados; entrega instantânea no Núcleo; matéria regenera até o valor inicial; o Núcleo
+  produz um creep por vez, com "repetir" que espera recurso; estradas são neutras (os dois times andam nelas),
+  construídas célula a célula a partir da rede, nunca numa travessia do rio.
 
 ## Proposta
 
