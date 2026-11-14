@@ -1,6 +1,7 @@
 // World state (plan section 3) and world creation. Arrays are ordered by id;
 // ids come from one increasing counter and are never reused.
 
+import type { UpgradeId } from "./economy.ts";
 import { generateMap, type Cell, type GameMap } from "./map.ts";
 import { DNAS, type Dna, type Params, type Resource } from "./params.ts";
 import type { Order } from "./orders.ts";
@@ -16,7 +17,23 @@ export const SIM_VERSION = 1;
 
 export type Stock = Record<Resource, number>;
 
-export type Team = { id: number; core: Cell; stock: Stock };
+/** Team ids match their index in WorldState.teams. */
+export type Team = {
+  id: number;
+  core: Cell;
+  stock: Stock;
+  /** Upgrades bought (spec I-3). */
+  upgrades: Record<UpgradeId, boolean>;
+  /** The creep the core is producing; one at a time, no queue. */
+  production: Production | null;
+  /**
+   * DNA to produce again whenever the core is free ("repeat", plan P5). It
+   * waits, armed, while the stock or the population cap does not allow it.
+   */
+  repeat: Dna | null;
+};
+
+export type Production = { dna: Dna; remainingSeconds: number };
 
 export type Creep = {
   id: number;
@@ -34,6 +51,14 @@ export type Creep = {
 
 export type Deposit = { id: number; kind: Resource; amount: number } & Cell;
 
+/** A road segment under construction, already paid for by `team`. */
+export type RoadJob = {
+  id: number;
+  team: number;
+  /** Build time still missing; the segment is done at 0. */
+  remainingSeconds: number;
+} & Cell;
+
 export type WorldState = {
   simVersion: number;
   /** Seed the world was created with. */
@@ -50,6 +75,8 @@ export type WorldState = {
   teams: Team[];
   creeps: Creep[];
   deposits: Deposit[];
+  /** Segments under construction, by id. */
+  roadJobs: RoadJob[];
   nextId: number;
 };
 
@@ -72,22 +99,16 @@ export function createWorld(seed: number, params: Params): WorldState {
       materia: params.teams.initialStock.materia,
       cristal: params.teams.initialStock.cristal,
     },
+    upgrades: { capacity: false },
+    production: null,
+    repeat: null,
   }));
 
   const creeps: Creep[] = [];
   for (const team of teams) {
     for (const dna of DNAS) {
       for (let i = 0; i < params.population.initial[dna]; i++) {
-        creeps.push({
-          id: nextId++,
-          team: team.id,
-          dna,
-          ...team.core,
-          cargo: { materia: 0, cristal: 0 },
-          order: { type: "stop" },
-          movePoints: 0,
-          path: null,
-        });
+        creeps.push(newCreep(nextId++, team, dna));
       }
     }
   }
@@ -104,6 +125,21 @@ export function createWorld(seed: number, params: Params): WorldState {
     teams,
     creeps,
     deposits,
+    roadJobs: [],
     nextId,
+  };
+}
+
+/** A creep standing stopped and empty on its team's core. */
+export function newCreep(id: number, team: Team, dna: Dna): Creep {
+  return {
+    id,
+    team: team.id,
+    dna,
+    ...team.core,
+    cargo: { materia: 0, cristal: 0 },
+    order: { type: "stop" },
+    movePoints: 0,
+    path: null,
   };
 }

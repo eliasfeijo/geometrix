@@ -2,27 +2,9 @@ import { describe, expect, test } from "vitest";
 import { isPassable, Terrain, type Cell, type GameMap } from "../src/map.ts";
 import { findPath, pathTo, stepCost } from "../src/pathfinding.ts";
 import { createWorld } from "../src/world.ts";
-import { loadDefaultParams } from "./helpers.ts";
+import { loadDefaultParams, parseMap } from "./helpers.ts";
 
 const params = loadDefaultParams();
-
-/** `.` jungle · `r` road on jungle · `=` crossing · `~` river · `#` rock */
-function parseMap(rows: string[]): GameMap {
-  const terrainOf: Record<string, number> = {
-    ".": Terrain.jungle,
-    r: Terrain.jungle,
-    "=": Terrain.crossing,
-    "~": Terrain.river,
-    "#": Terrain.rock,
-  };
-  const cells = rows.join("").split("");
-  return {
-    width: rows[0]!.length,
-    height: rows.length,
-    terrain: cells.map((c) => terrainOf[c]!) as GameMap["terrain"],
-    road: cells.map((c) => (c === "r" ? 1 : 0)),
-  };
-}
 
 /** The path drawn as `*` over the map rows. The start cell is not part of it. */
 function draw(map: GameMap, rows: string[], path: number[] | null): string[] {
