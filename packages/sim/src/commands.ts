@@ -57,6 +57,19 @@ export type Command =
   | { type: "stopRepeat" }
   | { type: "buyUpgrade"; upgrade: UpgradeId };
 
+export const COMMAND_TYPES = [
+  "join",
+  "dominate",
+  "release",
+  "order",
+  "setRules",
+  "applyPreset",
+  "produce",
+  "stopRepeat",
+  "buyUpgrade",
+] as const satisfies readonly Command["type"][];
+export type CommandType = Command["type"];
+
 /** A command with the player who sent it, as the log records it. */
 export type CommandInput = { playerId: number; command: Command };
 

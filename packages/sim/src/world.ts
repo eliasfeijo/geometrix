@@ -10,6 +10,7 @@ import { DNAS, type Dna, type Params, type Resource } from "./params.ts";
 import type { Order } from "./orders.ts";
 import type { PathCache } from "./pathfinding.ts";
 import type { RngState } from "./rng.ts";
+import { createStats, type Activity, type Stats, type Trip } from "./stats.ts";
 
 /**
  * Bump when a rule or state change makes old snapshots or replays invalid
@@ -54,6 +55,10 @@ export type Creep = {
   rules: Rule[];
   /** Id of the player dominating the creep, or null when it is free. */
   dominatedBy: number | null;
+  /** What it did in the last tick (stats). */
+  activity: Activity;
+  /** The trip under way (stats), or null at rest. */
+  trip: Trip | null;
 } & Cell;
 
 export type Deposit = { id: number; kind: Resource; amount: number } & Cell;
@@ -87,6 +92,8 @@ export type WorldState = {
   /** Segments under construction, by id. */
   roadJobs: RoadJob[];
   nextId: number;
+  /** Accumulators behind the metrics (spec section 7). */
+  stats: Stats;
 };
 
 export function createWorld(seed: number, params: Params): WorldState {
@@ -137,6 +144,7 @@ export function createWorld(seed: number, params: Params): WorldState {
     deposits,
     roadJobs: [],
     nextId,
+    stats: createStats(teams, deposits),
   };
 }
 
@@ -156,5 +164,7 @@ export function newCreep(id: number, team: Team, dna: Dna): Creep {
     path: null,
     rules: collectorRules("materia"),
     dominatedBy: null,
+    activity: "idle",
+    trip: null,
   };
 }
