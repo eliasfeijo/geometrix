@@ -7,6 +7,7 @@
 import { useEffect, useState } from "preact/hooks";
 import { Game } from "./game.tsx";
 import { Lobby } from "./lobby.tsx";
+import { keepNetPanel } from "./net-panel.tsx";
 import { LazyReplayScreen, type ReplaySource } from "./replay/lazy.tsx";
 import {
   clearSession,
@@ -53,7 +54,8 @@ export function App() {
     return () => window.removeEventListener("popstate", onPop);
   }, []);
 
-  const navigate = (search: string) => {
+  const navigate = (to: string) => {
+    const search = keepNetPanel(to, window.location.search);
     window.history.pushState(null, "", search || window.location.pathname);
     setWhere(here());
   };

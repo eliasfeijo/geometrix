@@ -72,12 +72,18 @@ try {
       `/api/worlds/${worldId}/join`,
       player,
     );
-    const url = tabUrl(base, worldId, i, {
-      playerId: joined.playerId,
-      team: joined.team,
-      name: player.name,
-      token: joined.token,
-    });
+    const url = tabUrl(
+      base,
+      worldId,
+      i,
+      {
+        playerId: joined.playerId,
+        team: joined.team,
+        name: player.name,
+        token: joined.token,
+      },
+      options.net,
+    );
     console.log(
       `${player.name} (${player.team === 0 ? "Azul" : "Laranja"}): ${url}`,
     );

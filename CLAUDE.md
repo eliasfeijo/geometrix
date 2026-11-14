@@ -3,7 +3,7 @@
 Jogo multiplayer de navegador: **mundo persistente de estratégia/economia (RTS + sandbox + construção)** com
 **batalhas em tempo real estilo MOBA** como tempero. Visual 100% geométrico (SVG/Canvas, formas como linguagem).
 
-**Fase atual: M1.5 (A névoa), fatia de rede: F4 concluída, próxima F5.** A fatia está em `docs/specs/m1.5-rede/`. O M1
+**Fase atual: M1.5 (A névoa), fatia de rede: F5 concluída, checkpoint de viabilidade com o dono.** A fatia está em `docs/specs/m1.5-rede/`. O M1
 está em `docs/specs/m1-ciclo-da-riqueza/` (o histórico fica no `tasks.md`; a estrutura do repositório, no `plan.md` §1).
 
 ## Fontes de verdade
@@ -37,8 +37,8 @@ Node 26 (`.nvmrc`). O Node roda `.ts` direto; só o cliente tem build (Vite).
 | `npm run server` | Servidor em `http://localhost:8080` (`GEO_PORT`, `GEO_DB`, `GEO_PARAMS`); serve o build do cliente |
 | `npm run build` | Build do cliente (Vite) em `apps/client/dist`, que o servidor serve |
 | `npm run client` | Dev server do Vite (porta 5173) com proxy de `/api` e `/ws` para o servidor no `GEO_PORT` |
-| `npm run dev:multi -- --clients 3` | Build + servidor + um mundo com K jogadores (Azul/Laranja alternados), uma aba por jogador (`--seed`, `--mult`, `--no-build`, `--no-open`) |
-| `npm run soak` | Teste de resistência: mundo bot × bot inteiro (×360, ~12 min) com `kill -9` e restart; o replay exportado tem de dar o hash do servidor. Relatório em `runs/soak-<id>/` |
+| `npm run dev:multi -- --clients 3` | Build + servidor + um mundo com K jogadores (Azul/Laranja alternados), uma aba por jogador (`--seed`, `--mult`, `--no-build`, `--no-open`, `--net` para o painel de rede `?net=1`) |
+| `npm run soak` | Teste de resistência: mundo bot × bot inteiro (×360, ~12 min) com `kill -9` e restart, e 2 clientes WebSocket por time seguindo os deltas; o replay exportado tem de dar o hash do servidor e cada cliente, a visão do servidor. Relatório em `runs/soak-<id>/` |
 
 ## Convenções do `sim`
 

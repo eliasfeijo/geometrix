@@ -15,8 +15,10 @@ import {
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { parseReplay, type WorldSummary } from "@geometrix/protocol";
-import { SIM_VERSION } from "@geometrix/sim";
+import { viewJson } from "@geometrix/protocol/stream";
+import { SIM_VERSION, view } from "@geometrix/sim";
 import { stateHash } from "./hash.ts";
+import { SoakClient } from "./soak-client.ts";
 import {
   interruptions,
   parseSoakArgs,
@@ -82,6 +84,22 @@ log(
   `world #${worldId}: ${durationTicks} ticks at ×${options.multiplier}, ` +
     `db ${db}\nplan: ${plan.map((p) => `${p.kind}@${p.tick}`).join(", ")}`,
 );
+const clients = await startClients();
+// Each client drops its own connection every dropEverySeconds, staggered:
+// short drops that the stream buffer should resume (spec S-5).
+const dropTimers = clients.map((client, i) => {
+  const every = options.dropEverySeconds * 1000;
+  const offset = Math.floor((every * (i + 1)) / (clients.length + 1));
+  let interval: NodeJS.Timeout | undefined;
+  const first = setTimeout(() => {
+    client.drop();
+    interval = setInterval(() => client.drop(), every);
+  }, offset);
+  return () => {
+    clearTimeout(first);
+    clearInterval(interval);
+  };
+});
 
 const samples: SoakSample[] = [];
 const events: Event[] = [];
@@ -97,15 +115,36 @@ while (!ended) {
   }
 }
 
+for (const stop of dropTimers) stop();
 const replay = parseReplay(await get(`/api/worlds/${worldId}/replay`));
-const rebuilt = stateHash(rebuild(replay));
+const final = rebuild(replay);
+const rebuilt = stateHash(final);
 const hashOk = rebuilt === replay.finalHash;
+// The last send carries the last tick; give the clients a moment to get it.
+const deadline = Date.now() + 15_000;
+while (
+  clients.some((c) => c.view?.tick !== replay.ticks) &&
+  Date.now() < deadline
+) {
+  await sleep(100);
+}
+const finals = clients.map((client) => ({
+  report: client.stop(),
+  tick: client.view?.tick ?? null,
+  same:
+    client.view !== null &&
+    viewJson(client.view) === viewJson(view(final, client.report.team)),
+}));
 server.kill("SIGTERM");
 await exited(server);
 
 const summary = summarize(samples, options.multiplier);
 const recoveredOk = events.every((e) => e.recoveredTick >= e.seenTick);
-const ok = hashOk && recoveredOk && events.length === plan.length;
+const clientsOk = finals.every(
+  (f) =>
+    f.same && f.report.hashes.mismatch === 0 && f.report.errors.length === 0,
+);
+const ok = hashOk && recoveredOk && events.length === plan.length && clientsOk;
 writeFileSync(join(outDir, "samples.csv"), samplesCsv(samples));
 writeFileSync(join(outDir, "summary.md"), report());
 log(`\n${report()}\n${outDir}`);
@@ -140,11 +179,61 @@ function report(): string {
     `- Loop speed (share of ×${options.multiplier}): ` +
       `median ${pct(summary.medianSpeedShare)}, slowest ${pct(summary.minSpeedShare)}`,
     "",
+    ...clientSections(),
     "Check it in the browser too: " +
       `\`GEO_DB=${db} GEO_PORT=${options.port} npm run server\`, then open ` +
       `${base}/?replay=${worldId}.`,
     "",
   ].join("\n");
+}
+
+function clientSections(): string[] {
+  if (finals.length === 0) return [];
+  const kb = (bytes: number) => `${(bytes / 1024).toFixed(2)} KB`;
+  const lines = [
+    `## Clients (${finals.length})`,
+    "",
+    `Headless WebSocket clients, ${options.clients} per team, each dropping its ` +
+      `own connection every ${options.dropEverySeconds} s (staggered). Bytes per ` +
+      `real second at ×${options.multiplier}: each send covers several ticks.`,
+    "",
+    "| Client | Team | Final view | Bytes/s, mean | Bytes/s, peak | Deltas | Drops | Resumed | Welcomes (join · reconnect · resync) | Resyncs (seq · hash) | Hashes ok · mismatched |",
+    "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
+  ];
+  for (const { report: r, same, tick } of finals) {
+    lines.push(
+      `| ${r.name} | ${r.team} | ${same ? "same as the server" : `DIFFERENT (tick ${tick})`} | ` +
+        `${kb(r.meanBytesPerSecond)} | ${kb(r.peakBytesPerSecond)} | ${r.deltas} | ${r.drops} | ${r.resumes} | ` +
+        `${r.welcomes.join} · ${r.welcomes.reconnect} · ${r.welcomes.resync} | ` +
+        `${r.resyncs.seqGap} · ${r.resyncs.hashMismatch} | ${r.hashes.ok} · ${r.hashes.mismatch} |`,
+    );
+  }
+  const errors = finals.flatMap((f) =>
+    f.report.errors.map((e) => `- ${f.report.name}: ${e}`),
+  );
+  return [...lines, "", ...errors, ...(errors.length > 0 ? [""] : [])];
+}
+
+async function startClients(): Promise<SoakClient[]> {
+  const started: SoakClient[] = [];
+  for (const team of [0, 1]) {
+    for (let i = 0; i < options.clients; i++) {
+      const name = `soak-${team}-${i}`;
+      const { token } = await post<{ token: string }>(
+        `/api/worlds/${worldId}/join`,
+        { name, team },
+      );
+      started.push(
+        new SoakClient({
+          base: base.replace("http", "ws"),
+          token,
+          name,
+          team,
+        }),
+      );
+    }
+  }
+  return started;
 }
 
 async function interrupt(step: Interruption, seenTick: number): Promise<Event> {
