@@ -1,12 +1,13 @@
 // WebSocket (plan section 7). A client connects to /ws?token=..., gets the
-// welcome with the static map, then sends commands and gets an ack (with the
-// tick the command will apply on) or a reject. After ticks, the whole dynamic
-// state goes to the world's sockets, at most once per broadcastIntervalMs.
+// welcome with the static map and the last view sent to its team, then sends
+// commands and gets an ack (with the tick the command will apply on) or a
+// reject. After ticks, each team's stream sends the delta of its view to the
+// team's sockets, at most once per broadcastIntervalMs (M1.5 plan section 5).
 
 import type { Server } from "node:http";
 import {
   parseClientMessage,
-  toDynamicState,
+  PROTOCOL_VERSION,
   toStaticMap,
   type ServerMessage,
   type WelcomeMessage,
@@ -15,6 +16,7 @@ import { WebSocket, WebSocketServer } from "ws";
 import { hashToken } from "./http.ts";
 import type { Timers } from "./loop.ts";
 import type { PlayerRow, Store } from "./persistence.ts";
+import { TeamStream } from "./stream.ts";
 import type { WorldHost } from "./world-host.ts";
 import type { Worlds } from "./worlds.ts";
 
@@ -67,8 +69,8 @@ export function attachWebSocket(server: Server, context: WsContext) {
       return;
     }
     const broadcaster = broadcasterOf(host);
-    send(socket, welcome(host, player));
-    broadcaster.add(socket);
+    send(socket, welcome(host, player, broadcaster.stream(player.team)));
+    broadcaster.add(socket, player.team);
     context.presence?.connected(player);
 
     socket.on("message", (data) => {
@@ -83,6 +85,7 @@ export function attachWebSocket(server: Server, context: WsContext) {
         });
         return;
       }
+      if (message.type === "resync") return;
       const tick = host.state.tick;
       const reason = host.submit(player.id, message.command);
       send(
@@ -107,18 +110,26 @@ export function attachWebSocket(server: Server, context: WsContext) {
   };
 }
 
-function welcome(host: WorldHost, player: PlayerRow): WelcomeMessage {
+function welcome(
+  host: WorldHost,
+  player: PlayerRow,
+  stream: TeamStream,
+): WelcomeMessage {
+  const { seq, view, status } = stream.lastView();
   return {
     type: "welcome",
+    protocol: PROTOCOL_VERSION,
     worldId: host.id,
     playerId: player.id,
     team: player.team,
-    status: host.status,
+    status,
     multiplier: host.multiplier,
     params: host.state.params,
     map: toStaticMap(host.state),
     cores: host.state.teams.map((t) => t.core),
-    state: toDynamicState(host.state),
+    stream: stream.id,
+    seq,
+    view,
   };
 }
 
@@ -138,12 +149,15 @@ function send(socket: WebSocket, message: ServerMessage): void {
 }
 
 /**
- * Sends a world's state after its ticks, at most once per interval: a tick
- * right after a send waits for the interval, and the send carries the latest
- * state then.
+ * Sends each team's view delta after the world's ticks, at most once per
+ * interval: a tick right after a send waits for the interval, and the send
+ * carries the latest state then. Every team's stream advances, with sockets
+ * or not (plan R7).
  */
 class Broadcaster {
-  private readonly sockets = new Set<WebSocket>();
+  /** Each open socket and its team. */
+  private readonly sockets = new Map<WebSocket, number>();
+  private readonly streams: TeamStream[];
   private readonly host: WorldHost;
   private readonly timers: Timers;
   private readonly intervalMs: number;
@@ -154,11 +168,18 @@ class Broadcaster {
     this.host = host;
     this.timers = timers;
     this.intervalMs = intervalMs;
+    this.streams = host.state.teams.map(
+      (team) => new TeamStream(host.state, team.id, host.status),
+    );
     host.onTick(() => this.ticked());
   }
 
-  add(socket: WebSocket): void {
-    this.sockets.add(socket);
+  stream(team: number): TeamStream {
+    return this.streams[team]!;
+  }
+
+  add(socket: WebSocket, team: number): void {
+    this.sockets.set(socket, team);
   }
 
   remove(socket: WebSocket): void {
@@ -185,14 +206,10 @@ class Broadcaster {
 
   private flush(): void {
     this.lastSent = this.timers.now();
-    if (this.sockets.size === 0) return;
-    const message = JSON.stringify({
-      type: "state",
-      state: toDynamicState(this.host.state),
-      status: this.host.status,
-    } satisfies ServerMessage);
-    for (const socket of this.sockets) {
-      if (socket.readyState === WebSocket.OPEN) socket.send(message);
+    const { state, status } = this.host;
+    const messages = this.streams.map((s) => s.advance(state, status));
+    for (const [socket, team] of this.sockets) {
+      if (socket.readyState === WebSocket.OPEN) socket.send(messages[team]!);
     }
   }
 }

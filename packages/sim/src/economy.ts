@@ -12,7 +12,11 @@ export const UPGRADES = ["capacity"] as const;
 export type UpgradeId = (typeof UPGRADES)[number];
 
 /** Units the creep can carry: its DNA's capacity, raised by the team upgrade. */
-export function capacity(creep: Creep, team: Team, params: Params): number {
+export function capacity(
+  creep: Pick<Creep, "dna">,
+  team: Pick<Team, "upgrades">,
+  params: Params,
+): number {
   const base = params.dna[creep.dna].capacity;
   const bonus = team.upgrades.capacity
     ? params.upgrade.capacity.bonusPermille

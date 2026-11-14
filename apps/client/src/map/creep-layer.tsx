@@ -3,8 +3,13 @@
 // it, and an hourglass while it waits at a drained deposit. Creeps sharing a
 // cell sit side by side, or form a stack when zoomed out (layout.ts).
 
-import type { DynamicState } from "@geometrix/protocol";
-import { capacity, type Cell, type Params, type Team } from "@geometrix/sim";
+import {
+  capacity,
+  type Cell,
+  type Params,
+  type Team,
+  type TeamView,
+} from "@geometrix/sim";
 import { useSignal } from "@preact/signals";
 import type { ComponentChildren } from "preact";
 import { useEffect } from "preact/hooks";
@@ -290,7 +295,7 @@ function CellSelection({ cell, size }: { cell?: Cell; size: number }) {
 }
 
 /** The cell an order heads to, or null for stop. */
-export function orderTarget(creep: Creep, state: DynamicState): Cell | null {
+export function orderTarget(creep: Creep, state: TeamView): Cell | null {
   const { order } = creep;
   switch (order.type) {
     case "stop":
@@ -306,7 +311,7 @@ export function orderTarget(creep: Creep, state: DynamicState): Cell | null {
 }
 
 /** Dashed line from the selected creep to where its order takes it. */
-function OrderLine(props: { creep: Creep; from: Point; state: DynamicState }) {
+function OrderLine(props: { creep: Creep; from: Point; state: TeamView }) {
   const target = orderTarget(props.creep, props.state);
   if (target === null) return null;
   const x2 = target.x + 0.5;
@@ -342,7 +347,7 @@ type MarkProps = {
 function CreepMark({ creep, center, team, params, mine, waiting }: MarkProps) {
   const { x: cx, y: cy, scale } = center;
   const color = teamColor(creep.team);
-  const max = capacity({ ...creep, path: null }, team, params);
+  const max = capacity(creep, team, params);
   const materia = creep.cargo.materia / max;
   const cristal = creep.cargo.cristal / max;
   const ring = CARGO_RADIUS * scale;

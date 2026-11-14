@@ -4,7 +4,7 @@ import { orderText, ruleText } from "../src/format.ts";
 import { orderTarget } from "../src/map/creep-layer.tsx";
 import type { Marker } from "../src/map/layout.ts";
 import { cellmates, pickAt } from "../src/map/pick.ts";
-import { dynamicOf, testWorld } from "./helpers.ts";
+import { viewOf, testWorld } from "./helpers.ts";
 
 const creep = (id: number, x: number, y: number, scale = 1): Marker => ({
   kind: "creep",
@@ -92,7 +92,7 @@ describe("texts and targets", () => {
   });
 
   it("describes and locates orders", () => {
-    const state = dynamicOf(testWorld());
+    const state = viewOf(testWorld());
     const c = structuredClone(state.creeps[0]!);
     const deposit = state.deposits[0]!;
     expect(orderTarget(c, state)).toBeNull();

@@ -1,13 +1,13 @@
 import { productionRefusal, step } from "@geometrix/sim";
 import { describe, expect, it } from "vitest";
-import { dynamicOf, testWorld } from "./helpers.ts";
+import { viewOf, testWorld } from "./helpers.ts";
 
 describe("production checks on the wire state", () => {
   it("match the sim's on the full state", () => {
     const world = testWorld();
     const team = world.teams[0]!;
     const check = () => {
-      const wire = dynamicOf(world);
+      const wire = viewOf(world);
       expect(
         productionRefusal(
           { params: world.params, creeps: wire.creeps },

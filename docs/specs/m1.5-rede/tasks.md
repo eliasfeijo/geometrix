@@ -32,9 +32,9 @@ na sua branch `m1.5/f<n>-<slug>` (skill `commit`), com merge `--no-ff` em `main`
 
 ## F3 — Servidor (`m1.5/f3-server`)
 
-- [ ] Mensagens do plan §4 no `protocol` (`welcome` com `protocol`, `seq` e `view`; `delta`; `resync`);
+- [x] Mensagens do plan §4 no `protocol` (`welcome` com `protocol`, `seq` e `view`; `delta`; `resync`);
       `PROTOCOL_VERSION`
-- [ ] `Broadcaster` com um stream por time: `sent`, `seq`, `lastView`, delta a cada envio, inclusive sem socket
+- [x] `Broadcaster` com um stream por time: `sent`, `seq`, `lastView`, delta a cada envio, inclusive sem socket
       (R7)
 - [ ] Hash da visão a cada `viewHashEveryTicks`; `welcome` com `lastView`
 - [ ] Retomada por `&seq=` com o buffer de `deltaBufferMs`; fora do buffer ou depois de restart, `welcome`
@@ -42,7 +42,7 @@ na sua branch `m1.5/f<n>-<slug>` (skill `commit`), com merge `--no-ff` em `main`
 
 ## F4 — Cliente (`m1.5/f4-client`)
 
-- [ ] Store aplica deltas com compartilhamento; interpolação igual à do M1
+- [x] Store aplica deltas com compartilhamento; interpolação igual à do M1
 - [ ] Conexão guarda o `seq` e o manda só ao reconectar na mesma página
 - [ ] `seqGap` e hash divergente pedem resync; versão do protocolo diferente recarrega a página
 - [ ] Painel de rede com `?net=1`

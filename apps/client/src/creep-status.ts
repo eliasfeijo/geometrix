@@ -2,10 +2,9 @@
 // it did in the last tick; a gather that stands empty at its drained deposit
 // is waiting for it to regenerate (owner decision, 2026-11-14), not stuck.
 
-import type { DynamicState } from "@geometrix/protocol";
-import type { Activity, Deposit } from "@geometrix/sim";
+import type { Activity, CreepView, Deposit } from "@geometrix/sim";
 
-export type Creep = DynamicState["creeps"][number];
+export type Creep = CreepView;
 
 export type CreepStatus = Activity | "waiting";
 

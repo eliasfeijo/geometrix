@@ -4,7 +4,6 @@
 // unless a job already paid for it; the road stops at the first cell that
 // cannot take one (a crossing, a rock, a core).
 
-import type { DynamicState } from "@geometrix/protocol";
 import { RESOURCE_NAMES } from "../format.ts";
 import {
   canAfford,
@@ -14,6 +13,7 @@ import {
   type Cell,
   type Cost,
   type Params,
+  type TeamView,
 } from "@geometrix/sim";
 
 export type RoadPlan =
@@ -32,7 +32,7 @@ export type RoadPlan =
 
 export function roadPlan(
   map: { width: number; height: number; terrain: readonly number[] },
-  state: Pick<DynamicState, "roads" | "roadJobs" | "teams">,
+  state: Pick<TeamView, "roads" | "roadJobs" | "teams">,
   params: Params,
   team: number,
   target: Cell,
