@@ -113,6 +113,9 @@ flowchart TD
     E --> F[6. acumuladores de stats; tick++]
 ```
 
+- **`step` muta o estado in place** (aprovado pelo dono em 2026-11-13). Copiar o estado a cada tick não cabe no
+  orçamento de 3 dias em menos de 10 min. A regra do ADR-0003 continua valendo no que importa: sem I/O, sem relógio,
+  sem aleatoriedade externa. Quem precisa do estado anterior guarda uma cópia com `serialize`.
 - **Pathfinding:** A* em 4 direções, com custo por terreno e estrada. Desempate pelo índice da célula, para ser
   determinístico. O caminho fica em cache no creep e só é recalculado quando o alvo muda ou quando uma estrada nova
   é concluída. O custo da estrada deve fazer as rotas convergirem para elas.

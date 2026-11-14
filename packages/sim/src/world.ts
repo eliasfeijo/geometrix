@@ -3,16 +3,34 @@
 
 import { generateMap, type Cell, type GameMap } from "./map.ts";
 import { DNAS, type Dna, type Params, type Resource } from "./params.ts";
+import type { Order } from "./orders.ts";
+import type { PathCache } from "./pathfinding.ts";
 import type { RngState } from "./rng.ts";
 
-/** Bump when a rule change makes old snapshots or replays invalid (ADR-0004). */
+/**
+ * Bump when a rule or state change makes old snapshots or replays invalid
+ * (ADR-0004). Nothing is persisted before the server exists (F6), so until then
+ * it stays at 1 and only the golden hash test is updated.
+ */
 export const SIM_VERSION = 1;
 
 export type Stock = Record<Resource, number>;
 
 export type Team = { id: number; core: Cell; stock: Stock };
 
-export type Creep = { id: number; team: number; dna: Dna } & Cell;
+export type Creep = {
+  id: number;
+  team: number;
+  dna: Dna;
+  /** What the creep carries. Any amount above 0 counts as loaded. */
+  cargo: Stock;
+  /** What the creep is doing now. */
+  order: Order;
+  /** Points gathered toward the next cell (CELL_COST enters it). */
+  movePoints: number;
+  /** Cached route; see pathTo. */
+  path: PathCache | null;
+} & Cell;
 
 export type Deposit = { id: number; kind: Resource; amount: number } & Cell;
 
@@ -27,6 +45,8 @@ export type WorldState = {
   tick: number;
   rng: RngState;
   map: GameMap;
+  /** Incremented when a road is completed: invalidates cached paths. */
+  roadRevision: number;
   teams: Team[];
   creeps: Creep[];
   deposits: Deposit[];
@@ -58,7 +78,16 @@ export function createWorld(seed: number, params: Params): WorldState {
   for (const team of teams) {
     for (const dna of DNAS) {
       for (let i = 0; i < params.population.initial[dna]; i++) {
-        creeps.push({ id: nextId++, team: team.id, dna, ...team.core });
+        creeps.push({
+          id: nextId++,
+          team: team.id,
+          dna,
+          ...team.core,
+          cargo: { materia: 0, cristal: 0 },
+          order: { type: "stop" },
+          movePoints: 0,
+          path: null,
+        });
       }
     }
   }
@@ -71,6 +100,7 @@ export function createWorld(seed: number, params: Params): WorldState {
     tick: 0,
     rng,
     map: layout.map,
+    roadRevision: 0,
     teams,
     creeps,
     deposits,
