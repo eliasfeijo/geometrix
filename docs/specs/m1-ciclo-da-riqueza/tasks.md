@@ -59,14 +59,14 @@ Marque `[x]` ao concluir. Cada task deve terminar com os testes verdes. Referên
 - [x] Recuperação após restart (teste de integração: o hash continua o mesmo)
 
 ## F7 — Cliente
-- [ ] Vite + Preact; conexão, `welcome`, reconexão
-- [ ] Mapa SVG com camadas estática e dinâmica; pan e zoom
-- [ ] Creeps por DNA e time, anel de carga, halo de domínio, interpolação
-- [ ] Inspetor do creep; dominar e liberar
-- [ ] Painel do Núcleo
-- [ ] Editor de regras e presets
-- [ ] Controle direto (moveTo, gather, deliver, modo estrada)
-- [ ] **Checkpoint:** sessão do dono: interface, legibilidade, editor de regras, domínio, multi-cliente local
+- [x] Vite + Preact; conexão, `welcome`, reconexão
+- [x] Mapa SVG com camadas estática e dinâmica; pan e zoom
+- [x] Creeps por DNA e time, anel de carga, halo de domínio, interpolação
+- [x] Inspetor do creep; dominar e liberar
+- [x] Painel do Núcleo
+- [x] Editor de regras e presets
+- [x] Controle direto (moveTo, gather, deliver, modo estrada)
+- [x] **Checkpoint:** sessão do dono: interface, legibilidade, editor de regras, domínio, multi-cliente local
   (spec §8, revista em 2026-11-14)
 
 ## F8 — Replay e multi-cliente

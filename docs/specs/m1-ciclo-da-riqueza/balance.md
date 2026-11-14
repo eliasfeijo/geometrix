@@ -148,6 +148,8 @@ assim** (GDD 02): a diferença entre os DNAs vem de outros sistemas, a partir do
   24 h. Deploy e playtest comprimido abrem o M2.
 - **Perguntas da §5:**
   1. sumidouro depois do teto: adiado, não entra no M1;
-  2. coleta com depósitos zerados: a única a fechar antes do F7 (o vaivém parece bug no cliente);
+  2. coleta com depósitos zerados: a única a fechar antes do F7 (o vaivém parece bug no cliente). **Fechada**
+     (2026-11-14): o creep fica com o depósito escolhido até encher e espera a regeneração ali
+     ([spec §5](spec.md), [GDD 07](../../gdd/07-piloto-automatico.md));
   3. papel do cristal: fica para o M2.
 - As metas da §3 ficam como referência do critério "sem estado degenerado" (spec §8).

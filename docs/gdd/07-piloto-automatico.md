@@ -7,6 +7,9 @@
 - **M1** (2026-11-13; detalhes na [spec M1 §5](../specs/m1-ciclo-da-riqueza/spec.md)): piloto automático
   declarativo por creep. A 1ª regra com condição verdadeira e ação possível vira a ordem; sem regra válida, o creep
   mantém o que fazia. Creeps nascem com o preset *coletor de matéria*.
+- **Coletar com os depósitos zerados** (2026-11-14): o creep escolhe o depósito não vazio mais próximo e fica com
+  ele até encher. Se o depósito zerar, espera ali a regeneração; se for cristal esgotado, escolhe outro. Deixar um
+  depósito rico sem uso é uma decisão do jogador, que pode mandar creeps para lá.
 
 ## Proposta
 - Humanos, macros, piloto automático e bots emitem os **mesmos comandos** ([ADR-0002](../adr/0002-tudo-e-comando.md)).
@@ -21,7 +24,3 @@
 - Onde fica o piloto automático: por creep, por grupo de creeps, ou por jogador?
 - A complexidade permitida (número de regras, CPU do script) é uma mecânica de progressão?
 - Qual é a diferença entre uma macro de cliente (só quando você está online) e o piloto automático (no servidor)?
-- **Coletar com os depósitos zerados.** "Coletar no depósito não vazio mais próximo" faz o creep correr atrás de
-  cada unidade que regenera, em qualquer depósito, e vagar entre eles (passada de balanceamento 1,
-  [balance.md](../specs/m1-ciclo-da-riqueza/balance.md) §5). Fica assim, ou a coleta espera a regeneração no
-  depósito em que está? **Fechar antes do F7** (dono, 2026-11-14): no cliente, o vaivém parece bug.

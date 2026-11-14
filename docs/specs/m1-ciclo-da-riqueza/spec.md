@@ -152,6 +152,9 @@ Formato: *Quando [gatilho], o sistema deve [resposta].*
 - **Regras de nascença:** os creeps iniciais e os produzidos nascem com o preset *coletor de matéria*.
 - **Vocabulário (P-2):** "mais próximo" e "raio R" usam a distância Manhattan a partir do creep, só contam
   depósitos com quantidade > 0, e o empate vai para o menor id. "Cheio" = carga ≥ capacidade; "vazio" = carga 0.
+- **Coletar com os depósitos zerados** (dono, 2026-11-14, antes do F7): o creep escolhe o depósito não vazio mais
+  próximo e fica com ele até encher, sem trocar de alvo no caminho. Se o depósito zerar, espera ali a regeneração;
+  se for cristal esgotado (não regenera), escolhe outro, e sem outro a ação é impossível.
 - **Presets (P-3):**
   - *Coletor de matéria:* cheio → entregar; sempre → coletar matéria; sempre → entregar (a última entrega a
     sobra quando não há depósito).
@@ -182,6 +185,14 @@ Formato: *Quando [gatilho], o sistema deve [resposta].*
 - **C-2** Selecionar um creep mostra DNA, inventário, regras de piloto automático e quem o domina.
 - **C-3** Painel do Núcleo: estoque, produção de creeps, upgrade, população.
 - **C-4** Editor das regras de piloto automático (lista ordenada; aplicar um preset).
+
+#### Detalhes de cliente decididos pelo dono no F7 (2026-11-14)
+
+- **Ordens pelo botão direito** (convenção RTS/MOBA): o esquerdo sempre seleciona e inspeciona; o direito dá a
+  ordem ao creep que o jogador domina: no mapa, `moveTo`; num depósito, `gather`; no próprio Núcleo, `deliver`.
+  No modo estrada, o clique direito vira `buildRoad`.
+- **Visual escuro:** fundo grafite, jungle em verde-escuro discreto, rio azul, rochas cinza; times em azul e
+  laranja (distinguíveis com daltonismo); matéria e cristal com cores próprias; formas com contorno claro.
 
 ## 6. Parâmetros iniciais (chutes, para serem quebrados)
 

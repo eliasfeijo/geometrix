@@ -4,7 +4,14 @@
 // such rule it keeps its current order. Dominated creeps are skipped: only
 // their player changes their order.
 
-import { canAfford, capacity, cargoTotal, teamOf } from "./economy.ts";
+import {
+  canAfford,
+  capacity,
+  cargoTotal,
+  findDeposit,
+  regenerates,
+  teamOf,
+} from "./economy.ts";
 import { isInMap, manhattan, type Cell } from "./map.ts";
 import { cellModifier } from "./movement.ts";
 import type { Order } from "./orders.ts";
@@ -22,7 +29,10 @@ export type Condition =
   | { type: "stockBelow"; resource: Resource; amount: number };
 
 export type Action =
-  /** Gather `resource` at the nearest deposit that still has some. */
+  /**
+   * Gather `resource` at the nearest deposit that still has some, and stay
+   * with it until full, waiting there if it runs dry and regenerates.
+   */
   | { type: "gather"; resource: Resource }
   | { type: "deliver" }
   | ({ type: "buildRoad" } & Cell)
@@ -69,6 +79,24 @@ export function nearestDeposit(
   return best;
 }
 
+/**
+ * The deposit of `kind` the creep is already gathering at, while it still has
+ * some or regenerates (owner decision, 2026-11-14): no switching on the way,
+ * and waiting there when it runs dry.
+ */
+function committedDeposit(
+  state: WorldState,
+  creep: Creep,
+  kind: Resource,
+): Deposit | null {
+  if (creep.order.type !== "gather") return null;
+  const deposit = findDeposit(state, creep.order.depositId);
+  if (deposit === undefined || deposit.kind !== kind) return null;
+  return deposit.amount > 0 || regenerates(deposit, state.params)
+    ? deposit
+    : null;
+}
+
 function holds(state: WorldState, creep: Creep, condition: Condition): boolean {
   switch (condition.type) {
     case "always":
@@ -95,7 +123,9 @@ function orderFor(
   switch (action.type) {
     case "gather": {
       if (isFull(state, creep)) return null;
-      const deposit = nearestDeposit(state, creep, action.resource);
+      const deposit =
+        committedDeposit(state, creep, action.resource) ??
+        nearestDeposit(state, creep, action.resource);
       return deposit === null
         ? null
         : { type: "gather", depositId: deposit.id };
