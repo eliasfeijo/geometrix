@@ -1,6 +1,7 @@
 // World state (plan section 3) and world creation. Arrays are ordered by id;
 // ids come from one increasing counter and are never reused.
 
+import type { Rule } from "./autopilot.ts";
 import type { UpgradeId } from "./economy.ts";
 import { generateMap, type Cell, type GameMap } from "./map.ts";
 import { DNAS, type Dna, type Params, type Resource } from "./params.ts";
@@ -47,6 +48,10 @@ export type Creep = {
   movePoints: number;
   /** Cached route; see pathTo. */
   path: PathCache | null;
+  /** Autopilot rules, in priority order (spec P-1). */
+  rules: Rule[];
+  /** Id of the player dominating the creep, or null when it is free. */
+  dominatedBy: number | null;
 } & Cell;
 
 export type Deposit = { id: number; kind: Resource; amount: number } & Cell;
@@ -141,5 +146,7 @@ export function newCreep(id: number, team: Team, dna: Dna): Creep {
     order: { type: "stop" },
     movePoints: 0,
     path: null,
+    rules: [],
+    dominatedBy: null,
   };
 }

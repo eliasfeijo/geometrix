@@ -7,6 +7,7 @@
 //   5. materia regeneration                                    (F3)
 //   6. stats accumulators; tick++                              (F5 / now)
 
+import { runAutopilot } from "./autopilot.ts";
 import { regenerate } from "./economy.ts";
 import { resolveOrders } from "./orders.ts";
 import { runProduction } from "./production.ts";
@@ -25,6 +26,7 @@ export type Command = never;
  */
 export function step(state: WorldState, commands: readonly Command[]): void {
   void commands;
+  runAutopilot(state);
   resolveOrders(state);
   runProduction(state);
   regenerate(state);

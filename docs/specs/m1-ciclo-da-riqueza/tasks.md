@@ -36,7 +36,7 @@ Marque `[x]` ao concluir. Cada task deve terminar com os testes verdes. Referên
 ## F4 — Piloto automático e domínio
 - [ ] `validate(state, cmd, playerId)` para todos os comandos externos (plan §4)
 - [ ] `dominate`/`release` com as regras D-1..D-4
-- [ ] Interpretador de regras com o vocabulário P-2
+- [x] Interpretador de regras com o vocabulário P-2
 - [ ] Presets: coletor de matéria, coletor de cristal, construtor de estrada
 - [ ] `setRules` e `applyPreset`
 
