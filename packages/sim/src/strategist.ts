@@ -16,7 +16,7 @@ import { collectorRules, roadBuilderRules } from "./presets.ts";
 import { productionRefusal } from "./production.ts";
 import { nextSegment, type RoadContext } from "./roads.ts";
 import { canonicalJson } from "./serialize.ts";
-import { view, type TeamView } from "./view.ts";
+import { isOwnCreep, ownTeam, view, type TeamView } from "./view.ts";
 import type { Creep, Deposit, Team, WorldState } from "./world.ts";
 
 export const STRATEGISTS = ["balanced", "none"] as const;
@@ -107,7 +107,7 @@ function knowledge(seen: TeamView, map: StaticMap, params: Params): Knowledge {
   const { width, height, terrain } = map;
   return {
     seen,
-    team: seen.teams[seen.team]!,
+    team: ownTeam(seen),
     map: { width, height, terrain, road },
     params,
   };
@@ -203,7 +203,9 @@ export function roadTarget(
  */
 function assignRoles(known: Knowledge): Command[] {
   const { seen, team, map, params } = known;
-  const creeps = seen.creeps.filter((c) => c.team === team.id);
+  const creeps = seen.creeps
+    .filter(isOwnCreep)
+    .filter((c) => c.team === team.id);
   const hasCristal = seen.deposits.some(
     (d) => d.kind === "cristal" && d.amount > 0,
   );
@@ -211,8 +213,12 @@ function assignRoles(known: Knowledge): Command[] {
   const wantCristal = hasCristal
     ? Math.floor((creeps.length * numerator + denominator - 1) / denominator)
     : 0;
+  // The cores the team knows of: its own and the ones it has seen.
+  const teams = seen.teams.flatMap((t) =>
+    t.core === null ? [] : [{ core: t.core }],
+  );
   const target = roadTarget(
-    { map, params, teams: seen.teams, deposits: seen.deposits },
+    { map, params, teams, deposits: seen.deposits },
     team,
   );
   const wantBuilders = target === null ? 0 : BALANCED.builders;

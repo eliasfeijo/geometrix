@@ -1,4 +1,8 @@
-import { collectorRules, roadBuilderRules } from "@geometrix/sim";
+import {
+  collectorRules,
+  roadBuilderRules,
+  type CreepView,
+} from "@geometrix/sim";
 import { describe, expect, it } from "vitest";
 import { orderText, ruleText } from "../src/format.ts";
 import { orderTarget } from "../src/map/creep-layer.tsx";
@@ -93,7 +97,8 @@ describe("texts and targets", () => {
 
   it("describes and locates orders", () => {
     const state = viewOf(testWorld());
-    const c = structuredClone(state.creeps[0]!);
+    // The team's own creep: whole in its view.
+    const c = structuredClone(state.creeps[0]!) as CreepView;
     const deposit = state.deposits[0]!;
     expect(orderTarget(c, state)).toBeNull();
     expect(orderText(c.order, state.deposits)).toBe("nenhuma");

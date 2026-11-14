@@ -9,6 +9,9 @@ import {
   canonicalJson,
   type CreepView,
   type Deposit,
+  type ForeignCreepView,
+  type ForeignPlayer,
+  type ForeignTeam,
   type Player,
   type RoadJob,
   type Team,
@@ -27,13 +30,17 @@ export type EntityDelta<T extends { id: number }> = {
 /** What changed in a view. Collections without changes are left out. */
 export type Delta = {
   tick: number;
-  teams?: EntityDelta<Team>;
-  creeps?: EntityDelta<CreepView>;
+  teams?: EntityDelta<Team | ForeignTeam>;
+  creeps?: EntityDelta<CreepView | ForeignCreepView>;
   deposits?: EntityDelta<Deposit>;
   roadJobs?: EntityDelta<RoadJob>;
-  players?: EntityDelta<Player>;
+  players?: EntityDelta<Player | ForeignPlayer>;
   /** Cells that got a road, increasing. Roads never go away in M1. */
   roads?: number[];
+  /** [cell, terrain] of the cells whose known terrain changed (fog plan §8). */
+  known?: [number, number][];
+  /** Cells that came into sight and that left it, increasing. */
+  visible?: { add?: number[]; remove?: number[] };
 };
 
 type Entity = { id: number } & Record<string, unknown>;
@@ -54,6 +61,12 @@ export type Sent = {
   roadJobs: Entity[];
   players: Entity[];
   roads: Set<number>;
+  /**
+   * The view's known and visible arrays as last diffed. Views build them anew
+   * and nothing mutates them, so they are kept by reference.
+   */
+  known: number[];
+  visible: number[];
 };
 
 export function emptySent(): Sent {
@@ -66,6 +79,28 @@ export function emptySent(): Sent {
     roadJobs: [],
     players: [],
     roads: new Set(),
+    known: [],
+    visible: [],
+  };
+}
+
+/**
+ * A view with nothing in it on a map of `cells` cells: what a client starts
+ * from when it rebuilds a stream from its first delta (tests and geo net; a
+ * real client starts from a welcome).
+ */
+export function emptyView(team: number, cells: number): TeamView {
+  return {
+    tick: 0,
+    team,
+    teams: [],
+    creeps: [],
+    deposits: [],
+    roads: [],
+    roadJobs: [],
+    players: [],
+    known: new Array<number>(cells).fill(-1),
+    visible: [],
   };
 }
 
@@ -87,7 +122,10 @@ const KINDS = {
   deposits: {},
   roadJobs: {},
   players: {},
-} satisfies Record<keyof Omit<Sent, "roads" | "tick" | "team">, FieldKinds>;
+} satisfies Record<
+  keyof Omit<Sent, "roads" | "tick" | "team" | "known" | "visible">,
+  FieldKinds
+>;
 
 const COLLECTIONS = Object.keys(KINDS) as (keyof typeof KINDS)[];
 
@@ -116,7 +154,55 @@ export function diffView(sent: Sent, view: TeamView): Delta {
     delta.roads = roads;
     for (const cell of roads) sent.roads.add(cell);
   }
+  const known = diffKnown(sent.known, view.known);
+  if (known.length > 0) delta.known = known;
+  sent.known = view.known;
+  const visible = diffSorted(sent.visible, view.visible);
+  if (visible.add !== undefined || visible.remove !== undefined) {
+    delta.visible = visible;
+  }
+  sent.visible = view.visible;
   return delta;
+}
+
+/** The cells whose value changed; a cell missing from `before` was -1. */
+function diffKnown(
+  before: readonly number[],
+  after: readonly number[],
+): [number, number][] {
+  if (before.length > after.length) {
+    throw new Error("diffView: the known map shrank");
+  }
+  const changed: [number, number][] = [];
+  for (let i = 0; i < after.length; i++) {
+    if ((before[i] ?? -1) !== after[i]) changed.push([i, after[i]!]);
+  }
+  return changed;
+}
+
+/** What `after` added to and removed from `before`, both increasing. */
+function diffSorted(
+  before: readonly number[],
+  after: readonly number[],
+): { add?: number[]; remove?: number[] } {
+  const add: number[] = [];
+  const remove: number[] = [];
+  let i = 0;
+  let j = 0;
+  while (i < before.length || j < after.length) {
+    if (j >= after.length || (i < before.length && before[i]! < after[j]!)) {
+      remove.push(before[i++]!);
+    } else if (i >= before.length || after[j]! < before[i]!) {
+      add.push(after[j++]!);
+    } else {
+      i++;
+      j++;
+    }
+  }
+  const changes: { add?: number[]; remove?: number[] } = {};
+  if (add.length > 0) changes.add = add;
+  if (remove.length > 0) changes.remove = remove;
+  return changes;
 }
 
 /**
@@ -210,6 +296,8 @@ export function sentView(sent: Sent): TeamView {
     roads: [...sent.roads].sort((a, b) => a - b),
     roadJobs: sent.roadJobs,
     players: sent.players,
+    known: sent.known,
+    visible: sent.visible,
   } as unknown as TeamView;
 }
 
@@ -227,6 +315,17 @@ export function applyDelta(previous: TeamView, delta: Delta): TeamView {
   }
   if (delta.roads !== undefined) {
     next.roads = mergeSorted(previous.roads, delta.roads);
+  }
+  if (delta.known !== undefined) {
+    next.known = [...previous.known];
+    for (const [cell, terrain] of delta.known) next.known[cell] = terrain;
+  }
+  if (delta.visible !== undefined) {
+    const removed = new Set(delta.visible.remove);
+    next.visible = mergeSorted(
+      previous.visible.filter((cell) => !removed.has(cell)),
+      delta.visible.add ?? [],
+    );
   }
   return next;
 }

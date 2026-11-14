@@ -2,13 +2,16 @@
 // deliver, "−N" when the team pays (roads, production, upgrade). Several
 // changes close in time add up in one float, so a fast replay stays legible.
 
-import type { Resource, TeamView } from "@geometrix/sim";
+import { isOwnTeam, type Resource, type TeamView } from "@geometrix/sim";
 
 export type StockDelta = { team: number; resource: Resource; amount: number };
 
 export const RESOURCES: readonly Resource[] = ["materia", "cristal"];
 
-/** How each team's stock changed from `previous` to `current`. */
+/**
+ * How each team's stock changed from `previous` to `current`: the teams whose
+ * stock the view has (the own one; every team in a replay).
+ */
 export function stockDeltas(
   previous: TeamView,
   current: TeamView,
@@ -16,7 +19,9 @@ export function stockDeltas(
   const deltas: StockDelta[] = [];
   for (const team of current.teams) {
     const before = previous.teams.find((t) => t.id === team.id);
-    if (before === undefined) continue;
+    if (!isOwnTeam(team) || before === undefined || !isOwnTeam(before)) {
+      continue;
+    }
     for (const resource of RESOURCES) {
       const amount = team.stock[resource] - before.stock[resource];
       if (amount !== 0) deltas.push({ team: team.id, resource, amount });

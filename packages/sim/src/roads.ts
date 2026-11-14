@@ -8,6 +8,7 @@ import { isRotatedSide, Terrain, type Cell, type GameMap } from "./map.ts";
 import { findPath } from "./pathfinding.ts";
 import type { Order } from "./orders.ts";
 import type { Params } from "./params.ts";
+import { rememberCompletedRoad } from "./vision.ts";
 import type { RoadJob, Team, WorldState } from "./world.ts";
 
 /**
@@ -66,9 +67,14 @@ export function findRoadJob(
   return state.roadJobs.find((j) => j.x === cell.x && j.y === cell.y);
 }
 
-/** Lays the road on the job's cell and invalidates cached paths. */
+/**
+ * Lays the road on the job's cell, makes it known to the team that paid for
+ * it and to the teams that see it, and invalidates cached paths.
+ */
 export function completeRoadJob(state: WorldState, job: RoadJob): void {
-  state.map.road[job.y * state.map.width + job.x] = 1;
+  const index = job.y * state.map.width + job.x;
+  state.map.road[index] = 1;
+  rememberCompletedRoad(state, job.team, index);
   state.roadRevision += 1;
   state.stats.teams[job.team]!.roadSegments += 1;
   state.roadJobs.splice(state.roadJobs.indexOf(job), 1);

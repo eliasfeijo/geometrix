@@ -1,7 +1,15 @@
 // What changes with the state but is not a creep: roads, road jobs,
 // deposits and the cores with their production.
 
-import type { Deposit, Params, RoadJob, Team, TeamView } from "@geometrix/sim";
+import {
+  isOwnTeam,
+  type Deposit,
+  type ForeignTeam,
+  type Params,
+  type RoadJob,
+  type Team,
+  type TeamView,
+} from "@geometrix/sim";
 import {
   arcDash,
   diamondPoints,
@@ -163,11 +171,19 @@ function DepositMark({
 
 export const CORE_RADIUS = 0.95;
 
-function CoreMark({ team, params }: { team: Team; params: Params }) {
+/** A core where the view has it; another team's without its production. */
+function CoreMark({
+  team,
+  params,
+}: {
+  team: Team | ForeignTeam;
+  params: Params;
+}) {
+  if (team.core === null) return null;
   const cx = team.core.x + 0.5;
   const cy = team.core.y + 0.5;
   const color = teamColor(team.id);
-  const production = team.production;
+  const production = isOwnTeam(team) ? team.production : null;
   const done =
     production === null
       ? 0
@@ -218,7 +234,7 @@ function CoreMark({ team, params }: { team: Team; params: Params }) {
           />
         </>
       )}
-      {team.repeat !== null && (
+      {isOwnTeam(team) && team.repeat !== null && (
         <circle
           cx={cx}
           cy={cy}

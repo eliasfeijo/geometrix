@@ -2,9 +2,9 @@
 // them apart (DNA, team, status, cargo, who dominates it). Hovering a row
 // highlights that creep on the map.
 
-import { capacity } from "@geometrix/sim";
+import { isOwnCreep } from "@geometrix/sim";
 import { useGame } from "../context.ts";
-import { creepStatus, STATUS_TEXTS } from "../creep-status.ts";
+import { creepStatus, STATUS_TEXTS, viewCapacity } from "../creep-status.ts";
 import { DNA_NAMES, teamName } from "../format.ts";
 import { creepName } from "../names.ts";
 import { DnaIcon } from "./dna-icon.tsx";
@@ -43,9 +43,9 @@ export function StackList() {
       </div>
       <ul>
         {creeps.map((creep) => {
-          const team = state.teams[creep.team]!;
-          const max = capacity(creep, team, params);
+          const max = viewCapacity(creep, state.teams[creep.team], params);
           const status = creepStatus(creep, state.deposits);
+          const dominatedBy = isOwnCreep(creep) ? creep.dominatedBy : null;
           return (
             <li key={creep.id}>
               <button
@@ -68,11 +68,11 @@ export function StackList() {
                   )}
                 </span>
                 <span class="muted small">
-                  {STATUS_TEXTS[status]} ·{" "}
+                  {status === null ? "" : `${STATUS_TEXTS[status]} · `}
                   {creep.cargo.materia + creep.cargo.cristal}/{max}
-                  {creep.dominatedBy === viewer.playerId
+                  {dominatedBy === viewer.playerId
                     ? " · você"
-                    : creep.dominatedBy !== null
+                    : dominatedBy !== null
                       ? " · dominado"
                       : ""}
                 </span>
