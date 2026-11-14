@@ -78,7 +78,7 @@ Marque `[x]` ao concluir. Cada task deve terminar com os testes verdes. Referên
 
 Decidida pelo dono em 2026-11-14, no fim do F8 (spec §8, itens 3 e 4).
 
-- [ ] `npm run soak`: teste de resistência comprimido (quedas forçadas, restart, hash no servidor, no Node e no
+- [x] `npm run soak`: teste de resistência comprimido (quedas forçadas, restart, hash no servidor, no Node e no
   navegador; memória, SQLite e atraso do loop)
 - [x] Estrada e pedra distinguíveis no mapa
 - [ ] Feedback do custo da estrada (modo estrada, pagamento, obra em andamento)

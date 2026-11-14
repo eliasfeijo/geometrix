@@ -37,6 +37,7 @@ Node 26 (`.nvmrc`). O Node roda `.ts` direto; só o cliente tem build (Vite).
 | `npm run build` | Build do cliente (Vite) em `apps/client/dist`, que o servidor serve |
 | `npm run client` | Dev server do Vite (porta 5173) com proxy de `/api` e `/ws` para o servidor no `GEO_PORT` |
 | `npm run dev:multi -- --clients 3` | Build + servidor + um mundo com K jogadores (Azul/Laranja alternados), uma aba por jogador (`--seed`, `--mult`, `--no-build`, `--no-open`) |
+| `npm run soak` | Teste de resistência: mundo bot × bot inteiro (×360, ~12 min) com `kill -9` e restart; o replay exportado tem de dar o hash do servidor. Relatório em `runs/soak-<id>/` |
 
 ## Convenções do `sim`
 
