@@ -26,6 +26,7 @@ export const CONDITION_LABELS: Record<Condition["type"], string> = {
   cargoEmpty: "carga vazia",
   resourceInRange: "recurso a até R células",
   stockBelow: "estoque abaixo de N",
+  resourceUnknown: "não conhece depósito de",
 };
 
 export const ACTION_LABELS: Record<Action["type"], string> = {
@@ -34,6 +35,7 @@ export const ACTION_LABELS: Record<Action["type"], string> = {
   buildRoad: "construir estrada até",
   moveTo: "ir até",
   stop: "ficar parado",
+  explore: "explorar",
 };
 
 /**
@@ -54,6 +56,8 @@ export function conditionOf(
     case "cargoFull":
     case "cargoEmpty":
       return { type };
+    case "resourceUnknown":
+      return { type, resource };
     case "resourceInRange":
       return {
         type,
@@ -78,6 +82,7 @@ export function actionOf(
   switch (type) {
     case "deliver":
     case "stop":
+    case "explore":
       return { type };
     case "gather":
       return {

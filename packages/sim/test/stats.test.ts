@@ -164,6 +164,7 @@ describe("players", () => {
       materiaCollector: 0,
       cristalCollector: 1,
       roadBuilder: 0,
+      scout: 0,
     });
     expect(a!.dominatedSeconds).toBe(10);
     expect(b!.commands).toMatchObject({ join: 1, dominate: 0 });

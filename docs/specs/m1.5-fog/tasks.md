@@ -31,7 +31,7 @@ na sua branch (plan §12, skill `commit`), com merge `--no-ff` em `main`.
 - [x] `nextSegment`, `canBuildRoad` e `buildRoad` no mapa conhecido, com teste de estrada no escuro (spec D5)
 - [x] Piloto pela memória: `nearestDeposit`, `committedDeposit`, `resourceInRange`, validação de `moveTo` (spec A-1,
       A-2)
-- [ ] Ordem `explore`, ação `explore` (BFS no mapa conhecido, sem repetir alvo), condição `resourceUnknown`; presets
+- [x] Ordem `explore`, ação `explore` (BFS no mapa conhecido, sem repetir alvo), condição `resourceUnknown`; presets
       coletor e `scout`; vocabulário com `BREAKING CHANGE` (plan §6, N4, N5)
 - [ ] Recusas sem vazamento: `unknownCreep` no lugar de `notYourTeam`; depósito fora da memória como inexistente
       (plan §7)

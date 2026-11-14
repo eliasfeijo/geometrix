@@ -95,6 +95,8 @@ export function conditionText(c: Condition): string {
       return `${RESOURCE_NAMES[c.resource]} a até ${c.radius} células`;
     case "stockBelow":
       return `estoque de ${RESOURCE_NAMES[c.resource]} < ${c.amount}`;
+    case "resourceUnknown":
+      return `não conhece depósito de ${RESOURCE_NAMES[c.resource]}`;
   }
 }
 
@@ -110,6 +112,8 @@ export function actionText(a: Action): string {
       return `ir até (${a.x}, ${a.y})`;
     case "stop":
       return "ficar parado";
+    case "explore":
+      return "explorar";
   }
 }
 
@@ -123,6 +127,8 @@ export function orderText(order: Order, deposits: readonly Deposit[]): string {
       return "nenhuma";
     case "moveTo":
       return `ir até (${order.x}, ${order.y})`;
+    case "explore":
+      return `explorar (${order.x}, ${order.y})`;
     case "gather": {
       const deposit = deposits.find((d) => d.id === order.depositId);
       return deposit === undefined

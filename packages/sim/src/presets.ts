@@ -9,6 +9,7 @@ export const PRESETS = [
   "materiaCollector",
   "cristalCollector",
   "roadBuilder",
+  "scout",
 ] as const;
 export type PresetId = (typeof PRESETS)[number];
 
@@ -27,9 +28,31 @@ const gather = (resource: Resource): Rule => ({
   then: { type: "gather", resource },
 });
 
-/** Gathers `resource` and delivers when full. */
+/**
+ * Gathers `resource` and delivers when full; explores while the team knows
+ * no deposit of it (fog spec A-4, D3).
+ */
 export function collectorRules(resource: Resource): Rule[] {
-  return [deliverWhenFull(), gather(resource), deliverLeftover()];
+  return [
+    deliverWhenFull(),
+    gather(resource),
+    {
+      when: { type: "resourceUnknown", resource },
+      then: { type: "explore" },
+    },
+    deliverLeftover(),
+  ];
+}
+
+/**
+ * Explores; with nothing left to explore it goes back to the core (fog spec
+ * A-4, D3).
+ */
+export function scoutRules(): Rule[] {
+  return [
+    { when: { type: "always" }, then: { type: "explore" } },
+    deliverLeftover(),
+  ];
 }
 
 /**
@@ -58,5 +81,7 @@ export function presetRules(preset: PresetId, target: Cell | null): Rule[] {
     case "roadBuilder":
       if (target === null) throw new Error("roadBuilder needs a target");
       return roadBuilderRules(target);
+    case "scout":
+      return scoutRules();
   }
 }

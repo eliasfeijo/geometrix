@@ -88,6 +88,7 @@ describe("texts and targets", () => {
     expect(collectorRules("materia").map(ruleText)).toEqual([
       "carga cheia → entregar no Núcleo",
       "sempre → coletar matéria",
+      "não conhece depósito de matéria → explorar",
       "sempre → entregar no Núcleo",
     ]);
     expect(roadBuilderRules({ x: 4, y: 7 }).map(ruleText)).toContain(

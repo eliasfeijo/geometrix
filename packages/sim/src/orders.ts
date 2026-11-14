@@ -14,7 +14,7 @@ import {
   teamOf,
   unload,
 } from "./economy.ts";
-import { knownRoadContext } from "./known.ts";
+import { knownRoadContext, memoryOf } from "./known.ts";
 import type { Cell } from "./map.ts";
 import { CELL_COST, movePointsPerTick } from "./movement.ts";
 import { pathTo } from "./pathfinding.ts";
@@ -30,6 +30,8 @@ import type { Creep, Deposit, WorldState } from "./world.ts";
 export type Order =
   | { type: "stop" }
   | ({ type: "moveTo" } & Cell)
+  /** Walk toward a cell never seen until the team has seen it (fog N5). */
+  | ({ type: "explore" } & Cell)
   | { type: "gather"; depositId: number }
   | { type: "deliver" }
   | BuildRoadOrder;
@@ -52,6 +54,16 @@ export function resolveOrders(state: WorldState): void {
         break;
       case "moveTo":
         if (walk(state, creep, order) !== "moving") halt(creep);
+        break;
+      case "explore":
+        if (
+          memoryOf(state, creep.team).explored[
+            order.y * state.map.width + order.x
+          ] === 1 ||
+          walk(state, creep, order) !== "moving"
+        ) {
+          halt(creep);
+        }
         break;
       case "gather":
         gather(state, creep, order.depositId);

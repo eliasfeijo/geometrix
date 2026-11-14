@@ -17,7 +17,13 @@ import { isInMap, manhattan, type Cell } from "./map.ts";
 import { cellModifier } from "./movement.ts";
 import type { Order } from "./orders.ts";
 import type { Resource } from "./params.ts";
-import { knownMap, knownRoadContext, knownRoadJob, memoryOf } from "./known.ts";
+import {
+  exploreTarget,
+  knownMap,
+  knownRoadContext,
+  knownRoadJob,
+  memoryOf,
+} from "./known.ts";
 import { canBuildRoad, nextSegment } from "./roads.ts";
 import type { Creep, Deposit, WorldState } from "./world.ts";
 
@@ -28,7 +34,12 @@ export type Condition =
   /** A deposit of `resource` with amount > 0 within `radius` cells (Manhattan). */
   | { type: "resourceInRange"; resource: Resource; radius: number }
   /** The team stock of `resource` is below `amount`. */
-  | { type: "stockBelow"; resource: Resource; amount: number };
+  | { type: "stockBelow"; resource: Resource; amount: number }
+  /**
+   * The team knows no deposit of `resource` with some left or that
+   * regenerates (fog plan section 6).
+   */
+  | { type: "resourceUnknown"; resource: Resource };
 
 export type Action =
   /**
@@ -39,7 +50,12 @@ export type Action =
   | { type: "deliver" }
   | ({ type: "buildRoad" } & Cell)
   | ({ type: "moveTo" } & Cell)
-  | { type: "stop" };
+  | { type: "stop" }
+  /**
+   * Go toward the nearest cell never seen that no teammate is exploring
+   * (fog spec D4, A-3); impossible when none can be reached.
+   */
+  | { type: "explore" };
 
 export type Rule = { when: Condition; then: Action };
 
@@ -121,6 +137,12 @@ function holds(state: WorldState, creep: Creep, condition: Condition): boolean {
     }
     case "stockBelow":
       return teamOf(state, creep).stock[condition.resource] < condition.amount;
+    case "resourceUnknown":
+      return !known(state, creep).deposits.some(
+        (d) =>
+          d.kind === condition.resource &&
+          (d.amount > 0 || regenerates(d, state.params)),
+      );
   }
 }
 
@@ -153,7 +175,25 @@ function orderFor(
     }
     case "buildRoad":
       return buildRoadFor(state, creep, action);
+    case "explore":
+      return exploreFor(state, creep);
   }
+}
+
+/**
+ * Keeps exploring toward the current target while it is still never seen,
+ * else toward a new one (fog plan section 6).
+ */
+function exploreFor(state: WorldState, creep: Creep): Order | null {
+  const { order } = creep;
+  if (
+    order.type === "explore" &&
+    known(state, creep).explored[order.y * state.map.width + order.x] === 0
+  ) {
+    return { type: "explore", x: order.x, y: order.y };
+  }
+  const target = exploreTarget(state, creep);
+  return target === null ? null : { type: "explore", ...target };
 }
 
 /**
