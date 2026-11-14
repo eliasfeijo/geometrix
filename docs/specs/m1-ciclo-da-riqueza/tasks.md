@@ -41,7 +41,7 @@ Marque `[x]` ao concluir. Cada task deve terminar com os testes verdes. Referên
 - [x] `setRules` e `applyPreset`
 
 ## F5 — Harness
-- [ ] Acumuladores de stats + `sampleMetrics` puro
+- [x] Acumuladores de stats + `sampleMetrics` puro
 - [ ] Estrategista bot `balanced`
 - [ ] `geo sim` → `runs/<id>/` (métricas, replay, `report.md`)
 - [ ] `geo sweep`

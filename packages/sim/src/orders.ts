@@ -22,6 +22,7 @@ import {
   findRoadJob,
   nextSegment,
 } from "./roads.ts";
+import { recordDelivery } from "./stats.ts";
 import type { Creep, WorldState } from "./world.ts";
 
 export type Order =
@@ -41,6 +42,7 @@ export function resolveOrders(state: WorldState): void {
   // Road jobs already advanced this tick: one builder per job.
   const built = new Set<number>();
   for (const creep of state.creeps) {
+    creep.activity = "idle";
     const { order } = creep;
     switch (order.type) {
       case "stop":
@@ -77,19 +79,22 @@ type WalkResult = "arrived" | "moving" | "unreachable";
 /**
  * Gains this tick's points toward the next cell of the path and enters cells
  * while the points last. On arrival the points and the path are dropped; the
- * order is left to the caller.
+ * order is left to the caller. Moving starts a trip if none is under way.
  */
 function walk(state: WorldState, creep: Creep, target: Cell): WalkResult {
   const path = pathTo(state, creep, target);
   if (path === null) return "unreachable";
   if (path.length > 0) {
     const { map, params } = state;
+    creep.activity = cargoTotal(creep) > 0 ? "carrying" : "walkingEmpty";
+    creep.trip ??= { startTick: state.tick, cells: 0 };
     creep.movePoints += movePointsPerTick(creep, map, path[0]!, params);
     while (path.length > 0 && creep.movePoints >= CELL_COST) {
       const next = path.shift()!;
       creep.x = next % map.width;
       creep.y = Math.floor(next / map.width);
       creep.movePoints -= CELL_COST;
+      creep.trip.cells += 1;
     }
     if (path.length > 0) return "moving";
   }
@@ -123,7 +128,10 @@ function deliver(state: WorldState, creep: Creep): void {
   if (!isAt(creep, team.core) && walk(state, creep, team.core) === "moving") {
     return;
   }
-  if (isAt(creep, team.core)) unload(creep, team);
+  if (isAt(creep, team.core)) {
+    recordDelivery(state, creep);
+    unload(creep, team);
+  }
   halt(creep);
 }
 
@@ -179,6 +187,7 @@ function buildRoad(
   }
   if (built.has(job.id)) return;
   built.add(job.id);
+  creep.activity = "building";
   job.remainingSeconds -= params.world.tickSeconds;
   if (job.remainingSeconds > 0) return;
   completeRoadJob(state, job);
