@@ -1,6 +1,7 @@
 # Status atual
 
-**Atualizado:** 2026-11-13 · **Marco:** M1 — O ciclo da riqueza · **Fase:** F4 concluída, F5 a iniciar
+**Atualizado:** 2026-11-13 · **Marco:** M1 — O ciclo da riqueza · **Fase:** F5 implementada, checkpoint aguardando
+revisão do dono
 
 Resumo de bolso. A fonte de verdade continua nos docs linkados. Atualize este arquivo ao fechar uma fase, ao passar
 por um portão de aprovação ou quando surgir um bloqueio.
@@ -17,7 +18,7 @@ por um portão de aprovação ou quando surgir um bloqueio.
 | M1 — F2 Movimento | ✅ Concluída, merge em `main`. Pontos de movimento em ‰, A* com cache, ordens `moveTo`/`stop` no pipeline | [tasks.md §F2](../specs/m1-ciclo-da-riqueza/tasks.md) · `packages/sim/src/{movement,pathfinding,orders}.ts` |
 | M1 — F3 Economia | ✅ Concluída, merge em `main`. Ordens `gather`/`deliver`/`buildRoad`, regeneração, produção com "repetir", upgrade de capacidade. Detalhes decididos pelo dono na [spec §5](../specs/m1-ciclo-da-riqueza/spec.md) | [tasks.md §F3](../specs/m1-ciclo-da-riqueza/tasks.md) · `packages/sim/src/{economy,production,roads,orders}.ts` |
 | M1 — F4 Piloto automático e domínio | ✅ Concluída, merge em `main`. Vocabulário de comandos + `validate`, jogadores, domínio D-1..D-4, interpretador de regras, presets, `setRules`/`applyPreset`. Detalhes decididos pelo dono na [spec §5](../specs/m1-ciclo-da-riqueza/spec.md) | [tasks.md §F4](../specs/m1-ciclo-da-riqueza/tasks.md) · `packages/sim/src/{commands,domination,autopilot,presets,rules}.ts` |
-| M1 — F5 Harness | ⏭️ Próxima. Métricas, estrategista bot, `geo sim`/`sweep`/`verify`. **Checkpoint:** primeiro relatório de 3 dias bot×bot | [tasks.md §F5](../specs/m1-ciclo-da-riqueza/tasks.md) · [plan §9](../specs/m1-ciclo-da-riqueza/plan.md) |
+| M1 — F5 Harness | 🟡 Tasks concluídas na branch `m1/f5-harness`; falta o **checkpoint** (revisão do relatório de 3 dias pelo dono) e o merge. Stats + `sampleMetrics`, estrategista `balanced`, `geo sim`/`report`/`sweep`, `geo verify` com bots e replay do log, orçamento de 6 h no CI. Detalhes decididos pelo dono no [plan §9](../specs/m1-ciclo-da-riqueza/plan.md) | [tasks.md §F5](../specs/m1-ciclo-da-riqueza/tasks.md) · `apps/cli/src/` · `packages/sim/src/stats.ts` |
 | M1 — F6…F9 | ⬜ Pendentes. Checkpoints: F7 playtest local; F9 playtest comprimido | [plan.md §13](../specs/m1-ciclo-da-riqueza/plan.md) |
 | M2–M4 | ⬜ Não iniciados | [ROADMAP](../ROADMAP.md) |
 
@@ -25,22 +26,45 @@ por um portão de aprovação ou quando surgir um bloqueio.
 
 1. **Publicar o repo no GitHub** (dono). Ainda não há remote, então o CI ([ci.yml](../../.github/workflows/ci.yml))
    nunca rodou fora da máquina local.
-2. **F5:** a branch `m1/f5-harness` já existe (por enquanto só com commits de harness). Use a skill
-   `implement-phase`. O que ela precisa
-   saber do código atual:
-   - Toda entrada do sim é `step(state, commands)`, com `commands: CommandInput[]` = `{ playerId, command }` na
-     ordem de `seq` (`commands.ts`). O `step` valida de novo cada comando e pula os recusados; o servidor usa
-     `validate` para o ack/reject. O log de replay é esse array por tick.
-   - Os jogadores entram no estado pelo comando de sistema `join {team}`. O estrategista bot precisa de um
-     `playerId` por time e de um `join` no tick 0.
-   - Os creeps nascem com o preset *coletor de matéria*. O estrategista age com `produce {dna, repeat}`,
-     `stopRepeat`, `buyUpgrade` e `applyPreset` (o `roadBuilder` leva `target`).
-   - Ainda não há `stats` no estado: as métricas da spec §7 começam do zero.
-   - **Medição do F4:** 3 dias bot×bot só com comandos (2 coletores de cristal + 1 construtor por time,
-     produção em "repetir") rodam em ~46 s; com 2 construtores travados num alvo inalcançável, ~71 s.
+2. **Checkpoint do F5:** o dono revisa o relatório de 3 dias bot×bot (`runs/m1-f5-checkpoint-s42/report.md`,
+   gerado por `npm run geo -- sim --seed 42 --days 3 --id m1-f5-checkpoint-s42`; `runs/` não vai para o git). Com o
+   OK, marcar o checkpoint no `tasks.md` e fazer o merge de `m1/f5-harness` em `main`.
+3. **F6 (servidor):** branch `m1/f6-server` a partir de `main` depois do merge. O que ele precisa saber do código atual:
+   - `apps/cli/src/harness.ts` já faz o caminho de entrada do servidor: `validate` no recebimento (ack/reject), o
+     aceito ganha `tick` e `seq` e vai para o log (`LoggedCommand` = `{tick, seq, playerId, command}`, o formato da
+     tabela `commands`), e o `step` revalida. Um comando aceito no recebimento ainda pode ser recusado no `step`
+     (ex.: `produce` e `buyUpgrade` disputando o mesmo cristal); o replay reproduz isso.
+   - O estado tem `stats` (no hash) e cada creep tem `activity` e `trip`. `sampleMetrics(state)` dá a amostra da
+     tabela `metrics`, a cada 60 ticks. O SQLite das métricas entra no F6 (decisão do dono no plan §9).
+   - `replay.json` do `geo sim` = `{simVersion, seed, params, ticks, finalHash, commands}`; o mundo inicial sai de
+     `createWorld(seed, params)`. É o formato que o modo replay do F8 pode ler.
+   - `SIM_VERSION` continua 1: nada é persistido ainda. Passa a valer no F6.
+   - **Medições do F5:** 6 h de mundo bot×bot em ~3–4 s; 3 dias em ~56 s. `geo verify` (50 000 ticks, 4 execuções)
+     leva ~45 s por seed; o CI roda 3 seeds.
 
 ## Pendências e pontos a esclarecer
 
+- **Interpretações do F5 a validar** (a spec e o plan não fixam):
+  - tempo dos creeps em 5 atividades: as 4 da spec §7 (coletando, carregando, andando vazio, parado) mais
+    **construindo**. "Andando" conta desde o tick em que o creep ganha pontos de movimento; esperar a obra de outro
+    construtor conta como parado;
+  - **viagem** = do primeiro tick em que o creep sai andando até entregar carga no Núcleo. Chegar vazio ao Núcleo
+    descarta a viagem;
+  - **disputa** de um depósito = tempo em que creeps dos dois times tinham ordem de coletar nele (tráfego, não só
+    coleta simultânea);
+  - **Núcleo ocioso** = tick que termina sem nada em produção (um creep de 10 min conta 599 s ocupado);
+  - "zerou pela 1ª vez" é registrado para todo depósito, inclusive de matéria;
+  - os bots entram no tick 0 e agem no tick 1 e depois a cada 60 ticks; os comandos deles contam nas métricas de
+    "humanos" do time (no harness não há humanos);
+  - o `geo sweep` guarda só o `run.json` de cada run (o `samples.jsonl` de 3 dias tem ~11 MB); `--keep-runs` guarda
+    tudo.
+- **Sinais do relatório de 3 dias (para o checkpoint):** com os parâmetros atuais e o `balanced`, a economia trava
+  em ~4 h: teto de população em 4,2 h, todo o cristal esgotado em 2,5 h, estradas param em 113 células; depois os
+  30 creeps disputam 6 depósitos de matéria que regeneram 1/min (andam vazios 58–76% do tempo), o Núcleo fica 94%
+  ocioso e 91% da matéria entregue sobra no estoque. O time 1 viaja quase o dobro do time 0 (37,7 × 19,6 min),
+  apesar do mapa simétrico, e disputa mais os depósitos de matéria do lado do time 0. Hipótese não verificada: os
+  desempates por menor id (o creep de menor id coleta primeiro; o depósito de menor id ganha o empate) favorecem o
+  time 0 quando a matéria é escassa.
 - **Interpretações do F4 a validar** (a spec não fixa):
   - jogadores entram no estado por um comando de sistema `join {team}`, que o servidor emite e grava no log como
     o `release` de desconexão;
@@ -53,10 +77,8 @@ por um portão de aprovação ou quando surgir um bloqueio.
     intransponível vira `stop` na execução;
   - um `applyPreset` recusado (ex.: `roadBuilder` sem alvo) não mexe nas regras.
 - **Custo do piloto automático:** com o "construtor de estrada" travado (alvo na outra margem ou sem caminho), a
-  regra refaz o A* a cada tick. Dentro do orçamento hoje; se o F5 mostrar muitos construtores travados, guardar em
-  cache o próximo segmento por `roadRevision`.
-- **Sinal para o F5:** no bot improvisado do F4, o cristal do mapa (2400) se esgota bem antes de 3 dias e a
-  matéria acumula ~13 000 por time.
+  regra refaz o A* a cada tick. O F5 confirmou que cabe no orçamento (3 dias em ~56 s, 10× abaixo do alvo); o cache
+  do próximo segmento por `roadRevision` só se a medição piorar.
 
 - **Interpretações do F3 a validar no playtest** (detalhes de implementação que a spec não fixa):
   - o tick em que o creep chega a um depósito ou a um segmento é gasto andando; a coleta e a obra começam no
