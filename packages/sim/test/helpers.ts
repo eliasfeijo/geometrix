@@ -126,3 +126,20 @@ export function creepOf(world: WorldState, team: number, dna: Dna): Creep {
   if (creep === undefined) throw new Error(`no ${dna} in team ${team}`);
   return creep;
 }
+
+/**
+ * Every team remembers the whole world as it is now: terrain, roads, every
+ * deposit and the other cores. For tests of decisions (the strategist) that
+ * are not about fog. Sight itself is left as it is.
+ */
+export function revealWorld(world: WorldState): void {
+  for (const memory of world.memory) {
+    memory.explored.fill(1);
+    memory.terrain = [...world.map.terrain];
+    memory.road = [...world.map.road];
+    memory.deposits = world.deposits.map((d) => ({ ...d }));
+    memory.cores = world.teams
+      .filter((t) => t.id !== memory.team)
+      .map((t) => ({ team: t.id, ...t.core }));
+  }
+}

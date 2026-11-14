@@ -19,7 +19,7 @@ na sua branch (plan §12, skill `commit`), com merge `--no-ff` em `main`.
 - [x] `TeamMemory` no `WorldState`, `createMemory` no `createWorld`, `updateVision` como estágio 6 do `step` e no
       fim do `createWorld`; estrada própria entra na memória em `completeRoadJob`; testes de memória (último valor,
       obra esquecida, estrada nunca some, Núcleo lembrado) (plan §3, N1, N10)
-- [ ] `view` filtrada (próprio inteiro, estrangeiros com os campos de D7, memória, `known`, `visible`), guardas
+- [x] `view` filtrada (próprio inteiro, estrangeiros com os campos de D7, memória, `known`, `visible`), guardas
       `isOwnCreep`/`isOwnTeam`, `fullView`; teste "nada vaza" num mundo montado à mão (plan §4, spec §7)
 - [ ] `SIM_VERSION` 3; hashes travados novos (mundo inicial, bot × bot de 6 h); o resto do repositório compila com
       a visão nova (estrategista, `protocol`, cliente), sem mudar comportamento além do `sim`
@@ -43,7 +43,8 @@ na sua branch (plan §12, skill `commit`), com merge `--no-ff` em `main`.
 
 ## F3 — Rede e servidor (`m1.5/fog-f3-network`)
 
-- [ ] Delta com `known` (pares novos), `visible` (`add`/`remove`) e os tipos estrangeiros; testes pequenos (plan §8)
+- [x] Delta com `known` (pares novos), `visible` (`add`/`remove`) e os tipos estrangeiros; testes pequenos (plan §8).
+      Feita na F1, junto com a `view` filtrada: sem ela o teste de propriedade da rede quebrava
 - [ ] Teste de propriedade de 6 h × seeds 1, 42 e 649 com o fog
 - [ ] `welcome` sem terreno e sem `cores`; `PROTOCOL_VERSION` 3
 - [ ] `WorldSummary.seed` `null` em mundo vivo; replay de mundo vivo → 409 (spec D9, D10, N9)

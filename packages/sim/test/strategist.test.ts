@@ -6,17 +6,18 @@ import { step } from "../src/step.ts";
 import { roadTarget, strategistCommands } from "../src/strategist.ts";
 import { view } from "../src/view.ts";
 import { createWorld, type WorldState } from "../src/world.ts";
-import { loadTestParams } from "./helpers.ts";
+import { loadTestParams, revealWorld } from "./helpers.ts";
 
 const params = loadTestParams();
 
-/** The seed-42 world after one bot per team joined at tick 0. */
+/** The seed-42 world after one bot per team joined at tick 0, all revealed. */
 function joined(): WorldState {
   const world = createWorld(42, params);
   step(world, [
     { playerId: 1, command: { type: "join", team: 0, bot: true } },
     { playerId: 2, command: { type: "join", team: 1, bot: true } },
   ]);
+  revealWorld(world);
   return world;
 }
 
@@ -105,6 +106,7 @@ describe("balanced", () => {
     a!.rules = collectorRules("cristal");
     b!.rules = collectorRules("cristal");
     for (const d of world.deposits) if (d.kind === "cristal") d.amount = 0;
+    revealWorld(world);
     // Freed first, a is then the lowest-id materia creep: it fills the builder.
     expect(presetsOf(decide(world, 0))).toEqual([
       [a!.id, "roadBuilder"],
@@ -124,7 +126,9 @@ describe("balanced", () => {
     for (const d of world.deposits) {
       expect(distance(d)).toBeGreaterThanOrEqual(distance(deposit));
     }
-    world.map.road[first.y * world.map.width + first.x] = 1;
+    const cell = first.y * world.map.width + first.x;
+    world.map.road[cell] = 1;
+    world.memory[0]!.road[cell] = 1;
     const second = roadTarget(world, team)!;
     expect(second).not.toEqual(first);
     // The builder moves on to the new target.

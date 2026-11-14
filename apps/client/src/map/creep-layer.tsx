@@ -4,8 +4,10 @@
 // cell sit side by side, or form a stack when zoomed out (layout.ts).
 
 import {
-  capacity,
+  isOwnCreep,
   type Cell,
+  type CreepView,
+  type ForeignTeam,
   type Params,
   type Team,
   type TeamView,
@@ -14,7 +16,7 @@ import { useSignal } from "@preact/signals";
 import type { ComponentChildren } from "preact";
 import { useEffect } from "preact/hooks";
 import { useGame } from "../context.ts";
-import { creepStatus, type Creep } from "../creep-status.ts";
+import { creepStatus, viewCapacity, type Creep } from "../creep-status.ts";
 import type { GameStore } from "../store.ts";
 import { creepName } from "../names.ts";
 import { COLORS, teamColor, teamTextColor } from "./colors.ts";
@@ -134,17 +136,19 @@ export function CreepLayer() {
     <CreepMark
       creep={creep}
       center={center}
-      team={state.teams[creep.team]!}
+      team={state.teams[creep.team]}
       params={info.params}
-      mine={creep.dominatedBy === viewer.playerId}
+      mine={isOwnCreep(creep) && creep.dominatedBy === viewer.playerId}
       waiting={creepStatus(creep, state.deposits) === "waiting"}
     />
   );
   return (
     <g class="creep-layer">
-      {selected !== undefined && selectedMarker !== undefined && (
-        <OrderLine creep={selected} from={selectedMarker} state={state} />
-      )}
+      {selected !== undefined &&
+        isOwnCreep(selected) &&
+        selectedMarker !== undefined && (
+          <OrderLine creep={selected} from={selectedMarker} state={state} />
+        )}
       {markers.map((m) =>
         m.kind === "creep" ? (
           <g key={m.id}>{mark(byId.get(m.id)!, m)}</g>
@@ -177,7 +181,7 @@ export function CreepLayer() {
         <CellSelection
           cell={
             selection.kind === "core"
-              ? state.teams[selection.team]?.core
+              ? (state.teams[selection.team]?.core ?? undefined)
               : state.deposits.find((d) => d.id === selection.id)
           }
           size={selection.kind === "core" ? 2.6 : 1.1}
@@ -295,7 +299,7 @@ function CellSelection({ cell, size }: { cell?: Cell; size: number }) {
 }
 
 /** The cell an order heads to, or null for stop. */
-export function orderTarget(creep: Creep, state: TeamView): Cell | null {
+export function orderTarget(creep: CreepView, state: TeamView): Cell | null {
   const { order } = creep;
   switch (order.type) {
     case "stop":
@@ -311,7 +315,7 @@ export function orderTarget(creep: Creep, state: TeamView): Cell | null {
 }
 
 /** Dashed line from the selected creep to where its order takes it. */
-function OrderLine(props: { creep: Creep; from: Point; state: TeamView }) {
+function OrderLine(props: { creep: CreepView; from: Point; state: TeamView }) {
   const target = orderTarget(props.creep, props.state);
   if (target === null) return null;
   const x2 = target.x + 0.5;
@@ -337,7 +341,7 @@ function OrderLine(props: { creep: Creep; from: Point; state: TeamView }) {
 type MarkProps = {
   creep: Creep;
   center: Point & { scale: number };
-  team: Team;
+  team: Team | ForeignTeam | undefined;
   params: Params;
   /** Dominated by this player. */
   mine: boolean;
@@ -347,7 +351,7 @@ type MarkProps = {
 function CreepMark({ creep, center, team, params, mine, waiting }: MarkProps) {
   const { x: cx, y: cy, scale } = center;
   const color = teamColor(creep.team);
-  const max = capacity(creep, team, params);
+  const max = viewCapacity(creep, team, params);
   const materia = creep.cargo.materia / max;
   const cristal = creep.cargo.cristal / max;
   const ring = CARGO_RADIUS * scale;
@@ -358,7 +362,7 @@ function CreepMark({ creep, center, team, params, mine, waiting }: MarkProps) {
   const ringWidth = (full ? CARGO_FULL_WIDTH : CARGO_WIDTH) * scale;
   return (
     <g class="creep">
-      {creep.dominatedBy !== null && (
+      {isOwnCreep(creep) && creep.dominatedBy !== null && (
         <circle
           class={mine ? "halo halo-mine" : "halo"}
           cx={cx}

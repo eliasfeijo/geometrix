@@ -38,7 +38,7 @@ export function StockFloatLayer() {
     <g class="stock-floats">
       {floats.value.map((f) => {
         const core = state.teams[f.team]?.core;
-        if (core === undefined) return null;
+        if (core === undefined || core === null) return null;
         // Deliveries rise above the core, payments beside it: materia on
         // the left, cristal on the right.
         const side = f.resource === "materia" ? -1 : 1;

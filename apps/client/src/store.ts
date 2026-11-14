@@ -11,7 +11,12 @@ import type {
   FatalReason,
   WorldMessage,
 } from "./connection.ts";
-import type { Cell, TeamView } from "@geometrix/sim";
+import {
+  isOwnCreep,
+  type Cell,
+  type CreepView,
+  type TeamView,
+} from "@geometrix/sim";
 import { viewHash } from "./hash.ts";
 import { NetStats } from "./net-stats.ts";
 import type { Selection } from "./map/pick.ts";
@@ -142,7 +147,11 @@ export class GameStore {
   readonly myCreep = computed(() => {
     const id = this.info.value?.playerId;
     const state = this.current.value?.state;
-    return state?.creeps.find((c) => c.dominatedBy === id) ?? null;
+    return (
+      state?.creeps.find(
+        (c): c is CreepView => isOwnCreep(c) && c.dominatedBy === id,
+      ) ?? null
+    );
   });
 
   /** Whether some player in the state has no known name yet. */
