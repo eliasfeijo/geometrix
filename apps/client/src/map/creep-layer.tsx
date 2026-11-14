@@ -125,7 +125,7 @@ export function CreepLayer() {
     <CreepName
       creep={creep}
       center={center}
-      name={creepName(state.creeps, creep.id)}
+      name={creepName(creep.id)}
       fontSize={nameFontSize(
         inCell.get(`${creep.x},${creep.y}`) ?? 1,
         viewScale,
