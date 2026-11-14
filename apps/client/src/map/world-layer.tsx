@@ -1,8 +1,7 @@
 // What changes with the state but is not a creep: roads, road jobs,
 // deposits and the cores with their production.
 
-import type { DynamicState } from "@geometrix/protocol";
-import type { Deposit, Params, RoadJob, Team } from "@geometrix/sim";
+import type { Deposit, Params, RoadJob, Team, TeamView } from "@geometrix/sim";
 import {
   arcDash,
   diamondPoints,
@@ -14,7 +13,7 @@ import { roadJoinsDown, roadRuns } from "./terrain.ts";
 import { DnaShape } from "./creep-shape.tsx";
 
 type Props = {
-  state: DynamicState;
+  state: TeamView;
   params: Params;
   width: number;
   /** markerScale of the current zoom. */

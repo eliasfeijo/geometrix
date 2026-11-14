@@ -6,10 +6,10 @@ import {
   MAX_GLIDE_CELLS,
   MAX_GLIDE_MS,
 } from "../src/map/interpolate.ts";
-import { dynamicOf, testWorld } from "./helpers.ts";
+import { viewOf, testWorld } from "./helpers.ts";
 
 describe("interpolation", () => {
-  const state = dynamicOf(testWorld());
+  const state = viewOf(testWorld());
 
   it("glides over the time between the two messages", () => {
     const previous = { state, at: 1000 };

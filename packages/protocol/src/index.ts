@@ -8,16 +8,13 @@ import { parseParams, ParamsError, SIM_VERSION } from "@geometrix/sim";
 import type {
   Cell,
   Command,
-  Creep,
-  Deposit,
   Params,
-  Player,
   Refusal,
-  RoadJob,
-  Team,
+  TeamView,
   WorldState,
 } from "@geometrix/sim";
 import { z } from "zod";
+import type { Delta } from "./delta.ts";
 
 const id = z.number().int().nonnegative();
 const coord = z.number().int();
@@ -89,14 +86,27 @@ export const clientCommand = z.discriminatedUnion("type", [
 
 export type ClientCommand = z.infer<typeof clientCommand>;
 
-/** Client -> server. `ref` comes back in the ack or reject. */
-export const clientMessage = z.object({
-  type: z.literal("command"),
-  ref: z.number().int().nonnegative(),
-  command: clientCommand,
-});
+/**
+ * Client -> server: a command, whose `ref` comes back in the ack or reject,
+ * or a request for the full view (spec S-6, C-2, C-3) after a gap in the
+ * sequence or a view hash that did not match.
+ */
+export const clientMessage = z.discriminatedUnion("type", [
+  z.object({
+    type: z.literal("command"),
+    ref: z.number().int().nonnegative(),
+    command: clientCommand,
+  }),
+  z.object({
+    type: z.literal("resync"),
+    reason: z.enum(["seqGap", "hashMismatch"]),
+    seq: z.number().int().nonnegative(),
+  }),
+]);
 
 export type ClientMessage = z.infer<typeof clientMessage>;
+export type ResyncMessage = Extract<ClientMessage, { type: "resync" }>;
+export type ResyncReason = ResyncMessage["reason"];
 
 /** The parsed message, or null when it is not a valid client message. */
 export function parseClientMessage(raw: string): ClientMessage | null {
@@ -145,43 +155,6 @@ export type WorldSummary = {
   players: { id: number; team: number; name: string; bot: boolean }[];
 };
 
-/** What changes tick by tick; the whole of it goes out each time (plan P3). */
-export type DynamicState = {
-  tick: number;
-  teams: Team[];
-  /** Without the cached path, which only the sim needs. */
-  creeps: Omit<Creep, "path">[];
-  deposits: Deposit[];
-  /** Cell indices (y * width + x) that have a road. */
-  roads: number[];
-  roadJobs: RoadJob[];
-  players: Player[];
-};
-
-/**
- * The dynamic part of `state`, as the server sends it. It shares objects with
- * the state: serialize it before the next tick.
- */
-export function toDynamicState(state: WorldState): DynamicState {
-  const roads: number[] = [];
-  state.map.road.forEach((road, i) => {
-    if (road === 1) roads.push(i);
-  });
-  return {
-    tick: state.tick,
-    teams: state.teams,
-    creeps: state.creeps.map((creep) => {
-      const sent: Partial<Creep> = { ...creep };
-      delete sent.path;
-      return sent as Omit<Creep, "path">;
-    }),
-    deposits: state.deposits,
-    roads,
-    roadJobs: state.roadJobs,
-    players: state.players,
-  };
-}
-
 /** The static map, sent once in the welcome. */
 export function toStaticMap(state: WorldState): WelcomeMessage["map"] {
   const { width, height, terrain } = state.map;
@@ -190,9 +163,19 @@ export function toStaticMap(state: WorldState): WelcomeMessage["map"] {
 
 export type WorldStatus = "running" | "ended";
 
-/** Server -> client, once per connection. The static map goes only here. */
+/**
+ * Version of the messages below. A client of another version reloads the page
+ * (M1.5 spec D6). 1: M1, the whole state each time. 2: view deltas.
+ */
+export const PROTOCOL_VERSION = 2;
+
+/**
+ * Server -> client: the start of a team stream (M1.5 plan section 4), on
+ * connecting and on a resync. The static map goes only here.
+ */
 export type WelcomeMessage = {
   type: "welcome";
+  protocol: number;
   worldId: number;
   playerId: number;
   team: number;
@@ -201,12 +184,34 @@ export type WelcomeMessage = {
   params: Params;
   map: { width: number; height: number; terrain: number[] };
   cores: Cell[];
-  state: DynamicState;
+  /**
+   * The team stream, new in each server process. A client resuming after a
+   * drop sends it back with its seq: a seq of another stream (the server
+   * restarted) gets a welcome (spec S-5).
+   */
+  stream: string;
+  /** The seq of `view`; the next delta is seq + 1. */
+  seq: number;
+  /** The last view sent to the team (spec S-1), not the state now. */
+  view: TeamView;
+};
+
+/**
+ * Server -> client: the changes of the team's view since seq - 1. `status`
+ * only when it changes; `hash` every few world ticks: the SHA-256 of viewJson
+ * of the view after this delta.
+ */
+export type DeltaMessage = {
+  type: "delta";
+  seq: number;
+  delta: Delta;
+  status?: WorldStatus;
+  hash?: string;
 };
 
 export type ServerMessage =
   | WelcomeMessage
-  | { type: "state"; state: DynamicState; status: WorldStatus }
+  | DeltaMessage
   | { type: "ack"; ref: number; tick: number }
   | { type: "reject"; ref: number; reason: RejectReason };
 

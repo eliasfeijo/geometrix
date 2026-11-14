@@ -1,5 +1,4 @@
 import type {
-  DynamicState,
   LoggedCommand,
   Replay,
   WelcomeMessage,
@@ -13,9 +12,11 @@ import {
   SIM_VERSION,
   step,
   validate,
+  view,
+  type TeamView,
   type WorldState,
 } from "@geometrix/sim";
-import { toDynamicState, toStaticMap } from "@geometrix/protocol";
+import { PROTOCOL_VERSION, toStaticMap } from "@geometrix/protocol";
 import params from "../../../packages/sim/test/params.json" with { type: "json" };
 import type { KeyValueStore } from "../src/session.ts";
 
@@ -24,9 +25,9 @@ export function testWorld(seed = 42): WorldState {
   return createWorld(seed, parseParams(params));
 }
 
-/** The dynamic state as the server sends it, detached from `state`. */
-export function dynamicOf(state: WorldState): DynamicState {
-  return JSON.parse(JSON.stringify(toDynamicState(state))) as DynamicState;
+/** The team's view as the client rebuilds it, detached from `state`. */
+export function viewOf(state: WorldState, team = 0): TeamView {
+  return JSON.parse(JSON.stringify(view(state, team))) as TeamView;
 }
 
 export function welcomeOf(
@@ -36,6 +37,7 @@ export function welcomeOf(
 ): WelcomeMessage {
   return {
     type: "welcome",
+    protocol: PROTOCOL_VERSION,
     worldId: 1,
     playerId,
     team,
@@ -44,7 +46,9 @@ export function welcomeOf(
     params: state.params,
     map: toStaticMap(state),
     cores: state.teams.map((t) => t.core),
-    state: dynamicOf(state),
+    stream: "test",
+    seq: 0,
+    view: viewOf(state, team),
   };
 }
 

@@ -1,11 +1,15 @@
 // Drives a replay frame by frame and feeds the game screen's store: a
-// synthetic welcome (after loading or a seek) and then a state per frame in
-// which the tick moved, the same messages the server would send. The screen
+// synthetic welcome (after loading or a seek) and then a view per frame in
+// which the tick moved, as the server's welcome and deltas would leave it. The screen
 // calls frame() on every animation frame; tests call it directly.
 
-import { toDynamicState, toStaticMap, type Replay } from "@geometrix/protocol";
+import {
+  PROTOCOL_VERSION,
+  toStaticMap,
+  type Replay,
+} from "@geometrix/protocol";
 import { signal } from "@preact/signals";
-import { SIM_VERSION } from "@geometrix/sim";
+import { SIM_VERSION, view } from "@geometrix/sim";
 import { GameStore } from "../store.ts";
 import { stateHash } from "./hash.ts";
 import { ReplayPlayer } from "./player.ts";
@@ -161,17 +165,15 @@ export class ReplayController {
   /** Hands the state now to the store, detached from the sim's objects. */
   private publish(kind: "welcome" | "state", now: number): void {
     const state = this.player.state;
-    const dynamic = structuredClone(toDynamicState(state));
+    const seen = structuredClone(view(state, 0));
     if (kind === "state") {
-      this.store.receive(
-        { type: "state", state: dynamic, status: "running" },
-        now,
-      );
+      this.store.show(seen, now);
       return;
     }
     this.store.receive(
       {
         type: "welcome",
+        protocol: PROTOCOL_VERSION,
         worldId: this.worldId,
         playerId: SPECTATOR_ID,
         team: 0,
@@ -180,7 +182,9 @@ export class ReplayController {
         params: state.params,
         map: toStaticMap(state),
         cores: state.teams.map((t) => ({ ...t.core })),
-        state: dynamic,
+        stream: "replay",
+        seq: 0,
+        view: seen,
       },
       now,
     );

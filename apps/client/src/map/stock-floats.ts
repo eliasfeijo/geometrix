@@ -2,8 +2,7 @@
 // deliver, "−N" when the team pays (roads, production, upgrade). Several
 // changes close in time add up in one float, so a fast replay stays legible.
 
-import type { DynamicState } from "@geometrix/protocol";
-import type { Resource } from "@geometrix/sim";
+import type { Resource, TeamView } from "@geometrix/sim";
 
 export type StockDelta = { team: number; resource: Resource; amount: number };
 
@@ -11,8 +10,8 @@ export const RESOURCES: readonly Resource[] = ["materia", "cristal"];
 
 /** How each team's stock changed from `previous` to `current`. */
 export function stockDeltas(
-  previous: DynamicState,
-  current: DynamicState,
+  previous: TeamView,
+  current: TeamView,
 ): StockDelta[] {
   const deltas: StockDelta[] = [];
   for (const team of current.teams) {

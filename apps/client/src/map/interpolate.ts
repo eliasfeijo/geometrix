@@ -2,11 +2,10 @@
 // shows the previous state when the current one arrives and glides to it over
 // the time between the two messages, so it runs one message behind.
 
-import type { DynamicState } from "@geometrix/protocol";
-import type { Cell } from "@geometrix/sim";
+import type { Cell, TeamView } from "@geometrix/sim";
 import type { Point } from "./view.ts";
 
-export type Timed = { state: DynamicState; at: number };
+export type Timed = { state: TeamView; at: number };
 
 /** Bounds on the glide time, in ms (messages come at most 5 per second). */
 export const MIN_GLIDE_MS = 50;
@@ -38,8 +37,8 @@ export function glide(from: Cell | undefined, to: Cell, t: number): Point {
 
 /** Drawn position (top-left of the cell, in cells) of every current creep. */
 export function creepPositions(
-  previous: DynamicState | null,
-  current: DynamicState,
+  previous: TeamView | null,
+  current: TeamView,
   t: number,
 ): Map<number, Point> {
   const before = new Map<number, Cell>();
