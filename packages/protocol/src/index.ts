@@ -154,7 +154,11 @@ export type JoinResponse = { playerId: number; team: number; token: string };
 
 export type WorldSummary = {
   id: number;
-  seed: number;
+  /**
+   * Null while the world runs (fog spec D9): with the seed and the params, a
+   * client rebuilds the whole map and the fog is gone.
+   */
+  seed: number | null;
   multiplier: number;
   status: WorldStatus;
   tick: number;

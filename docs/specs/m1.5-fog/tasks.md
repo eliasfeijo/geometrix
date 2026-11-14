@@ -51,7 +51,8 @@ na sua branch (plan §12, skill `commit`), com merge `--no-ff` em `main`.
       de creep inimigo entrando na visão e do Núcleo inimigo descoberto pelos dois times
 - [x] `welcome` sem terreno e sem `cores`; `PROTOCOL_VERSION` 3. O cliente passou a desenhar o terreno a partir de
       `known` (nunca visto como selva, sem a névoa ainda) e a ler os Núcleos da visão
-- [ ] `WorldSummary.seed` `null` em mundo vivo; replay de mundo vivo → 409 (spec D9, D10, N9)
+- [x] `WorldSummary.seed` `null` em mundo vivo; replay de mundo vivo → 409 (spec D9, D10, N9). O lobby só mostra
+      a seed e o botão "Assistir replay" de mundo encerrado
 - [ ] **Checkpoint:** `geo net --seed 42 --days 3` contra os alvos da spec da rede §7
 
 ## F4 — Cliente (`m1.5/fog-f4-client`)
