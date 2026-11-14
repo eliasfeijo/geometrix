@@ -1,6 +1,6 @@
 # Status atual
 
-**Atualizado:** 2026-11-14 · **Marco:** M1 — O ciclo da riqueza · **Fase:** F9 (legibilidade e playtest) em andamento
+**Atualizado:** 2026-11-14 · **Marco:** M1 — O ciclo da riqueza · **Fase:** F9 (legibilidade e playtest): tasks prontas, falta o checkpoint do dono
 
 Resumo de bolso. A fonte de verdade continua nos docs linkados. Atualize este arquivo ao fechar uma fase, ao passar
 por um portão de aprovação ou quando surgir um bloqueio.
@@ -22,35 +22,58 @@ por um portão de aprovação ou quando surgir um bloqueio.
 | M1 — F6 Servidor | ✅ Concluída, merge em `main`. SQLite (log de comandos, snapshots, métricas), loop de tick com multiplicador, HTTP (criar, listar, entrar), WebSocket com ack/reject e broadcast ≤5/s, `release` automático, bots e limite de humanos, recuperação após restart. Detalhes decididos pelo dono na [spec §5](../specs/m1-ciclo-da-riqueza/spec.md) | [tasks.md §F6](../specs/m1-ciclo-da-riqueza/tasks.md) · `apps/server/src/` · `packages/protocol/src/` |
 | M1 — F7 Cliente | ✅ Concluída, merge em `main`. Checkpoint aprovado pelo dono (2026-11-14). Lobby, mapa SVG com pan/zoom, creeps interpolados com nomes gerados, pilhas de creeps com lista para escolher, inspetor, dominar/liberar, painel do Núcleo, editor de regras e presets, controle direto pelo botão direito. Detalhes decididos pelo dono na [spec §5](../specs/m1-ciclo-da-riqueza/spec.md) | [tasks.md §F7](../specs/m1-ciclo-da-riqueza/tasks.md) · `apps/client/src/` |
 | M1 — F8 Replay e multi-cliente | ✅ Concluída, merge em `main`. Replay no navegador (arquivo do `geo sim` ou `GET /api/worlds/:id/replay`) com velocidades, linha do tempo e hash ✓/✗; hash confere no WebKit/JSC; `npm run dev:multi`. Detalhes decididos pelo dono no [plan §8](../specs/m1-ciclo-da-riqueza/plan.md) | [tasks.md §F8](../specs/m1-ciclo-da-riqueza/tasks.md) · `apps/client/src/replay/` · `apps/server/src/dev-multi*.ts` |
-| M1 — F9 Legibilidade e playtest | 🔄 Decidida pelo dono (2026-11-14) e em andamento na branch `m1/f9-legibility`: teste de resistência comprimido no lugar do mundo de 24 h, ajustes de legibilidade e feedback visual, playtest humano local. Fecha o M1 | [tasks.md §F9](../specs/m1-ciclo-da-riqueza/tasks.md) · [spec §8](../specs/m1-ciclo-da-riqueza/spec.md) |
+| M1 — F9 Legibilidade e playtest | 🔄 Na branch `m1/f9-legibility`, sem merge. Feito: `npm run soak` (teste de resistência comprimido, no lugar do mundo de 24 h), estrada × pedra, nomes no mapa (Chakra Petch), carga cheia, `+N`/`−N` no Núcleo, custo da estrada sob o cursor e tempo da obra, [PLAYTEST.md](../PLAYTEST.md). **Falta o checkpoint** (dono): playtest humano, replay validado, melhorias registradas. Fecha o M1 | [tasks.md §F9](../specs/m1-ciclo-da-riqueza/tasks.md) · [spec §8](../specs/m1-ciclo-da-riqueza/spec.md) |
 | Deploy e playtest de diversão | Saíram do M1 (dono, 2026-11-14): abrem o M2 | [ROADMAP](../ROADMAP.md) |
 | M2–M4 | ⬜ Não iniciados | [ROADMAP](../ROADMAP.md) |
 
 ## Próximos passos imediatos
 
-1. **F9 (legibilidade e playtest):** branch `m1/f9-legibility`. O dono decidiu (2026-11-14, fim do F8):
-   - **o mundo de 24 h sai** e entra o **teste de resistência comprimido** (`npm run soak`, spec §8 item 3): 24 h
-     reais de economia sem combate não testam nada que o relógio acrescente. Um mundo bot × bot inteiro pelo loop
-     real do servidor (ex.: ×360, ~12 min), `kill -9` em momentos sorteados (ex.: 5) com restart, um SIGTERM
-     limpo, e no fim o replay exportado refeito no Node e no navegador com o hash do servidor; registra memória
-     do processo, tamanho do SQLite e atraso do loop;
-   - **uma rodada de legibilidade e playtest humano** antes do M2 (spec §8 item 4), sem deploy. Itens do dono:
-     - **estrada × pedra:** a estrada (`road` `#7c766a`, borda `#a39b8a`) e a pedra (`rock` `#4a4e57`) são cinzas
-       parecidos e se confundem (caminho × obstáculo); `apps/client/src/map/colors.ts`;
-     - **custo da estrada:** feedback visual do custo (antes de mandar, ao pagar, obra em andamento);
-     - **carga cheia:** sinal claro de que o creep atingiu a capacidade máxima;
-     - **entrega no Núcleo:** feedback visual do depósito;
-     - **nome do creep no mapa:** em cima ou embaixo da forma, com uma fonte apropriada in-game (hoje o nome só
-       aparece no inspetor e na lista da pilha);
-     - "e coisas do tipo": o playtest gera a lista seguinte. Mudanças de **regra** (não só de tela) vão para o
-       GDD como proposta (skill `gdd-decision`).
-2. **Validações do dono do F8:** `npm run dev:multi -- --clients 3` abriu as 3 abas no Chrome (perfil da última
-   janela) e cada aba tirou o token da URL ✓. Rodar o cliente (`npm run build && npm run server`) ✓.
-   **Pendente:** "Assistir replay" (arquivo do `geo sim` e mundo do servidor); entra no checkpoint da F9.
-3. **Publicar o repo no GitHub** (dono). Ainda não há remote, então o CI ([ci.yml](../../.github/workflows/ci.yml))
+1. **Checkpoint da F9 (dono):** branch `m1/f9-legibility`, roteiro em [PLAYTEST.md](../PLAYTEST.md).
+   - **Playtest de legibilidade:** 1 a 3 pessoas, de preferência quem nunca viu o jogo, com
+     `npm run dev:multi -- --clients 2 --mult 36` (ou `--mult 12` para ver as obras). Roteiro de tarefas e
+     questionário no PLAYTEST.md. Os achados entram em "Achados do playtest", abaixo.
+   - **Replay** (pendente desde o F8): "Assistir replay" no lobby, velocidades, linha do tempo, "Ver como" e o
+     selo "✓ hash confere" no fim (passos no PLAYTEST.md). O mundo do último `npm run soak` também serve: o
+     `summary.md` dele diz como abrir.
+   - Também já validado pelo dono no F8: `npm run dev:multi -- --clients 3` (3 abas no Chrome, token fora da URL)
+     ✓ e o cliente pelo `npm run build && npm run server` ✓.
+   - Depois do checkpoint: melhorias que forem só legibilidade e couberem no M1 viram uma rodada seguinte da F9;
+     mudanças de **regra** vão para o GDD como proposta (skill `gdd-decision`). Com o OK do dono, merge da F9 em
+     `main`, e o M1 fecha.
+2. **Publicar o repo no GitHub** (dono). Ainda não há remote, então o CI ([ci.yml](../../.github/workflows/ci.yml))
    nunca rodou fora da máquina local.
 
+## Achados do playtest
+
+Um item por problema: o que a pessoa não entendeu ou não conseguiu, a tarefa ou pergunta do
+[PLAYTEST.md](../PLAYTEST.md) que mostrou, e quantas pessoas tropeçaram nele. Vazio até a primeira sessão.
+
 ## Pendências e pontos a esclarecer
+
+- **Interpretações da F9** (o plan fixa o quê, não estes detalhes):
+  - o `+N`/`−N` sobe do Núcleo com a **variação líquida** do estoque entre dois estados (5 por segundo): uma
+    entrega e um pagamento no mesmo intervalo se somam (ex.: `−140`). O `−N` também aparece ao pagar produção e
+    upgrade, não só estrada. Variações do mesmo time, recurso e sinal em até 700 ms viram um número só; o `+N`
+    sobe acima do Núcleo (matéria à esquerda, cristal à direita), o `−N` ao lado. O estoque no painel pisca
+    verde ao subir e vermelho ao descer;
+  - nomes no mapa só em creeps fora de pilha, com 10 a 13 px na tela, numa camada acima de todos os creeps
+    (nenhum vizinho cobre um nome);
+  - carga cheia = matéria + cristal ≥ capacidade do creep; o brilho toca quando o anel cheio aparece: ao encher,
+    mas também ao abrir a página ou quando o creep sai de uma pilha já cheio;
+  - custo da estrada no modo estrada: segue o `sim` (caminho mais barato do Núcleo do time até a célula; cada
+    célula sem estrada é um segmento; obra já paga não paga de novo; a estrada para na primeira célula que não
+    aceita estrada, marcada com ✕). O texto mostra as células a construir e o custo total; fica **vermelho
+    quando o estoque não cobre o total** (o `sim` constrói segmento a segmento enquanto houver estoque). "sem
+    caminho", "sem estrada aqui" (bloqueada já na primeira célula) e "já tem estrada" quando não há o que pagar;
+  - tempo da obra: acima da célula, numa camada sobre os creeps (o construtor fica em cima da obra), só com a
+    célula ≥ 22 px na tela, em tempo de mundo (`2:00` com o `default.json`, 1 s real a ×120);
+  - `npm run soak`: o tick de cada queda é sorteado por um LCG da seed, entre 5% e 95% do mundo; o SIGTERM limpo
+    fica no meio da lista; a amostragem é a cada 2 s reais.
+- **Medições da F9:** `npm run soak` completo (×360, seed 42, 5 `kill -9` + 1 SIGTERM): OK, mesmo hash no servidor
+  e no Node, 12,4 min reais; velocidade do loop mediana 100% do multiplicador, mais lenta 93%; SQLite final
+  55,1 MB; memória de cada processo estabiliza em ~200 MB (heap do V8 se acomodando, sem vazamento entre os
+  restarts). O replay do banco do soak também dá ✓ no Chromium. Bundle principal 106 KB (+ a fonte, 10 KB woff2),
+  chunk do replay 102,5 KB. 2033 testes.
 
 - **Interpretações do F8** (o plan não fixa):
   - o `dev:multi` passa a sessão inteira no fragmento (`#token=…&player=…&team=…&name=…`, não só o token): o
