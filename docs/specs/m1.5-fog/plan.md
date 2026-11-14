@@ -255,6 +255,15 @@ descartado. N4 ajustou a D4 da spec (distância em passos, não Manhattan).
 - **Os times divergem depois de ~15 h** no seed 42 (depósito disputado: o creep de id menor coleta primeiro, regra
   do M1). Aceito; a rever numa rodada de rebalanceamento (pergunta aberta no [GDD 03](../../gdd/03-economia-e-logistica.md)).
 
+**Checkpoint da F5: alvo de explorar (dono, 2026-11-14).** Num vídeo do dono, um círculo com o preset batedor
+varria a borda do escuro de lado, descendo uma linha de visão por vez: o alvo (a célula nunca vista mais próxima, a
+~7 passos) é visto depois de 1 passo, e o desempate pelo menor índice escolhe sempre a linha de cima. Medido com um
+batedor sozinho (seeds 42, 7 e 649, células conhecidas pelo time em 60 min): círculo 840–1 217 hoje, 1 648–1 681
+com a ordem acabando ao chegar ao alvo, **2 193–2 659 desempatando pelo ganho**, 2 088–2 769 com os dois;
+quadrado 316–351, 498–532, 773–918, 769–882. **Decisão:** desempate pelo ganho, a contagem de células nunca vistas
+no losango de raio igual à visão do DNA em volta do alvo (sem linha de visão: é uma estimativa); a ordem continua
+acabando quando o alvo é visto. `SIM_VERSION` 4.
+
 ## 11. Harness e testes
 
 | Tipo | O quê |
