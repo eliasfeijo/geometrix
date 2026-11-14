@@ -13,6 +13,7 @@ import {
   applyDelta,
   diffView,
   emptySent,
+  emptyView,
   viewJson,
   type Delta,
 } from "@geometrix/protocol";
@@ -85,17 +86,6 @@ export type NetResult = {
   };
 };
 
-const emptyView = (team: number): TeamView => ({
-  tick: 0,
-  team,
-  teams: [],
-  creeps: [],
-  deposits: [],
-  roads: [],
-  roadJobs: [],
-  players: [],
-});
-
 const sha256 = (text: string) =>
   createHash("sha256").update(text).digest("hex");
 
@@ -125,7 +115,8 @@ export function measureNet(
   const log: LoggedCommand[] = [];
   const teams = state.teams.map((t) => t.id);
   const sent = teams.map(() => emptySent());
-  const client = teams.map(emptyView);
+  const cells = state.map.width * state.map.height;
+  const client = teams.map((team) => emptyView(team, cells));
   const seq = teams.map(() => 0);
   // The base the server starts from: what the first welcome carries.
   for (const team of teams) {

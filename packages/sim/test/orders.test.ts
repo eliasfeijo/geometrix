@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import { Terrain, type GameMap } from "../src/map.ts";
 import type { Dna } from "../src/params.ts";
 import { step } from "../src/step.ts";
+import { createMemory } from "../src/vision.ts";
 import { createWorld, type Creep, type WorldState } from "../src/world.ts";
 import { loadTestParams, run } from "./helpers.ts";
 
@@ -20,6 +21,7 @@ function strip(dna: Dna = "square"): { world: WorldState; creep: Creep } {
     road: new Array(36).fill(0),
   };
   world.map = map;
+  world.memory = createMemory(world.teams, map);
   const creep = world.creeps[0]!;
   Object.assign(creep, { dna, x: 0, y: 1 });
   for (const other of world.creeps.slice(1))

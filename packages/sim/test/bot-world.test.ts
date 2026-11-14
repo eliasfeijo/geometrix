@@ -1,8 +1,7 @@
-// Behavior lock for the strategist (M1.5 plan section 7, spec D4): a seed-42
-// world with one balanced bot per team, run for 6 world hours the way the
-// harness and the server run it. The hash must not change while the strategist
-// moves from the state to the team view; a change means a bot decided
-// something different.
+// Behavior lock for the strategist (M1.5 rede plan section 7, spec D4): a
+// seed-42 world with one balanced bot per team, run for 6 world hours the way
+// the harness and the server run it. A changed hash means a bot decided
+// something different; it changes on purpose with the fog (fog spec D12).
 
 import { createHash } from "node:crypto";
 import { expect, test } from "vitest";
@@ -28,12 +27,12 @@ test("a 6 h bot world of seed 42 hashes to a stable value", () => {
     commands += accepted.length;
     step(state, accepted);
   }
-  // The bots did act: production, upgrades and role changes.
-  expect(state.creeps.length).toBeGreaterThan(12);
-  expect(commands).toBeGreaterThan(20);
+  // The bots did act: role changes. (Until the autopilot explores, fog F2,
+  // they know no cristal and produce nothing.)
+  expect(commands).toBeGreaterThan(5);
   expect(
     createHash("sha256").update(serialize(state)).digest("hex"),
   ).toMatchInlineSnapshot(
-    `"9974df6a5437172ca650f81e53bbc9fc04ad9fb37293e9b20be1f22b1a1d8bbb"`,
+    `"cf3d05a295b215969ad033d6510235f4f71f965121b260e9ef2621eb6963eaa8"`,
   );
 });

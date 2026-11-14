@@ -1,4 +1,4 @@
-import { productionRefusal, step } from "@geometrix/sim";
+import { ownTeam, productionRefusal, step } from "@geometrix/sim";
 import { describe, expect, it } from "vitest";
 import { viewOf, testWorld } from "./helpers.ts";
 
@@ -11,7 +11,7 @@ describe("production checks on the wire state", () => {
       expect(
         productionRefusal(
           { params: world.params, creeps: wire.creeps },
-          wire.teams[0]!,
+          ownTeam(wire),
         ),
       ).toBe(productionRefusal(world, team));
     };

@@ -1,6 +1,6 @@
 # Status atual
 
-**Atualizado:** 2026-11-14 · **Marco:** M1.5 — A névoa · **Fatia de rede:** ✅ concluída (viabilidade aprovada) · **Design do fog:** ✅ decidido (GDD 01, 02, 07) · **Spec e plan do fog:** ✅ aprovados · **Próximo:** fog F1 (visão e memória no `sim`)
+**Atualizado:** 2026-11-14 · **Marco:** M1.5 — A névoa · **Fatia de rede:** ✅ concluída (viabilidade aprovada) · **Design do fog:** ✅ decidido (GDD 01, 02, 07) · **Spec e plan do fog:** ✅ aprovados · **Fog F1:** ✅ · **Próximo:** fog F2 (pelo que o time sabe)
 
 Resumo de bolso. A fonte de verdade continua nos docs linkados. Atualize este arquivo ao fechar uma fase, ao passar
 por um portão de aprovação ou quando surgir um bloqueio.
@@ -24,7 +24,7 @@ por um portão de aprovação ou quando surgir um bloqueio.
 | M1 — F8 Replay e multi-cliente | ✅ Concluída, merge em `main`. Replay no navegador (arquivo do `geo sim` ou `GET /api/worlds/:id/replay`) com velocidades, linha do tempo e hash ✓/✗; hash confere no WebKit/JSC; `npm run dev:multi`. Detalhes decididos pelo dono no [plan §8](../specs/m1-ciclo-da-riqueza/plan.md) | [tasks.md §F8](../specs/m1-ciclo-da-riqueza/tasks.md) · `apps/client/src/replay/` · `apps/server/src/dev-multi*.ts` |
 | M1 — F9 Legibilidade e playtest | ✅ Concluída, merge em `main`. Fecha o M1. Feito: `npm run soak` (teste de resistência comprimido, no lugar do mundo de 24 h), estrada × pedra, nomes no mapa (Chakra Petch), carga cheia, `+N`/`−N` no Núcleo, custo da estrada sob o cursor e tempo da obra, [PLAYTEST.md](../PLAYTEST.md). **Checkpoint** (dono, 2026-11-14): playtest parcial e replay validados, sem achados | [tasks.md §F9](../specs/m1-ciclo-da-riqueza/tasks.md) · [spec §8](../specs/m1-ciclo-da-riqueza/spec.md) |
 | Deploy e playtest de diversão | Saíram do M1 (dono, 2026-11-14): abrem o M2 | [ROADMAP](../ROADMAP.md) |
-| M1.5 — A névoa | 🟡 Em andamento (dono, 2026-11-14). Duas fatias: rede (deltas da visão de cada time, [ADR-0006](../adr/0006-sync-do-mundo.md), aceito) ✅ concluída, e depois fog of war 🟡 (rodada de design, spec e plan ✅ 2026-11-14; F1 ⬜) | [ROADMAP](../ROADMAP.md) |
+| M1.5 — A névoa | 🟡 Em andamento (dono, 2026-11-14). Duas fatias: rede (deltas da visão de cada time, [ADR-0006](../adr/0006-sync-do-mundo.md), aceito) ✅ concluída, e depois fog of war 🟡 (rodada de design, spec e plan ✅ 2026-11-14; F1 ✅; F2 ⬜) | [ROADMAP](../ROADMAP.md) |
 | M1.5 rede — spec | ✅ Aprovada (2026-11-14). Decisões D1–D8; critérios de viabilidade na §7 | [spec.md](../specs/m1.5-rede/spec.md) |
 | M1.5 rede — plan | ✅ Aprovado (2026-11-14), com R1–R7 decididas | [plan.md](../specs/m1.5-rede/plan.md) |
 | M1.5 fog — spec | ✅ Aprovada (2026-11-14). Decisões D1–D12 (D1: pedras bloqueiam a visão, escolha do dono; D3/D4: como e para onde se explora, no GDD 07); critérios na §7 | [spec.md](../specs/m1.5-fog/spec.md) |
@@ -35,6 +35,7 @@ por um portão de aprovação ou quando surgir um bloqueio.
 | M1.5 rede — F3 Servidor | ✅ Concluída, merge em `main`. Protocolo 2: `welcome` com a última visão enviada ao time, `delta` numerado por time (inclusive sem socket), hash a cada 60 ticks, retomada pelo buffer de 30 s, `resync` com linha no log. O store do cliente já aplica os deltas (1ª task da F4) | [tasks.md](../specs/m1.5-rede/tasks.md) · `apps/server/src/{stream,ws}.ts` |
 | M1.5 rede — F4 Cliente | ✅ Concluída, merge em `main`. Retomada com `&stream=…&seq=…`, `resync` por `seqGap` e por hash divergente (Web Crypto), recarga com outra versão do protocolo, painel `?net=1`. Conferido no Chromium com `kill -9` + restart do servidor | [tasks.md](../specs/m1.5-rede/tasks.md) · `apps/client/src/{connection,store,net-panel}.ts*` |
 | M1.5 rede — F5 Soak e viabilidade | ✅ Tasks concluídas, merge em `main`. `npm run soak` com 2 clientes sem interface por time: 0 hashes divergentes, visões finais iguais à do servidor, retomadas pelo buffer e `welcome` depois de cada restart. **Todos os critérios da spec §7 verdes.** **Checkpoint** (dono, 2026-11-14): sessão com `dev:multi --net` e reconexão ok; segue para o fog; id do stream na URL aprovado | [viability.md](../specs/m1.5-rede/viability.md) · `apps/server/src/soak-client.ts` |
+| M1.5 fog — F1 Visão e memória | ✅ Concluída, merge em `main`. Params de visão, linha de visão (Bresenham inteiro no referencial do time), `TeamMemory` com `updateVision` incremental (estágio 6), `view` filtrada e `fullView`, delta com `known`/`visible` (1ª task da F3, adiantada), `SIM_VERSION` 3 | [tasks.md](../specs/m1.5-fog/tasks.md) · `packages/sim/src/{vision,view}.ts` |
 | M2–M4 | ⬜ Não iniciados | [ROADMAP](../ROADMAP.md) |
 
 ## Próximos passos imediatos
@@ -52,9 +53,21 @@ por um portão de aprovação ou quando surgir um bloqueio.
    Ficaram em aberto, para a spec: como os creeps começam explorando (regra no preset coletor, preset "batedor" ou
    os dois; GDD 07). Terreno e Núcleo inimigo vistos ficam conhecidos, e a tela tem três estados (nunca visto,
    lembrado, visível): confirmados pelo dono na mesma rodada.
-2. **Implementar o fog** ([tasks](../specs/m1.5-fog/tasks.md), skill `implement-phase`), começando pela **F1**
-   (`m1.5/fog-f1-vision`): params de visão, `TeamMemory` e `updateVision` com a linha de visão, `view` filtrada e
-   `fullView`, `SIM_VERSION` 3 e hashes novos. Lembretes do plan:
+2. **Implementar o fog** ([tasks](../specs/m1.5-fog/tasks.md), skill `implement-phase`). F1 ✅. Próxima: **F2**
+   (`m1.5/fog-f2-knowledge`): mapa conhecido, caminho e estradas pelo que o time sabe, piloto pela memória, explorar
+   e presets, recusas sem vazamento, estrategista só com a visão, métricas; checkpoint de início de partida e
+   economia. O que a F2 precisa saber da F1:
+   - **interim da F1:** o estrategista já lê a visão filtrada, mas o piloto não explora; os bots não conhecem
+     cristal e não produzem. Três testes afrouxaram e a F2 tem de **restaurar**: `apps/cli/test/harness.test.ts`
+     (crescer, comprar o upgrade, entregar cristal), `packages/sim/test/bot-world.test.ts` (mais de 12 creeps, mais
+     de 20 comandos) e `packages/protocol/test/delta-property.test.ts` (creeps nascendo; com o fog, `removes > 0`);
+   - a memória está em `state.memory[team]` (`vision.ts`); `memory.roadRevision`/`blockRevision` já existem para
+     o cache do A*; o `state.roadRevision` global ainda existe (sai na F2);
+   - os testes do estrategista usam `revealWorld` (`test/helpers.ts`), que dá a cada time a memória do mundo
+     inteiro;
+   - o `textWorld` recria a memória depois de trocar o mapa; teste que troca `world.map` à mão tem de fazer o mesmo.
+
+   Lembretes do plan:
    - dois vazamentos do código entram nas fases: o `welcome` manda `cores` (F3) e a recusa `notYourTeam` revela
      creep inimigo (F2);
    - o hash de 3 dias (`10662729…`) e o de 6 h do `bot-world.test.ts` mudam de propósito;
@@ -80,6 +93,27 @@ Um item por problema: o que a pessoa não entendeu ou não conseguiu, a tarefa o
   item 3).
 
 ## Pendências e pontos a esclarecer
+
+- **Interpretações da F1 do fog** (o plan não fixa):
+  - **o Bresenham escolhido já é simétrico por rotação de 180°** (só depende do módulo e do sinal do deslocamento):
+    o teste de espelho passa nas 4 096 células com ou sem o referencial do time. O referencial ficou, como o plan
+    pede, para garantir a equivalência se o traçado mudar;
+  - **a visão é incremental:** contagem de observadores por célula, refeita só para quem mudou de célula. Redesenhar
+    todos os losangos a cada tick custava 15,5 µs por tick (3 dias de 4,4 s para 10,5 s, acima do critério de 2×);
+    a contagem custa 1,5 µs. As listas de células à vista e as contagens ficam num cache derivado do estado (fora
+    do `WorldState`, recriado depois de um restore com o mesmo resultado; um teste confere a cada 5 min de 2 h de
+    mundo);
+  - estrada concluída entra na memória na hora (em `completeRoadJob`) para o time que pagou **e para os times que
+    têm a célula à vista** naquele momento; fora isso, o terreno e as estradas só são lidos quando a célula entra
+    na visão;
+  - a pedra só é "descoberta" (`blockRevision`) quando a célula é vista pela primeira vez; rio também conta;
+  - no cliente (só para compilar; a tela é da F4): creep inimigo com inspetor reduzido (DNA, carga, posição) e carga
+    contra a capacidade **base** do DNA (o upgrade do outro time é escondido); painel do Núcleo inimigo só com o
+    nome; `+N`/`−N` só do próprio Núcleo; o replay já usa a `fullView`;
+  - o delta de `known` a partir de um registro vazio compara com -1; o cliente que monta a visão do zero começa de
+    `emptyView(time, células)` (`protocol`), com `known` todo -1.
+- **Medição da F1:** `geo verify --seed 42` OK (hash `c8dcab74…`); `geo sim` de 3 dias do seed 42 em 4,8 s (sem
+  produção, ver o interim acima: não é comparável). 2120 testes.
 
 - **Interpretações da F5 do M1.5** (o plan não fixa):
   - os clientes do soak entram como jogadores humanos (`soak-<time>-<n>`, pelo `POST /join`): os `join` vão para o

@@ -1,3 +1,4 @@
+import { fullView } from "@geometrix/sim";
 import { describe, expect, it } from "vitest";
 import {
   addFloats,
@@ -9,16 +10,26 @@ import {
 import { viewOf, testWorld } from "./helpers.ts";
 
 describe("stockDeltas", () => {
-  it("tells deliveries and payments of each team", () => {
+  it("tells deliveries and payments of each team whose stock it sees", () => {
+    const state = testWorld();
+    const before = structuredClone(fullView(state));
+    state.teams[0]!.stock.materia += 40;
+    state.teams[1]!.stock.cristal -= 10;
+    expect(stockDeltas(before, fullView(state))).toEqual([
+      { team: 0, resource: "materia", amount: 40 },
+      { team: 1, resource: "cristal", amount: -10 },
+    ]);
+    expect(stockDeltas(before, before)).toEqual([]);
+  });
+
+  it("leaves out the other teams in a team's view (fog spec D7)", () => {
     const state = testWorld();
     const before = viewOf(state);
     state.teams[0]!.stock.materia += 40;
     state.teams[1]!.stock.cristal -= 10;
     expect(stockDeltas(before, viewOf(state))).toEqual([
       { team: 0, resource: "materia", amount: 40 },
-      { team: 1, resource: "cristal", amount: -10 },
     ]);
-    expect(stockDeltas(before, before)).toEqual([]);
   });
 });
 

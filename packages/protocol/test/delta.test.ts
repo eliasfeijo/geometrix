@@ -3,6 +3,7 @@ import {
   createWorld,
   parseParams,
   step,
+  updateVision,
   view,
   type TeamView,
   type WorldState,
@@ -13,6 +14,7 @@ import {
   applyDelta,
   diffView,
   emptySent,
+  emptyView,
   viewJson,
   type Delta,
   type Sent,
@@ -64,21 +66,15 @@ function expectApplies(world: WorldState, client: TeamView, delta: Delta) {
 describe("diffView / applyDelta", () => {
   test("from an empty sent record, the delta is the whole view", () => {
     const world = createWorld(42, parseParams(params));
-    const delta = wire(diffView(emptySent(), view(world, 0)));
-    expect(delta.creeps?.upsert).toHaveLength(world.creeps.length);
-    expect(delta.deposits?.upsert).toHaveLength(world.deposits.length);
+    const seen = view(world, 0);
+    const delta = wire(diffView(emptySent(), seen));
+    expect(delta.creeps?.upsert).toHaveLength(seen.creeps.length);
+    expect(delta.deposits?.upsert).toHaveLength(seen.deposits.length);
     expect(delta.teams?.upsert).toHaveLength(2);
-    const empty: TeamView = {
-      tick: 0,
-      team: 0,
-      teams: [],
-      creeps: [],
-      deposits: [],
-      roads: [],
-      roadJobs: [],
-      players: [],
-    };
-    expectApplies(world, empty, delta);
+    expect(delta.known).toHaveLength(seen.known.filter((t) => t >= 0).length);
+    expect(delta.visible).toEqual({ add: seen.visible });
+    const { width, height } = world.map;
+    expectApplies(world, emptyView(0, width * height), delta);
   });
 
   test("nothing changed: only the tick", () => {
@@ -91,16 +87,14 @@ describe("diffView / applyDelta", () => {
     const { world, client, next } = setup();
     const creep = world.creeps[3]!;
     creep.x += 1;
-    world.deposits[0]!.amount -= 5;
+    // The view's deposits are the team's memory.
+    const deposit = world.memory[0]!.deposits[0]!;
+    deposit.amount -= 5;
     const delta = next();
     expect(delta).toEqual({
       tick: world.tick,
       creeps: { upsert: [{ id: creep.id, x: creep.x }] },
-      deposits: {
-        upsert: [
-          { id: world.deposits[0]!.id, amount: world.deposits[0]!.amount },
-        ],
-      },
+      deposits: { upsert: [{ id: deposit.id, amount: deposit.amount }] },
     });
     expectApplies(world, client, delta);
   });
@@ -109,13 +103,13 @@ describe("diffView / applyDelta", () => {
     const { world, client, next } = setup();
     const creep = world.creeps[0]!;
     creep.cargo.materia += 3;
-    world.teams[1]!.stock.cristal += 7;
+    world.teams[0]!.stock.cristal += 7;
     const delta = next();
     expect(delta.creeps).toEqual({
       upsert: [{ id: creep.id, cargo: { materia: 3, cristal: 0 } }],
     });
     expect(delta.teams?.upsert).toEqual([
-      { id: 1, stock: { ...world.teams[1]!.stock } },
+      { id: 0, stock: { ...world.teams[0]!.stock } },
     ]);
     expectApplies(world, client, delta);
   });
@@ -186,12 +180,14 @@ describe("diffView / applyDelta", () => {
 
   test("new roads only, merged in increasing order", () => {
     const { world, client, next } = setup();
-    world.map.road[500] = 1;
-    world.map.road[20] = 1;
+    // The view's roads are the team's memory.
+    const { road } = world.memory[0]!;
+    road[500] = 1;
+    road[20] = 1;
     const first = next();
     expect(first.roads).toEqual([20, 500]);
     const after = expectApplies(world, client, first);
-    world.map.road[300] = 1;
+    road[300] = 1;
     const second = next();
     expect(second.roads).toEqual([300]);
     expect(expectApplies(world, after, second).roads).toEqual([20, 300, 500]);
@@ -199,10 +195,85 @@ describe("diffView / applyDelta", () => {
 
   test("a road that goes away is refused", () => {
     const { world, next } = setup();
-    world.map.road[20] = 1;
+    world.memory[0]!.road[20] = 1;
     next();
-    world.map.road[20] = 0;
+    world.memory[0]!.road[20] = 0;
     expect(next).toThrow(/road went away/);
+  });
+
+  test("cells explored go as [cell, terrain] pairs, sight as add and remove", () => {
+    const { world, client, next } = setup();
+    const scout = world.creeps.find((c) => c.team === 0 && c.dna === "circle")!;
+    const before = view(world, 0);
+    scout.y += scout.y < world.map.height / 2 ? 3 : -3;
+    updateVision(world);
+    const delta = next();
+    const after = view(world, 0);
+    const explored = after.known.flatMap((t, i) =>
+      t !== before.known[i] ? [[i, t]] : [],
+    );
+    expect(explored.length).toBeGreaterThan(0);
+    expect(delta.known).toEqual(explored);
+    expect(delta.visible?.add ?? []).toEqual(
+      after.visible.filter((i) => !before.visible.includes(i)),
+    );
+    expect(delta.visible?.remove ?? []).toEqual(
+      before.visible.filter((i) => !after.visible.includes(i)),
+    );
+    expectApplies(world, client, delta);
+    expect(next()).toEqual({ tick: world.tick });
+  });
+
+  test("an enemy creep enters sight with D7 fields only, and leaves as a remove", () => {
+    const { world, client, next } = setup();
+    const enemy = world.creeps.find((c) => c.team === 1)!;
+    const home = { x: enemy.x, y: enemy.y };
+    Object.assign(enemy, world.teams[0]!.core);
+    const entered = next();
+    expect(entered.creeps?.upsert).toEqual([
+      {
+        id: enemy.id,
+        team: 1,
+        dna: enemy.dna,
+        ...world.teams[0]!.core,
+        cargo: enemy.cargo,
+      },
+    ]);
+    const seen = expectApplies(world, client, entered);
+    Object.assign(enemy, home);
+    const left = next();
+    expect(left.creeps).toEqual({ remove: [enemy.id] });
+    expectApplies(world, seen, left);
+  });
+
+  test("the enemy core goes from unknown to known", () => {
+    const { world, client, next } = setup();
+    expect(client.teams[1]).toEqual({ id: 1, core: null });
+    world.memory[0]!.cores.push({ team: 1, ...world.teams[1]!.core });
+    const delta = next();
+    expect(delta.teams?.upsert).toEqual([
+      { id: 1, core: world.teams[1]!.core },
+    ]);
+    expectApplies(world, client, delta);
+  });
+
+  test("a remembered enemy road job that is forgotten is a remove", () => {
+    const { world, client, next } = setup();
+    const job = {
+      id: world.nextId++,
+      team: 1,
+      x: 3,
+      y: 3,
+      remainingSeconds: 60,
+    };
+    world.memory[0]!.roadJobs.push(job);
+    const remembered = next();
+    expect(remembered.roadJobs?.upsert).toEqual([job]);
+    const seen = expectApplies(world, client, remembered);
+    world.memory[0]!.roadJobs = [];
+    const forgotten = next();
+    expect(forgotten.roadJobs).toEqual({ remove: [job.id] });
+    expectApplies(world, seen, forgotten);
   });
 
   test("applyDelta shares what did not change and leaves the base alone", () => {
