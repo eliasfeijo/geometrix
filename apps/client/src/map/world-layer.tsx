@@ -10,7 +10,7 @@ import {
   octagonPoints,
 } from "./shapes.ts";
 import { COLORS, teamColor } from "./colors.ts";
-import { roadRuns } from "./terrain.ts";
+import { roadJoinsDown, roadRuns } from "./terrain.ts";
 import { DnaShape } from "./creep-shape.tsx";
 
 type Props = {
@@ -43,21 +43,50 @@ export function WorldLayer({ state, params, width, zoom }: Props) {
   );
 }
 
+/** Inset of a road strip from its cells' sides, in cells. */
+const ROAD_INSET = 0.08;
+/** Edge of the road outside the strip, in cells. */
+const ROAD_EDGE = 0.05;
+
+/**
+ * Roads as one continuous strip (F9): horizontal runs plus vertical joins.
+ * The strips are drawn twice, stroked and then filled on top, so the edge
+ * shows only on the outside of the road, not between its pieces.
+ */
 function Roads({ roads, width }: { roads: number[]; width: number }) {
+  const strip = 1 - 2 * ROAD_INSET;
+  const pieces = [
+    ...roadRuns(roads, width).map((run) => ({
+      key: `${run.x},${run.y}`,
+      x: run.x + ROAD_INSET,
+      y: run.y + ROAD_INSET,
+      width: run.length - 2 * ROAD_INSET,
+      height: strip,
+    })),
+    ...roadJoinsDown(roads, width).map((cell) => ({
+      key: `join ${cell.x},${cell.y}`,
+      x: cell.x + ROAD_INSET,
+      y: cell.y + 1 - ROAD_INSET,
+      width: strip,
+      height: 2 * ROAD_INSET,
+    })),
+  ];
   return (
     <g shape-rendering="crispEdges">
-      {roadRuns(roads, width).map((run) => (
-        <rect
-          key={`${run.x},${run.y}`}
-          x={run.x + 0.08}
-          y={run.y + 0.08}
-          width={run.length - 0.16}
-          height="0.84"
-          fill={COLORS.road}
-          stroke={COLORS.roadEdge}
-          stroke-width="0.04"
-        />
-      ))}
+      <g
+        fill={COLORS.roadEdge}
+        stroke={COLORS.roadEdge}
+        stroke-width={2 * ROAD_EDGE}
+      >
+        {pieces.map(({ key, ...rect }) => (
+          <rect key={key} {...rect} />
+        ))}
+      </g>
+      <g fill={COLORS.road}>
+        {pieces.map(({ key, ...rect }) => (
+          <rect key={key} {...rect} />
+        ))}
+      </g>
     </g>
   );
 }

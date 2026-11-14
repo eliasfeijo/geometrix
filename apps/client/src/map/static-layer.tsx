@@ -1,10 +1,11 @@
-// Terrain, river, crossings and rocks: drawn once per welcome.
+// Terrain, river, crossings and rocks (with their relief): drawn once per
+// welcome.
 
 import { Terrain } from "@geometrix/sim";
 import { memo } from "preact/compat";
 import type { WorldInfo } from "../store.ts";
 import { COLORS } from "./colors.ts";
-import { terrainRuns } from "./terrain.ts";
+import { ROCK_EDGE, rockEdges, terrainRuns } from "./terrain.ts";
 
 const TERRAIN_COLORS: Record<Terrain, string> = {
   [Terrain.jungle]: COLORS.jungle,
@@ -19,6 +20,7 @@ export const StaticLayer = memo(function StaticLayer({
   map: WorldInfo["map"];
 }) {
   const runs = terrainRuns(map);
+  const edges = rockEdges(map);
   return (
     <g class="static-layer">
       <defs>
@@ -71,13 +73,17 @@ export const StaticLayer = memo(function StaticLayer({
           />
         ))}
       </g>
+      <g fill="none" stroke-width={ROCK_EDGE}>
+        <path d={edges.shade} stroke={COLORS.rockShade} />
+        <path d={edges.lit} stroke={COLORS.rockLit} />
+      </g>
       <rect
         x="0"
         y="0"
         width={map.width}
         height={map.height}
         fill="none"
-        stroke={COLORS.rock}
+        stroke={COLORS.border}
         stroke-width="0.1"
       />
     </g>
