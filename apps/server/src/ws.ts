@@ -1,5 +1,5 @@
 // WebSocket (plan section 7). A client connects to /ws?token=..., gets the
-// welcome with the static map and the last view sent to its team, then sends
+// welcome with the map size and the last view sent to its team, then sends
 // commands and gets an ack (with the tick the command will apply on) or a
 // reject. After ticks, each team's stream sends the delta of its view to the
 // team's sockets, at most once per broadcastIntervalMs (M1.5 plan section 5).
@@ -8,7 +8,7 @@ import type { Server } from "node:http";
 import {
   parseClientMessage,
   PROTOCOL_VERSION,
-  toStaticMap,
+  mapSize,
   type ServerMessage,
   type WelcomeMessage,
 } from "@geometrix/protocol";
@@ -142,8 +142,7 @@ function welcome(
     status,
     multiplier: host.multiplier,
     params: host.state.params,
-    map: toStaticMap(host.state),
-    cores: host.state.teams.map((t) => t.core),
+    map: mapSize(host.state),
     stream: stream.id,
     seq,
     view,

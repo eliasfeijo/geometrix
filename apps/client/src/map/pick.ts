@@ -20,7 +20,8 @@ export function pickAt(
   point: Point,
   markers: readonly Marker[],
   deposits: readonly Deposit[],
-  cores: readonly Cell[],
+  /** By team; null for a core the team has not seen. */
+  cores: readonly (Cell | null)[],
 ): Pick | null {
   const marker = markerAt(point, markers);
   if (marker?.kind === "creep") return { kind: "creep", id: marker.id };
@@ -30,8 +31,9 @@ export function pickAt(
   if (deposit !== undefined) return { kind: "deposit", id: deposit.id };
   const team = cores.findIndex(
     (core) =>
+      core !== null &&
       Math.hypot(core.x + 0.5 - point.x, core.y + 0.5 - point.y) <=
-      CORE_HIT_RADIUS,
+        CORE_HIT_RADIUS,
   );
   if (team >= 0) return { kind: "core", team };
   return null;

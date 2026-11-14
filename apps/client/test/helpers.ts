@@ -16,7 +16,7 @@ import {
   type TeamView,
   type WorldState,
 } from "@geometrix/sim";
-import { PROTOCOL_VERSION, toStaticMap } from "@geometrix/protocol";
+import { mapSize, PROTOCOL_VERSION } from "@geometrix/protocol";
 import params from "../../../packages/sim/test/params.json" with { type: "json" };
 import type { KeyValueStore } from "../src/session.ts";
 
@@ -44,8 +44,7 @@ export function welcomeOf(
     status: "running",
     multiplier: 1,
     params: state.params,
-    map: toStaticMap(state),
-    cores: state.teams.map((t) => t.core),
+    map: mapSize(state),
     stream: "test",
     seq: 0,
     view: viewOf(state, team),
