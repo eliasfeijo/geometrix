@@ -111,7 +111,7 @@ Formato: *Quando [gatilho], o sistema deve [resposta].*
 - **Produção:** um creep por vez por Núcleo, sem fila; um pedido com o Núcleo ocupado é recusado. O custo é
   debitado ao iniciar. O teto de população conta os creeps vivos + o que está em produção. O creep nasce no Núcleo,
   parado. **"Repetir"** (P5): ao terminar, recomeça o mesmo DNA; sem estoque ou sem espaço no teto, fica armado e
-  tenta de novo a cada tick. Desarmar é um comando do F4.
+  tenta de novo a cada tick. Desarmar é o comando `stopRepeat` (plan §4).
 - **Construção de estrada:** segmento = 1 célula. `buildRoad{x,y}` segue o caminho mais barato do próprio Núcleo
   até P; o próximo segmento é a 1ª célula sem estrada nesse caminho. O creep vai até a célula; a matéria é debitada
   ao começar; ele fica lá pelo tempo de construção e segue para o próximo segmento até P ter estrada. Sem matéria
@@ -120,6 +120,8 @@ Formato: *Quando [gatilho], o sistema deve [resposta].*
 - **Estradas são neutras:** os dois times andam nelas. A conexão de I-2 vale para qualquer estrada ou para o
   próprio Núcleo. Não dá para construir em travessia (ela continua lenta, gargalo para o M2) nem na célula de um
   Núcleo.
+  Consequência aceita pelo dono: como todo segmento encosta na rede, **no M1 nenhuma estrada cruza o rio**; um
+  `buildRoad` para a outra margem constrói até a travessia e para.
 
 ### Domínio
 - **D-1** Quando um jogador domina um creep livre do próprio time, o creep deve passar a executar só os comandos

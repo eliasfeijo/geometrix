@@ -1,6 +1,6 @@
 # Status atual
 
-**Atualizado:** 2026-11-13 · **Marco:** M1 — O ciclo da riqueza · **Fase:** F3 concluída, F4 a iniciar
+**Atualizado:** 2026-11-13 · **Marco:** M1 — O ciclo da riqueza · **Fase:** F3 concluída, F4 em andamento
 
 Resumo de bolso. A fonte de verdade continua nos docs linkados. Atualize este arquivo ao fechar uma fase, ao passar
 por um portão de aprovação ou quando surgir um bloqueio.
@@ -24,12 +24,12 @@ por um portão de aprovação ou quando surgir um bloqueio.
 
 1. **Publicar o repo no GitHub** (dono). Ainda não há remote, então o CI ([ci.yml](../../.github/workflows/ci.yml))
    nunca rodou fora da máquina local.
-2. **F4:** criar a branch `m1/f4-autopilot` a partir de `main` e usar a skill `implement-phase`. O que ela precisa
+2. **F4:** em andamento na branch `m1/f4-autopilot`, com a skill a skill `implement-phase`. O que ela precisa
    saber do código atual:
    - `Command` em `step.ts` ainda é `never`. O F3 expôs a mecânica como funções que devolvem o motivo da recusa
      (ou `null`): `startProduction(state, teamId, dna, repeat)` e `buyUpgrade(state, teamId, "capacity")`. Os
-     comandos `produce`/`buyUpgrade` do F4 devem chamá-las. Falta um comando para **desarmar o "repetir"**
-     (`team.repeat = null`); o `produce` sem repetir já desarma.
+     comandos `produce`/`buyUpgrade` do F4 devem chamá-las. O dono aprovou o comando `stopRepeat {}` (plan §4),
+     que desarma o "repetir" (`team.repeat = null`).
    - Ordens (`Order` em `orders.ts`): `stop`, `moveTo{x,y}`, `gather{depositId}`, `deliver`,
      `buildRoad{x,y,segment}`. Crie a de estrada com `buildRoadOrder(cell)` (`segment: -1`); o comando externo
      `buildRoad{x,y}` não carrega `segment`.
@@ -46,8 +46,6 @@ por um portão de aprovação ou quando surgir um bloqueio.
   - a regeneração usa o relógio do mundo (a cada `everySeconds` desde o tick 0), não um contador por depósito;
   - uma obra de estrada pertence ao time que pagou, mas qualquer creep com `buildRoad` naquela célula a continua
     (inclusive do outro time) sem pagar de novo; obras abandonadas ficam no estado para sempre;
-  - **consequência da regra "não constrói em travessia"**: como todo segmento precisa encostar na rede, nenhuma
-    estrada cruza o rio. Um `buildRoad` para a outra margem constrói até a travessia e para.
 - **Sinal da medição do F3** (bot improvisado, não é o estrategista do F5): em 3 dias, os dois times batem o teto
   de 30 creeps, acumulam ~13 000 de matéria e esgotam todo o cristal. Material para a calibragem do F5.
 
