@@ -37,12 +37,14 @@ function setup() {
   const statuses: ConnectionStatus[] = [];
   const messages: WorldMessage[] = [];
   const fatal: FatalReason[] = [];
+  const resyncs: [string, number][] = [];
   const connection = new Connection(
     "ws://test/ws?token=t",
     {
       message: (m) => messages.push(m),
       status: (s) => statuses.push(s),
       fatal: (r) => fatal.push(r),
+      resync: (reason, seq) => resyncs.push([reason, seq]),
     },
     {
       openSocket: (url, handlers) => {
@@ -80,6 +82,7 @@ function setup() {
     statuses,
     messages,
     fatal,
+    resyncs,
     fireTimer,
     last,
     openWithWelcome,
@@ -187,6 +190,49 @@ describe("Connection", () => {
     t.last().handlers.close(1006);
     t.fireTimer();
     expect(t.last().url).toBe("ws://test/ws?token=t&stream=new&seq=0");
+  });
+
+  it("asks for a resync on a gap in the seqs and drops deltas until the welcome", () => {
+    const t = setup();
+    t.openWithWelcome();
+    t.last().serverSends({ type: "delta", seq: 1, delta: { tick: 2 } });
+    t.last().serverSends({ type: "delta", seq: 3, delta: { tick: 4 } });
+    t.last().serverSends({ type: "delta", seq: 4, delta: { tick: 5 } });
+    expect(t.last().sent).toEqual([
+      { type: "resync", reason: "seqGap", seq: 1 },
+    ]);
+    expect(t.resyncs).toEqual([["seqGap", 1]]);
+    // Asked once: a hash mismatch now changes nothing.
+    t.connection.resync("hashMismatch");
+    expect(t.last().sent).toHaveLength(1);
+    // A drop now asks for a welcome, not a resume.
+    t.last().handlers.close(1006);
+    t.fireTimer();
+    expect(t.last().url).toBe("ws://test/ws?token=t");
+    t.last().handlers.open();
+    t.last().serverSends({ ...t.welcome, seq: 4 });
+    t.last().serverSends({ type: "delta", seq: 5, delta: { tick: 6 } });
+    expect(t.messages.map((m) => m.type)).toEqual([
+      "welcome",
+      "delta",
+      "welcome",
+      "delta",
+    ]);
+    t.connection.resync("hashMismatch");
+    expect(t.last().sent).toEqual([
+      { type: "resync", reason: "hashMismatch", seq: 5 },
+    ]);
+  });
+
+  it("stops for good on another protocol version", () => {
+    const t = setup();
+    t.last().handlers.open();
+    t.last().serverSends({ ...t.welcome, protocol: 1 });
+    expect(t.fatal).toEqual(["outdated"]);
+    expect(t.messages).toEqual([]);
+    expect(t.last().closed).toBe(true);
+    expect(t.statuses.at(-1)).toBe("closed");
+    expect(t.timers).toEqual([]);
   });
 
   it.each([

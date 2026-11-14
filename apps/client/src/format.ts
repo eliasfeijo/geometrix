@@ -80,6 +80,7 @@ export const REJECT_TEXTS: Record<RejectReason | "disconnected", string> = {
 export const FATAL_TEXTS = {
   unauthorized: "Sessão inválida para este mundo. Entre de novo.",
   worldNotHosted: "Este mundo não está hospedado no servidor.",
+  outdated: "O jogo foi atualizado. Recarregando a página…",
 } as const;
 
 export function conditionText(c: Condition): string {

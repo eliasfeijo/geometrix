@@ -5,11 +5,13 @@
 // deltas it missed (spec C-4, plan R5); a refused token or an unhosted world
 // is final.
 
-import type {
-  ClientCommand,
-  ClientMessage,
-  RejectReason,
-  ServerMessage,
+import {
+  PROTOCOL_VERSION,
+  type ClientCommand,
+  type ClientMessage,
+  type RejectReason,
+  type ResyncReason,
+  type ServerMessage,
 } from "@geometrix/protocol";
 
 export type ConnectionStatus =
@@ -20,7 +22,8 @@ const FATAL_CODES: Record<number, FatalReason> = {
   4401: "unauthorized",
   4404: "worldNotHosted",
 };
-export type FatalReason = "unauthorized" | "worldNotHosted";
+/** Also "outdated": the server speaks another protocol version (spec C-5). */
+export type FatalReason = "unauthorized" | "worldNotHosted" | "outdated";
 
 export type CommandResult =
   | { ok: true; tick: number }
@@ -35,6 +38,8 @@ export type ConnectionEvents = {
   message(message: WorldMessage): void;
   status(status: ConnectionStatus): void;
   fatal(reason: FatalReason): void;
+  /** A resync was asked for (spec C-2, C-3): an incident worth logging. */
+  resync?(reason: ResyncReason, seq: number): void;
 };
 
 export type SocketHandlers = {
@@ -71,6 +76,11 @@ export class Connection {
   private seq = 0;
   /** Whether the current socket asked to resume instead of a welcome. */
   private resuming = false;
+  /**
+   * Whether deltas apply: from a welcome until a resync is asked for. Deltas
+   * in between are dropped, and a reconnect then asks for a welcome.
+   */
+  private synced = false;
 
   constructor(url: string, events: ConnectionEvents, deps: ConnectionDeps) {
     this.url = url;
@@ -92,6 +102,18 @@ export class Connection {
     });
   }
 
+  /**
+   * Asks for the full view again (spec C-2, C-3), dropping deltas until the
+   * welcome. Ignored while one is already on its way or the socket is down.
+   */
+  resync(reason: ResyncReason): void {
+    if (!this.synced || this.socket === null || !this.isOpen) return;
+    this.synced = false;
+    const message: ClientMessage = { type: "resync", reason, seq: this.seq };
+    this.socket.send(JSON.stringify(message));
+    this.events.resync?.(reason, this.seq);
+  }
+
   close(): void {
     this.stopped = true;
     if (this.timer !== null) this.deps.clearTimeout(this.timer);
@@ -105,7 +127,7 @@ export class Connection {
     this.timer = null;
     this.events.status(this.attempts === 0 ? "connecting" : "reconnecting");
     // Only a reconnect on this page has a stream to resume.
-    this.resuming = this.stream !== null;
+    this.resuming = this.stream !== null && this.synced;
     const url = this.resuming
       ? `${this.url}&stream=${encodeURIComponent(this.stream!)}&seq=${this.seq}`
       : this.url;
@@ -135,6 +157,15 @@ export class Connection {
     }
     switch (message.type) {
       case "welcome":
+        if (message.protocol !== PROTOCOL_VERSION) {
+          this.stopped = true;
+          this.socket?.close();
+          this.dropped();
+          this.events.status("closed");
+          this.events.fatal("outdated");
+          return;
+        }
+        this.synced = true;
         this.stream = message.stream;
         this.seq = message.seq;
         this.resuming = false;
@@ -142,6 +173,12 @@ export class Connection {
         this.events.message(message);
         break;
       case "delta":
+        if (!this.synced) return;
+        // Over TCP a gap means a bug (ADR-0006, rule 5): start over.
+        if (message.seq !== this.seq + 1) {
+          this.resync("seqGap");
+          return;
+        }
         this.seq = message.seq;
         this.events.message(message);
         break;

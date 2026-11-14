@@ -15,6 +15,9 @@ import { TopBar } from "./top-bar.tsx";
 /** Least time between two fetches of the player names. */
 const NAMES_RETRY_MS = 3000;
 
+/** Time to read the notice before a reload for a new protocol version. */
+const RELOAD_MS = 1500;
+
 type Props = {
   session: Session;
   onLeave(): void;
@@ -31,12 +34,22 @@ export function Game({ session, onLeave, onInvalid }: Props) {
         {
           message: (m) => store.receive(m, performance.now()),
           status: (s) => (store.connection.value = s),
-          fatal: (reason) => onInvalid(FATAL_TEXTS[reason]),
+          fatal: (reason) => {
+            if (reason !== "outdated") return onInvalid(FATAL_TEXTS[reason]);
+            // Spec C-5: a tab older than the server reloads.
+            store.notify(FATAL_TEXTS.outdated, performance.now());
+            window.setTimeout(() => window.location.reload(), RELOAD_MS);
+          },
+          resync: (reason, seq) =>
+            console.warn(`resync reason=${reason} seq=${seq}`),
         },
         browserDeps,
       ),
     [],
   );
+  useEffect(() => {
+    store.hashMismatch = () => connection.resync("hashMismatch");
+  }, []);
   useEffect(() => () => connection.close(), []);
   useEffect(() => fetchNamesWhenMissing(store, session.worldId), []);
 
