@@ -11,6 +11,7 @@ import { validate } from "../src/commands.ts";
 import { serialize } from "../src/serialize.ts";
 import { step } from "../src/step.ts";
 import { strategistActs, strategistCommands } from "../src/strategist.ts";
+import { view } from "../src/view.ts";
 import { createWorld, type WorldState } from "../src/world.ts";
 import { loadTestParams } from "./helpers.ts";
 
@@ -26,7 +27,12 @@ function botInputs(state: WorldState): CommandInput[] {
   }
   if (!strategistActs(state.tick)) return [];
   return [0, 1].flatMap((team) =>
-    strategistCommands("balanced", state, team).map((command) => ({
+    strategistCommands(
+      "balanced",
+      view(state, team),
+      state.map,
+      state.params,
+    ).map((command) => ({
       playerId: team + 1,
       command,
     })),

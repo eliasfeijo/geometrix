@@ -17,6 +17,7 @@ import {
   strategistActs,
   strategistCommands,
   validate,
+  view,
   type Command,
   type Params,
   type WorldState,
@@ -221,7 +222,13 @@ export class WorldHost {
     if (strategistActs(state.tick)) {
       for (const bot of this.bots) {
         if (findPlayer(state, bot.playerId) === undefined) continue;
-        for (const command of strategistCommands("balanced", state, bot.team)) {
+        const seen = view(state, bot.team);
+        for (const command of strategistCommands(
+          "balanced",
+          seen,
+          state.map,
+          state.params,
+        )) {
           this.submit(bot.playerId, command);
         }
       }
