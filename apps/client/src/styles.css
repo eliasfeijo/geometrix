@@ -361,7 +361,7 @@ h3 {
   position: absolute;
   top: 10px;
   right: 10px;
-  width: 340px;
+  width: 380px;
   max-width: calc(100% - 20px);
   max-height: calc(100% - 20px);
   overflow-y: auto;
@@ -573,4 +573,114 @@ h3 {
     width: calc(100% - 20px);
     max-height: 45%;
   }
+}
+
+/* Rules editor */
+
+.rules-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.presets {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+.presets button {
+  font-size: 12px;
+  padding: 2px 6px;
+}
+
+.rules {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rule {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 6px;
+  background: var(--panel-2);
+  border-radius: 4px;
+}
+
+.rule-index {
+  color: var(--muted);
+  width: 1.2em;
+  text-align: right;
+  padding-top: 3px;
+}
+
+.rule-body {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+.rule-body select,
+.rule-body input {
+  font-size: 12px;
+  padding: 1px 3px;
+}
+
+.rule-body input[type="number"] {
+  width: 4em;
+}
+
+.field-group {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3px;
+}
+
+.arrow {
+  color: var(--muted);
+}
+
+.rule-buttons {
+  display: flex;
+  flex-direction: column;
+}
+
+.rule-buttons button {
+  padding: 0 4px;
+  font-size: 12px;
+}
+
+.rules-footer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.warn {
+  color: #ffd166;
+}
+
+.mode-banner {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: #3a3220;
+  border: 1px solid #ffd166;
+  border-radius: 6px;
+  z-index: 3;
+  max-width: calc(100% - 32px);
 }

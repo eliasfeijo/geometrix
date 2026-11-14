@@ -13,8 +13,18 @@ import type {
   FatalReason,
   WorldMessage,
 } from "./connection.ts";
+import type { Cell } from "@geometrix/sim";
 import type { Selection } from "./map/pick.ts";
 import type { Size, View } from "./map/view.ts";
+
+/**
+ * What a click on the map does besides selecting: pick a cell for a form
+ * (e.g. the roadBuilder target), or give buildRoad orders (road mode).
+ */
+export type Mode =
+  | { type: "select" }
+  | { type: "pickCell"; prompt: string; pick(cell: Cell): void }
+  | { type: "road" };
 
 /** A dynamic state and when it arrived (performance.now(), ms). */
 export type Snapshot = { state: DynamicState; at: number };
@@ -42,6 +52,7 @@ export class GameStore {
   readonly view = signal<View | null>(null);
   readonly mapSize = signal<Size>({ width: 0, height: 0 });
   readonly selection = signal<Selection | null>(null);
+  readonly mode = signal<Mode>({ type: "select" });
 
   /** This player, once the join is in the state (the tick after joining). */
   readonly me = computed(() => {
