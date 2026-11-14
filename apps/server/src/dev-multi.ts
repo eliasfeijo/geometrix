@@ -15,6 +15,7 @@ one browser tab per player. Ctrl+C stops the server.
   --mult <n>      time multiplier (default 36)
   --no-build      serve the client build already in apps/client/dist
   --no-open       only print the URLs
+  --net           open the tabs with the network panel (?net=1)
 `;
 
 export type DevMultiOptions = {
@@ -23,6 +24,8 @@ export type DevMultiOptions = {
   multiplier: number;
   build: boolean;
   open: boolean;
+  /** Tabs with ?net=1, the network panel (M1.5 spec D8). */
+  net: boolean;
 };
 
 export class DevMultiError extends Error {}
@@ -46,6 +49,7 @@ export function parseDevMultiArgs(args: readonly string[]): DevMultiOptions {
         mult: { type: "string" },
         "no-build": { type: "boolean" },
         "no-open": { type: "boolean" },
+        net: { type: "boolean" },
       },
       strict: true,
     }));
@@ -65,6 +69,7 @@ export function parseDevMultiArgs(args: readonly string[]): DevMultiOptions {
       values.mult === undefined ? 36 : integer("mult", values.mult, 1, 10_000),
     build: values["no-build"] !== true,
     open: values["no-open"] !== true,
+    net: values.net === true,
   };
 }
 
@@ -83,11 +88,13 @@ export function tabUrl(
   worldId: number,
   slot: number,
   session: { playerId: number; team: number; name: string; token: string },
+  net = false,
 ): string {
   const query = new URLSearchParams({
     world: String(worldId),
     slot: String(slot),
   });
+  if (net) query.set("net", "1");
   const fragment = new URLSearchParams({
     token: session.token,
     player: String(session.playerId),

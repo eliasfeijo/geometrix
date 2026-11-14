@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { showNetPanel } from "../src/net-panel.tsx";
+import { keepNetPanel, showNetPanel } from "../src/net-panel.tsx";
 import { BYTES_WINDOW_MS, NetStats } from "../src/net-stats.ts";
 
 describe("NetStats", () => {
@@ -23,5 +23,15 @@ describe("showNetPanel", () => {
     ["", false],
   ])("%s → %s", (search, shown) => {
     expect(showNetPanel({ search })).toBe(shown);
+  });
+});
+
+describe("keepNetPanel", () => {
+  it("keeps ?net=1 when the page moves", () => {
+    expect(keepNetPanel("?world=3&slot=1", "?slot=1&net=1")).toBe(
+      "?world=3&slot=1&net=1",
+    );
+    expect(keepNetPanel("", "?net=1")).toBe("?net=1");
+    expect(keepNetPanel("?world=3", "?slot=1")).toBe("?world=3");
   });
 });
