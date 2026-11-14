@@ -10,6 +10,7 @@ import {
   debit,
   findDeposit,
   gatherFrom,
+  regenerates,
   teamOf,
   unload,
 } from "./economy.ts";
@@ -23,7 +24,7 @@ import {
   nextSegment,
 } from "./roads.ts";
 import { recordDelivery } from "./stats.ts";
-import type { Creep, WorldState } from "./world.ts";
+import type { Creep, Deposit, WorldState } from "./world.ts";
 
 export type Order =
   | { type: "stop" }
@@ -103,12 +104,18 @@ function walk(state: WorldState, creep: Creep, target: Cell): WalkResult {
   return "arrived";
 }
 
-/** Walks to the deposit, then gathers until full or the deposit is empty. */
+/**
+ * Walks to the deposit, then gathers until full. At an empty deposit that
+ * regenerates the creep waits (idle) for it; one that never does ends the
+ * order (owner decision, 2026-11-14).
+ */
 function gather(state: WorldState, creep: Creep, depositId: number): void {
   const deposit = findDeposit(state, depositId);
-  const full =
-    cargoTotal(creep) >= capacity(creep, teamOf(state, creep), state.params);
-  if (deposit === undefined || deposit.amount === 0 || full) {
+  if (
+    deposit === undefined ||
+    isFull(state, creep) ||
+    exhausted(state, deposit)
+  ) {
     halt(creep);
     return;
   }
@@ -116,8 +123,17 @@ function gather(state: WorldState, creep: Creep, depositId: number): void {
     if (walk(state, creep, deposit) === "unreachable") halt(creep);
     return;
   }
-  if (!gatherFrom(state, creep, deposit)) halt(creep);
+  if (deposit.amount === 0) return;
+  gatherFrom(state, creep, deposit);
+  if (isFull(state, creep) || exhausted(state, deposit)) halt(creep);
 }
+
+const isFull = (state: WorldState, creep: Creep) =>
+  cargoTotal(creep) >= capacity(creep, teamOf(state, creep), state.params);
+
+/** Empty for good: nothing left and no regeneration. */
+const exhausted = (state: WorldState, deposit: Deposit) =>
+  deposit.amount === 0 && !regenerates(deposit, state.params);
 
 /**
  * Walks to the team's core and unloads on arrival, in the same tick

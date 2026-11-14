@@ -38,14 +38,13 @@ export function findDeposit(
 
 /**
  * Moves this tick's share from the deposit into the creep's cargo, limited by
- * the free capacity and by what the deposit holds. Returns true while the
- * creep can keep gathering there.
+ * the free capacity and by what the deposit holds.
  */
 export function gatherFrom(
   state: WorldState,
   creep: Creep,
   deposit: Deposit,
-): boolean {
+): void {
   const { params } = state;
   const free =
     capacity(creep, teamOf(state, creep), params) - cargoTotal(creep);
@@ -55,7 +54,15 @@ export function gatherFrom(
   creep.cargo[deposit.kind] += taken;
   creep.activity = "gathering";
   recordDepositAmount(state, deposit);
-  return free - taken > 0 && deposit.amount > 0;
+}
+
+/**
+ * Whether an empty `deposit` fills up again: materia regenerates, cristal
+ * never does (R-2). A gather waits at a deposit like this (owner decision,
+ * 2026-11-14).
+ */
+export function regenerates(deposit: Deposit, params: Params): boolean {
+  return deposit.kind === "materia" && params.deposits.materia.regen.amount > 0;
 }
 
 /** Moves the whole cargo into the team stock (spec R-3). */

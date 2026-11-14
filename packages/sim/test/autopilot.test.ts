@@ -149,11 +149,51 @@ describe("actions", () => {
       type: "gather",
       depositId: depositAt(world, 2).id,
     });
+    creep.order = { type: "stop" };
     depositAt(world, 2).amount = 0;
     step(world, []);
     expect(creep.order).toEqual({
       type: "gather",
       depositId: depositAt(world, 6).id,
+    });
+  });
+
+  test("gather keeps its deposit on the way when a nearer one fills up", () => {
+    const { world, creep } = withRules([
+      { when: always, then: { type: "gather", resource: "materia" } },
+    ]);
+    depositAt(world, 2).amount = 0;
+    step(world, []);
+    const far = { type: "gather", depositId: depositAt(world, 6).id } as const;
+    expect(creep.order).toEqual(far);
+    depositAt(world, 2).amount = 5;
+    run(world, 30);
+    expect(creep.order).toEqual(far);
+  });
+
+  test("gather waits at its materia deposit when it runs dry", () => {
+    const { world, creep } = withRules([
+      { when: always, then: { type: "gather", resource: "materia" } },
+      { when: always, then: { type: "deliver" } },
+    ]);
+    const near = { type: "gather", depositId: depositAt(world, 2).id } as const;
+    creep.order = near;
+    depositAt(world, 2).amount = 0;
+    step(world, []);
+    expect(creep.order).toEqual(near);
+  });
+
+  test("gather leaves a cristal deposit that runs dry for the next one", () => {
+    const { world, creep } = withRules(
+      [{ when: always, then: { type: "gather", resource: "cristal" } }],
+      ["A.c.c....B"],
+    );
+    creep.order = { type: "gather", depositId: depositAt(world, 2).id };
+    depositAt(world, 2).amount = 0;
+    step(world, []);
+    expect(creep.order).toEqual({
+      type: "gather",
+      depositId: depositAt(world, 4).id,
     });
   });
 

@@ -88,7 +88,7 @@ describe("gather", () => {
     expect(creep.cargo).toEqual({ materia: 0, cristal: 10 });
   });
 
-  test("stops when the deposit runs out", () => {
+  test("stops when a cristal deposit runs out", () => {
     const world = textWorld(["Ac.......B"]);
     const deposit = depositAt(world, 1);
     deposit.amount = 3;
@@ -114,7 +114,44 @@ describe("gather", () => {
     expect([first!.cargo.materia, second!.cargo.materia]).toEqual([1, 1]);
     run(world, 1);
     expect([first!.cargo.materia, second!.cargo.materia]).toEqual([2, 1]);
-    expect(second!.order).toEqual({ type: "stop" });
+    expect(deposit.amount).toBe(0);
+    expect(second!.activity).toBe("idle");
+  });
+
+  test("waits at an empty materia deposit and gathers what regenerates", () => {
+    const world = textWorld(NEXT_TO_MATERIA);
+    const deposit = depositAt(world, 1);
+    deposit.amount = 0;
+    const creep = creepOf(world, 0, "circle");
+    Object.assign(creep, { x: 1 });
+    const order = { type: "gather", depositId: deposit.id } as const;
+    creep.order = order;
+    // 1 unit regenerates at the end of each world minute (tick 59, 119...).
+    run(world, 60);
+    expect(creep).toMatchObject({
+      order,
+      activity: "idle",
+      cargo: { materia: 0 },
+    });
+    expect(deposit.amount).toBe(1);
+    run(world, 1);
+    expect(creep).toMatchObject({
+      order,
+      activity: "gathering",
+      cargo: { materia: 1 },
+    });
+    expect(deposit.amount).toBe(0);
+  });
+
+  test("walks to an empty materia deposit to wait there", () => {
+    const world = textWorld(NEXT_TO_MATERIA);
+    const deposit = depositAt(world, 1);
+    deposit.amount = 0;
+    const creep = creepOf(world, 0, "circle");
+    creep.order = { type: "gather", depositId: deposit.id };
+    run(world, 40);
+    expect(creep.x).toBe(1);
+    expect(creep.order).toEqual({ type: "gather", depositId: deposit.id });
   });
 
   test("a full creep stops without walking", () => {
@@ -129,9 +166,9 @@ describe("gather", () => {
 
   test.each([
     ["an unknown deposit", 9999],
-    ["an empty deposit", 0],
+    ["an empty cristal deposit", 0],
   ])("%s turns into stop", (_, id) => {
-    const world = textWorld(NEXT_TO_MATERIA);
+    const world = textWorld(["Ac.......B"]);
     const deposit = depositAt(world, 1);
     deposit.amount = 0;
     const creep = creepOf(world, 0, "circle");
