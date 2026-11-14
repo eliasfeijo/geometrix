@@ -1,6 +1,6 @@
 # Spec M1.5 — Fog of war
 
-**Status:** Rascunho · **Data:** 2026-11-14 · **Marco:** M1.5 — A névoa ([ROADMAP](../../ROADMAP.md)), fatia 2 de 2
+**Status:** Aprovada (2026-11-14) · **Data:** 2026-11-14 · **Marco:** M1.5 — A névoa ([ROADMAP](../../ROADMAP.md)), fatia 2 de 2
 **GDD relacionado:** [01](../../gdd/01-mundo.md) (Decidido, "Fog of war"), [02](../../gdd/02-creeps-e-dominio.md)
 (visão por DNA), [07](../../gdd/07-piloto-automatico.md) (piloto pelo que o time sabe, ação "explorar") ·
 **ADR:** [0006](../../adr/0006-sync-do-mundo.md) (`Accepted`) · **Fatia anterior:** [rede](../m1.5-rede/spec.md)
@@ -32,12 +32,12 @@ Resumo; a fonte é o GDD.
 
 ## 3. Decisões de escopo que esta spec assume
 
-Propostas; só valem com o aceite do dono (junto com a spec). As marcadas com **(gameplay)** completam o GDD e,
-aceitas, entram nele (skill `gdd-decision`).
+Aceitas pelo dono com a spec (2026-11-14). As marcadas com **(gameplay)** completam o GDD e já estão nele (01 e
+07). Em D1 o dono escolheu a linha de visão, no lugar da proposta original (sem bloqueio).
 
 | # | Decisão | Padrão proposto | Por quê |
 |---|---|---|---|
-| D1 | Linha de visão **(gameplay)** | Não existe: pedras e rio não bloqueiam a visão. Visível = célula a até `r` (Manhattan) do Núcleo ou de um creep do time | O GDD fala só em raio; linha de visão é custo e regra a mais |
+| D1 | Linha de visão **(gameplay)** | **Pedras bloqueiam.** Visível = célula a até `r` (Manhattan) do Núcleo ou de um creep do time, sem pedra entre os dois; a pedra em si é vista. Rio e vaus não bloqueiam. O algoritmo da linha (só inteiros, equivalente para os dois times no mapa espelhado) fica para o plan | Escolha do dono: as pedras viram cobertura, o que serve à emboscada do M2. Custa regra e CPU a mais |
 | D2 | Quando a visão é medida | No fim de cada tick, depois do movimento e da economia. A memória é atualizada nesse momento, e o piloto do tick seguinte decide por ela | Uma única leitura por tick, a mesma para a rede, o bot e o piloto |
 | D3 | Como os creeps começam explorando **(gameplay)** | As duas coisas: (a) o preset coletor ganha a regra "explorar" logo depois de "coletar", e só vale quando o time não conhece depósito com o recurso; (b) um preset novo **batedor** (só explorar; quando não há mais nada a explorar, para no Núcleo) | Pergunta aberta do GDD 07. (a) faz o início funcionar sozinho, inclusive offline; (b) dá ao jogador o papel explícito, que o círculo (raio 6) pede |
 | D4 | Alvo de "explorar" **(gameplay)** | A célula nunca vista mais próxima do creep (Manhattan) que nenhum outro creep do time já tenha como alvo de exploração; desempate pelo menor índice **no referencial do time** (como os caminhos, `isRotatedSide`) | Sem a exclusão, os 6 creeps iniciais andam em bando para a mesma célula. O referencial do time mantém os dois lados equivalentes no mapa espelhado |
@@ -53,7 +53,7 @@ aceitas, entram nele (skill `gdd-decision`).
 ## 4. Escopo
 
 ### Dentro
-- **`sim`:** visão por raio (D1, D2); memória do time no `WorldState`; a visão do time filtrada (inimigo, memória,
+- **`sim`:** visão por raio com linha de visão (D1, D2); memória do time no `WorldState`; a visão do time filtrada (inimigo, memória,
   terreno explorado); caminho e estradas pelo que o time sabe (D5); piloto automático pelo que o time sabe; ação
   "explorar" (D4) e os presets (D3); recusas que não vazam (D6); parâmetros de raio.
 - **Estrategista dos bots:** decide só pela visão, que agora inclui o terreno explorado (sem o mapa estático
@@ -67,7 +67,7 @@ aceitas, entram nele (skill `gdd-decision`).
 - **Playtest de legibilidade:** perguntas de névoa no [PLAYTEST.md](../../PLAYTEST.md).
 
 ### Fora
-Linha de visão (D1); estruturas ou estradas que dão visão; visão no replay por time; minimapa; idade da memória
+Estruturas ou estradas que dão visão; visão no replay por time; minimapa; idade da memória
 na tela ("visto há X min"); depósito garantido à vista; mudar a velocidade ou a capacidade dos DNAs; batalha,
 emboscada e morte (M2); deploy (M2).
 
@@ -77,7 +77,8 @@ Formato: *Quando [gatilho], o sistema deve [resposta].*
 
 ### Visão e memória (`sim`)
 - **V-1** No fim de cada tick, uma célula deve estar **visível** para o time quando está a até o raio do Núcleo
-  (8) do Núcleo dele ou a até o raio do DNA de algum creep dele (Manhattan, D1). Raios nos params.
+  (8) do Núcleo dele ou a até o raio do DNA de algum creep dele (Manhattan), sem pedra no meio da linha entre os
+  dois (D1). Uma célula de pedra é vista, mas esconde o que está atrás. Raios nos params.
 - **V-2** Quando uma célula fica visível, o time deve passar a conhecer o terreno dela para sempre (explorada).
 - **V-3** Quando um depósito está numa célula visível, a memória do time deve guardar o depósito com a quantidade
   atual. Fora da visão, a memória mantém o último valor visto.
@@ -158,6 +159,7 @@ Os alvos são chutes provisórios. Quando um reprovar, o dono decide no checkpoi
 | Banda e CPU | Os alvos da [spec da rede §7](../m1.5-rede/spec.md) (≤ 2 KB/s por cliente; visão + diff ≤ 0,25 ms por mundo por envio, mediana) | `geo net --seed 42 --days 3` |
 | Custo do tick | O tick com fog custa no máximo o dobro do tick sem fog | Harness, tempo médio por tick no mundo de 3 dias |
 | Sem divergência | 0 hashes divergentes; visão final de cada cliente igual à do servidor | `npm run soak` |
+| Linha de visão | Mapas de teste em texto: o que fica atrás de uma pedra não é visto; a pedra é; rio não bloqueia; o resultado é o mesmo para os dois times em posições espelhadas | Teste do `sim` |
 | Nada vaza | A visão de um time não tem nenhum campo de D7 a mais nem entidade fora da visão ou da memória | Teste do `sim` com um mundo montado à mão |
 
 **Métricas novas no relatório do harness:** tempo até a 1ª entrega de cada recurso, por time; % do mapa explorado
@@ -165,7 +167,7 @@ por time ao longo do tempo; tempo até ver o Núcleo inimigo; creeps em "explora
 
 ## 8. Protocolo de teste
 
-1. **Testes** (`sim`, `protocol`, `server`, `client`): visão por raio, memória, caminho e estrada no escuro,
+1. **Testes** (`sim`, `protocol`, `server`, `client`): visão por raio e linha de visão, memória, caminho e estrada no escuro,
    explorar e os presets, recusas sem vazamento, filtro do inimigo, `welcome` sem terreno e sem seed, replay
    recusado em mundo vivo.
 2. **Harness:** seeds 1 a 20 (6 h) e o mundo de 3 dias do seed 42, com as métricas da seção 7; `geo net`.
@@ -180,11 +182,11 @@ por time ao longo do tempo; tempo até ver o Núcleo inimigo; creeps em "explora
 
 ## 9. Pré-requisitos antes do `plan.md`
 
-- Aceite do dono nas decisões D1–D12; as de gameplay (D1, D3, D4) entram no GDD.
+- Aceite do dono nas decisões D1–D12 ✅ (2026-11-14); as de gameplay (D1, D3, D4) já estão no GDD.
 - Nenhum ADR novo previsto: o fog é a visão por time que o [ADR-0006](../../adr/0006-sync-do-mundo.md) já supõe,
   e o ADR não fixa o mapa no `welcome` (isso era do plan da rede). Se o plan mudar uma regra do ADR, vira emenda
   (skill `adr`).
 
 ## 10. Perguntas abertas
 
-Nenhuma além do aceite de D1–D12.
+Nenhuma no momento.

@@ -25,6 +25,6 @@ e o playtest de diversão continuam abrindo o M2.
 **Escopo da fatia de fog** (rodada de design, 2026-11-14): o dono escolheu a névoa negra e a visão por DNA, que vão
 além de só filtrar a visão. A fatia passa a incluir a ação "explorar" do piloto automático, o caminho calculado pelo
 que o time sabe (cache por time), o terreno explorado no delta da rede (hoje o mapa vai inteiro no `welcome`) e a
-exploração no estrategista dos bots.
+exploração no estrategista dos bots, e a linha de visão (pedras bloqueiam; spec do fog, D1).
 
 O mapa completo de 3 lanes + 2 jungles entra conforme os marcos pedirem, não antes.
