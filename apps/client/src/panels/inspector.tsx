@@ -20,12 +20,12 @@ import { DnaIcon } from "./dna-icon.tsx";
 import { RulesEditor } from "./rules-editor.tsx";
 
 export function Inspector() {
-  const { store, session } = useGame();
+  const { store, viewer } = useGame();
   const selection = store.selection.value;
   // The own core has its panel docked on the left.
   if (
     selection === null ||
-    (selection.kind === "core" && selection.team === session.team)
+    (selection.kind === "core" && selection.team === viewer.team)
   ) {
     return null;
   }
@@ -43,7 +43,7 @@ export function Inspector() {
 }
 
 function CreepInspector({ id }: { id: number }) {
-  const { store, session, send } = useGame();
+  const { store, viewer, send } = useGame();
   const state = store.current.value?.state;
   const params = store.info.value?.params;
   const creep = state?.creeps.find((c) => c.id === id);
@@ -52,8 +52,8 @@ function CreepInspector({ id }: { id: number }) {
   }
   const team = state.teams[creep.team]!;
   const max = capacity({ ...creep, path: null }, team, params);
-  const own = creep.team === session.team;
-  const mine = creep.dominatedBy === session.playerId;
+  const own = creep.team === viewer.team;
+  const mine = creep.dominatedBy === viewer.playerId;
   const canAct = store.canAct.value;
   const status = creepStatus(creep, state.deposits);
   const roadMode = store.mode.value.type === "road";
