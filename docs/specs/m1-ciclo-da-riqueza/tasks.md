@@ -65,7 +65,8 @@ Marque `[x]` ao concluir. Cada task deve terminar com os testes verdes. Referên
 - [ ] Painel do Núcleo
 - [ ] Editor de regras e presets
 - [ ] Controle direto (moveTo, gather, deliver, modo estrada)
-- [ ] **Checkpoint:** primeiro playtest local
+- [ ] **Checkpoint:** sessão do dono: interface, legibilidade, editor de regras, domínio, multi-cliente local
+  (spec §8, revista em 2026-11-14)
 
 ## F8 — Replay e multi-cliente
 - [ ] Modo replay no navegador (o `sim` roda no cliente)
@@ -73,6 +74,9 @@ Marque `[x]` ao concluir. Cada task deve terminar com os testes verdes. Referên
 - [ ] Script `npm run dev:multi -- --clients K`
 
 ## F9 — Deploy e playtest
+
+**Fora do M1** (dono, 2026-11-14): vira a primeira etapa antes do playtest do M2. Fica aqui como referência.
+
 - [ ] Dockerfile, `compose.yml`, Caddyfile, `litestream.yml`
 - [ ] Workflow de deploy manual
 - [ ] `docs/PLAYTEST.md`: túnel, protocolo, questionário

@@ -223,6 +223,9 @@ metrics   (world_id, tick, team_id, sample_json)
 | Cliente | smoke manual no M1. Playwright só se for necessário |
 
 ## 11. Deploy
+
+Adiado para antes do playtest do M2 (dono, 2026-11-14; spec §8). O desenho abaixo continua valendo.
+
 - `infra/docker/`:
   - `Dockerfile`: multi-stage; build do cliente; runtime Node.
   - `compose.yml`: app + Caddy + Litestream.
@@ -260,6 +263,6 @@ interface**. Detalhes em [tasks.md](tasks.md).
 | F4 | Piloto automático, presets, domínio | |
 | F5 | Métricas, CLI, estrategista bot | **Primeiro mundo de 3 dias bot×bot + `report.md`** |
 | F6 | Servidor: HTTP, WebSocket, loop de tick, persistência, recuperação | |
-| F7 | Cliente: mapa, painéis, controle direto, interpolação | **Primeiro playtest local** |
+| F7 | Cliente: mapa, painéis, controle direto, interpolação | **Sessão do dono** (interface e legibilidade) |
 | F8 | Replay no navegador; comando de multi-cliente local | |
-| F9 | Deploy: Docker, Caddy, Litestream, Actions, túnel | **Playtest comprimido** |
+| ~~F9~~ | Deploy e playtest comprimido: **saem do M1** (dono, 2026-11-14) e viram a primeira etapa antes do playtest do M2. O §11 continua valendo | |

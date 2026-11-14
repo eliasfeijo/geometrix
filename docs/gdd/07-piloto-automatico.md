@@ -24,4 +24,4 @@
 - **Coletar com os depósitos zerados.** "Coletar no depósito não vazio mais próximo" faz o creep correr atrás de
   cada unidade que regenera, em qualquer depósito, e vagar entre eles (passada de balanceamento 1,
   [balance.md](../specs/m1-ciclo-da-riqueza/balance.md) §5). Fica assim, ou a coleta espera a regeneração no
-  depósito em que está?
+  depósito em que está? **Fechar antes do F7** (dono, 2026-11-14): no cliente, o vaivém parece bug.

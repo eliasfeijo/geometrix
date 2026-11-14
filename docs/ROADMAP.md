@@ -10,4 +10,8 @@
 | **M3 — O time** | 3v3, impostos, votação com níveis de autoridade, genética e progressão | A governança gera decisões interessantes, ou só burocracia? |
 | **M4 — O mundo vivo** | Jungle com tribos e diplomacia, piloto automático scriptável, construção ampla | — |
 
+**M1 sem playtest humano** (dono, 2026-11-14): sem combate não há o que vencer, então o M1 fecha com a sessão do
+dono, bots e o mundo de 24 h ([spec M1 §8](specs/m1-ciclo-da-riqueza/spec.md)). O deploy e o primeiro playtest
+humano abrem o M2.
+
 O mapa completo de 3 lanes + 2 jungles entra conforme os marcos pedirem, não antes.

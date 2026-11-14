@@ -1,11 +1,11 @@
 # M1 — Passada de balanceamento 1
 
-**Data:** 2026-11-14 · **Status:** aguardando decisão do dono · **Protocolo:** spec §8, item 1 (varreduras bot × bot)
+**Data:** 2026-11-14 · **Status:** decidida (candidato B adotado) · **Protocolo:** spec §8, item 1 (varreduras bot × bot)
 
-Parte do checkpoint do F5 ("precisamos balancear, como era previsto"). Nenhum valor novo entrou em
-`params/default.json`: os candidatos estão em `params/balance-a.json` e `params/balance-b.json` e só passam para o
-default com o OK do dono. Todos os números abaixo são do estrategista `balanced` (provisório), 72 h de mundo,
-seeds 1–5, salvo indicação. Reproduzir: `npm run geo -- sim --seed 42 --days 3 --params params/balance-b.json`.
+Parte do checkpoint do F5 ("precisamos balancear, como era previsto"). O dono adotou o candidato B como
+`params/default.json` provisório em 2026-11-14 (§7); o A ficou em `params/balance-a.json` como referência. Todos os
+números abaixo são do estrategista `balanced` (provisório), 72 h de mundo, seeds 1–5, salvo indicação.
+Reproduzir o B: `npm run geo -- sim --seed 42 --days 3`.
 
 ## 1. Correção antes de balancear: o mapa simétrico não era justo
 
@@ -125,3 +125,29 @@ Registradas também como perguntas abertas no GDD ([03](../../gdd/03-economia-e-
    travessias, ou aceitar e revisitar no M2, quando o cristal ganha usos.
 4. **O bot é parte da medida.** O `balanced` mantém ⅓ dos creeps no cristal até acabar e só constrói estrada até
    depósitos. Um bot melhor muda os números; vale ajustá-lo antes da passada 2, sem mudar o jogo.
+
+## 6. Medição: os DNAs se equivalem na economia
+
+Times de 6 creeps de um DNA só, 12 h, sem estradas (estrategista `none`), com os depósitos do candidato B, que não
+zeram com 6 creeps. Matéria entregue, seeds 1–3:
+
+| DNA | Entregue |
+|---|---|
+| ■ quadrado (30 de carga, 2 células/min) | 9 090 – 10 050 |
+| ▲ triângulo (20, 3) | 9 260 – 11 160 |
+| ● círculo (10, 5) | 8 740 – 10 140 |
+
+A diferença entre DNAs é menor que a diferença entre seeds. Capacidade × velocidade dá 60 / 60 / 50, e a coleta
+(1 por segundo) é igual para todos; o upgrade de +50% multiplica os três da mesma forma. **O dono decidiu manter
+assim** (GDD 02): a diferença entre os DNAs vem de outros sistemas, a partir do M2.
+
+## 7. Decisões do dono (2026-11-14)
+
+- **Candidato B** vira o `params/default.json` provisório.
+- **Sem playtest humano no M1** (spec §8 revista): o M1 fecha com a sessão do dono no F7, os bots e um mundo de
+  24 h. Deploy e playtest comprimido abrem o M2.
+- **Perguntas da §5:**
+  1. sumidouro depois do teto: adiado, não entra no M1;
+  2. coleta com depósitos zerados: a única a fechar antes do F7 (o vaivém parece bug no cliente);
+  3. papel do cristal: fica para o M2.
+- As metas da §3 ficam como referência do critério "sem estado degenerado" (spec §8).
