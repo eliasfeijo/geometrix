@@ -134,7 +134,7 @@ export function writeRun(dir: string, result: SimResult): void {
   const { meta, params, samples, log } = result;
   const write = (file: string, text: string) =>
     writeFileSync(join(dir, file), text);
-  write(RUN_FILES.meta, `${JSON.stringify({ ...meta, params }, null, 2)}\n`);
+  write(RUN_FILES.meta, metaJson(result));
   write(
     RUN_FILES.samples,
     samples.map((s) => `${canonicalJson(s)}\n`).join(""),
@@ -152,6 +152,11 @@ export function writeRun(dir: string, result: SimResult): void {
     })}\n`,
   );
   write(RUN_FILES.report, renderReport({ meta, params, samples }));
+}
+
+/** run.json: the run's meta with its params. */
+export function metaJson({ meta, params }: SimResult): string {
+  return `${JSON.stringify({ ...meta, params }, null, 2)}\n`;
 }
 
 /** What `geo report` needs from a run directory. */
