@@ -4,7 +4,7 @@
 // that path without a road, so it always touches the network (a road or the
 // core). Roads are neutral: both teams move on them.
 
-import { Terrain, type Cell } from "./map.ts";
+import { isRotatedSide, Terrain, type Cell } from "./map.ts";
 import { findPath } from "./pathfinding.ts";
 import type { Order } from "./orders.ts";
 import type { RoadJob, Team, WorldState } from "./world.ts";
@@ -36,7 +36,13 @@ export function nextSegment(
   team: Team,
   target: Cell,
 ): number | null {
-  const path = findPath(state.map, team.core, target, state.params);
+  const path = findPath(
+    state.map,
+    team.core,
+    target,
+    state.params,
+    isRotatedSide(team.id),
+  );
   const next = path?.find((i) => state.map.road[i] === 0);
   return next !== undefined && canBuildRoad(state, next) ? next : null;
 }
