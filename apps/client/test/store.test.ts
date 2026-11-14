@@ -1,5 +1,5 @@
 import { diffView, emptySent, viewJson } from "@geometrix/protocol";
-import { join, step, view, type WorldState } from "@geometrix/sim";
+import { join, step, Terrain, view, type WorldState } from "@geometrix/sim";
 import { describe, expect, it, vi } from "vitest";
 import { duration, durationWords, worldClock } from "../src/format.ts";
 import { sha256Hex } from "../src/hash.ts";
@@ -86,6 +86,37 @@ describe("GameStore", () => {
     expect(store.missingNames()).toBe(true);
     store.names.value = new Map([[1, "Ana"]]);
     expect(store.missingNames()).toBe(false);
+  });
+
+  it("draws the map the team knows, again only when it explores", () => {
+    const world = testWorld();
+    const store = new GameStore();
+    store.receive(welcomeOf(world), 0);
+    const known = store.current.value!.state.known;
+    const map = store.map.value!;
+    expect(map.width).toBe(world.map.width);
+    known.forEach((t, i) =>
+      expect(map.terrain[i]).toBe(
+        t < 0 ? Terrain.jungle : world.map.terrain[i],
+      ),
+    );
+    expect(store.cores.value).toEqual([world.teams[0]!.core, null]);
+
+    // A delta that explores nothing keeps the same map (no redraw).
+    store.receive({ type: "delta", seq: 1, delta: { tick: 2 } }, 1);
+    expect(store.map.value).toBe(map);
+
+    const unseen = known.indexOf(-1);
+    store.receive(
+      {
+        type: "delta",
+        seq: 2,
+        delta: { tick: 3, known: [[unseen, Terrain.rock]] },
+      },
+      2,
+    );
+    expect(store.map.value).not.toBe(map);
+    expect(store.map.value!.terrain[unseen]).toBe(Terrain.rock);
   });
 
   it("expires notices", () => {

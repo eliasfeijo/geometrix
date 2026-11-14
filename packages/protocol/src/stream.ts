@@ -8,5 +8,7 @@ export * from "./delta.ts";
 /**
  * Version of the messages in index.ts. A client of another version reloads
  * the page (M1.5 spec D6). 1: M1, the whole state each time. 2: view deltas.
+ * 3: fog of war, a filtered view with the known terrain and a welcome without
+ * the map's terrain and the cores.
  */
-export const PROTOCOL_VERSION = 2;
+export const PROTOCOL_VERSION = 3;

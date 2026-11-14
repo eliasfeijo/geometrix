@@ -3,11 +3,7 @@
 // which the tick moved, as the server's welcome and deltas would leave it. The screen
 // calls frame() on every animation frame; tests call it directly.
 
-import {
-  PROTOCOL_VERSION,
-  toStaticMap,
-  type Replay,
-} from "@geometrix/protocol";
+import { PROTOCOL_VERSION, mapSize, type Replay } from "@geometrix/protocol";
 import { signal } from "@preact/signals";
 import { fullView, SIM_VERSION } from "@geometrix/sim";
 import { GameStore } from "../store.ts";
@@ -180,8 +176,7 @@ export class ReplayController {
         status: "running",
         multiplier: 1,
         params: state.params,
-        map: toStaticMap(state),
-        cores: state.teams.map((t) => ({ ...t.core })),
+        map: mapSize(state),
         stream: "replay",
         seq: 0,
         view: seen,

@@ -122,7 +122,8 @@ export function Lobby(props: Props) {
               <div class="world-head">
                 <strong>Mundo #{world.id}</strong>
                 <span class="muted">
-                  seed {world.seed} · ×{world.multiplier} · tick {world.tick} (
+                  {world.seed !== null && `seed ${world.seed} · `}×
+                  {world.multiplier} · tick {world.tick} (
                   {Math.floor((100 * world.tick) / world.durationTicks)}%)
                 </span>
                 <span class={`status status-${world.status}`}>
@@ -156,12 +157,14 @@ export function Lobby(props: Props) {
                     Continuar como {session.name} ({teamName(session.team)})
                   </button>
                 )}
-                <button
-                  onClick={() => props.onWatch(world.id)}
-                  title="Rodar o mundo desde o início, no navegador"
-                >
-                  Assistir replay
-                </button>
+                {world.status === "ended" && (
+                  <button
+                    onClick={() => props.onWatch(world.id)}
+                    title="Rodar o mundo desde o início, no navegador"
+                  >
+                    Assistir replay
+                  </button>
+                )}
               </div>
             </article>
           );

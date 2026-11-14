@@ -13,15 +13,16 @@ const TEXT_PX = 13;
 export function RoadPreviewLayer() {
   const { store, viewer } = useGame();
   const info = store.info.value;
+  const map = store.map.value;
   const state = store.current.value?.state;
   const cell = store.pointerCell.value;
   const active = store.mode.value.type === "road" && cell !== null;
   const plan = useMemo<RoadPlan | null>(
     () =>
-      !active || info === null || state === undefined
+      !active || info === null || map === null || state === undefined
         ? null
-        : roadPlan(info.map, state, info.params, viewer.team, cell),
-    [active, cell?.x, cell?.y, state?.roads, state?.roadJobs, viewer.team],
+        : roadPlan(map, state, info.params, viewer.team, cell),
+    [active, cell?.x, cell?.y, state?.roads, state?.roadJobs, map, viewer.team],
   );
   if (plan === null || cell === null || info === null || !state) return null;
 

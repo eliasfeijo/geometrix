@@ -47,6 +47,7 @@ type Drag = {
 export function MapView({ onSelect, onOrder, children }: Props) {
   const { store } = useGame();
   const info = store.info.value;
+  const map = store.map.value;
   const element = useRef<HTMLDivElement>(null);
   const drag = useRef<Drag | null>(null);
 
@@ -225,7 +226,7 @@ export function MapView({ onSelect, onOrder, children }: Props) {
         height="100%"
         style={{ background: COLORS.background }}
       >
-        <StaticLayer map={info.map} />
+        {map !== null && <StaticLayer map={map} />}
         {state !== undefined && (
           <WorldLayer
             state={state}

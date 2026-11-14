@@ -1,9 +1,8 @@
-// Terrain, river, crossings and rocks (with their relief): drawn once per
-// welcome.
+// Terrain, river, crossings and rocks (with their relief), as far as the team
+// explored: drawn again only when the known map changes.
 
 import { Terrain } from "@geometrix/sim";
 import { memo } from "preact/compat";
-import type { WorldInfo } from "../store.ts";
 import { COLORS } from "./colors.ts";
 import { ROCK_EDGE, rockEdges, terrainRuns } from "./terrain.ts";
 
@@ -17,7 +16,7 @@ const TERRAIN_COLORS: Record<Terrain, string> = {
 export const StaticLayer = memo(function StaticLayer({
   map,
 }: {
-  map: WorldInfo["map"];
+  map: { width: number; height: number; terrain: readonly number[] };
 }) {
   const runs = terrainRuns(map);
   const edges = rockEdges(map);

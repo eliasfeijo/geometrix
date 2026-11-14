@@ -21,13 +21,12 @@ export function select(
     return;
   }
   const state = store.current.value?.state;
-  const info = store.info.value;
-  if (state === undefined || info === null) return;
+  if (state === undefined) return;
   const pick = pickAt(
     point,
     markersNow(store, now),
     state.deposits,
-    info.cores,
+    store.cores.value,
   );
   if (pick?.kind === "stack") {
     store.stack.value = { ids: pick.ids, at: px };
