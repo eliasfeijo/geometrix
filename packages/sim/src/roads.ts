@@ -4,10 +4,22 @@
 // that path without a road, so it always touches the network (a road or the
 // core). Roads are neutral: both teams move on them.
 
-import { isRotatedSide, Terrain, type Cell } from "./map.ts";
+import { isRotatedSide, Terrain, type Cell, type GameMap } from "./map.ts";
 import { findPath } from "./pathfinding.ts";
 import type { Order } from "./orders.ts";
+import type { Params } from "./params.ts";
 import type { RoadJob, Team, WorldState } from "./world.ts";
+
+/**
+ * What the road checks read: the map with its road layer, the params and the
+ * cores. The state fits it, and so does what a team sees (a bot builds the road
+ * layer from its view, M1.5 plan R3).
+ */
+export type RoadContext = {
+  map: GameMap;
+  params: Params;
+  teams: readonly { core: Cell }[];
+};
 
 /** Order to build road, segment by segment, until cell P has one. */
 export function buildRoadOrder(target: Cell): Order {
@@ -18,7 +30,7 @@ export function buildRoadOrder(target: Cell): Order {
  * Whether a segment can be built on cell `index`: jungle without a road, and
  * not a core. Crossings stay as they are, the river's slow choke points.
  */
-export function canBuildRoad(state: WorldState, index: number): boolean {
+export function canBuildRoad(state: RoadContext, index: number): boolean {
   const { map } = state;
   if (map.terrain[index] !== Terrain.jungle || map.road[index] === 1) {
     return false;
@@ -32,8 +44,8 @@ export function canBuildRoad(state: WorldState, index: number): boolean {
  * (the path is unreachable or is blocked by a cell that cannot take a road).
  */
 export function nextSegment(
-  state: WorldState,
-  team: Team,
+  state: RoadContext,
+  team: Pick<Team, "id" | "core">,
   target: Cell,
 ): number | null {
   const path = findPath(

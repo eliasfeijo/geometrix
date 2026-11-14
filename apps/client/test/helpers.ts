@@ -13,6 +13,7 @@ import {
   strategistActs,
   strategistCommands,
   validate,
+  view,
   type CommandInput,
   type WorldState,
 } from "@geometrix/sim";
@@ -83,7 +84,12 @@ export function botReplay(
           }))
         : strategistActs(state.tick)
           ? [0, 1].flatMap((team) =>
-              strategistCommands("balanced", state, team).map((command) => ({
+              strategistCommands(
+                "balanced",
+                view(state, team),
+                state.map,
+                state.params,
+              ).map((command) => ({
                 playerId: team + 1,
                 command,
               })),
