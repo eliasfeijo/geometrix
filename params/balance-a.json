@@ -110,7 +110,6 @@
       "materia": 0,
       "cristal": 0
     },
-    "timeoutSeconds": 300,
     "cooldownSeconds": 0,
     "maxDistanceCells": 0
   }
