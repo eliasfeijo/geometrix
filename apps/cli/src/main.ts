@@ -27,6 +27,8 @@ commands:
                                  (default balanced; one name = both teams)
            --out <dir>           runs directory (default runs)
            --id <id>             run id (default <utc time>-s<seed>)
+           --max-seconds <n>     fail (exit 1) if simulating takes longer
+                                 than n wall-clock seconds (CI budget)
   sweep    runs the world for each value of one parameter and each seed,
            and compares them in runs/<id>/report.md and sweep.csv
            --set <path=v1,v2,...>  e.g. creep.cost.materia=30,40,50
@@ -42,7 +44,12 @@ commands:
            --params <file> params JSON (default params/default.json)
            --strategist <a[,b]>  as in sim (default balanced)`;
 
-export type Output = { log(line: string): void; error(line: string): void };
+export type Output = {
+  log(line: string): void;
+  error(line: string): void;
+  /** Wall clock in ms for timing runs; tests pass a fake one. */
+  clock?: () => number;
+};
 
 class UsageError extends Error {}
 
@@ -115,6 +122,7 @@ function runSim(args: string[], out: Output): number {
       strategist: { type: "string", default: "balanced" },
       out: { type: "string", default: "runs" },
       id: { type: "string" },
+      "max-seconds": { type: "string" },
     },
     strict: true,
   });
@@ -122,24 +130,37 @@ function runSim(args: string[], out: Output): number {
   const params = loadParams(values.params ?? DEFAULT_PARAMS);
   const ticks = parseTicks(values, params);
   const strategists = parseStrategists(values.strategist, TEAMS);
+  const maxSeconds =
+    values["max-seconds"] === undefined
+      ? null
+      : parseUint("max-seconds", values["max-seconds"], 1);
   const id = values.id ?? runId(seed);
   const dir = join(values.out, id);
   if (existsSync(dir)) throw new UsageError(`run already exists: ${dir}`);
 
   out.log(`geo sim --seed ${seed}: ${ticks} ticks, ${strategists.join(" x ")}`);
-  const result = simulate({
-    id,
-    seed,
-    params,
-    paramsSource: paramsSource(values.params),
-    ticks,
-    strategists,
-  });
+  const result = simulate(
+    {
+      id,
+      seed,
+      params,
+      paramsSource: paramsSource(values.params),
+      ticks,
+      strategists,
+    },
+    out.clock,
+  );
   writeRun(dir, result);
   out.log(
     `  ${result.meta.wallSeconds.toFixed(1)} s, ${result.meta.commands} commands, hash ${result.meta.finalHash}`,
   );
   out.log(`  ${join(dir, RUN_FILES.report)}`);
+  if (maxSeconds !== null && result.meta.wallSeconds > maxSeconds) {
+    out.error(
+      `FAIL: ${result.meta.wallSeconds.toFixed(1)} s is over the ${maxSeconds} s budget`,
+    );
+    return 1;
+  }
   return 0;
 }
 

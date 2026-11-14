@@ -213,6 +213,46 @@ describe("geo sim / geo report", () => {
     expect(io.errors.join("\n")).toContain(message);
   });
 
+  test("--max-seconds fails a run over the budget (exit 1)", () => {
+    const out = join(scratch, "budget");
+    let now = 0;
+    const slow = { ...capture(), clock: () => (now += 61_000) };
+    expect(
+      run(
+        [
+          "sim",
+          "--hours",
+          "1",
+          "--max-seconds",
+          "60",
+          "--out",
+          out,
+          "--id",
+          "slow",
+        ],
+        slow,
+      ),
+    ).toBe(1);
+    expect(slow.errors).toEqual(["FAIL: 61.0 s is over the 60 s budget"]);
+    const fast = { ...capture(), clock: () => (now += 59_000) };
+    expect(
+      run(
+        [
+          "sim",
+          "--hours",
+          "1",
+          "--max-seconds",
+          "60",
+          "--out",
+          out,
+          "--id",
+          "fast",
+        ],
+        fast,
+      ),
+    ).toBe(0);
+  });
+
   test("an existing run id is a usage error", () => {
     const io = capture();
     expect(

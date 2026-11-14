@@ -29,3 +29,6 @@ jobs:
       - name: Determinism (geo verify)
         # 649 exercises the map regeneration path (seed + 1).
         run: for seed in 1 42 649; do npm run -s geo -- verify --seed "$seed"; done
+      - name: Performance budget (6 h of bot x bot world in at most 60 s)
+        # Plan section 10: proportional to 3 days in 10 min, with some slack.
+        run: npm run -s geo -- sim --seed 42 --hours 6 --out "$RUNNER_TEMP/runs" --max-seconds 60
