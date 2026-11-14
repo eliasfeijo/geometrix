@@ -3,7 +3,7 @@ import { Terrain, type GameMap } from "../src/map.ts";
 import type { Dna } from "../src/params.ts";
 import { step } from "../src/step.ts";
 import { createWorld, type Creep, type WorldState } from "../src/world.ts";
-import { loadDefaultParams } from "./helpers.ts";
+import { loadDefaultParams, run } from "./helpers.ts";
 
 const params = loadDefaultParams();
 
@@ -22,10 +22,6 @@ function strip(dna: Dna = "square"): { world: WorldState; creep: Creep } {
   for (const other of world.creeps.slice(1))
     Object.assign(other, { x: 0, y: 0 });
   return { world, creep };
-}
-
-function run(world: WorldState, ticks: number): void {
-  for (let i = 0; i < ticks; i++) step(world, []);
 }
 
 const at = (creep: Creep) => ({ x: creep.x, y: creep.y });
