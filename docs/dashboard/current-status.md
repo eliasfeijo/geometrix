@@ -1,6 +1,6 @@
 # Status atual
 
-**Atualizado:** 2026-11-14 · **Marco:** M1.5 — A névoa, fatia de rede · **Fase:** F3 ✅ concluída · **Próximo:** F4 (cliente)
+**Atualizado:** 2026-11-14 · **Marco:** M1.5 — A névoa, fatia de rede · **Fase:** F4 ✅ concluída · **Próximo:** F5 (soak com clientes e viabilidade)
 
 Resumo de bolso. A fonte de verdade continua nos docs linkados. Atualize este arquivo ao fechar uma fase, ao passar
 por um portão de aprovação ou quando surgir um bloqueio.
@@ -31,6 +31,7 @@ por um portão de aprovação ou quando surgir um bloqueio.
 | M1.5 rede — F1 Visão no `sim` | ✅ Concluída, merge em `main`. `view(state, team)` e `TeamView`; o estrategista decide pela visão do time + mapa estático + parâmetros; hash de 6 h travado em teste e o de 3 dias (`10662729…`) inalterado | [tasks.md](../specs/m1.5-rede/tasks.md) · `packages/sim/src/view.ts` |
 | M1.5 rede — F2 Delta no `protocol` | ✅ Concluída, merge em `main`. `diffView`/`applyDelta`/`viewJson`, propriedade de 6 h × 3 seeds no CI, `geo net`. **Checkpoint** (3 dias, seed 42): 227 B/s por cliente a ×1 (alvo ≤ 2 KB/s), 83 µs por envio (alvo ≤ 250 µs), 0 divergências em 518 400 verificações, hash `10662729…` igual | [tasks.md](../specs/m1.5-rede/tasks.md) · `packages/protocol/src/delta.ts` · `apps/cli/src/net.ts` |
 | M1.5 rede — F3 Servidor | ✅ Concluída, merge em `main`. Protocolo 2: `welcome` com a última visão enviada ao time, `delta` numerado por time (inclusive sem socket), hash a cada 60 ticks, retomada pelo buffer de 30 s, `resync` com linha no log. O store do cliente já aplica os deltas (1ª task da F4) | [tasks.md](../specs/m1.5-rede/tasks.md) · `apps/server/src/{stream,ws}.ts` |
+| M1.5 rede — F4 Cliente | ✅ Concluída, merge em `main`. Retomada com `&stream=…&seq=…`, `resync` por `seqGap` e por hash divergente (Web Crypto), recarga com outra versão do protocolo, painel `?net=1`. Conferido no Chromium com `kill -9` + restart do servidor | [tasks.md](../specs/m1.5-rede/tasks.md) · `apps/client/src/{connection,store,net-panel}.ts*` |
 | M2–M4 | ⬜ Não iniciados | [ROADMAP](../ROADMAP.md) |
 
 ## Próximos passos imediatos
@@ -39,20 +40,18 @@ por um portão de aprovação ou quando surgir um bloqueio.
 ([spec](../specs/m1.5-rede/spec.md) · [plan](../specs/m1.5-rede/plan.md) · [tasks](../specs/m1.5-rede/tasks.md)),
 depois a de fog of war. O repo está no GitHub e o CI passa lá.
 
-1. **F4 — Cliente**, pela skill `implement-phase`, na branch `m1.5/f4-client` (criar a partir de `main`). O que a F4
-   precisa saber:
-   - **A 1ª task já está feita** (no commit da troca de formato da F3, para cliente e servidor nunca falarem
-     formatos diferentes em `main`): `GameStore.receive` aplica `delta` com `applyDelta` e guarda a visão anterior
-     para a interpolação; `GameStore.show(view, now)` é a entrada do replay.
-   - **Falta no store/conexão:** guardar o `seq` e o `stream` do `welcome` e de cada delta; reconectar com
-     `&stream=…&seq=…` só na mesma página (`socketUrl` e `Connection.connect`); `seq` fora de ordem → mandar
-     `{type: "resync", reason: "seqGap", seq}` e ignorar deltas até o próximo `welcome`; `hash` no delta →
-     SHA-256 (Web Crypto) de `viewJson` da visão daquele `seq`, diferente → `resync` `hashMismatch`;
-     `welcome.protocol !== PROTOCOL_VERSION` → aviso e `location.reload()`.
-   - **O servidor responde** a um `resync` com um `welcome` (o store já trata `welcome` como recomeço) e a uma
-     retomada aceita mandando só os deltas perdidos, sem `welcome`.
-   - **Painel `?net=1`** (spec D8): bytes/s (média de 10 s), `seq`, deltas, retomadas, `welcome`s por causa,
-     hashes conferidos e divergentes.
+1. **F5 — Soak com clientes e viabilidade**, pela skill `implement-phase`, na branch `m1.5/f5-soak` (criar a partir
+   de `main`). O que a F5 precisa saber:
+   - **O soak** está em `apps/server/src/soak.ts` (lógica) e `soak-main.ts` (processo); hoje ele sobe o servidor
+     filho, derruba com `kill -9`, reinicia e compara o replay exportado com o hash do servidor.
+   - **Clientes sem interface:** o protocolo está em `@geometrix/protocol` (tipos, `parseClientMessage`) e
+     `@geometrix/protocol/stream` (`applyDelta`, `viewJson`, `PROTOCOL_VERSION`). A lógica de conexão do
+     navegador (`apps/client/src/connection.ts`: retomada, `seqGap`, `resync`, contadores do `NetStats`) não
+     depende do DOM além do `browserDeps`; dá para reaproveitar o raciocínio (ou a classe) com o `ws` do Node.
+   - **A visão final** de cada cliente deve bater com a do servidor: o hash periódico vem nos deltas (a cada 60
+     ticks); no fim, comparar `viewJson` do cliente com o da última visão enviada (o `welcome` de uma conexão
+     nova, por exemplo).
+   - **Checkpoint do dono:** `npm run dev:multi` com `?net=1` (o `dev:multi` ainda não acrescenta `net=1` às URLs).
 2. **Rodada de design do fog**, em paralelo, pela skill `gdd-decision`: as perguntas do [GDD 01](../gdd/01-mundo.md)
    (o que dá visão e até onde, o que se vê do outro time, se o piloto automático respeita o fog, se o que já foi
    visto continua visível). Precisa estar decidida antes da spec da fatia de fog.
@@ -76,6 +75,20 @@ Um item por problema: o que a pessoa não entendeu ou não conseguiu, a tarefa o
 
 ## Pendências e pontos a esclarecer
 
+- **Interpretações da F4 do M1.5** (o plan não fixa):
+  - uma conexão que pediu retomada fica "conectado" ao abrir o socket; a retomada só conta no painel quando chega
+    um delta sem `welcome` antes (uma retomada recusada depois de um restart vira "reconexão");
+  - depois de pedir `resync`, os deltas são descartados até o `welcome`, e uma reconexão nesse meio pede
+    `welcome`, não retomada. O incidente vai para o `console.warn` do navegador;
+  - o hash é conferido de forma assíncrona; uma divergência descoberta depois de um `welcome` novo é ignorada;
+  - protocolo diferente: aviso "O jogo foi atualizado. Recarregando a página…" e recarga depois de 1,5 s;
+  - o painel mostra os bytes como o tamanho da string recebida (JSON é quase todo ASCII) e na velocidade real do
+    mundo: a ×36, ~2,9 KB/s (cada envio cobre ~7 ticks);
+  - entrada nova `@geometrix/protocol/stream` (versão do protocolo e deltas, sem o zod) para o bundle principal do
+    cliente: 111 KB (40 KB gzip); o chunk do replay, 101,6 KB.
+- **Teste no navegador da F4** (Chromium headless, ×36, seed 42, `?net=1`): em 8 s, 41 deltas e 4 hashes ✓; depois
+  de `kill -9` e restart do servidor, a retomada é recusada (stream novo), chega um `welcome` de reconexão e os
+  hashes seguem ✓ (9 ✓, 0 ✗). A tela é a do M1, com o painel no canto inferior direito. 2088 testes.
 - **Interpretações da F3 do M1.5** (o plan não fixa):
   - **o `welcome` leva um id do stream** (`stream`, novo a cada processo do servidor) e a retomada é
     `/ws?token=…&stream=…&seq=…`, não só `&seq=` (R5): sem o id, depois de um restart um `seq` antigo do cliente
