@@ -61,6 +61,13 @@ export function mirrorCell({ x, y }: Cell, map: GameMap): Cell {
   return { x: map.width - 1 - x, y: map.height - 1 - y };
 }
 
+/**
+ * Whether the team's side is the rotated copy (plan section 6): team 1 owns the
+ * bottom side, team 0's top side rotated 180°. Its pathfinding breaks ties in
+ * the rotated cell order, so both teams get mirrored routes.
+ */
+export const isRotatedSide = (team: number) => team === 1;
+
 /** Distance in 4-direction steps, ignoring terrain. */
 export const manhattan = (a: Cell, b: Cell) =>
   Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
