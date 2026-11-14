@@ -344,3 +344,13 @@ h3 {
 .map svg {
   display: block;
 }
+
+.halo-mine {
+  animation: halo-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes halo-pulse {
+  50% {
+    stroke-opacity: 0.35;
+  }
+}

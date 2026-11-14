@@ -10,6 +10,7 @@ import { COLORS } from "./colors.ts";
 import { StaticLayer } from "./static-layer.tsx";
 import {
   fitView,
+  markerScale,
   panBy,
   toMap,
   viewBoxAttribute,
@@ -207,6 +208,7 @@ export function MapView({ onSelect, onOrder, children }: Props) {
             state={state}
             params={info.params}
             width={info.map.width}
+            zoom={markerScale(store.view.value?.scale ?? 1)}
           />
         )}
         {children}

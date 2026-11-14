@@ -13,9 +13,15 @@ import { COLORS, teamColor } from "./colors.ts";
 import { roadRuns } from "./terrain.ts";
 import { DnaShape } from "./creep-shape.tsx";
 
-type Props = { state: DynamicState; params: Params; width: number };
+type Props = {
+  state: DynamicState;
+  params: Params;
+  width: number;
+  /** markerScale of the current zoom. */
+  zoom: number;
+};
 
-export function WorldLayer({ state, params, width }: Props) {
+export function WorldLayer({ state, params, width, zoom }: Props) {
   return (
     <g class="world-layer">
       <Roads roads={state.roads} width={width} />
@@ -23,7 +29,12 @@ export function WorldLayer({ state, params, width }: Props) {
         <RoadJobMark key={job.id} job={job} params={params} />
       ))}
       {state.deposits.map((deposit) => (
-        <DepositMark key={deposit.id} deposit={deposit} params={params} />
+        <DepositMark
+          key={deposit.id}
+          deposit={deposit}
+          params={params}
+          zoom={zoom}
+        />
       ))}
       {state.teams.map((team) => (
         <CoreMark key={team.id} team={team} params={params} />
@@ -83,15 +94,18 @@ const DEPOSIT_RADIUS = 0.42;
 function DepositMark({
   deposit,
   params,
+  zoom,
 }: {
   deposit: Deposit;
   params: Params;
+  zoom: number;
 }) {
   const cx = deposit.x + 0.5;
   const cy = deposit.y + 0.5;
   const full = params.deposits[deposit.kind].amount;
   const ratio = Math.min(deposit.amount / full, 1);
   const shape = deposit.kind === "materia" ? hexagonPoints : diamondPoints;
+  const radius = DEPOSIT_RADIUS * Math.min(zoom, 1.4);
   const empty = deposit.amount === 0;
   // Exhausted cristal never comes back (R-2): grey. Empty materia keeps its
   // color, dashed, while it regenerates.
@@ -102,16 +116,16 @@ function DepositMark({
   return (
     <g class="deposit">
       <polygon
-        points={shape(cx, cy, DEPOSIT_RADIUS)}
+        points={shape(cx, cy, radius)}
         fill={COLORS.background}
         fill-opacity="0.6"
         stroke={color}
-        stroke-width="0.07"
-        stroke-dasharray={empty ? "0.12 0.1" : undefined}
+        stroke-width={0.07 * zoom}
+        stroke-dasharray={empty ? `${0.12 * zoom} ${0.1 * zoom}` : undefined}
       />
       {ratio > 0 && (
         <polygon
-          points={shape(cx, cy, DEPOSIT_RADIUS * Math.sqrt(ratio) * 0.85)}
+          points={shape(cx, cy, radius * Math.sqrt(ratio) * 0.85)}
           fill={color}
         />
       )}

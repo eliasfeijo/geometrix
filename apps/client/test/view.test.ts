@@ -82,3 +82,14 @@ describe("map view", () => {
     ).toEqual({ cx: 5.5, cy: 9.5, scale: 20 });
   });
 });
+
+describe("marker scale", () => {
+  it("grows markers only when zoomed out, up to a limit", async () => {
+    const { markerScale, MIN_MARKER_PX, MAX_MARKER_SCALE } =
+      await import("../src/map/view.ts");
+    expect(markerScale(40)).toBe(1);
+    expect(markerScale(MIN_MARKER_PX)).toBe(1);
+    expect(markerScale(MIN_MARKER_PX / 1.5)).toBeCloseTo(1.5);
+    expect(markerScale(1)).toBe(MAX_MARKER_SCALE);
+  });
+});
