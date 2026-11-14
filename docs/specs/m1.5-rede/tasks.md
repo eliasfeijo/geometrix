@@ -51,7 +51,7 @@ na sua branch `m1.5/f<n>-<slug>` (skill `commit`), com merge `--no-ff` em `main`
 
 - [x] Clientes WebSocket sem interface no soak (2 por time), com `applyDelta` e hash; seção por cliente no
       `summary.md`
-- [ ] `npm run soak` completo; relatório de viabilidade em `viability.md` contra a spec §7
+- [x] `npm run soak` completo; relatório de viabilidade em `viability.md` contra a spec §7
 - [ ] Dashboard atualizado
 - [ ] **Checkpoint:** sessão do dono com `npm run dev:multi` e `?net=1` (tela igual à do M1, retomada ao derrubar o
       servidor) e decisão sobre a viabilidade: segue para a fatia de fog, ou o ADR-0006 volta à mesa
