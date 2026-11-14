@@ -68,7 +68,7 @@ export function RulesEditor({ creep }: { creep: CreepView }) {
   };
 
   const preset = (
-    name: "materiaCollector" | "cristalCollector" | "roadBuilder",
+    name: "materiaCollector" | "cristalCollector" | "roadBuilder" | "scout",
     target?: Cell,
   ) => {
     setDraft(null);
@@ -111,6 +111,13 @@ export function RulesEditor({ creep }: { creep: CreepView }) {
           }
         >
           Construtor de estrada…
+        </button>
+        <button
+          disabled={!canAct}
+          title="Explora a célula nunca vista mais próxima; sem nada a explorar, volta ao Núcleo"
+          onClick={() => preset("scout")}
+        >
+          Batedor
         </button>
       </div>
 
@@ -278,7 +285,9 @@ function ConditionField(props: {
           </option>
         ))}
       </select>
-      {(value.type === "resourceInRange" || value.type === "stockBelow") && (
+      {(value.type === "resourceInRange" ||
+        value.type === "stockBelow" ||
+        value.type === "resourceUnknown") && (
         <ResourceSelect
           value={value.resource}
           disabled={disabled}

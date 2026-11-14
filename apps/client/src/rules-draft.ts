@@ -10,6 +10,7 @@ export const CONDITION_TYPES = [
   "cargoEmpty",
   "resourceInRange",
   "stockBelow",
+  "resourceUnknown",
 ] as const satisfies readonly Condition["type"][];
 
 export const ACTION_TYPES = [
@@ -17,6 +18,7 @@ export const ACTION_TYPES = [
   "deliver",
   "buildRoad",
   "moveTo",
+  "explore",
   "stop",
 ] as const satisfies readonly Action["type"][];
 

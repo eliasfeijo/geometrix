@@ -66,7 +66,7 @@ na sua branch (plan §12, skill `commit`), com merge `--no-ff` em `main`.
       base) e trocou "não existe mais" por "saiu da visão do seu time"
 - [x] Cursor e traçado de estrada pelo mapa conhecido (spec C-3). O traçado já usava o mapa conhecido desde a F3;
       sobre célula nunca vista, o rótulo diz "nunca vista · custo desconhecido" e o traçado continua desenhado
-- [ ] Editor de regras: ação explorar, condição "não conhece depósito de X", preset batedor (spec C-4)
+- [x] Editor de regras: ação explorar, condição "não conhece depósito de X", preset batedor (spec C-4)
 - [ ] Replay com `fullView`, sem névoa (spec C-5)
 
 ## F5 — Soak e legibilidade (`m1.5/fog-f5-playtest`)
