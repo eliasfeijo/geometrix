@@ -13,6 +13,7 @@ import type {
   Refusal,
   RoadJob,
   Team,
+  WorldState,
 } from "@geometrix/sim";
 import { z } from "zod";
 
@@ -146,13 +147,44 @@ export type WorldSummary = {
 export type DynamicState = {
   tick: number;
   teams: Team[];
-  creeps: Creep[];
+  /** Without the cached path, which only the sim needs. */
+  creeps: Omit<Creep, "path">[];
   deposits: Deposit[];
   /** Cell indices (y * width + x) that have a road. */
   roads: number[];
   roadJobs: RoadJob[];
   players: Player[];
 };
+
+/**
+ * The dynamic part of `state`, as the server sends it. It shares objects with
+ * the state: serialize it before the next tick.
+ */
+export function toDynamicState(state: WorldState): DynamicState {
+  const roads: number[] = [];
+  state.map.road.forEach((road, i) => {
+    if (road === 1) roads.push(i);
+  });
+  return {
+    tick: state.tick,
+    teams: state.teams,
+    creeps: state.creeps.map((creep) => {
+      const sent: Partial<Creep> = { ...creep };
+      delete sent.path;
+      return sent as Omit<Creep, "path">;
+    }),
+    deposits: state.deposits,
+    roads,
+    roadJobs: state.roadJobs,
+    players: state.players,
+  };
+}
+
+/** The static map, sent once in the welcome. */
+export function toStaticMap(state: WorldState): WelcomeMessage["map"] {
+  const { width, height, terrain } = state.map;
+  return { width, height, terrain: [...terrain] };
+}
 
 export type WorldStatus = "running" | "ended";
 
