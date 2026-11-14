@@ -36,7 +36,7 @@ na sua branch (plan §12, skill `commit`), com merge `--no-ff` em `main`.
 - [x] Recusas sem vazamento: `unknownCreep` no lugar de `notYourTeam`; depósito fora da memória como inexistente
       (plan §7)
 - [x] Estrategista só com a visão (mapa a partir de `known`), sem lógica de batedor (spec B-1, N8)
-- [ ] Métricas: 1ª entrega por recurso e time, células exploradas, Núcleo inimigo visto, creeps explorando; no
+- [x] Métricas: 1ª entrega por recurso e time, células exploradas, Núcleo inimigo visto, creeps explorando; no
       `report.md` do `geo sim` e do `geo sweep` (plan §11)
 - [ ] **Checkpoint:** `geo sweep` nas seeds 1–20 (6 h), `geo sim --days 3` do seed 42 (economia lado a lado com o
       hash anterior), custo do tick antes × depois (spec §7)

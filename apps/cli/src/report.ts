@@ -23,6 +23,7 @@ export const number = (value: number, digits = 0) =>
 export const percent = (part: number, whole: number) =>
   whole === 0 ? "—" : `${number((100 * part) / whole)}%`;
 export const hours = (seconds: number) => `${number(seconds / HOUR, 1)} h`;
+export const minutes = (seconds: number) => `${number(seconds / 60)} min`;
 
 export function table(header: string[], rows: string[][]): string {
   const line = (cells: string[]) => `| ${cells.join(" | ")} |`;
@@ -48,6 +49,10 @@ export function renderReport(run: RunData): string {
   const teamIds = last.teams.map((t) => t.team);
   const perTeam = (cell: (team: number) => string) => teamIds.map(cell);
   const teamHeader = ["Métrica", ...teamIds.map((t) => `Time ${t}`)];
+  const mapCells = params.map.width * params.map.height;
+  /** A tick as world time, or "—" for null. */
+  const atTick = (tick: number | null, format = hours) =>
+    tick === null ? "—" : format(tick * meta.tickSeconds);
 
   /** Seconds at which `when` first holds for the team, as hours, or "—". */
   const firstTime = (
@@ -122,6 +127,21 @@ export function renderReport(run: RunData): string {
       [
         "Upgrade de capacidade comprado em",
         ...perTeam((t) => firstTime(t, (s) => s.capacityUpgrade)),
+      ],
+      [
+        "1ª entrega (matéria / cristal) em",
+        ...perTeam((t) => {
+          const first = stat(t).firstDeliveryTick;
+          return `${atTick(first.materia, minutes)} / ${atTick(first.cristal, minutes)}`;
+        }),
+      ],
+      [
+        "Núcleo inimigo visto em",
+        ...perTeam((t) => atTick(stat(t).enemyCoreSeenTick)),
+      ],
+      [
+        "Mapa explorado no fim",
+        ...perTeam((t) => percent(stat(t).exploredCells, mapCells)),
       ],
       [
         "Estoque no fim (matéria / cristal)",
@@ -217,7 +237,7 @@ export function renderReport(run: RunData): string {
   out(
     "## Linha do tempo",
     "",
-    `Janelas de ${hours(window)}. Estoque e creeps no fim da janela; vazão e tempo dos creeps dentro dela.`,
+    `Janelas de ${hours(window)}. Estoque, creeps, mapa explorado e creeps com ordem de explorar no fim da janela; vazão e tempo dos creeps dentro dela.`,
     "",
   );
   for (const team of teamIds) {
@@ -249,6 +269,8 @@ export function renderReport(run: RunData): string {
         share("building"),
         share("idle"),
         String(to.roadCells),
+        percent(b.exploredCells, mapCells),
+        String(b.exploring),
       ]);
     }
     out(
@@ -266,6 +288,8 @@ export function renderReport(run: RunData): string {
           "Construindo",
           "Parado",
           "Estradas no mapa",
+          "Explorado",
+          "Explorando",
         ],
         rows,
       ),
