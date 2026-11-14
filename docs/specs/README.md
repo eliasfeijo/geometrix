@@ -13,3 +13,4 @@ Regra: a spec é a fonte de verdade. Diante de uma ambiguidade não coberta, par
 | Spec | Status |
 |---|---|
 | [M1 — O ciclo da riqueza](m1-ciclo-da-riqueza/spec.md) | Concluída (2026-11-14) |
+| [M1.5 — Rede: deltas da visão de cada time](m1.5-rede/spec.md) | Spec aprovada (2026-11-14) · plan em rascunho |
