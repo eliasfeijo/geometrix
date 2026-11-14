@@ -1,6 +1,6 @@
 # Status atual
 
-**Atualizado:** 2026-11-14 · **Marco:** M1 — O ciclo da riqueza · **Fase:** F5 concluída; passada de balanceamento 1 aguardando decisão do dono; F6 a seguir
+**Atualizado:** 2026-11-14 · **Marco:** M1 — O ciclo da riqueza · **Fase:** F6 (servidor) em andamento, branch `m1/f6-server`
 
 Resumo de bolso. A fonte de verdade continua nos docs linkados. Atualize este arquivo ao fechar uma fase, ao passar
 por um portão de aprovação ou quando surgir um bloqueio.
@@ -18,19 +18,19 @@ por um portão de aprovação ou quando surgir um bloqueio.
 | M1 — F3 Economia | ✅ Concluída, merge em `main`. Ordens `gather`/`deliver`/`buildRoad`, regeneração, produção com "repetir", upgrade de capacidade. Detalhes decididos pelo dono na [spec §5](../specs/m1-ciclo-da-riqueza/spec.md) | [tasks.md §F3](../specs/m1-ciclo-da-riqueza/tasks.md) · `packages/sim/src/{economy,production,roads,orders}.ts` |
 | M1 — F4 Piloto automático e domínio | ✅ Concluída, merge em `main`. Vocabulário de comandos + `validate`, jogadores, domínio D-1..D-4, interpretador de regras, presets, `setRules`/`applyPreset`. Detalhes decididos pelo dono na [spec §5](../specs/m1-ciclo-da-riqueza/spec.md) | [tasks.md §F4](../specs/m1-ciclo-da-riqueza/tasks.md) · `packages/sim/src/{commands,domination,autopilot,presets,rules}.ts` |
 | M1 — F5 Harness | ✅ Concluída, merge em `main`. Checkpoint revisado pelo dono (2026-11-13): a economia precisa de balanceamento. Stats + `sampleMetrics`, estrategista `balanced`, `geo sim`/`report`/`sweep`, `geo verify` com bots e replay do log, orçamento de 6 h no CI. Detalhes decididos pelo dono no [plan §9](../specs/m1-ciclo-da-riqueza/plan.md) | [tasks.md §F5](../specs/m1-ciclo-da-riqueza/tasks.md) · `apps/cli/src/` · `packages/sim/src/stats.ts` |
-| M1 — Balanceamento 1 | 🟡 Diagnóstico e 2 candidatos prontos; **aguarda decisão do dono**. Assimetria entre os times corrigida (desempate do A*) | [balance.md](../specs/m1-ciclo-da-riqueza/balance.md) · `params/balance-{a,b}.json` |
-| M1 — F6…F9 | ⬜ Pendentes. Checkpoints: F7 playtest local; F9 playtest comprimido | [plan.md §13](../specs/m1-ciclo-da-riqueza/plan.md) |
+| M1 — Balanceamento 1 | ✅ Decidido pelo dono (2026-11-14): candidato B no `params/default.json` provisório; DNAs economicamente equivalentes de propósito; playtest humano e deploy saem do M1. Assimetria entre os times corrigida (desempate do A*). Na branch `m1/f6-server` | [balance.md](../specs/m1-ciclo-da-riqueza/balance.md) |
+| M1 — F6 Servidor | 🟡 Em andamento, branch `m1/f6-server`. Lacunas levantadas com o dono | [tasks.md §F6](../specs/m1-ciclo-da-riqueza/tasks.md) |
+| M1 — F7, F8 | ⬜ Pendentes. Checkpoint do F7: sessão do dono (interface e legibilidade). O M1 fecha com o critério da [spec §8](../specs/m1-ciclo-da-riqueza/spec.md) | [plan.md §13](../specs/m1-ciclo-da-riqueza/plan.md) |
+| ~~M1 — F9~~ | Deploy e playtest comprimido saíram do M1 (dono, 2026-11-14): abrem o M2 | [ROADMAP](../ROADMAP.md) |
 | M2–M4 | ⬜ Não iniciados | [ROADMAP](../ROADMAP.md) |
 
 ## Próximos passos imediatos
 
 1. **Publicar o repo no GitHub** (dono). Ainda não há remote, então o CI ([ci.yml](../../.github/workflows/ci.yml))
    nunca rodou fora da máquina local.
-2. **Decisões do balanceamento** (dono), em [balance.md](../specs/m1-ciclo-da-riqueza/balance.md): aprovar as
-   metas de "não trava nem explode" (§3); escolher o candidato A ou B (recomendado: B) para virar o
-   `params/default.json` provisório (§4); responder as perguntas de §5 (sumidouro no M1, coleta com depósitos
-   zerados, papel do cristal). A escolha só mexe em parâmetros, então o F6 pode andar em paralelo.
-3. **F6 (servidor):** branch `m1/f6-server` a partir de `main`. O que ele precisa saber do código atual:
+2. **Antes do F7:** fechar a pergunta da coleta com depósitos zerados ([GDD 07](../gdd/07-piloto-automatico.md)):
+   no cliente, o vaivém dos creeps parece bug.
+3. **F6 (servidor):** branch `m1/f6-server` (já tem os commits do balanceamento). O que ele precisa saber do código atual:
    - `apps/cli/src/harness.ts` já faz o caminho de entrada do servidor: `validate` no recebimento (ack/reject), o
      aceito ganha `tick` e `seq` e vai para o log (`LoggedCommand` = `{tick, seq, playerId, command}`, o formato da
      tabela `commands`), e o `step` revalida. Um comando aceito no recebimento ainda pode ser recusado no `step`
@@ -59,9 +59,11 @@ por um portão de aprovação ou quando surgir um bloqueio.
     "humanos" do time (no harness não há humanos);
   - o `geo sweep` guarda só o `run.json` de cada run (o `samples.jsonl` de 3 dias tem ~11 MB); `--keep-runs` guarda
     tudo.
+- **Testes de mecânica** usam `packages/sim/test/params.json` (os valores do F5), não o `default.json`; o
+  balanceamento não quebra mais os testes. O `default.json` continua no `geo verify` e no orçamento do CI.
 - **Correção do A* (2026-11-14, branch `m1/f6-server`):** o time 1 desempata na ordem de células rotacionada, e
   a rota dele é o espelho da do time 0. Antes, os times construíam estradas diferentes no mapa simétrico (até ~19%
-  de diferença na entrega). O hash de 3 dias do seed 42 com `params/default.json` passou a ser `ab0aa8a1…`.
+  de diferença na entrega). Com o candidato B no `default.json`, o hash de 3 dias do seed 42 é `91b06470…`.
 - **Sinais do relatório de 3 dias (checkpoint do F5, anterior à correção do A*):** com os parâmetros atuais e o `balanced`, a economia trava
   em ~4 h: teto de população em 4,2 h, todo o cristal esgotado em 2,5 h, estradas param em 113 células; depois os
   30 creeps disputam 6 depósitos de matéria que regeneram 1/min (andam vazios 58–76% do tempo), o Núcleo fica 94%
