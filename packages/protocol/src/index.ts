@@ -1,8 +1,10 @@
 // Client <-> server messages (plan section 7). The client's messages are
 // checked structurally here, with zod; whether a command makes sense in the
 // world is the sim's validate (plan section 4). Server messages are plain
-// types: the server builds them, so there is nothing to check.
+// types: the server builds them, so there is nothing to check. The replay file
+// is here too, at the end: it is checked like a client message.
 
+import { parseParams, ParamsError, SIM_VERSION } from "@geometrix/sim";
 import type {
   Cell,
   Command,
@@ -218,3 +220,103 @@ const sameVocabulary: Same<
   Exclude<Command, { type: "join" }>
 > = true;
 void sameVocabulary;
+
+// Replay file (plan section 8, F8 details): enough to rebuild a world tick by
+// tick. The initial state is createWorld(seed, params); the logged commands
+// enter on their ticks, in seq order, as the server and the harness applied
+// them. `geo sim` writes it (runs/<id>/replay.json) and the server exports it
+// (GET /api/worlds/:id/replay); the client replays it with the sim.
+
+/** An accepted command, as the log keeps it (ADR-0004). */
+export type LoggedCommand = {
+  tick: number;
+  seq: number;
+  playerId: number;
+  command: Command;
+};
+
+export type Replay = {
+  simVersion: number;
+  seed: number;
+  params: Params;
+  /** Ticks stepped: the replay ends on this tick. */
+  ticks: number;
+  /** sha256 of serialize(state) at `ticks`. */
+  finalHash: string;
+  commands: LoggedCommand[];
+};
+
+const count = z.number().int().nonnegative();
+
+/** Every command of the log: the client's plus the system join. */
+const loggedCommand = z.object({
+  tick: count,
+  seq: count,
+  playerId: count,
+  command: z.union([
+    clientCommand,
+    z.object({ type: z.literal("join"), team: count, bot: z.boolean() }),
+  ]),
+});
+
+const replayFile = z.object({
+  simVersion: z.number().int().positive(),
+  seed: count.max(2 ** 32 - 1),
+  params: z.unknown(),
+  ticks: count,
+  finalHash: z.string().regex(/^[0-9a-f]{64}$/),
+  commands: z.array(loggedCommand),
+});
+
+export class ReplayError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ReplayError";
+  }
+}
+
+/**
+ * Validates a parsed replay file: its shape, its params and the log order
+ * (ticks before `ticks`, sorted by tick and seq). Throws a ReplayError.
+ */
+export function parseReplay(input: unknown): Replay {
+  const result = replayFile.safeParse(input);
+  if (!result.success) {
+    const issue = result.error.issues[0]!;
+    const path = issue.path.map(String).join(".") || "(root)";
+    // An older file usually fails because the command vocabulary changed.
+    const version = (input as { simVersion?: unknown } | null)?.simVersion;
+    const note =
+      typeof version === "number" && version !== SIM_VERSION
+        ? ` (sim version ${version}; this build runs ${SIM_VERSION})`
+        : "";
+    throw new ReplayError(`invalid replay at ${path}: ${issue.message}${note}`);
+  }
+  const data = result.data;
+  let params: Params;
+  try {
+    params = parseParams(data.params);
+  } catch (error) {
+    if (!(error instanceof ParamsError)) throw error;
+    throw new ReplayError(`invalid replay params: ${error.issues.join("; ")}`);
+  }
+  let previous: LoggedCommand | null = null;
+  for (const command of data.commands) {
+    if (command.tick >= data.ticks) {
+      throw new ReplayError(
+        `command on tick ${command.tick}, the replay ends at ${data.ticks}`,
+      );
+    }
+    if (
+      previous !== null &&
+      (command.tick < previous.tick ||
+        (command.tick === previous.tick && command.seq <= previous.seq))
+    ) {
+      throw new ReplayError(
+        `commands out of order at tick ${command.tick}, seq ${command.seq}`,
+      );
+    }
+    previous = command;
+  }
+  return { ...data, params };
+}

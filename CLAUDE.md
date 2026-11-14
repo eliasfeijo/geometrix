@@ -36,6 +36,7 @@ Node 26 (`.nvmrc`). O Node roda `.ts` direto; só o cliente tem build (Vite).
 | `npm run server` | Servidor em `http://localhost:8080` (`GEO_PORT`, `GEO_DB`, `GEO_PARAMS`); serve o build do cliente |
 | `npm run build` | Build do cliente (Vite) em `apps/client/dist`, que o servidor serve |
 | `npm run client` | Dev server do Vite (porta 5173) com proxy de `/api` e `/ws` para o servidor no `GEO_PORT` |
+| `npm run dev:multi -- --clients 3` | Build + servidor + um mundo com K jogadores (Azul/Laranja alternados), uma aba por jogador (`--seed`, `--mult`, `--no-build`, `--no-open`) |
 
 ## Convenções do `sim`
 

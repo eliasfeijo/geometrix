@@ -23,7 +23,7 @@ const BLOCK_TEXTS = {
 } as const;
 
 export function CorePanel({ team: teamId }: { team: number }) {
-  const { store, session, send } = useGame();
+  const { store, viewer, send } = useGame();
   const [repeat, setRepeat] = useState(false);
   const state = store.current.value?.state;
   const params = store.info.value?.params;
@@ -31,7 +31,7 @@ export function CorePanel({ team: teamId }: { team: number }) {
   if (state === undefined || params === undefined || team === undefined) {
     return null;
   }
-  const own = teamId === session.team;
+  const own = teamId === viewer.team;
   const canAct = own && store.canAct.value;
   const view = { params, creeps: state.creeps };
   const block = productionRefusal(view, team);
@@ -212,12 +212,12 @@ function CostText({ cost }: { cost: Cost }) {
 
 /** The own team's core, docked on the left of the map. */
 export function CoreDock() {
-  const { store, session } = useGame();
+  const { store, viewer } = useGame();
   const [open, setOpen] = useState(true);
   if (store.current.value === null) return null;
   const selected =
     store.selection.value?.kind === "core" &&
-    store.selection.value.team === session.team;
+    store.selection.value.team === viewer.team;
   return (
     <aside
       class={`core-dock panel ${selected ? "selected" : ""} ${open ? "" : "collapsed"}`}
@@ -231,9 +231,9 @@ export function CoreDock() {
         {open ? "−" : "+"}
       </button>
       {open ? (
-        <CorePanel team={session.team} />
+        <CorePanel team={viewer.team} />
       ) : (
-        <span class={`team-${session.team} team-name`}>Núcleo</span>
+        <span class={`team-${viewer.team} team-name`}>Núcleo</span>
       )}
     </aside>
   );

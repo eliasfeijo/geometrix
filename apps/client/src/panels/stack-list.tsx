@@ -12,7 +12,7 @@ import { DnaIcon } from "./dna-icon.tsx";
 const WIDTH = 280;
 
 export function StackList() {
-  const { store, session } = useGame();
+  const { store, viewer } = useGame();
   const stack = store.stack.value;
   const state = store.current.value?.state;
   const params = store.info.value?.params;
@@ -63,14 +63,14 @@ export function StackList() {
                   <span class="muted small">
                     {DNA_NAMES[creep.dna]} · #{creep.id}
                   </span>
-                  {creep.team !== session.team && (
+                  {creep.team !== viewer.team && (
                     <span class="team-name"> {teamName(creep.team)}</span>
                   )}
                 </span>
                 <span class="muted small">
                   {STATUS_TEXTS[status]} ·{" "}
                   {creep.cargo.materia + creep.cargo.cristal}/{max}
-                  {creep.dominatedBy === session.playerId
+                  {creep.dominatedBy === viewer.playerId
                     ? " · você"
                     : creep.dominatedBy !== null
                       ? " · dominado"

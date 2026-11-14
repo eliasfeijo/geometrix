@@ -186,6 +186,22 @@ metrics   (world_id, tick, team_id, sample_json)
 - **Modo replay:** carrega um arquivo de replay (snapshot inicial + comandos) e **roda o `sim` no navegador**, com
   play, pausa e velocidade. Isso também prova que o `sim` roda igual no navegador (testar no Safari = JSC).
 
+### Detalhes do F8 decididos pelo dono (2026-11-14)
+
+- **Origem do replay:** o `replay.json` do `geo sim`, aberto pelo lobby ("Assistir replay", escolha de arquivo), e
+  `GET /api/worlds/:id/replay`, que exporta um mundo do servidor (snapshot inicial + log do SQLite).
+- **Controles:** play, pausa e velocidades ×1, ×60, ×600, ×3600 e máximo (segundos de mundo por segundo real).
+  Linha do tempo com salto para qualquer ponto: o cliente guarda um snapshot em memória a cada hora de mundo e,
+  para voltar, restaura o mais próximo e re-simula.
+- **Hash no fim:** no último tick o cliente calcula o hash (SHA-256 pelo Web Crypto) e mostra ✓/✗ contra o
+  `finalHash`.
+- **Safari/JSC:** uma execução do replay no WebKit do Playwright (engine JSC), só no scratchpad, com o resultado
+  registrado. Verificação permanente com Bun só se aparecer divergência.
+- **`npm run dev:multi -- --clients K`:** sobe o servidor com o build do cliente, cria um mundo (`--seed`,
+  `--mult`, padrão ×36), faz o join de K jogadores alternando Azul e Laranja ("Jogador 1…K") e abre K abas no
+  navegador padrão (no WSL, `cmd.exe /c start`; sem navegador, imprime as URLs). Cada aba recebe
+  `?world=…&slot=N#token=…`; o cliente grava o token no `localStorage` e limpa a URL. Só para desenvolvimento.
+
 ## 9. CLI (`apps/cli`)
 
 | Comando | Saída |
