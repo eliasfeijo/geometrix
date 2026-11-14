@@ -55,7 +55,14 @@ function CreepInspector({ id }: { id: number }) {
   const params = store.info.value?.params;
   const creep = state?.creeps.find((c) => c.id === id);
   if (state === undefined || params === undefined || creep === undefined) {
-    return <p class="muted">Esse creep não existe mais.</p>;
+    // No creep dies in M1.5: one the view lost left the team's sight.
+    return (
+      <p class="muted">
+        {state !== undefined && state.team >= 0
+          ? "Esse creep saiu da visão do seu time."
+          : "Esse creep não existe mais."}
+      </p>
+    );
   }
   const team = state.teams[creep.team];
   if (team === undefined || !isOwnCreep(creep) || !isOwnTeam(team)) {
