@@ -1,8 +1,8 @@
 // Economy rules (spec section 5, R and I; F3 details decided 2026-11-13):
 // carrying capacity, gathering from deposits and delivery to the core.
 
-import type { Params } from "./params.ts";
-import type { Creep, Deposit, Team, WorldState } from "./world.ts";
+import type { Cost, Params } from "./params.ts";
+import type { Creep, Deposit, Stock, Team, WorldState } from "./world.ts";
 
 const PERMILLE = 1000;
 
@@ -79,4 +79,13 @@ export function regenerate(state: WorldState): void {
       materia.amount,
     );
   }
+}
+
+export function canAfford(stock: Stock, cost: Cost): boolean {
+  return stock.materia >= cost.materia && stock.cristal >= cost.cristal;
+}
+
+export function debit(stock: Stock, cost: Cost): void {
+  stock.materia -= cost.materia;
+  stock.cristal -= cost.cristal;
 }
