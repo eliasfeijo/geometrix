@@ -8,6 +8,7 @@ import { browserDeps, Connection, socketUrl } from "./connection.ts";
 import { GameContext, type Game as GameValue } from "./context.ts";
 import { FATAL_TEXTS, REJECT_TEXTS } from "./format.ts";
 import type { Session } from "./session.ts";
+import { MapView } from "./map/map-view.tsx";
 import { GameStore } from "./store.ts";
 import { Notices, TopBar } from "./top-bar.tsx";
 
@@ -59,16 +60,12 @@ export function Game({ session, onLeave, onInvalid }: Props) {
       <div class="game">
         <TopBar onLeave={onLeave} />
         <div class="game-body">
-          <Placeholder />
+          <MapView />
         </div>
         <Notices />
       </div>
     </GameContext.Provider>
   );
-}
-
-function Placeholder() {
-  return <div class="map-placeholder muted">Conectando ao mundo…</div>;
 }
 
 /** Player names are only in the HTTP list: fetch it when a new id shows up. */

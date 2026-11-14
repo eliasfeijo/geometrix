@@ -13,6 +13,7 @@ import type {
   FatalReason,
   WorldMessage,
 } from "./connection.ts";
+import type { Size, View } from "./map/view.ts";
 
 /** A dynamic state and when it arrived (performance.now(), ms). */
 export type Snapshot = { state: DynamicState; at: number };
@@ -36,6 +37,9 @@ export class GameStore {
   readonly names = signal<ReadonlyMap<number, string>>(new Map());
   readonly notices = signal<Notice[]>([]);
   private nextNotice = 1;
+  /** Pan and zoom; null until the map element has a size. */
+  readonly view = signal<View | null>(null);
+  readonly mapSize = signal<Size>({ width: 0, height: 0 });
 
   /** This player, once the join is in the state (the tick after joining). */
   readonly me = computed(() => {
