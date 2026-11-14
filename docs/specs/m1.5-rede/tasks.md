@@ -43,7 +43,7 @@ na sua branch `m1.5/f<n>-<slug>` (skill `commit`), com merge `--no-ff` em `main`
 ## F4 — Cliente (`m1.5/f4-client`)
 
 - [x] Store aplica deltas com compartilhamento; interpolação igual à do M1
-- [ ] Conexão guarda o `seq` e o manda só ao reconectar na mesma página
+- [x] Conexão guarda o `seq` e o manda só ao reconectar na mesma página
 - [ ] `seqGap` e hash divergente pedem resync; versão do protocolo diferente recarrega a página
 - [ ] Painel de rede com `?net=1`
 

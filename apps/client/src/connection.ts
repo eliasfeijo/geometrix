@@ -1,7 +1,9 @@
 // WebSocket session with the server (plan section 7): welcome, then the
 // deltas of the team's view at most 5 times per second (M1.5 plan section 6); commands go out with a ref and come back as ack or
-// reject. A dropped connection reconnects with the same token (backoff); a
-// refused token or an unhosted world is final.
+// reject. A dropped connection reconnects with the same token (backoff),
+// telling the stream and the last seq it got so the server can send just the
+// deltas it missed (spec C-4, plan R5); a refused token or an unhosted world
+// is final.
 
 import type {
   ClientCommand,
@@ -64,6 +66,11 @@ export class Connection {
   private timer: unknown = null;
   private nextRef = 1;
   private readonly pending = new Map<number, (r: CommandResult) => void>();
+  /** The team stream of the last welcome, and the last seq received in it. */
+  private stream: string | null = null;
+  private seq = 0;
+  /** Whether the current socket asked to resume instead of a welcome. */
+  private resuming = false;
 
   constructor(url: string, events: ConnectionEvents, deps: ConnectionDeps) {
     this.url = url;
@@ -97,9 +104,17 @@ export class Connection {
   private connect(): void {
     this.timer = null;
     this.events.status(this.attempts === 0 ? "connecting" : "reconnecting");
-    const socket = this.deps.openSocket(this.url, {
+    // Only a reconnect on this page has a stream to resume.
+    this.resuming = this.stream !== null;
+    const url = this.resuming
+      ? `${this.url}&stream=${encodeURIComponent(this.stream!)}&seq=${this.seq}`
+      : this.url;
+    const socket = this.deps.openSocket(url, {
       open: () => {
-        if (this.socket === socket) this.isOpen = true;
+        if (this.socket !== socket) return;
+        this.isOpen = true;
+        // A resumed stream goes on without a welcome.
+        if (this.resuming) this.opened();
       },
       message: (data) => {
         if (this.socket === socket) this.received(data);
@@ -120,11 +135,14 @@ export class Connection {
     }
     switch (message.type) {
       case "welcome":
-        this.attempts = 0;
-        this.events.status("open");
+        this.stream = message.stream;
+        this.seq = message.seq;
+        this.resuming = false;
+        this.opened();
         this.events.message(message);
         break;
       case "delta":
+        this.seq = message.seq;
         this.events.message(message);
         break;
       case "ack":
@@ -140,6 +158,11 @@ export class Connection {
         break;
       }
     }
+  }
+
+  private opened(): void {
+    this.attempts = 0;
+    this.events.status("open");
   }
 
   private closed(code: number): void {

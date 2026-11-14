@@ -83,6 +83,7 @@ function setup() {
     fireTimer,
     last,
     openWithWelcome,
+    welcome,
   };
 }
 
@@ -144,7 +145,12 @@ describe("Connection", () => {
       RECONNECT_MAX_MS,
     ]);
     expect(t.sockets).toHaveLength(7);
-    expect(t.sockets.every((s) => s.url === "ws://test/ws?token=t")).toBe(true);
+    expect(t.sockets[0]!.url).toBe("ws://test/ws?token=t");
+    expect(
+      t.sockets
+        .slice(1)
+        .every((s) => s.url === "ws://test/ws?token=t&stream=test&seq=0"),
+    ).toBe(true);
 
     // A welcome resets the backoff.
     t.fireTimer();
@@ -152,6 +158,35 @@ describe("Connection", () => {
     expect(t.statuses.at(-1)).toBe("open");
     t.last().handlers.close(1006);
     expect(t.fireTimer()).toBe(RECONNECT_MIN_MS);
+  });
+
+  it("resumes the stream on a reconnect, without a welcome", () => {
+    const t = setup();
+    t.openWithWelcome();
+    t.last().serverSends({ type: "delta", seq: 1, delta: { tick: 2 } });
+    t.last().serverSends({ type: "delta", seq: 2, delta: { tick: 3 } });
+    t.last().handlers.close(1006);
+    t.fireTimer();
+    expect(t.last().url).toBe("ws://test/ws?token=t&stream=test&seq=2");
+    expect(t.statuses.at(-1)).toBe("reconnecting");
+    t.last().handlers.open();
+    expect(t.statuses.at(-1)).toBe("open");
+    t.last().serverSends({ type: "delta", seq: 3, delta: { tick: 4 } });
+    expect(t.messages.map((m) => m.type)).toEqual([
+      "welcome",
+      "delta",
+      "delta",
+      "delta",
+    ]);
+    // The backoff starts over once resumed.
+    t.last().handlers.close(1006);
+    expect(t.fireTimer()).toBe(RECONNECT_MIN_MS);
+    // A server that cannot resume sends a welcome: a new base.
+    t.last().handlers.open();
+    t.last().serverSends({ ...t.welcome, stream: "new", seq: 0 });
+    t.last().handlers.close(1006);
+    t.fireTimer();
+    expect(t.last().url).toBe("ws://test/ws?token=t&stream=new&seq=0");
   });
 
   it.each([
