@@ -75,3 +75,7 @@ Curto, em PT-BR:
 - O primeiro `lintText` do ESLint leva ~9 s no `/mnt/c`: testes que usam o ESLint aquecem num `beforeAll` com
   timeout longo.
 - `parseArgs` do Node recusa `--opt -1` (ambíguo); use `--opt=-1`.
+- **"Verde" é o código de saída do `npm run check`, não a saída filtrada.** Em `npm run check | grep ... && git
+  commit`, quem decide o `&&` é o `grep`: um typecheck ou lint vermelho passa, porque o `grep` acha linhas. Rode
+  `npm run check > <scratchpad>/check.log 2>&1; echo "exit $?"` e só commite com `exit 0`. Aconteceu no F4 (teste
+  antigo sem os campos novos do `Creep` e um `no-useless-assignment` do lint).
