@@ -38,7 +38,7 @@ Marque `[x]` ao concluir. Cada task deve terminar com os testes verdes. Referên
 - [x] `dominate`/`release` com as regras D-1..D-4
 - [x] Interpretador de regras com o vocabulário P-2
 - [x] Presets: coletor de matéria, coletor de cristal, construtor de estrada
-- [ ] `setRules` e `applyPreset`
+- [x] `setRules` e `applyPreset`
 
 ## F5 — Harness
 - [ ] Acumuladores de stats + `sampleMetrics` puro

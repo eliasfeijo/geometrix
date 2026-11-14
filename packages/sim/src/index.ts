@@ -10,6 +10,7 @@ export * from "./presets.ts";
 export * from "./production.ts";
 export * from "./rng.ts";
 export * from "./roads.ts";
+export * from "./rules.ts";
 export * from "./serialize.ts";
 export * from "./step.ts";
 export * from "./world.ts";

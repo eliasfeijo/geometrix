@@ -79,6 +79,7 @@ const schema = {
   creep: { cost, productionSeconds: positive },
   road: { cost, buildSeconds: positive },
   upgrade: { capacity: { cost, bonusPermille: nonNegative } },
+  autopilot: { maxRules: positive },
   domination: {
     cost,
     timeoutSeconds: positive,
