@@ -23,6 +23,8 @@ export const COLORS = {
   selection: "#ffd166",
   dominated: "#ffffff",
   depleted: "#555b66",
+  /** What a team pays, rising from its core (F9). */
+  paid: "#ff9b9b",
 } as const;
 
 export const teamColor = (team: number): string =>

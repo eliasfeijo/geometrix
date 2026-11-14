@@ -445,6 +445,50 @@ h3 {
   }
 }
 
+/* "+N" / "−N" rising from a core (F9). --rise is in map units. */
+.stock-float {
+  animation: stock-rise 1.4s ease-out forwards;
+}
+
+@keyframes stock-rise {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(var(--rise));
+    opacity: 0;
+  }
+}
+
+/* A stock number that just changed in the core panel. */
+.stock-up {
+  animation: stock-up 0.9s ease-out;
+}
+
+.stock-down {
+  animation: stock-down 0.9s ease-out;
+}
+
+@keyframes stock-up {
+  from {
+    color: var(--ok);
+    text-shadow: 0 0 8px var(--ok);
+  }
+}
+
+@keyframes stock-down {
+  from {
+    color: var(--danger);
+  }
+}
+
 .cargo-full {
   color: var(--ok);
   font-weight: 600;

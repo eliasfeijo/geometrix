@@ -9,6 +9,7 @@ import { GameContext, type Game } from "./context.ts";
 import { handleKey, order, select } from "./interaction.ts";
 import { CreepLayer } from "./map/creep-layer.tsx";
 import { MapView } from "./map/map-view.tsx";
+import { StockFloatLayer } from "./map/stock-float-layer.tsx";
 import { ModeBanner } from "./mode-banner.tsx";
 import { CoreDock } from "./panels/core-panel.tsx";
 import { Inspector } from "./panels/inspector.tsx";
@@ -59,6 +60,7 @@ export function GameLayout({ game, header, orders }: Props) {
             }
           >
             <CreepLayer />
+            <StockFloatLayer />
           </MapView>
           <CoreDock />
           <Inspector />
