@@ -12,9 +12,9 @@ import { manhattan, type Cell } from "./map.ts";
 import { DNAS, type Dna } from "./params.ts";
 import { collectorRules, roadBuilderRules } from "./presets.ts";
 import { productionRefusal } from "./production.ts";
-import { nextSegment } from "./roads.ts";
+import { nextSegment, type RoadContext } from "./roads.ts";
 import { canonicalJson } from "./serialize.ts";
-import type { Creep, Team, WorldState } from "./world.ts";
+import type { Creep, Deposit, Team, WorldState } from "./world.ts";
 
 export const STRATEGISTS = ["balanced", "none"] as const;
 export type StrategistId = (typeof STRATEGISTS)[number];
@@ -87,7 +87,7 @@ function scarcestDna(state: WorldState, team: Team): Dna {
 }
 
 /** The role a creep's rules match; anything else counts as materia. */
-function roleOf(creep: Creep): Role {
+function roleOf(creep: Pick<Creep, "rules">): Role {
   const rules = canonicalJson(creep.rules);
   if (rules === canonicalJson(collectorRules("cristal")))
     return { kind: "cristal" };
@@ -106,7 +106,10 @@ function roleOf(creep: Creep): Role {
  * to the lower id) without a road on its cell and with a segment that can be
  * built toward it. null when there is none.
  */
-export function roadTarget(state: WorldState, team: Team): Cell | null {
+export function roadTarget(
+  state: RoadContext & { deposits: readonly Deposit[] },
+  team: Pick<Team, "id" | "core">,
+): Cell | null {
   const { map } = state;
   const candidates = state.deposits
     .filter((d) => d.amount > 0 && map.road[d.y * map.width + d.x] === 0)
