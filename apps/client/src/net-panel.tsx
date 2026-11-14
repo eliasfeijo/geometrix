@@ -11,6 +11,14 @@ export function showNetPanel(location: Pick<Location, "search">): boolean {
   return new URLSearchParams(location.search).get("net") === "1";
 }
 
+/** `search` with the ?net=1 of `current` kept: the panel survives navigation. */
+export function keepNetPanel(search: string, current: string): string {
+  if (!showNetPanel({ search: current })) return search;
+  const params = new URLSearchParams(search);
+  params.set("net", "1");
+  return `?${params.toString()}`;
+}
+
 export function NetPanel({ stats }: { stats: NetStats }) {
   const [now, setNow] = useState(() => performance.now());
   useEffect(() => {
