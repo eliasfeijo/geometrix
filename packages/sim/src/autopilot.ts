@@ -16,7 +16,8 @@ import { isInMap, manhattan, type Cell } from "./map.ts";
 import { cellModifier } from "./movement.ts";
 import type { Order } from "./orders.ts";
 import type { Resource } from "./params.ts";
-import { canBuildRoad, findRoadJob, nextSegment } from "./roads.ts";
+import { knownRoadContext, knownRoadJob, memoryOf } from "./known.ts";
+import { canBuildRoad, nextSegment } from "./roads.ts";
 import type { Creep, Deposit, WorldState } from "./world.ts";
 
 export type Condition =
@@ -155,10 +156,12 @@ function buildRoadFor(
   creep: Creep,
   target: Cell,
 ): Order | null {
-  const { map, params } = state;
+  const { params } = state;
   if (!isInMap(state.map, target)) return null;
-  if (!canBuildRoad(state, target.y * map.width + target.x)) return null;
   const team = teamOf(state, creep);
+  const known = knownRoadContext(state, team.id);
+  const { map } = known;
+  if (!canBuildRoad(known, target.y * map.width + target.x)) return null;
   const affordable = canAfford(team.stock, params.road.cost);
   const { order } = creep;
   let segment: number;
@@ -167,16 +170,21 @@ function buildRoadFor(
     order.x === target.x &&
     order.y === target.y &&
     order.segment >= 0 &&
-    map.road[order.segment] === 0
+    canBuildRoad(known, order.segment)
   ) {
     segment = order.segment;
   } else {
     // Skip the path search when nothing could pay for or resume a segment.
-    if (!affordable && state.roadJobs.length === 0) return null;
-    segment = nextSegment(state, team, target) ?? -1;
+    const jobs =
+      memoryOf(state, team.id).roadJobs.length > 0 ||
+      state.roadJobs.some((j) => j.team === team.id);
+    if (!affordable && !jobs) return null;
+    segment = nextSegment(known, team, target) ?? -1;
     if (segment < 0) return null;
   }
   const cell = { x: segment % map.width, y: Math.floor(segment / map.width) };
-  if (!affordable && findRoadJob(state, cell) === undefined) return null;
+  if (!affordable && knownRoadJob(state, team.id, cell) === undefined) {
+    return null;
+  }
   return { type: "buildRoad", x: target.x, y: target.y, segment };
 }

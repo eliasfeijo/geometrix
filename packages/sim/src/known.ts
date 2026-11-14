@@ -3,10 +3,10 @@
 // it knows. Paths, road building and the autopilot think on this map; moving
 // (the speed of a step) still reads the real one.
 
-import type { GameMap } from "./map.ts";
+import type { Cell, GameMap } from "./map.ts";
 import type { RoadContext } from "./roads.ts";
 import type { TeamMemory } from "./vision.ts";
-import type { WorldState } from "./world.ts";
+import type { RoadJob, WorldState } from "./world.ts";
 
 /** The team's memory. */
 export function memoryOf(state: WorldState, team: number): TeamMemory {
@@ -36,4 +36,20 @@ export function knownRoadContext(state: WorldState, team: number): RoadContext {
     params: state.params,
     teams: [{ core: own.core }, ...memory.cores.map((c) => ({ core: c }))],
   };
+}
+
+/**
+ * The road job the team knows of on `cell`: one of its own, or another
+ * team's as last seen there.
+ */
+export function knownRoadJob(
+  state: WorldState,
+  team: number,
+  cell: Cell,
+): RoadJob | undefined {
+  const at = (j: RoadJob) => j.x === cell.x && j.y === cell.y;
+  return (
+    state.roadJobs.find((j) => j.team === team && at(j)) ??
+    memoryOf(state, team).roadJobs.find(at)
+  );
 }
