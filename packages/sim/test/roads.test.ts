@@ -52,11 +52,11 @@ describe("buildRoad", () => {
     ]);
     run(world, 119);
     expect(roads(world)).toEqual([".r........"]);
-    expect(world.roadRevision).toBe(1);
+    expect(world.memory[0]!.roadRevision).toBe(1);
     expect(world.roadJobs).toEqual([]);
     run(world, 300);
     expect(roads(world)).toEqual([".rrr......"]);
-    expect(world.roadRevision).toBe(3);
+    expect(world.memory[0]!.roadRevision).toBe(3);
     expect(world.teams[0]!.stock.materia).toBe(85);
     expect(creep).toMatchObject({ x: 3, order: { type: "stop" } });
   });

@@ -160,7 +160,7 @@ describe("findPath on the rotated side", () => {
   );
 });
 
-describe("pathTo (cache)", () => {
+describe("pathTo (known map and cache)", () => {
   function setup() {
     const world = createWorld(42, params);
     world.map = parseMap([".......", ".......", "......."]);
@@ -168,14 +168,21 @@ describe("pathTo (cache)", () => {
     const creep = world.creeps[0]!;
     creep.x = 0;
     creep.y = 2;
-    return { world, creep };
+    return { world, creep, memory: world.memory[creep.team]! };
   }
 
-  test("reuses the cached path while target and roads are unchanged", () => {
+  test("plans on what the team knows: a rock never seen is jungle", () => {
+    const { world, creep } = setup();
+    world.map.terrain[3 + 2 * 7] = Terrain.rock;
+    expect(pathTo(world, creep, { x: 6, y: 2 })).toEqual([
+      15, 16, 17, 18, 19, 20,
+    ]);
+  });
+
+  test("reuses the cached path while target and known roads are unchanged", () => {
     const { world, creep } = setup();
     const first = pathTo(world, creep, { x: 6, y: 2 });
-    // Changing the map without a road revision must not trigger a recompute.
-    world.map.terrain[3 + 2 * 7] = Terrain.rock;
+    world.map.road[7] = 1;
     expect(pathTo(world, creep, { x: 6, y: 2 })).toBe(first);
   });
 
@@ -187,21 +194,37 @@ describe("pathTo (cache)", () => {
     expect(second?.at(-1)).toBe(6);
   });
 
-  test("recomputes when a road was completed", () => {
-    const { world, creep } = setup();
+  test("recomputes when the team came to know a road", () => {
+    const { world, creep, memory } = setup();
     const before = pathTo(world, creep, { x: 6, y: 2 });
     // A road along row 1: 4500 instead of 6000 for the straight jungle path.
-    for (let x = 0; x < 7; x++) world.map.road[7 + x] = 1;
-    world.roadRevision += 1;
+    for (let x = 0; x < 7; x++) memory.road[7 + x] = 1;
+    memory.roadRevision += 1;
     const after = pathTo(world, creep, { x: 6, y: 2 });
     expect(after).not.toEqual(before);
     expect(creep.path?.roadRevision).toBe(1);
   });
 
-  test("clears the cache when the target is unreachable", () => {
-    const { world, creep } = setup();
+  test("a rock discovered off the path keeps it; one on the path replans", () => {
+    const { world, creep, memory } = setup();
+    const first = pathTo(world, creep, { x: 6, y: 2 });
+    memory.terrain[3] = Terrain.rock;
+    memory.blockRevision += 1;
+    expect(pathTo(world, creep, { x: 6, y: 2 })).toBe(first);
+    expect(creep.path?.blockRevision).toBe(1);
+
+    memory.terrain[3 + 2 * 7] = Terrain.rock;
+    memory.blockRevision += 1;
+    const around = pathTo(world, creep, { x: 6, y: 2 });
+    expect(around).not.toBe(first);
+    expect(around).not.toContain(3 + 2 * 7);
+    expect(creep.path?.blockRevision).toBe(2);
+  });
+
+  test("clears the cache when the target is known to be unreachable", () => {
+    const { world, creep, memory } = setup();
     pathTo(world, creep, { x: 6, y: 2 });
-    world.map.terrain[6] = Terrain.rock;
+    memory.terrain[6] = Terrain.rock;
     expect(pathTo(world, creep, { x: 6, y: 0 })).toBeNull();
     expect(creep.path).toBeNull();
   });

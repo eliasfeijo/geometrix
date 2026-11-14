@@ -68,14 +68,13 @@ export function findRoadJob(
 }
 
 /**
- * Lays the road on the job's cell, makes it known to the team that paid for
- * it and to the teams that see it, and invalidates cached paths.
+ * Lays the road on the job's cell and makes it known to the team that paid
+ * for it and to the teams that see it (which invalidates their cached paths).
  */
 export function completeRoadJob(state: WorldState, job: RoadJob): void {
   const index = job.y * state.map.width + job.x;
   state.map.road[index] = 1;
   rememberCompletedRoad(state, job.team, index);
-  state.roadRevision += 1;
   state.stats.teams[job.team]!.roadSegments += 1;
   state.roadJobs.splice(state.roadJobs.indexOf(job), 1);
 }

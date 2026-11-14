@@ -6,7 +6,8 @@
 // team 0, not just one of the same cost. Lower-index ties alone gave the teams
 // differently shaped roads and up to ~20% apart in delivered materia.
 
-import { isRotatedSide, type Cell, type GameMap } from "./map.ts";
+import { knownMap, memoryOf } from "./known.ts";
+import { isPassable, isRotatedSide, type Cell, type GameMap } from "./map.ts";
 import { cellModifier } from "./movement.ts";
 import type { Params } from "./params.ts";
 import type { Creep, WorldState } from "./world.ts";
@@ -147,33 +148,43 @@ export function findPath(
 export type PathCache = {
   /** Cell index of the target the path leads to. */
   target: number;
-  /** state.roadRevision when the path was computed. */
+  /** The team memory's roadRevision when the path was computed. */
   roadRevision: number;
+  /** The team memory's blockRevision the path was last checked against. */
+  blockRevision: number;
   /** Cells still to enter, next one first. */
   cells: number[];
 };
 
 /**
- * The creep's path to `target`, from its cache when still valid. It is
- * recomputed only when the target changes or a road was completed since
- * (plan section 5). null when the target cannot be reached.
+ * The creep's path to `target` on the map its team knows (fog plan section
+ * 5, spec P-1), from its cache when still valid. It is recomputed when the
+ * target changes or the team came to know a road since. When the team only
+ * discovered impassable cells, the cached path is kept unless one of its
+ * cells is among them (N3). null when the target cannot be reached.
  */
 export function pathTo(
   state: WorldState,
   creep: Creep,
   target: Cell,
 ): number[] | null {
-  const targetIndex = target.y * state.map.width + target.x;
+  const map = knownMap(state, creep.team);
+  const { roadRevision, blockRevision } = memoryOf(state, creep.team);
+  const targetIndex = target.y * map.width + target.x;
   const cache = creep.path;
   if (
     cache !== null &&
     cache.target === targetIndex &&
-    cache.roadRevision === state.roadRevision
+    cache.roadRevision === roadRevision
   ) {
-    return cache.cells;
+    if (cache.blockRevision === blockRevision) return cache.cells;
+    if (cache.cells.every((i) => isPassable(map.terrain[i]!))) {
+      cache.blockRevision = blockRevision;
+      return cache.cells;
+    }
   }
   const cells = findPath(
-    state.map,
+    map,
     creep,
     target,
     state.params,
@@ -182,6 +193,6 @@ export function pathTo(
   creep.path =
     cells === null
       ? null
-      : { target: targetIndex, roadRevision: state.roadRevision, cells };
+      : { target: targetIndex, roadRevision, blockRevision, cells };
   return cells;
 }
