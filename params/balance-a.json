@@ -34,7 +34,8 @@
     "initialStock": {
       "materia": 0,
       "cristal": 0
-    }
+    },
+    "maxHumans": 3
   },
   "dna": {
     "square": {

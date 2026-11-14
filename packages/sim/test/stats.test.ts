@@ -145,8 +145,8 @@ describe("players", () => {
     const world = textWorld(LANE, params);
     const creep = creepOf(world, 0, "circle");
     step(world, [
-      as(1, { type: "join", team: 0 }),
-      as(2, { type: "join", team: 1 }),
+      as(1, { type: "join", team: 0, bot: false }),
+      as(2, { type: "join", team: 1, bot: false }),
       as(1, { type: "dominate", creepId: creep.id }),
       as(1, { type: "applyPreset", creepId: creep.id, preset: "roadBuilder" }),
       as(1, {

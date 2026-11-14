@@ -48,7 +48,11 @@ const schema = {
     },
     cap: positive,
   },
-  teams: { initialStock: cost },
+  teams: {
+    initialStock: cost,
+    /** Human players per team (spec D6); bots do not count. */
+    maxHumans: positive,
+  },
   dna: { square: dna, triangle: dna, circle: dna },
   movementPermille: {
     road: positive,

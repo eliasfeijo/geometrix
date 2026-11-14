@@ -45,7 +45,7 @@ import type { WorldState } from "./world.ts";
 
 export type Command =
   /** System command the server emits when a player joins (not a client input). */
-  | { type: "join"; team: number }
+  | { type: "join"; team: number; bot: boolean }
   | { type: "dominate"; creepId: number }
   /** Also emitted by the server on disconnect or domination timeout (D-4). */
   | { type: "release" }
@@ -91,7 +91,7 @@ export function validate(
 ): Refusal | null {
   switch (command.type) {
     case "join":
-      return joinRefusal(state, playerId, command.team);
+      return joinRefusal(state, playerId, command.team, command.bot);
     case "dominate":
       return dominateRefusal(state, playerId, command.creepId);
     case "release":
@@ -150,7 +150,7 @@ export function applyCommand(
   if (refusal !== null) return refusal;
   switch (command.type) {
     case "join":
-      join(state, playerId, command.team);
+      join(state, playerId, command.team, command.bot);
       break;
     case "dominate":
       dominate(state, playerId, command.creepId);
