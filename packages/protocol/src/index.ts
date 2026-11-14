@@ -107,6 +107,41 @@ export function parseClientMessage(raw: string): ClientMessage | null {
   return result.success ? result.data : null;
 }
 
+/** POST /api/worlds. Without a seed the server picks one (it is stored). */
+export const createWorldRequest = z.object({
+  seed: z
+    .number()
+    .int()
+    .nonnegative()
+    .max(2 ** 32 - 1)
+    .optional(),
+  multiplier: z.number().int().positive().max(10_000).optional(),
+  /** Teams that get a balanced bot (spec section 5, F6 details). */
+  botTeams: z.array(z.number().int().nonnegative()).max(8).optional(),
+});
+
+export type CreateWorldRequest = z.infer<typeof createWorldRequest>;
+
+/** POST /api/worlds/:id/join. The answer carries the session token. */
+export const joinRequest = z.object({
+  name: z.string().trim().min(1).max(32),
+  team: z.number().int().nonnegative(),
+});
+
+export type JoinRequest = z.infer<typeof joinRequest>;
+
+export type JoinResponse = { playerId: number; team: number; token: string };
+
+export type WorldSummary = {
+  id: number;
+  seed: number;
+  multiplier: number;
+  status: WorldStatus;
+  tick: number;
+  durationTicks: number;
+  players: { id: number; team: number; name: string; bot: boolean }[];
+};
+
 /** What changes tick by tick; the whole of it goes out each time (plan P3). */
 export type DynamicState = {
   tick: number;

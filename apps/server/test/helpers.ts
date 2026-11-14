@@ -1,5 +1,8 @@
 import { readFileSync } from "node:fs";
 import { parseParams, type Params } from "@geometrix/sim";
+import { startApp } from "../src/app.ts";
+import { DEFAULT_CONFIG, type ServerConfig } from "../src/config.ts";
+import { Store } from "../src/persistence.ts";
 
 /** The sim tests' fixed params, so balancing does not change these tests. */
 export function testParams(): Params {
@@ -49,4 +52,31 @@ export class FakeTimers {
   stall(ms: number): void {
     this.time += ms;
   }
+}
+
+/** The app on a free port, with a memory store and a clock that never moves. */
+export async function testApp(config: Partial<ServerConfig> = {}) {
+  const timers = new FakeTimers();
+  const store = new Store(":memory:");
+  const app = await startApp({
+    store,
+    config: { ...DEFAULT_CONFIG, port: 0, dbFile: ":memory:", ...config },
+    timers,
+    params: testParams(),
+    clock: () => "2026-11-14T00:00:00.000Z",
+  });
+  const base = `http://127.0.0.1:${app.port}`;
+  const post = async (path: string, body: unknown) => {
+    const res = await fetch(base + path, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    return { status: res.status, body: (await res.json()) as never };
+  };
+  const get = async (path: string) => {
+    const res = await fetch(base + path);
+    return { status: res.status, res };
+  };
+  return { app, store, timers, base, post, get };
 }
