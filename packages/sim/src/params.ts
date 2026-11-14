@@ -74,6 +74,8 @@ const schema = {
       contestedMaxRiverDistance: positive,
     },
   },
+  /** Units a creep takes from a deposit per second, for every DNA and resource. */
+  gather: { unitsPerSecond: positive },
   creep: { cost, productionSeconds: positive },
   road: { cost, buildSeconds: positive },
   upgrade: { capacity: { cost, bonusPermille: nonNegative } },

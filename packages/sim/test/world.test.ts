@@ -29,8 +29,18 @@ describe("createWorld", () => {
   test("has two teams on the map cores with the initial stock", () => {
     const { cores } = generateMap(42, params).layout;
     expect(world.teams).toEqual([
-      { id: 0, core: cores[0], stock: { materia: 0, cristal: 0 } },
-      { id: 1, core: cores[1], stock: { materia: 0, cristal: 0 } },
+      {
+        id: 0,
+        core: cores[0],
+        stock: { materia: 0, cristal: 0 },
+        upgrades: { capacity: false },
+      },
+      {
+        id: 1,
+        core: cores[1],
+        stock: { materia: 0, cristal: 0 },
+        upgrades: { capacity: false },
+      },
     ]);
   });
 

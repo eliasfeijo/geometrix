@@ -76,6 +76,9 @@
       "contestedMaxRiverDistance": 3
     }
   },
+  "gather": {
+    "unitsPerSecond": 1
+  },
   "creep": {
     "cost": {
       "materia": 40,
