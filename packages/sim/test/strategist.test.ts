@@ -115,6 +115,19 @@ describe("balanced", () => {
     ]);
   });
 
+  test("sends cristal collectors to explore while there is map left to see (fog spec A-4)", () => {
+    const cristalCollectors = (world: WorldState) =>
+      presetsOf(decide(world, 0)).filter(([, p]) => p === "cristalCollector");
+    // No cristal known, but cells never seen within reach: the split holds.
+    const wide = textWorld(["A..m...............B"]);
+    expect(wide.memory[0]!.explored).toContain(0);
+    expect(cristalCollectors(wide)).toHaveLength(2);
+    // The core has seen every cell: there is no cristal to look for.
+    const small = textWorld(["A..m....B"]);
+    expect(small.memory[0]!.explored).not.toContain(0);
+    expect(cristalCollectors(small)).toEqual([]);
+  });
+
   test("the road target is the nearest deposit without a road, then the next", () => {
     const world = joined();
     const team = world.teams[0]!;

@@ -27,12 +27,12 @@ test("a 6 h bot world of seed 42 hashes to a stable value", () => {
     commands += accepted.length;
     step(state, accepted);
   }
-  // The bots did act: role changes. (Until the autopilot explores, fog F2,
-  // they know no cristal and produce nothing.)
-  expect(commands).toBeGreaterThan(5);
+  // The bots did act: production, upgrades and role changes.
+  expect(state.creeps.length).toBeGreaterThan(12);
+  expect(commands).toBeGreaterThan(20);
   expect(
     createHash("sha256").update(serialize(state)).digest("hex"),
   ).toMatchInlineSnapshot(
-    `"eb8d899333fa42f2af33143fc20401147ec6ae6d17daee54cf98b5b5c8755695"`,
+    `"86a1d76aa03d3f7d442b6f6946ed5851b09783fe64271526df4c0ca964ac8fe6"`,
   );
 });
