@@ -1,0 +1,330 @@
+/* Dark theme (owner decision, F7): graphite background, team blue × orange,
+   materia and cristal with their own colors. Map colors live in map/colors.ts. */
+
+:root {
+  --bg: #111317;
+  --panel: #1a1d23;
+  --panel-2: #22262e;
+  --line: #333844;
+  --text: #e6e8ec;
+  --muted: #8b92a1;
+  --accent: #f2f4f8;
+  --team-0: #4ea8ff;
+  --team-1: #ff8c42;
+  --materia: #7fdba0;
+  --cristal: #c48cff;
+  --danger: #ff6b6b;
+  --ok: #7fdba0;
+  color-scheme: dark;
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--text);
+  background: var(--bg);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  margin: 0;
+  height: 100%;
+}
+
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+
+button:hover:not(:disabled) {
+  border-color: var(--muted);
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+button.primary {
+  background: #2b3a52;
+  border-color: var(--team-0);
+}
+
+button.ghost {
+  background: transparent;
+  border-color: transparent;
+}
+
+button.active {
+  background: #3a3220;
+  border-color: #ffd166;
+}
+
+input,
+select {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 3px 6px;
+}
+
+input[type="number"] {
+  width: 5em;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0 0 8px;
+  font-weight: 600;
+}
+
+h2 {
+  font-size: 15px;
+}
+
+h3 {
+  font-size: 13px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.error {
+  color: var(--danger);
+}
+
+.team-0 {
+  --team: var(--team-0);
+}
+
+.team-1 {
+  --team: var(--team-1);
+}
+
+.team-name,
+.player {
+  color: var(--team);
+  font-weight: 600;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 12px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.status {
+  font-size: 12px;
+  padding: 1px 6px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+}
+
+.status-running {
+  color: var(--ok);
+}
+
+.status-ended {
+  color: var(--muted);
+}
+
+/* Lobby */
+
+.lobby {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.lobby-header h1 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 26px;
+  margin: 0;
+}
+
+.logo-square {
+  fill: none;
+  stroke: var(--team-0);
+  stroke-width: 1.4;
+}
+
+.logo-triangle {
+  fill: none;
+  stroke: var(--text);
+  stroke-width: 1.4;
+}
+
+.logo-circle {
+  fill: none;
+  stroke: var(--team-1);
+  stroke-width: 1.4;
+}
+
+.create-fields {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.worlds {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.world.highlight {
+  border-color: var(--team-0);
+}
+
+.world-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.world-teams {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.world-team {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 8px;
+  border-left: 3px solid var(--team);
+  background: var(--panel-2);
+  border-radius: 4px;
+}
+
+@media (max-width: 560px) {
+  .world-teams {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Game */
+
+.game {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.top-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 10px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+  overflow-x: auto;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.clock {
+  font-variant-numeric: tabular-nums;
+}
+
+.connection {
+  font-size: 12px;
+}
+
+.connection-open {
+  color: var(--ok);
+}
+
+.connection-connecting,
+.connection-reconnecting {
+  color: #ffd166;
+}
+
+.connection-closed {
+  color: var(--danger);
+}
+
+.game-body {
+  flex: 1;
+  position: relative;
+  min-height: 0;
+}
+
+.map-placeholder {
+  display: grid;
+  place-items: center;
+  height: 100%;
+}
+
+.notices {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 10;
+}
+
+.notice {
+  background: #3a2326;
+  border: 1px solid var(--danger);
+  border-radius: 4px;
+  padding: 6px 12px;
+  cursor: pointer;
+}

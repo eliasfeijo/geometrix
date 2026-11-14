@@ -59,7 +59,7 @@ Marque `[x]` ao concluir. Cada task deve terminar com os testes verdes. Referên
 - [x] Recuperação após restart (teste de integração: o hash continua o mesmo)
 
 ## F7 — Cliente
-- [ ] Vite + Preact; conexão, `welcome`, reconexão
+- [x] Vite + Preact; conexão, `welcome`, reconexão
 - [ ] Mapa SVG com camadas estática e dinâmica; pan e zoom
 - [ ] Creeps por DNA e time, anel de carga, halo de domínio, interpolação
 - [ ] Inspetor do creep; dominar e liberar
