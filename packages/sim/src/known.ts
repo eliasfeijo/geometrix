@@ -91,16 +91,23 @@ export function nearestUnseen(
   rotated: boolean,
   taken: ReadonlySet<number> = new Set(),
 ): Cell | null {
+  // Once the team has seen every cell, as it does late in a world, skip the
+  // search.
+  if (!explored.includes(0)) return null;
   const { width, height, terrain } = map;
   const size = width * height;
   const start = from.y * width + from.x;
-  const steps = new Array<number>(size).fill(-1);
+  const steps = new Int32Array(size).fill(-1);
+  const queue = new Int32Array(size);
+  let tail = 0;
   steps[start] = 0;
-  const queue = [start];
+  queue[tail++] = start;
+  // Neighbors up, left, right, down; reversed in the rotated frame.
+  const offsets = rotated ? [width, 1, -1, -width] : [-width, -1, 1, width];
   let best = -1;
   // The queue is in step order: once a target is found, only cells at the
   // same number of steps can still beat it, on the tie-break.
-  for (let head = 0; head < queue.length; head++) {
+  for (let head = 0; head < tail; head++) {
     const i = queue[head]!;
     if (best >= 0 && steps[i]! > steps[best]!) break;
     if (explored[i] === 0 && !taken.has(i)) {
@@ -109,18 +116,14 @@ export function nearestUnseen(
       if (best < 0 || key < bestKey) best = i;
     }
     const x = i % width;
-    const neighbors = [
-      i >= width ? i - width : -1,
-      x > 0 ? i - 1 : -1,
-      x < width - 1 ? i + 1 : -1,
-      i + width < size ? i + width : -1,
-    ];
-    if (rotated) neighbors.reverse();
-    for (const next of neighbors) {
-      if (next < 0 || steps[next] !== -1) continue;
-      if (!isPassable(terrain[next]!)) continue;
+    for (const offset of offsets) {
+      const next = i + offset;
+      if (next < 0 || next >= size) continue;
+      if (offset === -1 && x === 0) continue;
+      if (offset === 1 && x === width - 1) continue;
+      if (steps[next] !== -1 || !isPassable(terrain[next]!)) continue;
       steps[next] = steps[i]! + 1;
-      queue.push(next);
+      queue[tail++] = next;
     }
   }
   return best < 0 ? null : { x: best % width, y: Math.floor(best / width) };
