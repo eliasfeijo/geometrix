@@ -5,10 +5,14 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
-import { parseParams, type Params } from "@geometrix/sim";
+import {
+  parseParams,
+  STRATEGISTS,
+  type Params,
+  type StrategistId,
+} from "@geometrix/sim";
 import { renderReport } from "./report.ts";
 import { readRun, RUN_FILES, runId, simulate, writeRun } from "./sim.ts";
-import { STRATEGISTS, type StrategistId } from "./strategist.ts";
 import { parseSeeds, parseSet, runSweep, SweepError } from "./sweep.ts";
 import { verify } from "./verify.ts";
 

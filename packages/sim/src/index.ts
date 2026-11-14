@@ -14,5 +14,6 @@ export * from "./roads.ts";
 export * from "./rules.ts";
 export * from "./serialize.ts";
 export * from "./stats.ts";
+export * from "./strategist.ts";
 export * from "./step.ts";
 export * from "./world.ts";
