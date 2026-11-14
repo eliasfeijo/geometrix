@@ -59,7 +59,7 @@ export function StackList() {
               >
                 <DnaIcon dna={creep.dna} team={creep.team} size={16} />
                 <span class="stack-name">
-                  <strong>{creepName(state.creeps, creep.id)}</strong>{" "}
+                  <strong>{creepName(creep.id)}</strong>{" "}
                   <span class="muted small">
                     {DNA_NAMES[creep.dna]} · #{creep.id}
                   </span>

@@ -1,8 +1,10 @@
 import { join, setRulesRefusal, type Rule } from "@geometrix/sim";
 import { describe, expect, it } from "vitest";
 import {
+  ACTION_LABELS,
   ACTION_TYPES,
   actionOf,
+  CONDITION_LABELS,
   CONDITION_TYPES,
   conditionOf,
   move,
@@ -59,6 +61,23 @@ describe("rules draft", () => {
     expect(
       actionOf("gather", { type: "gather", resource: "cristal" }, core),
     ).toEqual({ type: "gather", resource: "cristal" });
+  });
+
+  it("offers the whole vocabulary, explore and resourceUnknown included", () => {
+    expect([...CONDITION_TYPES].sort()).toEqual(
+      Object.keys(CONDITION_LABELS).sort(),
+    );
+    expect([...ACTION_TYPES].sort()).toEqual(Object.keys(ACTION_LABELS).sort());
+    expect(
+      conditionOf("resourceUnknown", {
+        type: "stockBelow",
+        resource: "cristal",
+        amount: 5,
+      }),
+    ).toEqual({ type: "resourceUnknown", resource: "cristal" });
+    expect(actionOf("explore", { type: "deliver" }, { x: 1, y: 2 })).toEqual({
+      type: "explore",
+    });
   });
 
   it("produces only rules the sim accepts", () => {
