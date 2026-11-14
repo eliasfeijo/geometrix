@@ -2,9 +2,9 @@ import { describe, expect, test } from "vitest";
 import { restore, serialize } from "../src/serialize.ts";
 import { step } from "../src/step.ts";
 import { createWorld } from "../src/world.ts";
-import { loadDefaultParams } from "./helpers.ts";
+import { loadTestParams } from "./helpers.ts";
 
-const params = loadDefaultParams();
+const params = loadTestParams();
 
 describe("step", () => {
   test("advances the tick by one, in place", () => {

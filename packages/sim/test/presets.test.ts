@@ -6,9 +6,9 @@ import {
 } from "../src/presets.ts";
 import { startProduction } from "../src/production.ts";
 import { createWorld } from "../src/world.ts";
-import { creepOf, loadDefaultParams, run, textWorld } from "./helpers.ts";
+import { creepOf, loadTestParams, run, textWorld } from "./helpers.ts";
 
-const params = loadDefaultParams();
+const params = loadTestParams();
 
 describe("preset rules", () => {
   test("collectors deliver when full, gather, then bring the leftover home", () => {

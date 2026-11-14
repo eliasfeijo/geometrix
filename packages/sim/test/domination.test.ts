@@ -21,9 +21,9 @@ const ROW = ["A.m......B"];
 /** Players 1 and 2 on team 0, player 3 on team 1. */
 function world(params?: Params): WorldState {
   const w = textWorld(ROW, params);
-  join(w, 1, 0);
-  join(w, 2, 0);
-  join(w, 3, 1);
+  join(w, 1, 0, false);
+  join(w, 2, 0, false);
+  join(w, 3, 1, false);
   return w;
 }
 
@@ -33,19 +33,34 @@ const teamCreep = (w: WorldState, team: number, n = 0) =>
 describe("join", () => {
   test("adds players by id with their team", () => {
     const w = textWorld(ROW);
-    join(w, 5, 1);
-    join(w, 2, 0);
+    join(w, 5, 1, false);
+    join(w, 2, 0, false);
+    join(w, 7, 1, true);
     expect(w.players).toEqual([
-      { id: 2, team: 0, lastDominateTick: null },
-      { id: 5, team: 1, lastDominateTick: null },
+      { id: 2, team: 0, bot: false, lastDominateTick: null },
+      { id: 5, team: 1, bot: false, lastDominateTick: null },
+      { id: 7, team: 1, bot: true, lastDominateTick: null },
     ]);
+  });
+
+  test("takes at most teams.maxHumans humans per team; bots do not count", () => {
+    const w = textWorld(ROW);
+    expect(w.params.teams.maxHumans).toBe(3);
+    join(w, 1, 0, true);
+    for (const id of [2, 3, 4]) {
+      expect(joinRefusal(w, id, 0, false)).toBeNull();
+      join(w, id, 0, false);
+    }
+    expect(joinRefusal(w, 5, 0, false)).toBe("teamFull");
+    expect(joinRefusal(w, 5, 0, true)).toBeNull();
+    expect(joinRefusal(w, 5, 1, false)).toBeNull();
   });
 
   test("refuses a player twice or an unknown team", () => {
     const w = world();
-    expect(joinRefusal(w, 1, 1)).toBe("alreadyJoined");
-    expect(joinRefusal(w, 9, 2)).toBe("unknownTeam");
-    expect(joinRefusal(w, 9, 1)).toBeNull();
+    expect(joinRefusal(w, 1, 1, false)).toBe("alreadyJoined");
+    expect(joinRefusal(w, 9, 2, false)).toBe("unknownTeam");
+    expect(joinRefusal(w, 9, 1, false)).toBeNull();
   });
 });
 

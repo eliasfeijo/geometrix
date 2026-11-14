@@ -48,7 +48,11 @@ const schema = {
     },
     cap: positive,
   },
-  teams: { initialStock: cost },
+  teams: {
+    initialStock: cost,
+    /** Human players per team (spec D6); bots do not count. */
+    maxHumans: positive,
+  },
   dna: { square: dna, triangle: dna, circle: dna },
   movementPermille: {
     road: positive,
@@ -82,7 +86,6 @@ const schema = {
   autopilot: { maxRules: positive },
   domination: {
     cost,
-    timeoutSeconds: positive,
     cooldownSeconds: nonNegative,
     /** 0 = no distance limit. */
     maxDistanceCells: nonNegative,
@@ -154,7 +157,6 @@ function checkConsistency(p: Params, issues: string[]): void {
     ],
     ["creep.productionSeconds", p.creep.productionSeconds],
     ["road.buildSeconds", p.road.buildSeconds],
-    ["domination.timeoutSeconds", p.domination.timeoutSeconds],
     ["domination.cooldownSeconds", p.domination.cooldownSeconds],
   ];
   for (const [path, seconds] of durations) {

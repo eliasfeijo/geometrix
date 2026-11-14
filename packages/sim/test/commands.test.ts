@@ -3,17 +3,17 @@ import { validate, type Command, type CommandInput } from "../src/commands.ts";
 import { serialize } from "../src/serialize.ts";
 import { step } from "../src/step.ts";
 import { createWorld, type WorldState } from "../src/world.ts";
-import { loadDefaultParams, run, textWorld } from "./helpers.ts";
+import { loadTestParams, run, textWorld } from "./helpers.ts";
 
-const params = loadDefaultParams();
+const params = loadTestParams();
 
 /** Players 1 and 2 on team 0, player 3 on team 1, joined through step. */
 function world(): WorldState {
   const w = textWorld(["A.m....c.B"]);
   step(w, [
-    { playerId: 1, command: { type: "join", team: 0 } },
-    { playerId: 2, command: { type: "join", team: 0 } },
-    { playerId: 3, command: { type: "join", team: 1 } },
+    { playerId: 1, command: { type: "join", team: 0, bot: false } },
+    { playerId: 2, command: { type: "join", team: 0, bot: false } },
+    { playerId: 3, command: { type: "join", team: 1, bot: false } },
   ]);
   return w;
 }
@@ -32,7 +32,7 @@ describe("validate", () => {
     const creep = ownCreep(w);
     const before = serialize(w);
     const commands: Command[] = [
-      { type: "join", team: 1 },
+      { type: "join", team: 1, bot: false },
       { type: "dominate", creepId: creep.id },
       { type: "release" },
       { type: "order", creepId: creep.id, order: { type: "stop" } },
@@ -171,7 +171,13 @@ describe("replaying a command log", () => {
   test("gives the same state", () => {
     // Seed 42: deposits are ids 1-14, team 0 creeps 15-20, team 1 creeps 21-26.
     const log = new Map<number, CommandInput[]>([
-      [0, [as(1, { type: "join", team: 0 }), as(3, { type: "join", team: 1 })]],
+      [
+        0,
+        [
+          as(1, { type: "join", team: 0, bot: false }),
+          as(3, { type: "join", team: 1, bot: false }),
+        ],
+      ],
       [
         10,
         [

@@ -1,10 +1,16 @@
 import { describe, expect, test } from "vitest";
-import { isPassable, Terrain, type Cell, type GameMap } from "../src/map.ts";
+import {
+  isPassable,
+  mirrorCell,
+  Terrain,
+  type Cell,
+  type GameMap,
+} from "../src/map.ts";
 import { findPath, pathTo, stepCost } from "../src/pathfinding.ts";
 import { createWorld } from "../src/world.ts";
-import { loadDefaultParams, parseMap } from "./helpers.ts";
+import { loadTestParams, parseMap } from "./helpers.ts";
 
-const params = loadDefaultParams();
+const params = loadTestParams();
 
 /** The path drawn as `*` over the map rows. The start cell is not part of it. */
 function draw(map: GameMap, rows: string[], path: number[] | null): string[] {
@@ -108,6 +114,46 @@ describe("findPath", () => {
         );
         expect(dx + dy).toBe(1);
         prev = i;
+      }
+    },
+  );
+});
+
+describe("findPath on the rotated side", () => {
+  test("breaks ties toward the higher cell index", () => {
+    const rows = ["...", "...", "..."];
+    const map = parseMap(rows);
+    const from = { x: 0, y: 0 };
+    const to = { x: 2, y: 2 };
+    expect(draw(map, rows, findPath(map, from, to, params))).toEqual([
+      ".**",
+      "..*",
+      "..*",
+    ]);
+    expect(draw(map, rows, findPath(map, from, to, params, true))).toEqual([
+      "...",
+      "*..",
+      "***",
+    ]);
+  });
+
+  test.each([1, 2, 3, 42, 649])(
+    "seed %i: team 1's route is the mirror of team 0's",
+    (seed) => {
+      const { map, teams, deposits } = createWorld(seed, params);
+      const mirror = (i: number) => map.width * map.height - 1 - i;
+      const half = deposits.length / 2;
+      for (const deposit of deposits.slice(0, half)) {
+        const core = teams[0]!.core;
+        const top = findPath(map, core, deposit, params)!;
+        const bottom = findPath(
+          map,
+          mirrorCell(core, map),
+          mirrorCell(deposit, map),
+          params,
+          true,
+        )!;
+        expect(bottom).toEqual(top.map(mirror));
       }
     },
   );

@@ -10,6 +10,7 @@ import {
   parseParams,
   type MetricsSample,
   type Params,
+  type StrategistId,
 } from "@geometrix/sim";
 import { HOUR, hours, number, table } from "./report.ts";
 import {
@@ -19,7 +20,6 @@ import {
   writeRun,
   type SimResult,
 } from "./sim.ts";
-import type { StrategistId } from "./strategist.ts";
 
 export class SweepError extends Error {}
 

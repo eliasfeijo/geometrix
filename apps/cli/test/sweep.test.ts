@@ -15,7 +15,8 @@ import { parseSeeds, parseSet, SweepError, withParam } from "../src/sweep.ts";
 const params = parseParams(
   JSON.parse(
     readFileSync(
-      new URL("../../../params/default.json", import.meta.url),
+      // The sim tests' fixed params, so balancing does not change the bots.
+      new URL("../../../packages/sim/test/params.json", import.meta.url),
       "utf8",
     ),
   ),

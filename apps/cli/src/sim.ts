@@ -5,6 +5,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import {
+  BALANCED,
   canonicalJson,
   sampleMetrics,
   SIM_VERSION,
@@ -12,12 +13,12 @@ import {
   type Cell,
   type Params,
   type Resource,
+  type StrategistId,
   type WorldState,
 } from "@geometrix/sim";
 import { botsFor, runBots, type LoggedCommand } from "./harness.ts";
 import { stateHash } from "./hash.ts";
 import { renderReport } from "./report.ts";
-import { BALANCED, type StrategistId } from "./strategist.ts";
 
 /** One metrics sample per world minute (plan section 9). */
 export const SAMPLE_EVERY_TICKS = 60;

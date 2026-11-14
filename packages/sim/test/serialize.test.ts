@@ -7,9 +7,9 @@ import {
   SnapshotVersionError,
 } from "../src/serialize.ts";
 import { createWorld, SIM_VERSION } from "../src/world.ts";
-import { loadDefaultParams } from "./helpers.ts";
+import { loadTestParams } from "./helpers.ts";
 
-const params = loadDefaultParams();
+const params = loadTestParams();
 const sha256 = (text: string) =>
   createHash("sha256").update(text).digest("hex");
 
@@ -50,7 +50,7 @@ describe("serialize / restore", () => {
     // on purpose, update it, and bump SIM_VERSION once worlds are persisted
     // (see SIM_VERSION).
     expect(sha256(serialize(world))).toMatchInlineSnapshot(
-      `"7a88c5c91f9dc64d83899bc162d0f4eca859583ada74a673525be4354d1f9e3a"`,
+      `"2b9424fccbae162889f56b1e55f35481bc37000a9d09d2cdd3184a36828f2875"`,
     );
   });
 
