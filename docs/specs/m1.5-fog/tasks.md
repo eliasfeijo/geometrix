@@ -47,7 +47,8 @@ na sua branch (plan §12, skill `commit`), com merge `--no-ff` em `main`.
 
 - [x] Delta com `known` (pares novos), `visible` (`add`/`remove`) e os tipos estrangeiros; testes pequenos (plan §8).
       Feita na F1, junto com a `view` filtrada: sem ela o teste de propriedade da rede quebrava
-- [ ] Teste de propriedade de 6 h × seeds 1, 42 e 649 com o fog
+- [x] Teste de propriedade de 6 h × seeds 1, 42 e 649 com o fog. Já rodava com o fog desde a F1; ganhou as asserções
+      de creep inimigo entrando na visão e do Núcleo inimigo descoberto pelos dois times
 - [ ] `welcome` sem terreno e sem `cores`; `PROTOCOL_VERSION` 3
 - [ ] `WorldSummary.seed` `null` em mundo vivo; replay de mundo vivo → 409 (spec D9, D10, N9)
 - [ ] **Checkpoint:** `geo net --seed 42 --days 3` contra os alvos da spec da rede §7
