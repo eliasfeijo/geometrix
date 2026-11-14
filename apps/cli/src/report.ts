@@ -32,7 +32,7 @@ export function table(header: string[], rows: string[][]): string {
 }
 
 /** Report windows: the shortest of these giving at most 12 rows. */
-function windowSeconds(totalSeconds: number): number {
+export function windowSeconds(totalSeconds: number): number {
   const options = [1, 2, 3, 6, 12, 24].map((h) => h * HOUR);
   return (
     options.find((w) => Math.ceil(totalSeconds / w) <= 12) ?? options.at(-1)!

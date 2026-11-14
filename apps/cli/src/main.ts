@@ -11,6 +11,7 @@ import {
   type Params,
   type StrategistId,
 } from "@geometrix/sim";
+import { measureNet, NET_FILES, netVerdicts, writeNet } from "./net.ts";
 import { renderReport } from "./report.ts";
 import { readRun, RUN_FILES, runId, simulate, writeRun } from "./sim.ts";
 import { parseSeeds, parseSet, runSweep, SweepError } from "./sweep.ts";
@@ -46,7 +47,14 @@ commands:
            --seed <n>      world seed (default 42)
            --ticks <n>     ticks to simulate (default 50000)
            --params <file> params JSON (default params/default.json)
-           --strategist <a[,b]>  as in sim (default balanced)`;
+           --strategist <a[,b]>  as in sim (default balanced)
+  net      view deltas over a bot x bot world, as the server sends them:
+           bytes and CPU per delta against the spec targets, and the client
+           view rebuilt from the deltas checked in every tick; writes
+           runs/<id>/net.md and net.json. Exit 1 if a target fails
+           --seed, --params, --days | --hours, --strategist, --out, --id
+                                 as in sim
+           --hash-every <n>      ticks between view hashes (default 60)`;
 
 export type Output = {
   log(line: string): void;
@@ -251,6 +259,54 @@ function runVerify(args: string[], out: Output): number {
   return result.ok ? 0 : 1;
 }
 
+function runNet(args: string[], out: Output): number {
+  const { values } = parseArgs({
+    args,
+    options: {
+      seed: { type: "string", default: "42" },
+      params: { type: "string" },
+      days: { type: "string" },
+      hours: { type: "string" },
+      strategist: { type: "string", default: "balanced" },
+      out: { type: "string", default: "runs" },
+      id: { type: "string" },
+      "hash-every": { type: "string", default: "60" },
+    },
+    strict: true,
+  });
+  const seed = parseSeed(values.seed);
+  const params = loadParams(values.params ?? DEFAULT_PARAMS);
+  const ticks = parseTicks(values, params);
+  const strategists = parseStrategists(values.strategist, TEAMS);
+  const hashEveryTicks = parseUint("hash-every", values["hash-every"], 1);
+  const id = values.id ?? `${runId(seed)}-net`;
+  const dir = join(values.out, id);
+  if (existsSync(dir)) throw new UsageError(`run already exists: ${dir}`);
+
+  out.log(`geo net --seed ${seed}: ${ticks} ticks, ${strategists.join(" x ")}`);
+  const result = measureNet(
+    {
+      id,
+      seed,
+      params,
+      paramsSource: paramsSource(values.params),
+      ticks,
+      strategists,
+      hashEveryTicks,
+    },
+    out.clock,
+  );
+  writeNet(dir, result);
+  const verdicts = netVerdicts(result);
+  out.log(
+    `  ${result.wallSeconds.toFixed(1)} s, ${result.bytes.mean.toFixed(0)} B/delta, ${(result.cpuMicros.median + result.hash.amortizedMicros).toFixed(1)} µs/send, ${result.property.mismatches} mismatches, hash ${result.finalHash}`,
+  );
+  out.log(`  ${join(dir, NET_FILES.report)}`);
+  const failed = Object.entries(verdicts).filter(([, pass]) => !pass);
+  for (const [name] of failed) out.error(`FAIL: ${name}`);
+  return failed.length === 0 ? 0 : 1;
+}
+
 /** Runs the CLI and returns the exit code: 0 ok, 1 check failed, 2 usage. */
 export function run(argv: string[], out: Output = console): number {
   const [command, ...args] = argv;
@@ -264,6 +320,8 @@ export function run(argv: string[], out: Output = console): number {
         return runReport(args, out);
       case "verify":
         return runVerify(args, out);
+      case "net":
+        return runNet(args, out);
       case undefined:
       case "help":
       case "--help":
