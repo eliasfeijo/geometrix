@@ -39,3 +39,8 @@
 - As skills e a ultimate valem para todo creep, ou só a partir de certo level?
 - Um creep pode mudar de forma ao evoluir, ou o DNA é fixo para sempre?
 - É possível dominar creeps de tribos aliadas?
+- **Vários creeps na mesma célula** (levantada no F7, 2026-11-14): no M1 os creeps não colidem, e os "gêmeos"
+  (mesmo DNA, nascidos juntos) escolhem o mesmo depósito e andam colados na mesma célula por até ~16 min de mundo.
+  Eles devem se espalhar? Caminhos possíveis: limite de ocupação por célula, colisão, ou desempate diferente na
+  escolha do depósito. É regra de jogo: muda a economia (tráfego nos depósitos) e provavelmente as batalhas do M2.
+  Enquanto isso, o cliente mostra cada creep individualmente e deixa escolher um deles numa pilha.
