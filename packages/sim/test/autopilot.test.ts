@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { nearestDeposit, type Rule } from "../src/autopilot.ts";
 import { step } from "../src/step.ts";
+import { updateVision } from "../src/vision.ts";
 import type { WorldState } from "../src/world.ts";
 import { creepOf, run, textWorld } from "./helpers.ts";
 
@@ -19,6 +20,12 @@ function withRules(rules: Rule[], rows = ROW) {
 const depositAt = (world: WorldState, x: number) =>
   world.deposits.find((d) => d.x === x && d.y === 0)!;
 
+/** Sets the deposit's amount where the team sees it: its memory follows. */
+function setAmount(world: WorldState, x: number, amount: number): void {
+  depositAt(world, x).amount = amount;
+  updateVision(world);
+}
+
 describe("rule evaluation", () => {
   test("the first rule whose condition holds sets the order", () => {
     const { world, creep } = withRules([
@@ -35,7 +42,7 @@ describe("rule evaluation", () => {
       { when: always, then: { type: "gather", resource: "cristal" } },
       { when: always, then: { type: "moveTo", x: 8, y: 0 } },
     ]);
-    depositAt(world, 4).amount = 0;
+    setAmount(world, 4, 0);
     step(world, []);
     expect(creep.order).toEqual({ type: "moveTo", x: 8, y: 0 });
   });
@@ -121,7 +128,7 @@ describe("conditions", () => {
     const { world, creep } = withRules(
       ifThenMove({ type: "resourceInRange", resource: "cristal", radius: 9 }),
     );
-    depositAt(world, 4).amount = 0;
+    setAmount(world, 4, 0);
     step(world, []);
     expect(creep.order.type).toBe("stop");
   });
@@ -150,7 +157,7 @@ describe("actions", () => {
       depositId: depositAt(world, 2).id,
     });
     creep.order = { type: "stop" };
-    depositAt(world, 2).amount = 0;
+    setAmount(world, 2, 0);
     step(world, []);
     expect(creep.order).toEqual({
       type: "gather",
@@ -162,11 +169,11 @@ describe("actions", () => {
     const { world, creep } = withRules([
       { when: always, then: { type: "gather", resource: "materia" } },
     ]);
-    depositAt(world, 2).amount = 0;
+    setAmount(world, 2, 0);
     step(world, []);
     const far = { type: "gather", depositId: depositAt(world, 6).id } as const;
     expect(creep.order).toEqual(far);
-    depositAt(world, 2).amount = 5;
+    setAmount(world, 2, 5);
     run(world, 30);
     expect(creep.order).toEqual(far);
   });
@@ -178,7 +185,7 @@ describe("actions", () => {
     ]);
     const near = { type: "gather", depositId: depositAt(world, 2).id } as const;
     creep.order = near;
-    depositAt(world, 2).amount = 0;
+    setAmount(world, 2, 0);
     step(world, []);
     expect(creep.order).toEqual(near);
   });
@@ -189,7 +196,7 @@ describe("actions", () => {
       ["A.c.c....B"],
     );
     creep.order = { type: "gather", depositId: depositAt(world, 2).id };
-    depositAt(world, 2).amount = 0;
+    setAmount(world, 2, 0);
     step(world, []);
     expect(creep.order).toEqual({
       type: "gather",
@@ -199,7 +206,9 @@ describe("actions", () => {
 
   test("nearestDeposit breaks ties by the lower id", () => {
     const world = textWorld(["m.A.m....B"]);
-    expect(nearestDeposit(world, { x: 2, y: 0 }, "materia")!.x).toBe(0);
+    expect(nearestDeposit(world.deposits, { x: 2, y: 0 }, "materia")!.x).toBe(
+      0,
+    );
   });
 
   test("gather is impossible with a full cargo", () => {
@@ -281,5 +290,49 @@ describe("a gather-deliver loop", () => {
     run(world, 3600);
     expect(world.teams[0]!.stock.materia).toBeGreaterThan(400);
     expect(creep.cargo.materia).toBeLessThanOrEqual(10);
+  });
+});
+
+describe("by what the team knows (fog spec A-1, A-2)", () => {
+  // Core A sees 8 cells: cristal at x = 5 is known, at x = 14 it is not.
+  const FAR = ["A....c........c....B"];
+
+  test("a deposit the team never saw is not gathered nor in range", () => {
+    const { world, creep } = withRules(
+      [
+        {
+          when: { type: "resourceInRange", resource: "cristal", radius: 20 },
+          then: { type: "gather", resource: "cristal" },
+        },
+        { when: always, then: { type: "stop" } },
+      ],
+      FAR,
+    );
+    setAmount(world, 5, 0);
+    expect(world.memory[0]!.deposits.map((d) => d.x)).toEqual([5]);
+    step(world, []);
+    expect(creep.order).toEqual({ type: "stop" });
+  });
+
+  test("a remembered amount holds until the creep sees the deposit again", () => {
+    const { world, creep } = withRules(
+      [
+        { when: always, then: { type: "gather", resource: "cristal" } },
+        { when: always, then: { type: "deliver" } },
+      ],
+      FAR,
+    );
+    const far = depositAt(world, 14);
+    // Seen full once; it ran dry since, out of sight.
+    world.memory[0]!.deposits.push({ ...far });
+    far.amount = 0;
+    setAmount(world, 5, 0);
+    step(world, []);
+    expect(creep.order).toEqual({ type: "gather", depositId: far.id });
+    // A circle sees 6 cells: from x = 8 it sees the deposit empty and turns.
+    run(world, 12 * 8);
+    expect(creep.x).toBe(8);
+    expect(world.memory[0]!.deposits[1]!.amount).toBe(0);
+    expect(creep.order).toEqual({ type: "deliver" });
   });
 });

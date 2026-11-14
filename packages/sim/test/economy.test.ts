@@ -164,15 +164,24 @@ describe("gather", () => {
     expect(creep.movePoints).toBe(0);
   });
 
-  test.each([
-    ["an unknown deposit", 9999],
-    ["an empty cristal deposit", 0],
-  ])("%s turns into stop", (_, id) => {
+  test("an unknown deposit turns into stop", () => {
     const world = textWorld(["Ac.......B"]);
-    const deposit = depositAt(world, 1);
+    const creep = creepOf(world, 0, "circle");
+    creep.order = { type: "gather", depositId: 9999 };
+    run(world, 1);
+    expect(creep.order).toEqual({ type: "stop" });
+  });
+
+  test("an empty cristal deposit turns into stop once the creep is there", () => {
+    const world = textWorld(["A..c......B"]);
+    const deposit = depositAt(world, 3);
     deposit.amount = 0;
     const creep = creepOf(world, 0, "circle");
-    creep.order = { type: "gather", depositId: id || deposit.id };
+    creep.order = { type: "gather", depositId: deposit.id };
+    // 12 ticks per cell for a circle: there after 36.
+    run(world, 36);
+    expect(creep.x).toBe(3);
+    expect(creep.order).toEqual({ type: "gather", depositId: deposit.id });
     run(world, 1);
     expect(creep.order).toEqual({ type: "stop" });
   });

@@ -29,7 +29,7 @@ na sua branch (plan §12, skill `commit`), com merge `--no-ff` em `main`.
 - [x] `known.ts`: o mapa conhecido do time como `GameMap`; `pathTo` nele, com o cache por `roadRevision` e
       `blockRevision` da memória; sai o `state.roadRevision` (plan §5, N3)
 - [x] `nextSegment`, `canBuildRoad` e `buildRoad` no mapa conhecido, com teste de estrada no escuro (spec D5)
-- [ ] Piloto pela memória: `nearestDeposit`, `committedDeposit`, `resourceInRange`, validação de `moveTo` (spec A-1,
+- [x] Piloto pela memória: `nearestDeposit`, `committedDeposit`, `resourceInRange`, validação de `moveTo` (spec A-1,
       A-2)
 - [ ] Ordem `explore`, ação `explore` (BFS no mapa conhecido, sem repetir alvo), condição `resourceUnknown`; presets
       coletor e `scout`; vocabulário com `BREAKING CHANGE` (plan §6, N4, N5)
