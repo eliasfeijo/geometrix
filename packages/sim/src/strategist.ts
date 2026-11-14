@@ -1,20 +1,23 @@
 // Bot strategists (plan section 9; balanced decided by the owner in F5,
 // 2026-11-13). A strategist is a team policy that issues the same external
 // commands a human would (produce, buyUpgrade, applyPreset). It decides from
-// the state alone, with no memory of its own, so a run restored from a
-// snapshot or replayed from the log takes the same decisions. The harness
+// its team's view, the static map and the params alone (M1.5 spec V-3: a bot
+// knows no more than a human of the team, ADR-0006 rule 2), with no memory of
+// its own, so a run restored from a snapshot or replayed from the log takes the
+// same decisions. The harness
 // runs it for every team; a server world may give each team one bot (spec
 // section 5, F6 details). Its commands go into the log like a human's.
 
 import { canAfford } from "./economy.ts";
 import type { Command } from "./commands.ts";
-import { manhattan, type Cell } from "./map.ts";
-import { DNAS, type Dna } from "./params.ts";
+import { manhattan, type Cell, type GameMap } from "./map.ts";
+import { DNAS, type Dna, type Params } from "./params.ts";
 import { collectorRules, roadBuilderRules } from "./presets.ts";
 import { productionRefusal } from "./production.ts";
 import { nextSegment, type RoadContext } from "./roads.ts";
 import { canonicalJson } from "./serialize.ts";
-import type { Creep, Deposit, Team, WorldState } from "./world.ts";
+import type { TeamView } from "./view.ts";
+import type { Creep, Deposit, Team } from "./world.ts";
 
 export const STRATEGISTS = ["balanced", "none"] as const;
 export type StrategistId = (typeof STRATEGISTS)[number];
@@ -29,17 +32,45 @@ export const BALANCED = {
   builders: 1,
 } as const;
 
+/** The terrain every client gets in the welcome; roads come from the view. */
+export type StaticMap = Omit<GameMap, "road">;
+
+/**
+ * The commands of the team's bot. `map` may be the world's map: its road
+ * layer is ignored and rebuilt from `seen.roads`.
+ */
 export function strategistCommands(
   id: StrategistId,
-  state: WorldState,
-  team: number,
+  seen: TeamView,
+  map: StaticMap,
+  params: Params,
 ): Command[] {
   switch (id) {
     case "balanced":
-      return balanced(state, state.teams[team]!);
+      return balanced(knowledge(seen, map, params));
     case "none":
       return [];
   }
+}
+
+/** All a strategist decides from: the team's view on the static map. */
+type Knowledge = {
+  seen: TeamView;
+  team: Team;
+  map: GameMap;
+  params: Params;
+};
+
+function knowledge(seen: TeamView, map: StaticMap, params: Params): Knowledge {
+  const road: number[] = new Array<number>(map.terrain.length).fill(0);
+  for (const i of seen.roads) road[i] = 1;
+  const { width, height, terrain } = map;
+  return {
+    seen,
+    team: seen.teams[seen.team]!,
+    map: { width, height, terrain, road },
+    params,
+  };
 }
 
 /**
@@ -53,15 +84,15 @@ export function strategistActs(tick: number): boolean {
 type Role =
   { kind: "materia" } | { kind: "cristal" } | { kind: "builder"; target: Cell };
 
-function balanced(state: WorldState, team: Team): Command[] {
+function balanced(known: Knowledge): Command[] {
   const commands: Command[] = [];
-  const { params } = state;
+  const { seen, team, params } = known;
   const stock = { ...team.stock };
 
-  if (productionRefusal(state, team) === null) {
+  if (productionRefusal({ params, creeps: seen.creeps }, team) === null) {
     commands.push({
       type: "produce",
-      dna: scarcestDna(state, team),
+      dna: scarcestDna(seen, team),
       repeat: false,
     });
     stock.materia -= params.creep.cost.materia;
@@ -73,15 +104,15 @@ function balanced(state: WorldState, team: Team): Command[] {
   ) {
     commands.push({ type: "buyUpgrade", upgrade: "capacity" });
   }
-  commands.push(...assignRoles(state, team));
+  commands.push(...assignRoles(known));
   return commands;
 }
 
 /** The DNA the team has fewest creeps of; ties in DNAS order (■ ▲ ●). */
-function scarcestDna(state: WorldState, team: Team): Dna {
+function scarcestDna(seen: TeamView, team: Team): Dna {
   const counts = DNAS.map(
     (dna) =>
-      state.creeps.filter((c) => c.team === team.id && c.dna === dna).length,
+      seen.creeps.filter((c) => c.team === team.id && c.dna === dna).length,
   );
   return DNAS[counts.indexOf(Math.min(...counts))]!;
 }
@@ -130,16 +161,20 @@ export function roadTarget(
  * role that has too many are taken lowest id first, and so are the materia
  * creeps that fill a role short of creeps.
  */
-function assignRoles(state: WorldState, team: Team): Command[] {
-  const creeps = state.creeps.filter((c) => c.team === team.id);
-  const hasCristal = state.deposits.some(
+function assignRoles(known: Knowledge): Command[] {
+  const { seen, team, map, params } = known;
+  const creeps = seen.creeps.filter((c) => c.team === team.id);
+  const hasCristal = seen.deposits.some(
     (d) => d.kind === "cristal" && d.amount > 0,
   );
   const { numerator, denominator } = BALANCED.cristalShare;
   const wantCristal = hasCristal
     ? Math.floor((creeps.length * numerator + denominator - 1) / denominator)
     : 0;
-  const target = roadTarget(state, team);
+  const target = roadTarget(
+    { map, params, teams: seen.teams, deposits: seen.deposits },
+    team,
+  );
   const wantBuilders = target === null ? 0 : BALANCED.builders;
 
   const roles = new Map(creeps.map((c) => [c, roleOf(c)]));
