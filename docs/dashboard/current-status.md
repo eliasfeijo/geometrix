@@ -25,7 +25,8 @@ por um portão de aprovação ou quando surgir um bloqueio.
 
 1. **Publicar o repo no GitHub** (dono). Ainda não há remote, então o CI ([ci.yml](../../.github/workflows/ci.yml))
    nunca rodou fora da máquina local.
-2. **F5:** criar a branch `m1/f5-harness` a partir de `main` e usar a skill `implement-phase`. O que ela precisa
+2. **F5:** a branch `m1/f5-harness` já existe (por enquanto só com commits de harness). Use a skill
+   `implement-phase`. O que ela precisa
    saber do código atual:
    - Toda entrada do sim é `step(state, commands)`, com `commands: CommandInput[]` = `{ playerId, command }` na
      ordem de `seq` (`commands.ts`). O `step` valida de novo cada comando e pula os recusados; o servidor usa
