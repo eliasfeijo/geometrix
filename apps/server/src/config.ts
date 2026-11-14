@@ -17,6 +17,13 @@ export type ServerConfig = {
   maxCatchUpTicks: number;
   /** Most frequent state broadcast: 200 ms = 5 per second (plan P3). */
   broadcastIntervalMs: number;
+  /**
+   * A delta carries the hash of the team's view when its tick reaches a
+   * multiple of this (M1.5 spec section 6: 60, a world minute).
+   */
+  viewHashEveryTicks: number;
+  /** Real time a team stream keeps its deltas for resuming (M1.5 spec S-5). */
+  deltaBufferMs: number;
   /** Domination released after this long without input (spec, F6). */
   dominationTimeoutMs: number;
   /** A disconnected player keeps their domination this long (spec, F6). */
@@ -32,6 +39,8 @@ export const DEFAULT_CONFIG: ServerConfig = {
   metricsEveryTicks: 60,
   maxCatchUpTicks: 100,
   broadcastIntervalMs: 200,
+  viewHashEveryTicks: 60,
+  deltaBufferMs: 30 * 1000,
   dominationTimeoutMs: 5 * 60 * 1000,
   reconnectGraceMs: 15 * 1000,
 };
@@ -56,6 +65,8 @@ export function loadConfig(env: NodeJS.ProcessEnv): ServerConfig {
     metricsEveryTicks: DEFAULT_CONFIG.metricsEveryTicks,
     maxCatchUpTicks: DEFAULT_CONFIG.maxCatchUpTicks,
     broadcastIntervalMs: DEFAULT_CONFIG.broadcastIntervalMs,
+    viewHashEveryTicks: DEFAULT_CONFIG.viewHashEveryTicks,
+    deltaBufferMs: DEFAULT_CONFIG.deltaBufferMs,
     dominationTimeoutMs: DEFAULT_CONFIG.dominationTimeoutMs,
     reconnectGraceMs: DEFAULT_CONFIG.reconnectGraceMs,
   };

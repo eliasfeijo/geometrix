@@ -163,6 +163,28 @@ describe("WebSocket", () => {
     client.socket.close();
   });
 
+  test("a welcome carries the last view sent, not the state now", async () => {
+    const { base, token, host, timers, post } = await setup();
+    const ana = await connect(base, token);
+    await ana.next("welcome");
+    host.tick();
+    await ana.delta(1);
+    host.tick();
+    // Tick 3 waits for the interval; a player joining now starts at tick 2.
+    const joined = await post("/api/worlds/1/join", { name: "Caio", team: 0 });
+    const caio = await connect(base, (joined.body as { token: string }).token);
+    const welcome = await caio.next("welcome");
+    expect(welcome).toMatchObject({ seq: 1, view: { tick: 2 } });
+    timers.advance(200);
+    const next = await caio.delta(2);
+    expect(next.delta.tick).toBe(3);
+    expect(viewJson(applyDelta(welcome.view, next.delta))).toBe(
+      viewJson(view(host.state, 0)),
+    );
+    ana.socket.close();
+    caio.socket.close();
+  });
+
   test("each team has its own stream, advancing even with no socket", async () => {
     const { base, token, host, timers, post } = await setup();
     const ana = await connect(base, token);

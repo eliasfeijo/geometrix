@@ -45,6 +45,8 @@ export async function startApp(options: AppOptions): Promise<App> {
     worlds,
     timers,
     broadcastIntervalMs: config.broadcastIntervalMs,
+    viewHashEveryTicks: config.viewHashEveryTicks,
+    deltaBufferMs: config.deltaBufferMs,
     presence,
   });
   await new Promise<void>((done) => server.listen(config.port, done));
