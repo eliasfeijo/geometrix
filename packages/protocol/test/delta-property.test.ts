@@ -43,6 +43,8 @@ test.each([1, 42, 649])(
     let roads = 0;
     let explored = 0;
     let sight = 0;
+    let foreign = 0;
+    const enemyCoreSeen = teams.map(() => false);
     for (;;) {
       for (const team of teams) {
         const seen = view(state, team);
@@ -54,6 +56,14 @@ test.each([1, 42, 649])(
         roads += delta.roads?.length ?? 0;
         explored += delta.known?.length ?? 0;
         sight += delta.visible?.remove?.length ?? 0;
+        foreign += (delta.creeps?.upsert ?? []).filter(
+          (creep) => creep.team !== undefined && creep.team !== team,
+        ).length;
+        for (const other of delta.teams?.upsert ?? []) {
+          if (other.id !== team && "core" in other && other.core != null) {
+            enemyCoreSeen[team] = true;
+          }
+        }
         client[team] = applyDelta(client[team]!, delta);
         const same = JSON.stringify(client[team]) === JSON.stringify(seen);
         if (
@@ -75,14 +85,18 @@ test.each([1, 42, 649])(
       step(state, accepted);
     }
     // The world did move: creeps were born and changed, roads were built,
-    // cells were explored and left sight, enemy creeps came into sight and
-    // left it (no creep dies in M1.5: every remove is one leaving sight).
+    // cells were explored and left sight, enemy creeps came into sight (with
+    // the D7 fields: a new entity is sent whole, so it has its team) and left
+    // it (no creep dies in M1.5: every remove is one leaving sight), and each
+    // team found the enemy core (seen after ~4.5-5.3 h in these seeds).
     expect(state.creeps.length).toBeGreaterThan(12);
     expect(upserts).toBeGreaterThan(ticks);
     expect(explored).toBeGreaterThan(300);
     expect(sight).toBeGreaterThan(1000);
     expect(roads).toBeGreaterThan(10);
     expect(removes).toBeGreaterThan(0);
+    expect(foreign).toBeGreaterThan(100);
+    expect(enemyCoreSeen).toEqual([true, true]);
   },
   60_000,
 );
