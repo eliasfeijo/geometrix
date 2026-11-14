@@ -33,15 +33,26 @@ export function startProduction(
   return refusal;
 }
 
-function tryStart(
+/** Why the team cannot start producing now, or null. Changes nothing. */
+export function productionRefusal(
   state: WorldState,
   team: Team,
-  dna: Dna,
 ): ProductionRefusal | null {
   const { params } = state;
   if (team.production !== null) return "busy";
   if (population(state, team) >= params.population.cap) return "populationCap";
   if (!canAfford(team.stock, params.creep.cost)) return "stock";
+  return null;
+}
+
+function tryStart(
+  state: WorldState,
+  team: Team,
+  dna: Dna,
+): ProductionRefusal | null {
+  const refusal = productionRefusal(state, team);
+  if (refusal !== null) return refusal;
+  const { params } = state;
   debit(team.stock, params.creep.cost);
   team.production = { dna, remainingSeconds: params.creep.productionSeconds };
   return null;

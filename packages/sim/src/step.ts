@@ -8,24 +8,26 @@
 //   6. stats accumulators; tick++                              (F5 / now)
 
 import { runAutopilot } from "./autopilot.ts";
+import { applyCommand, type CommandInput } from "./commands.ts";
 import { regenerate } from "./economy.ts";
 import { resolveOrders } from "./orders.ts";
 import { runProduction } from "./production.ts";
 import type { WorldState } from "./world.ts";
 
 /**
- * External command (ADR-0002, plan section 4): the only input that goes into
- * the command log. The vocabulary arrives in F4; until then there is none.
- */
-export type Command = never;
-
-/**
  * Advances the world by one tick, mutating `state` in place: copying the whole
  * state every tick would not fit the 3-days-in-10-minutes budget (spec
  * section 7). Callers that need the previous state keep a `serialize` copy.
+ * `commands` are the tick's external commands in seq order; each is validated
+ * again against the state as it is then, and a refused one is skipped.
  */
-export function step(state: WorldState, commands: readonly Command[]): void {
-  void commands;
+export function step(
+  state: WorldState,
+  commands: readonly CommandInput[],
+): void {
+  for (const { playerId, command } of commands) {
+    applyCommand(state, command, playerId);
+  }
   runAutopilot(state);
   resolveOrders(state);
   runProduction(state);

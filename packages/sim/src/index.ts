@@ -1,4 +1,5 @@
 export * from "./autopilot.ts";
+export * from "./commands.ts";
 export * from "./domination.ts";
 export * from "./economy.ts";
 export * from "./map.ts";
