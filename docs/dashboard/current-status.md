@@ -79,6 +79,10 @@ por um portão de aprovação ou quando surgir um bloqueio.
     mudaram no servidor no meio; um preset aplica na hora e descarta o rascunho. Valores iniciais ao trocar a
     condição: raio 10, quantidade 100 (padrões do editor, não balanceamento); regra nova = "sempre → entregar";
   - os nomes dos jogadores vêm do `GET /api/worlds` (o estado só tem ids);
+  - nomes de creep (dono, 2026-11-14): gerados no cliente pela ordem de nascimento, de uma lista de 179 palavras
+    curtas inventadas (todas a pelo menos 2 edições umas das outras, sem gíria, sem inicial I); nascimentos
+    seguidos ganham nomes distantes na lista. Estável só porque ninguém morre no M1; o nome no estado é
+    proposta no GDD 02 para o M2;
   - os botões de produção usam o `productionRefusal` do `sim` (alargado para aceitar o estado da rede).
 - **Servidor no `/mnt/c`:** subir o `npm run server` às vezes leva mais de 5 s (WSL). Scripts que sobem o
   servidor devem esperar a porta responder, não um `sleep` fixo.
