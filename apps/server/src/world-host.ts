@@ -1,0 +1,206 @@
+// One hosted world (plan section 7): the state in memory, the queue of
+// commands for the next tick, optional bots, and persistence of every tick.
+// Commands take the same path as in the harness: validate on receipt (ack or
+// reject), the accepted one gets the tick it will apply on and a seq, and step
+// validates it again. Time is not read here; the TickLoop decides when a tick
+// runs, so tests drive ticks directly.
+
+import type { RejectReason, WorldStatus } from "@geometrix/protocol";
+import {
+  createWorld,
+  findPlayer,
+  sampleMetrics,
+  serialize,
+  SIM_VERSION,
+  step,
+  strategistActs,
+  strategistCommands,
+  validate,
+  type Command,
+  type Params,
+  type WorldState,
+} from "@geometrix/sim";
+import type { ServerConfig } from "./config.ts";
+import { stateHash } from "./hash.ts";
+import type { LoggedCommand, Snapshot, Store } from "./persistence.ts";
+
+export type HostContext = {
+  store: Store;
+  config: Pick<ServerConfig, "snapshotEveryTicks" | "metricsEveryTicks">;
+};
+
+export type NewWorld = {
+  seed: number;
+  params: Params;
+  multiplier: number;
+  /** Teams that get a balanced bot (spec section 5, F6 details). */
+  botTeams: readonly number[];
+  createdAt: string;
+};
+
+type Bot = { playerId: number; team: number };
+
+export class WorldHost {
+  readonly id: number;
+  readonly multiplier: number;
+  readonly state: WorldState;
+  status: WorldStatus;
+  private readonly context: HostContext;
+  private readonly bots: readonly Bot[];
+  private pending: LoggedCommand[] = [];
+  private readonly listeners: (() => void)[] = [];
+
+  private constructor(
+    context: HostContext,
+    id: number,
+    multiplier: number,
+    state: WorldState,
+    bots: readonly Bot[],
+    status: WorldStatus,
+  ) {
+    this.context = context;
+    this.id = id;
+    this.multiplier = multiplier;
+    this.state = state;
+    this.bots = bots;
+    this.status = status;
+  }
+
+  /** Creates, stores and returns a new world, with its bots joining on tick 0. */
+  static create(context: HostContext, world: NewWorld): WorldHost {
+    const { store } = context;
+    return store.transaction(() => {
+      const state = createWorld(world.seed, world.params);
+      const id = store.createWorld({
+        seed: world.seed,
+        params: world.params,
+        simVersion: SIM_VERSION,
+        multiplier: world.multiplier,
+        createdAt: world.createdAt,
+      });
+      const bots = world.botTeams.map((team) => ({
+        team,
+        playerId: store.addPlayer({
+          worldId: id,
+          team,
+          name: "bot",
+          tokenHash: null,
+          bot: true,
+        }),
+      }));
+      store.putSnapshot(id, snapshotOf(state));
+      const host = new WorldHost(
+        context,
+        id,
+        world.multiplier,
+        state,
+        bots,
+        "running",
+      );
+      for (const bot of bots) {
+        host.submit(bot.playerId, { type: "join", team: bot.team, bot: true });
+      }
+      return host;
+    });
+  }
+
+  /** Ticks in the world's duration (spec M-4). */
+  get durationTicks(): number {
+    const { durationSeconds, tickSeconds } = this.state.params.world;
+    return Math.floor(durationSeconds / tickSeconds);
+  }
+
+  /**
+   * Validates `command` against the state now and queues it for the next
+   * tick. Returns why it was refused, or null (accepted).
+   */
+  submit(playerId: number, command: Command): RejectReason | null {
+    if (this.status === "ended") return "worldEnded";
+    const refusal =
+      validate(this.state, command, playerId) ??
+      this.queuedJoinRefusal(command);
+    if (refusal !== null) return refusal;
+    this.pending.push({
+      tick: this.state.tick,
+      seq: this.pending.length,
+      playerId,
+      command,
+    });
+    return null;
+  }
+
+  /**
+   * validate sees only players already in the state; joins queued for the
+   * same tick count toward the human limit too.
+   */
+  private queuedJoinRefusal(command: Command): "teamFull" | null {
+    if (command.type !== "join" || command.bot) return null;
+    const humans =
+      this.state.players.filter((p) => p.team === command.team && !p.bot)
+        .length +
+      this.pending.filter(
+        (c) =>
+          c.command.type === "join" &&
+          !c.command.bot &&
+          c.command.team === command.team,
+      ).length;
+    return humans >= this.state.params.teams.maxHumans ? "teamFull" : null;
+  }
+
+  /** Runs one tick: bot decisions, step, then one stored transaction. */
+  tick(): void {
+    if (this.status === "ended") return;
+    const { state } = this;
+    if (strategistActs(state.tick)) {
+      for (const bot of this.bots) {
+        if (findPlayer(state, bot.playerId) === undefined) continue;
+        for (const command of strategistCommands("balanced", state, bot.team)) {
+          this.submit(bot.playerId, command);
+        }
+      }
+    }
+    const commands = this.pending;
+    this.pending = [];
+    step(state, commands);
+
+    const { snapshotEveryTicks, metricsEveryTicks } = this.context.config;
+    const ended = state.tick >= this.durationTicks;
+    const { store } = this.context;
+    store.transaction(() => {
+      store.commitTick({
+        worldId: this.id,
+        commands,
+        tick: state.tick,
+        snapshot:
+          ended || state.tick % snapshotEveryTicks === 0
+            ? snapshotOf(state)
+            : undefined,
+        metrics:
+          state.tick % metricsEveryTicks === 0
+            ? sampleMetrics(state)
+            : undefined,
+      });
+      if (ended) store.setStatus(this.id, "ended");
+    });
+    if (ended) this.status = "ended";
+    for (const listener of this.listeners) listener();
+  }
+
+  /** Stores a snapshot of the state now (clean shutdown). */
+  snapshot(): void {
+    this.context.store.putSnapshot(this.id, snapshotOf(this.state));
+  }
+
+  /** Calls `listener` after every tick. */
+  onTick(listener: () => void): void {
+    this.listeners.push(listener);
+  }
+}
+
+function snapshotOf(state: WorldState): Snapshot {
+  return {
+    tick: state.tick,
+    stateJson: serialize(state),
+    stateHash: stateHash(state),
+  };
+}
