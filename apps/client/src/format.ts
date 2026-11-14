@@ -2,7 +2,15 @@
 // can be tested.
 
 import type { RejectReason } from "@geometrix/protocol";
-import type { Dna, Resource } from "@geometrix/sim";
+import type {
+  Action,
+  Condition,
+  Deposit,
+  Dna,
+  Order,
+  Resource,
+  Rule,
+} from "@geometrix/sim";
 
 /** "dia 2 · 03:15": world time from tick 0 (day 1 starts at 00:00). */
 export function worldClock(tick: number, tickSeconds: number): string {
@@ -73,3 +81,68 @@ export const FATAL_TEXTS = {
   unauthorized: "Sessão inválida para este mundo. Entre de novo.",
   worldNotHosted: "Este mundo não está hospedado no servidor.",
 } as const;
+
+export function conditionText(c: Condition): string {
+  switch (c.type) {
+    case "always":
+      return "sempre";
+    case "cargoFull":
+      return "carga cheia";
+    case "cargoEmpty":
+      return "carga vazia";
+    case "resourceInRange":
+      return `${RESOURCE_NAMES[c.resource]} a até ${c.radius} células`;
+    case "stockBelow":
+      return `estoque de ${RESOURCE_NAMES[c.resource]} < ${c.amount}`;
+  }
+}
+
+export function actionText(a: Action): string {
+  switch (a.type) {
+    case "gather":
+      return `coletar ${RESOURCE_NAMES[a.resource]}`;
+    case "deliver":
+      return "entregar no Núcleo";
+    case "buildRoad":
+      return `construir estrada até (${a.x}, ${a.y})`;
+    case "moveTo":
+      return `ir até (${a.x}, ${a.y})`;
+    case "stop":
+      return "ficar parado";
+  }
+}
+
+export const ruleText = (rule: Rule) =>
+  `${conditionText(rule.when)} → ${actionText(rule.then)}`;
+
+/** The creep's current order, as a sentence. */
+export function orderText(order: Order, deposits: readonly Deposit[]): string {
+  switch (order.type) {
+    case "stop":
+      return "nenhuma";
+    case "moveTo":
+      return `ir até (${order.x}, ${order.y})`;
+    case "gather": {
+      const deposit = deposits.find((d) => d.id === order.depositId);
+      return deposit === undefined
+        ? `coletar no depósito #${order.depositId}`
+        : `coletar ${RESOURCE_NAMES[deposit.kind]} em (${deposit.x}, ${deposit.y})`;
+    }
+    case "deliver":
+      return "entregar no Núcleo";
+    case "buildRoad":
+      return `construir estrada até (${order.x}, ${order.y})`;
+  }
+}
+
+/** "30 s", "1 min", "10 min", "1 h 30 min": a world duration in words. */
+export function durationWords(seconds: number): string {
+  const s = Math.max(0, Math.floor(seconds));
+  if (s < 60) return `${s} s`;
+  if (s % 60 !== 0) return duration(s);
+  const minutes = s / 60;
+  if (minutes < 60) return `${minutes} min`;
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return m === 0 ? `${h} h` : `${h} h ${m} min`;
+}

@@ -7,6 +7,8 @@ import { listWorlds } from "./api.ts";
 import { browserDeps, Connection, socketUrl } from "./connection.ts";
 import { GameContext, type Game as GameValue } from "./context.ts";
 import { FATAL_TEXTS, REJECT_TEXTS } from "./format.ts";
+import { handleKey, select } from "./interaction.ts";
+import { Inspector } from "./panels/inspector.tsx";
 import type { Session } from "./session.ts";
 import { CreepLayer } from "./map/creep-layer.tsx";
 import { MapView } from "./map/map-view.tsx";
@@ -40,6 +42,13 @@ export function Game({ session, onLeave, onInvalid }: Props) {
   );
   useEffect(() => () => connection.close(), []);
   useEffect(() => fetchNamesWhenMissing(store, session.worldId), []);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (handleKey(store, session.team, e)) e.preventDefault();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   const game = useMemo<GameValue>(
     () => ({
@@ -61,9 +70,12 @@ export function Game({ session, onLeave, onInvalid }: Props) {
       <div class="game">
         <TopBar onLeave={onLeave} />
         <div class="game-body">
-          <MapView>
+          <MapView
+            onSelect={(point) => select(store, point, performance.now())}
+          >
             <CreepLayer />
           </MapView>
+          <Inspector />
         </div>
         <Notices />
       </div>

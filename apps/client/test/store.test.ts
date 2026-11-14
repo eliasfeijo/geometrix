@@ -1,6 +1,6 @@
 import { join } from "@geometrix/sim";
 import { describe, expect, it } from "vitest";
-import { duration, worldClock } from "../src/format.ts";
+import { duration, durationWords, worldClock } from "../src/format.ts";
 import { GameStore, NOTICE_MS } from "../src/store.ts";
 import { dynamicOf, testWorld, welcomeOf } from "./helpers.ts";
 
@@ -67,5 +67,11 @@ describe("format", () => {
     expect(duration(545)).toBe("9:05");
     expect(duration(3723)).toBe("1:02:03");
     expect(duration(-3)).toBe("0:00");
+    expect(durationWords(30)).toBe("30 s");
+    expect(durationWords(60)).toBe("1 min");
+    expect(durationWords(600)).toBe("10 min");
+    expect(durationWords(90)).toBe("1:30");
+    expect(durationWords(5400)).toBe("1 h 30 min");
+    expect(durationWords(7200)).toBe("2 h");
   });
 });
