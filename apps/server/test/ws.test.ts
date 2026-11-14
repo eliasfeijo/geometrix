@@ -134,6 +134,29 @@ describe("WebSocket", () => {
     client.socket.close();
   });
 
+  test("a socket closed for 15 s releases the domination", async () => {
+    const { base, token, host, timers } = await setup();
+    const client = await connect(base, token);
+    await client.next("welcome");
+    const creep = host.state.creeps.find((c) => c.team === 0)!;
+    client.send({
+      type: "command",
+      ref: 1,
+      command: { type: "dominate", creepId: creep.id },
+    });
+    await client.next("ack");
+    // setup() already ran tick 0 by hand, so the loop owes its 1st tick at 2 s.
+    timers.advance(2_000);
+    expect(creep.dominatedBy).not.toBeNull();
+    client.socket.close();
+    await client.closed;
+    await new Promise((done) => setTimeout(done, 20));
+    timers.advance(14_000);
+    expect(creep.dominatedBy).not.toBeNull();
+    timers.advance(2_000);
+    expect(creep.dominatedBy).toBeNull();
+  });
+
   test("closes sockets with a bad token", async () => {
     const { base } = await setup();
     const client = await connect(base, "nope");

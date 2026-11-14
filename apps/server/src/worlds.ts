@@ -6,6 +6,7 @@ import type { Params } from "@geometrix/sim";
 import type { ServerConfig } from "./config.ts";
 import { TickLoop, type Timers } from "./loop.ts";
 import type { Store } from "./persistence.ts";
+import type { PresenceTracker } from "./presence.ts";
 import { WorldHost } from "./world-host.ts";
 
 export class Worlds {
@@ -13,6 +14,7 @@ export class Worlds {
   private readonly config: ServerConfig;
   private readonly timers: Timers;
   private readonly params: Params;
+  private readonly presence: PresenceTracker;
   private readonly hosted = new Map<
     number,
     { host: WorldHost; loop: TickLoop }
@@ -24,11 +26,13 @@ export class Worlds {
     config: ServerConfig,
     timers: Timers,
     params: Params,
+    presence: PresenceTracker,
   ) {
     this.store = store;
     this.config = config;
     this.timers = timers;
     this.params = params;
+    this.presence = presence;
   }
 
   get(id: number): WorldHost | undefined {
@@ -53,7 +57,12 @@ export class Worlds {
 
   /** Starts hosting `host`; its loop runs while the world is running. */
   host(host: WorldHost): void {
-    const loop = new TickLoop(host, this.timers, this.config.maxCatchUpTicks);
+    const loop = new TickLoop(
+      host,
+      this.timers,
+      this.config.maxCatchUpTicks,
+      () => this.presence.check(host),
+    );
     this.hosted.set(host.id, { host, loop });
     loop.start();
   }
