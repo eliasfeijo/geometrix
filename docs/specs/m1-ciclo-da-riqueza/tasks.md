@@ -85,7 +85,7 @@ Decidida pelo dono em 2026-11-14, no fim do F8 (spec §8, itens 3 e 4).
 - [x] Sinal de carga cheia no creep
 - [x] Feedback de entrega no Núcleo
 - [x] Nome do creep no mapa
-- [ ] `docs/PLAYTEST.md`: acesso ao servidor local, roteiro e questionário de legibilidade
+- [x] `docs/PLAYTEST.md`: acesso ao servidor local, roteiro e questionário de legibilidade
 - [ ] **Checkpoint:** playtest humano de legibilidade e mecânica; replay validado pelo dono; melhorias seguintes
   registradas
 
