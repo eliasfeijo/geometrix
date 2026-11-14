@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { fullView, step, view } from "@geometrix/sim";
 import { creepName, NAME_STRIDE, nameAt, NAMES } from "../src/names.ts";
+import { testWorld } from "./helpers.ts";
 
 function edits(a: string, b: string): number {
   const x = a.toLowerCase();
@@ -44,10 +46,17 @@ describe("creep names", () => {
     expect(nameAt(2 * NAMES.length + 5)).toBe(`${nameAt(5)} III`);
   });
 
-  it("follow the birth order in the state", () => {
-    const creeps = [{ id: 3 }, { id: 4 }, { id: 46 }];
-    expect(creepName(creeps, 3)).toBe(nameAt(0));
-    expect(creepName(creeps, 46)).toBe(nameAt(2));
-    expect(creepName(creeps, 99)).toBe("#99");
+  it("come from the id alone, whatever the view has in sight", () => {
+    const world = testWorld();
+    for (let i = 0; i < 600; i++) step(world, []);
+    const own = world.creeps.find((c) => c.team === 0)!;
+    // Team 0's view with and without an enemy creep of a smaller id in sight
+    // names its own creep the same, as does the replay's full view.
+    expect(creepName(own.id)).toBe(nameAt(own.id));
+    const names = (seen: { creeps: { id: number }[] }) =>
+      new Map(seen.creeps.map((c) => [c.id, creepName(c.id)]));
+    expect(names(view(world, 0)).get(own.id)).toBe(
+      names(fullView(world)).get(own.id),
+    );
   });
 });

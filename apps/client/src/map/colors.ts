@@ -23,6 +23,9 @@ export const COLORS = {
   selection: "#ffd166",
   dominated: "#ffffff",
   depleted: "#555b66",
+  /** Fog (M1.5): never seen, and the veil over what is out of sight. */
+  unseen: "#050608",
+  veil: "#0d0f12",
   /** What a team pays, rising from its core (F9). */
   paid: "#ff9b9b",
 } as const;

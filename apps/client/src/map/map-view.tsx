@@ -7,6 +7,7 @@ import type { ComponentChildren } from "preact";
 import { useEffect, useRef } from "preact/hooks";
 import { useGame } from "../context.ts";
 import { COLORS } from "./colors.ts";
+import { FogLayer } from "./fog-layer.tsx";
 import { StaticLayer } from "./static-layer.tsx";
 import {
   fitView,
@@ -233,6 +234,14 @@ export function MapView({ onSelect, onOrder, children }: Props) {
             params={info.params}
             width={info.map.width}
             zoom={markerScale(store.view.value?.scale ?? 1)}
+          />
+        )}
+        {state !== undefined && (
+          <FogLayer
+            team={state.team}
+            known={state.known}
+            visible={state.visible}
+            width={info.map.width}
           />
         )}
         {children}

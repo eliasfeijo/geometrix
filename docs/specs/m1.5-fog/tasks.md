@@ -59,12 +59,16 @@ na sua branch (plan §12, skill `commit`), com merge `--no-ff` em `main`.
 
 ## F4 — Cliente (`m1.5/fog-f4-client`)
 
-- [ ] Terreno a partir de `known` (feito na F3, com o `welcome` sem terreno); camada de névoa com os três estados; depósitos e obras lembrados sob o véu (spec
-      C-1)
-- [ ] Estrangeiros: creep e Núcleo inimigos só com o que a visão traz; painéis sem dados do time inimigo (spec C-2)
-- [ ] Cursor e traçado de estrada pelo mapa conhecido (spec C-3)
-- [ ] Editor de regras: ação explorar, condição "não conhece depósito de X", preset batedor (spec C-4)
-- [ ] Replay com `fullView`, sem névoa (spec C-5)
+- [x] Terreno a partir de `known` (feito na F3, com o `welcome` sem terreno); camada de névoa com os três estados; depósitos e obras lembrados sob o véu (spec
+      C-1). O inspetor de depósito fora da visão diz "último valor visto"
+- [x] Estrangeiros: creep e Núcleo inimigos só com o que a visão traz; painéis sem dados do time inimigo (spec C-2).
+      Os painéis reduzidos vieram da F1; a F4 testou o creep inimigo (sem regras, ordem nem atividade; capacidade
+      base) e trocou "não existe mais" por "saiu da visão do seu time"
+- [x] Cursor e traçado de estrada pelo mapa conhecido (spec C-3). O traçado já usava o mapa conhecido desde a F3;
+      sobre célula nunca vista, o rótulo diz "nunca vista · custo desconhecido" e o traçado continua desenhado
+- [x] Editor de regras: ação explorar, condição "não conhece depósito de X", preset batedor (spec C-4)
+- [x] Replay com `fullView`, sem névoa (spec C-5). O controller já usava a `fullView` desde a F1; a névoa não
+      desenha nada com `team = -1`, e um teste confere o mundo inteiro no replay
 
 ## F5 — Soak e legibilidade (`m1.5/fog-f5-playtest`)
 

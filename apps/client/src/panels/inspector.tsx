@@ -10,6 +10,7 @@ import {
 } from "@geometrix/sim";
 import { useGame } from "../context.ts";
 import { toggleRoadMode } from "../interaction.ts";
+import { inSight } from "../map/fog.ts";
 import { cellmates } from "../map/pick.ts";
 import { creepName } from "../names.ts";
 import { creepStatus, STATUS_TEXTS, viewCapacity } from "../creep-status.ts";
@@ -54,7 +55,14 @@ function CreepInspector({ id }: { id: number }) {
   const params = store.info.value?.params;
   const creep = state?.creeps.find((c) => c.id === id);
   if (state === undefined || params === undefined || creep === undefined) {
-    return <p class="muted">Esse creep não existe mais.</p>;
+    // No creep dies in M1.5: one the view lost left the team's sight.
+    return (
+      <p class="muted">
+        {state !== undefined && state.team >= 0
+          ? "Esse creep saiu da visão do seu time."
+          : "Esse creep não existe mais."}
+      </p>
+    );
   }
   const team = state.teams[creep.team];
   if (team === undefined || !isOwnCreep(creep) || !isOwnTeam(team)) {
@@ -71,7 +79,7 @@ function CreepInspector({ id }: { id: number }) {
       <h2 class="title creep-title">
         <DnaIcon dna={creep.dna} team={creep.team} />
         <span>
-          {creepName(state.creeps, creep.id)}
+          {creepName(creep.id)}
           <span class="subtitle muted">
             {DNA_NAMES[creep.dna]} · #{creep.id}
           </span>
@@ -194,7 +202,7 @@ function ForeignCreepInspector({ creep }: { creep: ForeignCreepView }) {
       <h2 class="title creep-title">
         <DnaIcon dna={creep.dna} team={creep.team} />
         <span>
-          {creepName(state.creeps, creep.id)}
+          {creepName(creep.id)}
           <span class="subtitle muted">
             {DNA_NAMES[creep.dna]} · #{creep.id}
           </span>
@@ -287,6 +295,9 @@ function DepositInspector({ id }: { id: number }) {
   }
   const full = params.deposits[deposit.kind].amount;
   const regen = params.deposits.materia.regen;
+  // Out of sight, the view has the amount the team saw last (spec C-1).
+  const width = store.info.value?.map.width ?? 0;
+  const remembered = !inSight(state, deposit, width);
   // Only the own creeps' orders are in the view (spec D7).
   const heading = (team: number) =>
     state.creeps.filter(
@@ -306,6 +317,7 @@ function DepositInspector({ id }: { id: number }) {
         <dt>Quantidade</dt>
         <dd>
           {deposit.amount}/{full}
+          {remembered && <span class="muted"> · último valor visto</span>}
         </dd>
         <dt>Regeneração</dt>
         <dd>
