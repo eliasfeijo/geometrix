@@ -21,7 +21,7 @@ na sua branch (plan §12, skill `commit`), com merge `--no-ff` em `main`.
       obra esquecida, estrada nunca some, Núcleo lembrado) (plan §3, N1, N10)
 - [x] `view` filtrada (próprio inteiro, estrangeiros com os campos de D7, memória, `known`, `visible`), guardas
       `isOwnCreep`/`isOwnTeam`, `fullView`; teste "nada vaza" num mundo montado à mão (plan §4, spec §7)
-- [ ] `SIM_VERSION` 3; hashes travados novos (mundo inicial, bot × bot de 6 h); o resto do repositório compila com
+- [x] `SIM_VERSION` 3; hashes travados novos (mundo inicial, bot × bot de 6 h); o resto do repositório compila com
       a visão nova (estrategista, `protocol`, cliente), sem mudar comportamento além do `sim`
 
 ## F2 — Pelo que o time sabe (`m1.5/fog-f2-knowledge`)
