@@ -55,9 +55,11 @@ export class FakeTimers {
 }
 
 /** The app on a free port, with a memory store and a clock that never moves. */
-export async function testApp(config: Partial<ServerConfig> = {}) {
+export async function testApp(
+  config: Partial<ServerConfig> = {},
+  store = new Store(":memory:"),
+) {
   const timers = new FakeTimers();
-  const store = new Store(":memory:");
   const app = await startApp({
     store,
     config: { ...DEFAULT_CONFIG, port: 0, dbFile: ":memory:", ...config },
