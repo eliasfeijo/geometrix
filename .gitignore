@@ -3,3 +3,4 @@ dist/
 coverage/
 runs/
 .claude/settings.local.json
+data/

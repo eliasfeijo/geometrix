@@ -2,9 +2,9 @@ import { describe, expect, test } from "vitest";
 import { buyUpgrade, capacity } from "../src/economy.ts";
 import { DNAS } from "../src/params.ts";
 import type { WorldState } from "../src/world.ts";
-import { creepOf, loadDefaultParams, run, textWorld } from "./helpers.ts";
+import { creepOf, loadTestParams, run, textWorld } from "./helpers.ts";
 
-const params = loadDefaultParams();
+const params = loadTestParams();
 
 /** Core A next to a materia deposit; core B far away. */
 const NEXT_TO_MATERIA = ["Am.......B"];

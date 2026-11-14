@@ -50,12 +50,13 @@ Marque `[x]` ao concluir. Cada task deve terminar com os testes verdes. Referên
 - [x] **Checkpoint:** primeiro relatório de 3 dias bot×bot revisado com o dono
 
 ## F6 — Servidor
-- [ ] Esquema SQLite + módulo de persistência
-- [ ] `world-host`: loop de tick com multiplicador, fila de comandos, snapshots
-- [ ] HTTP: criar mundo, join, estáticos
-- [ ] WebSocket: autenticação, comandos com ack/reject, broadcast limitado a 5 por segundo
-- [ ] `release` automático por desconexão ou inatividade
-- [ ] Recuperação após restart (teste de integração: o hash continua o mesmo)
+- [x] Esquema SQLite + módulo de persistência
+- [x] `world-host`: loop de tick com multiplicador, fila de comandos, snapshots
+- [x] HTTP: criar mundo, join, estáticos
+- [x] WebSocket: autenticação, comandos com ack/reject, broadcast limitado a 5 por segundo
+- [x] `release` automático por desconexão (carência de 15 s) ou inatividade (5 min reais)
+- [x] Bots opcionais por time no servidor; limite de 3 humanos por time no `join` (decisões do dono, 2026-11-14)
+- [x] Recuperação após restart (teste de integração: o hash continua o mesmo)
 
 ## F7 — Cliente
 - [ ] Vite + Preact; conexão, `welcome`, reconexão
@@ -65,7 +66,8 @@ Marque `[x]` ao concluir. Cada task deve terminar com os testes verdes. Referên
 - [ ] Painel do Núcleo
 - [ ] Editor de regras e presets
 - [ ] Controle direto (moveTo, gather, deliver, modo estrada)
-- [ ] **Checkpoint:** primeiro playtest local
+- [ ] **Checkpoint:** sessão do dono: interface, legibilidade, editor de regras, domínio, multi-cliente local
+  (spec §8, revista em 2026-11-14)
 
 ## F8 — Replay e multi-cliente
 - [ ] Modo replay no navegador (o `sim` roda no cliente)
@@ -73,6 +75,9 @@ Marque `[x]` ao concluir. Cada task deve terminar com os testes verdes. Referên
 - [ ] Script `npm run dev:multi -- --clients K`
 
 ## F9 — Deploy e playtest
+
+**Fora do M1** (dono, 2026-11-14): vira a primeira etapa antes do playtest do M2. Fica aqui como referência.
+
 - [ ] Dockerfile, `compose.yml`, Caddyfile, `litestream.yml`
 - [ ] Workflow de deploy manual
 - [ ] `docs/PLAYTEST.md`: túnel, protocolo, questionário

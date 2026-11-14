@@ -3,9 +3,9 @@ import { Terrain, type GameMap } from "../src/map.ts";
 import type { Dna } from "../src/params.ts";
 import { step } from "../src/step.ts";
 import { createWorld, type Creep, type WorldState } from "../src/world.ts";
-import { loadDefaultParams, run } from "./helpers.ts";
+import { loadTestParams, run } from "./helpers.ts";
 
-const params = loadDefaultParams();
+const params = loadTestParams();
 
 /**
  * A world on an open 12×3 jungle strip, with its first creep at (0, 1) and no

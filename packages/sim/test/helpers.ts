@@ -19,22 +19,32 @@ const DEFAULT_PARAMS_URL = new URL(
   "../../../params/default.json",
   import.meta.url,
 );
+const TEST_PARAMS_URL = new URL("./params.json", import.meta.url);
 
 /** params/default.json as parsed JSON, before validation. */
 export function readDefaultParamsJson(): unknown {
   return JSON.parse(readFileSync(DEFAULT_PARAMS_URL, "utf8"));
 }
 
-/** params/default.json, validated. */
-export function loadDefaultParams(): Params {
-  return parseParams(readDefaultParamsJson());
+/**
+ * test/params.json as parsed JSON: the fixed params the tests run on. They are
+ * the F5 values and do not follow balancing, so a new params/default.json
+ * does not break tests of mechanics that spell out costs and distances.
+ */
+export function readTestParamsJson(): unknown {
+  return JSON.parse(readFileSync(TEST_PARAMS_URL, "utf8"));
+}
+
+/** test/params.json, validated. */
+export function loadTestParams(): Params {
+  return parseParams(readTestParamsJson());
 }
 
 type Mutable<T> = { -readonly [K in keyof T]: Mutable<T[K]> };
 
-/** params/default.json changed by `edit`, then validated. */
+/** test/params.json changed by `edit`, then validated. */
 export function paramsWith(edit: (params: Mutable<Params>) => void): Params {
-  const params = readDefaultParamsJson() as Mutable<Params>;
+  const params = readTestParamsJson() as Mutable<Params>;
   edit(params);
   return parseParams(params);
 }
@@ -71,7 +81,7 @@ export function run(world: WorldState, ticks: number): void {
  */
 export function textWorld(
   rows: string[],
-  params: Params = loadDefaultParams(),
+  params: Params = loadTestParams(),
 ): WorldState {
   const world = createWorld(42, params);
   world.map = parseMap(rows.map((row) => row.replace(/[ABmc]/g, ".")));

@@ -59,3 +59,12 @@ consumo de cristal em evoluções.
   só com matéria e cristal, sem moeda. Decidir quando impostos e comércio entrarem (M3).
 - O creep pode gastar o próprio inventário sem passar pelo tesouro (comprar item para si)?
 - Existe comércio entre times, ou com tribos?
+- **Sumidouro no M1?** Na passada de balanceamento 1 ([balance.md](../specs/m1-ciclo-da-riqueza/balance.md) §5),
+  depois do teto de população o estoque cresce sem uso nas últimas ~20–30 h do mundo. Trazer um sumidouro
+  (manutenção, desgaste) ou um limitador de população para o M1 aumenta o escopo do marco; a alternativa é medir
+  no playtest se o fim fica chato. **Adiada pelo dono (2026-11-14):** não entra no M1; volta quando houver
+  playtest humano.
+- **Papel do cristal no M1.** Cada time precisa de ~390 cristais e coleta ~1 200, que se esgotam em ~8 h. Os
+  depósitos disputados quase não são disputados, então o sinal do M2 não aparece. Depósitos disputados mais ricos,
+  mais perto das travessias, ou aceitar até o M2 dar mais usos ao cristal? **Fica para o M2 (dono,
+  2026-11-14)**, onde o cristal vira o alvo da emboscada.

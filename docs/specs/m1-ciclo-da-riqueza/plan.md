@@ -148,6 +148,11 @@ flowchart TD
 - **Broadcast:** o mapa estático vai uma vez, no `welcome`. Depois vai o **estado dinâmico completo**
   (creeps, estoques, depósitos, estradas novas) após cada tick, **limitado a no máximo 5 envios por segundo** em
   tempo real. São ~3–5 KB por mensagem. Deltas só se a medição mostrar necessidade (P3).
+- **Configuração do servidor** (não é balanceamento, não vai para os parâmetros do `sim`): timeout de domínio de
+  5 min reais e carência de reconexão de 15 s reais (spec §5, detalhes do F6), porta, caminho do SQLite,
+  `snapshot_every`.
+- **Bots:** um bot por time, opcional na criação do mundo. O estrategista sai do `apps/cli` para o `sim`, para o
+  servidor e a CLI usarem o mesmo código; os comandos dele passam pelo mesmo caminho dos humanos.
 - **Sessão do jogador:** token aleatório (o hash vai para o SQLite; o cliente guarda no `localStorage`).
   Reconexão automática com o mesmo token.
 
@@ -223,6 +228,9 @@ metrics   (world_id, tick, team_id, sample_json)
 | Cliente | smoke manual no M1. Playwright só se for necessário |
 
 ## 11. Deploy
+
+Adiado para antes do playtest do M2 (dono, 2026-11-14; spec §8). O desenho abaixo continua valendo.
+
 - `infra/docker/`:
   - `Dockerfile`: multi-stage; build do cliente; runtime Node.
   - `compose.yml`: app + Caddy + Litestream.
@@ -243,7 +251,7 @@ descartado.
 | P2 | Driver SQLite | **better-sqlite3**: maduro e síncrono; é módulo nativo, mas tem binários prontos | `node:sqlite`: zero dependências, API ainda amadurecendo |
 | P3 | Estado na rede | **Estado dinâmico completo**, limitado a 5 envios por segundo | Deltas desde o início (mais código, sem necessidade comprovada) |
 | P4 | Editar regras sem dominar | **Sim**, qualquer jogador do time edita as regras de qualquer creep do time | Só o jogador que domina o creep |
-| P5 | **Lacuna na spec:** produção e upgrade quando os humanos estão offline | M1: os humanos podem marcar uma produção como **"repetir"**; o estrategista bot fica só no harness | Um "piloto automático de time" para humanos já no M1 (mais escopo) |
+| P5 | **Lacuna na spec:** produção e upgrade quando os humanos estão offline | M1: os humanos podem marcar uma produção como **"repetir"**; o estrategista bot fica só no harness. **Revisto em 2026-11-14:** um mundo do servidor pode ter um bot por time, opcional (spec §5, detalhes do F6) | Um "piloto automático de time" para humanos já no M1 (mais escopo) |
 | P6 | Movimento | **4 direções** (mais simples, desempate trivial) | 8 direções (rotas mais naturais, A* um pouco mais complexo) |
 
 ## 13. Ordem de implementação
@@ -260,6 +268,6 @@ interface**. Detalhes em [tasks.md](tasks.md).
 | F4 | Piloto automático, presets, domínio | |
 | F5 | Métricas, CLI, estrategista bot | **Primeiro mundo de 3 dias bot×bot + `report.md`** |
 | F6 | Servidor: HTTP, WebSocket, loop de tick, persistência, recuperação | |
-| F7 | Cliente: mapa, painéis, controle direto, interpolação | **Primeiro playtest local** |
+| F7 | Cliente: mapa, painéis, controle direto, interpolação | **Sessão do dono** (interface e legibilidade) |
 | F8 | Replay no navegador; comando de multi-cliente local | |
-| F9 | Deploy: Docker, Caddy, Litestream, Actions, túnel | **Playtest comprimido** |
+| ~~F9~~ | Deploy e playtest comprimido: **saem do M1** (dono, 2026-11-14) e viram a primeira etapa antes do playtest do M2. O §11 continua valendo | |

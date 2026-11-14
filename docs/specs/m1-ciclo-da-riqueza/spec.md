@@ -39,7 +39,7 @@ playtests indicarem.
 |---|---|---|---|
 | D1 | Vitória no M1 | **Nenhuma.** O mundo termina por tempo; a "prosperidade" é só métrica | Sem combate, não há como destruir a base. Uma corrida artificial distorceria o que queremos medir. |
 | D2 | Custo de dominar | Livre, sem cooldown e sem limite de distância (os parâmetros existem, com valor 0) | Primeiro descobrir se dominar é útil; depois, se precisa de custo. |
-| D3 | O que o DNA muda no M1 | Só traços econômicos: ■ quadrado carrega muito e é lento; ● círculo é rápido e carrega pouco; ▲ triângulo fica no meio-termo | Dá peso à escolha de DNA já no M1, sem combate. |
+| D3 | O que o DNA muda no M1 | Só traços econômicos: ■ quadrado carrega muito e é lento; ● círculo é rápido e carrega pouco; ▲ triângulo fica no meio-termo | Dá peso à escolha de DNA já no M1, sem combate. **Revisto em 2026-11-14:** o dono decidiu que os DNAs se equivalem no impacto econômico (GDD 02); a escolha só passa a pesar a partir do M2. |
 | D4 | Uso dos recursos | Matéria: estradas e produção de creeps. Cristal: produção de creeps e o upgrade de capacidade | Os dois recursos precisam importar. |
 | D5 | Fog of war | Não existe (mapa todo visível) | Simplicidade. Fog entra com as batalhas, se fizer falta. |
 | D6 | Times | 2 times. Cada um com 0 a 3 humanos; um time sem humanos roda só com piloto automático | Permite testar humano × bot e bot × bot. |
@@ -165,6 +165,17 @@ Formato: *Quando [gatilho], o sistema deve [resposta].*
   a partir do último domínio aceito; a distância máxima é Manhattan, do Núcleo do time até o creep (0 = sem
   limite).
 
+#### Detalhes de servidor decididos pelo dono no F6 (2026-11-14)
+
+- **`timeout_dominio` em tempo real:** 5 min reais sem input liberam o creep, em qualquer multiplicador. A
+  inatividade é do humano, não do mundo; o valor sai dos parâmetros do `sim` e vira configuração do servidor.
+- **Desconexão (D-4) com carência:** se o jogador reconecta com o mesmo token em até 15 s reais, mantém o domínio.
+  O `release` só entra no log quando a carência vence.
+- **Bots no servidor:** ao criar um mundo, cada time pode ter um bot `balanced` opcional, para o mundo de 24 h e
+  para a sessão do dono. Ele entra como jogador e emite comandos normais, que vão para o log (ADR-0002).
+- **Limite de humanos por time (D6):** 3, imposto pelo `sim` com o parâmetro `teams.maxHumans`; o 4º `join`
+  humano no time é recusado. Bots não contam.
+
 ### Cliente
 - **C-1** Mapa estratégico em SVG com pan e zoom, mostrando terreno, rio, depósitos, estradas, Núcleos e creeps
   (forma = DNA, cor = time, indicador de carga).
@@ -187,13 +198,13 @@ Todos ficam num arquivo de parâmetros versionado, nunca no código.
 | Capacidade de carga ■ / ▲ / ● | 30 / 20 / 10 |
 | Velocidade em células por minuto ■ / ▲ / ● | 2 / 3 / 5 |
 | Multiplicador de velocidade | estrada ×2 · jungle ×1 · travessia ×0,5 · carregado ×0,8 |
-| Depósito de matéria | 500 unidades; regenera 1 por minuto |
+| Depósito de matéria | 500 unidades; regenera 8 por minuto; 6 por lado, de 3 a 20 células do Núcleo (passada de balanceamento 1, 2026-11-14; antes: 1 por minuto, 3 por lado, até 8 células) |
 | Depósito de cristal | 300 unidades, esgotável; 3 por lado + 2 no centro |
 | Taxa de coleta | 1 unidade por segundo, igual para todos os DNAs (decidido pelo dono em 2026-11-13) |
-| Custo de um creep | 40 matéria + 10 cristal; 10 min para produzir |
-| Custo de um segmento de estrada | 5 matéria; 2 min para construir |
+| Custo de um creep | 3 000 matéria + 10 cristal; 10 min para produzir (balanceamento 1; antes: 40 matéria) |
+| Custo de um segmento de estrada | 150 matéria; 2 min para construir (balanceamento 1; antes: 5) |
 | Upgrade de capacidade | 150 cristal; +50% de capacidade |
-| `timeout_dominio` | 5 min sem input |
+| `timeout_dominio` | 5 min sem input, em tempo real (dono, 2026-11-14) |
 
 ## 7. Harness exigido pelo M1
 
@@ -217,16 +228,24 @@ Todos ficam num arquivo de parâmetros versionado, nunca no código.
 ## 8. Protocolo de teste
 
 1. **Varreduras bot × bot** (sem interface): calibrar os parâmetros até a economia não travar nem explodir em 3
-   dias de mundo.
-2. **Playtest comprimido** (2 a 4 humanos, cerca de 2 h, multiplicador ×36, ou seja 3 dias → 2 h). Depois, um
-   questionário curto: que decisões você tomou? o que ficou chato? quando você dominou um creep, e por quê?
-3. **Teste em tempo real de 24 h**, com o multiplicador baixo: como é voltar para um mundo que andou sem você?
+   dias de mundo. Primeira passada: [balance.md](balance.md).
+2. **Sessão do dono** (checkpoint do F7): interface, legibilidade do mapa, editor de regras, domínio e
+   multi-cliente local. Não é um playtest de diversão.
+3. **Mundo de 24 h** rodando em tempo real, com multiplicador baixo, na máquina de dev: persistência,
+   recuperação e estabilidade.
 
-### Sinais para avançar ao M2 (não são metas rígidas)
-- Os humanos editam regras e constroem estradas por escolha, não só por tutorial.
-- A mistura de DNA varia entre times e entre partidas.
-- Os depósitos disputados de cristal concentram tráfego dos dois times. É o ponto onde o M2 vai colocar a emboscada.
-- Os jogadores conseguem explicar por que dominaram um creep.
+**Revisto pelo dono em 2026-11-14.** O playtest humano (2 a 4 pessoas, ×36, 2 h, questionário) e o deploy saíram
+do M1: sem combate não há o que vencer, e os DNAs se equivalem de propósito, então um playtest agora mediria o que
+o jogo não pretende ser. Eles viram a primeira etapa antes do playtest do M2 ([ROADMAP](../../ROADMAP.md)).
+
+### Critério para avançar ao M2
+- Bot × bot sem estado degenerado em 3 dias de mundo (sem travar nem explodir; ver [balance.md](balance.md)).
+- Determinismo (`geo verify`) e recuperação após restart verdes.
+- O mundo de 24 h roda sem cair.
+- A sessão do dono aprova a legibilidade.
+
+Os sinais da versão anterior (humanos editando regras por escolha, mistura de DNA, tráfego nos depósitos
+disputados, motivos para dominar) passam para o playtest do M2, menos a mistura de DNA.
 
 ## 9. Pré-requisitos antes do `plan.md`
 

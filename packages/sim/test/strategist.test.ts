@@ -1,47 +1,32 @@
-import { readFileSync } from "node:fs";
-import {
-  collectorRules,
-  createWorld,
-  parseParams,
-  roadBuilderRules,
-  serialize,
-  step,
-  type Command,
-  type WorldState,
-} from "@geometrix/sim";
 import { describe, expect, test } from "vitest";
-import {
-  botCommands,
-  botsFor,
-  logCursor,
-  runBots,
-  stepWithBots,
-  type LoggedCommand,
-} from "../src/harness.ts";
-import {
-  BALANCED,
-  roadTarget,
-  strategistActs,
-  strategistCommands,
-} from "../src/strategist.ts";
+import type { Command } from "../src/commands.ts";
+import { collectorRules, roadBuilderRules } from "../src/presets.ts";
+import { serialize } from "../src/serialize.ts";
+import { step } from "../src/step.ts";
+import { roadTarget, strategistCommands } from "../src/strategist.ts";
+import { createWorld, type WorldState } from "../src/world.ts";
+import { loadTestParams } from "./helpers.ts";
 
-const params = parseParams(
-  JSON.parse(
-    readFileSync(
-      new URL("../../../params/default.json", import.meta.url),
-      "utf8",
-    ),
-  ),
-);
+const params = loadTestParams();
 
-const bots = botsFor(["balanced", "balanced"]);
-
-/** The seed-42 world after the bots joined at tick 0. */
+/** The seed-42 world after one bot per team joined at tick 0. */
 function joined(): WorldState {
   const world = createWorld(42, params);
-  stepWithBots(world, bots, []);
+  step(world, [
+    { playerId: 1, command: { type: "join", team: 0, bot: true } },
+    { playerId: 2, command: { type: "join", team: 1, bot: true } },
+  ]);
   return world;
 }
+
+/** What both bots send on this tick, as the harness would. */
+const botInputs = (world: WorldState) =>
+  [0, 1].flatMap((team) =>
+    strategistCommands("balanced", world, team).map((command) => ({
+      playerId: team + 1,
+      command,
+    })),
+  );
 
 const teamCreeps = (world: WorldState, team: number) =>
   world.creeps.filter((c) => c.team === team);
@@ -50,41 +35,6 @@ const presetsOf = (commands: Command[]) =>
   commands.flatMap((c) =>
     c.type === "applyPreset" ? [[c.creepId, c.preset] as const] : [],
   );
-
-describe("bots", () => {
-  test("join their teams at tick 0, then act on tick 1 and every minute", () => {
-    expect(botCommands(createWorld(42, params), bots)).toEqual([
-      { playerId: 1, command: { type: "join", team: 0 } },
-      { playerId: 2, command: { type: "join", team: 1 } },
-    ]);
-    expect(BALANCED.everyTicks).toBe(60);
-    expect([0, 1, 2, 60, 61, 121].map(strategistActs)).toEqual([
-      false,
-      true,
-      false,
-      false,
-      true,
-      true,
-    ]);
-  });
-
-  test("only accepted commands go into the log, with tick and seq", () => {
-    const world = joined();
-    world.teams[0]!.stock = { materia: 40, cristal: 10 };
-    const log: LoggedCommand[] = [];
-    stepWithBots(world, bots, log);
-    // Team 1 cannot pay for a creep, so it never sends produce.
-    expect(log.filter((l) => l.command.type === "produce")).toEqual([
-      {
-        tick: 1,
-        seq: 0,
-        playerId: 1,
-        command: { type: "produce", dna: "square", repeat: false },
-      },
-    ]);
-    expect(log.map((l) => l.seq)).toEqual(log.map((_, i) => i));
-  });
-});
 
 describe("balanced", () => {
   test("splits 6 creeps into 2 cristal, 1 road builder and 3 materia, lowest ids first", () => {
@@ -106,7 +56,7 @@ describe("balanced", () => {
 
   test("leaves a team that already has the split alone", () => {
     const world = joined();
-    for (const input of botCommands(world, bots)) {
+    for (const input of botInputs(world)) {
       step(world, [input]);
       world.tick -= 1;
     }
@@ -191,26 +141,5 @@ describe("balanced", () => {
     const first = strategistCommands("balanced", world, 0);
     expect(serialize(world)).toBe(before);
     expect(strategistCommands("balanced", world, 0)).toEqual(first);
-  });
-});
-
-describe("a bot × bot world", () => {
-  const ticks = 6 * 3600;
-  const { state, log } = runBots(42, params, ticks, bots);
-
-  test("grows, buys the upgrade and builds roads on both sides", () => {
-    for (const team of state.teams) {
-      expect(teamCreeps(state, team.id).length).toBeGreaterThan(6);
-      expect(team.upgrades.capacity).toBe(true);
-      expect(state.stats.teams[team.id]!.roadSegments).toBeGreaterThan(0);
-      expect(state.stats.teams[team.id]!.delivered.cristal).toBeGreaterThan(0);
-    }
-  });
-
-  test("replaying the log without bots reaches the same state", () => {
-    const replay = createWorld(42, params);
-    const commandsAt = logCursor(log);
-    for (let i = 0; i < ticks; i++) step(replay, commandsAt(replay.tick));
-    expect(serialize(replay)).toBe(serialize(state));
   });
 });

@@ -1,6 +1,6 @@
 # Status atual
 
-**Atualizado:** 2026-11-13 · **Marco:** M1 — O ciclo da riqueza · **Fase:** F5 concluída; balanceamento ou F6 a seguir
+**Atualizado:** 2026-11-14 · **Marco:** M1 — O ciclo da riqueza · **Fase:** F6 (servidor) concluída; próxima: F7 (cliente), branch `m1/f7-client`
 
 Resumo de bolso. A fonte de verdade continua nos docs linkados. Atualize este arquivo ao fechar uma fase, ao passar
 por um portão de aprovação ou quando surgir um bloqueio.
@@ -18,34 +18,54 @@ por um portão de aprovação ou quando surgir um bloqueio.
 | M1 — F3 Economia | ✅ Concluída, merge em `main`. Ordens `gather`/`deliver`/`buildRoad`, regeneração, produção com "repetir", upgrade de capacidade. Detalhes decididos pelo dono na [spec §5](../specs/m1-ciclo-da-riqueza/spec.md) | [tasks.md §F3](../specs/m1-ciclo-da-riqueza/tasks.md) · `packages/sim/src/{economy,production,roads,orders}.ts` |
 | M1 — F4 Piloto automático e domínio | ✅ Concluída, merge em `main`. Vocabulário de comandos + `validate`, jogadores, domínio D-1..D-4, interpretador de regras, presets, `setRules`/`applyPreset`. Detalhes decididos pelo dono na [spec §5](../specs/m1-ciclo-da-riqueza/spec.md) | [tasks.md §F4](../specs/m1-ciclo-da-riqueza/tasks.md) · `packages/sim/src/{commands,domination,autopilot,presets,rules}.ts` |
 | M1 — F5 Harness | ✅ Concluída, merge em `main`. Checkpoint revisado pelo dono (2026-11-13): a economia precisa de balanceamento. Stats + `sampleMetrics`, estrategista `balanced`, `geo sim`/`report`/`sweep`, `geo verify` com bots e replay do log, orçamento de 6 h no CI. Detalhes decididos pelo dono no [plan §9](../specs/m1-ciclo-da-riqueza/plan.md) | [tasks.md §F5](../specs/m1-ciclo-da-riqueza/tasks.md) · `apps/cli/src/` · `packages/sim/src/stats.ts` |
-| M1 — F6…F9 | ⬜ Pendentes. Checkpoints: F7 playtest local; F9 playtest comprimido | [plan.md §13](../specs/m1-ciclo-da-riqueza/plan.md) |
+| M1 — Balanceamento 1 | ✅ Decidido pelo dono (2026-11-14): candidato B no `params/default.json` provisório; DNAs economicamente equivalentes de propósito; playtest humano e deploy saem do M1. Assimetria entre os times corrigida (desempate do A*). Na branch `m1/f6-server` | [balance.md](../specs/m1-ciclo-da-riqueza/balance.md) |
+| M1 — F6 Servidor | ✅ Concluída, merge em `main`. SQLite (log de comandos, snapshots, métricas), loop de tick com multiplicador, HTTP (criar, listar, entrar), WebSocket com ack/reject e broadcast ≤5/s, `release` automático, bots e limite de humanos, recuperação após restart. Detalhes decididos pelo dono na [spec §5](../specs/m1-ciclo-da-riqueza/spec.md) | [tasks.md §F6](../specs/m1-ciclo-da-riqueza/tasks.md) · `apps/server/src/` · `packages/protocol/src/` |
+| M1 — F7, F8 | ⬜ Pendentes; o F7 é o próximo. Checkpoint do F7: sessão do dono (interface e legibilidade). O M1 fecha com o critério da [spec §8](../specs/m1-ciclo-da-riqueza/spec.md) | [plan.md §13](../specs/m1-ciclo-da-riqueza/plan.md) |
+| ~~M1 — F9~~ | Deploy e playtest comprimido saíram do M1 (dono, 2026-11-14): abrem o M2 | [ROADMAP](../ROADMAP.md) |
 | M2–M4 | ⬜ Não iniciados | [ROADMAP](../ROADMAP.md) |
 
 ## Próximos passos imediatos
 
 1. **Publicar o repo no GitHub** (dono). Ainda não há remote, então o CI ([ci.yml](../../.github/workflows/ci.yml))
    nunca rodou fora da máquina local.
-2. **Balancear a economia** (o dono revisou o relatório de 3 dias em 2026-11-13: "precisamos balancear, como era
-   previsto"). Decidir no início da próxima sessão se a calibração vem antes do F6 ou em paralelo. Os sinais estão
-   em "Pendências" abaixo; a ferramenta é o `geo sweep` (spec §8, protocolo 1: a economia não pode travar nem
-   explodir em 3 dias). Qualquer valor novo é proposto ao dono antes de entrar em `params/default.json`. O relatório
-   do checkpoint é reproduzível (determinístico): `npm run geo -- sim --seed 42 --days 3 --id m1-f5-checkpoint-s42`
-   dá o hash `ff18fa4b…`.
-3. **F6 (servidor):** branch `m1/f6-server` a partir de `main`. O que ele precisa saber do código atual:
-   - `apps/cli/src/harness.ts` já faz o caminho de entrada do servidor: `validate` no recebimento (ack/reject), o
-     aceito ganha `tick` e `seq` e vai para o log (`LoggedCommand` = `{tick, seq, playerId, command}`, o formato da
-     tabela `commands`), e o `step` revalida. Um comando aceito no recebimento ainda pode ser recusado no `step`
-     (ex.: `produce` e `buyUpgrade` disputando o mesmo cristal); o replay reproduz isso.
-   - O estado tem `stats` (no hash) e cada creep tem `activity` e `trip`. `sampleMetrics(state)` dá a amostra da
-     tabela `metrics`, a cada 60 ticks. O SQLite das métricas entra no F6 (decisão do dono no plan §9).
-   - `replay.json` do `geo sim` = `{simVersion, seed, params, ticks, finalHash, commands}`; o mundo inicial sai de
-     `createWorld(seed, params)`. É o formato que o modo replay do F8 pode ler.
-   - `SIM_VERSION` continua 1: nada é persistido ainda. Passa a valer no F6.
-   - **Medições do F5:** 6 h de mundo bot×bot em ~3–4 s; 3 dias em ~56 s. `geo verify` (50 000 ticks, 4 execuções)
-     leva ~45 s por seed; o CI roda 3 seeds.
+2. **Antes do F7:** fechar a pergunta da coleta com depósitos zerados ([GDD 07](../gdd/07-piloto-automatico.md)):
+   no cliente, o vaivém dos creeps parece bug.
+3. **F7 (cliente):** branch `m1/f7-client`, a partir de `main`. O que ele precisa saber do servidor:
+   - `npm run server` sobe em `http://localhost:8080` e serve `apps/client/dist` como estáticos. Variáveis:
+     `GEO_PORT`, `GEO_DB` (padrão `data/geometrix.db`, ignorado pelo git), `GEO_PARAMS` (padrão
+     `params/default.json`), `GEO_STATIC`. O dev server do Vite precisa de proxy para `/api` e `/ws`.
+   - **HTTP:** `POST /api/worlds` `{seed?, multiplier?, botTeams?}` → `201 {id}`; `GET /api/worlds` →
+     `WorldSummary[]`; `POST /api/worlds/:id/join` `{name, team}` → `201 {playerId, team, token}`, ou `409
+     {error: "teamFull" | ...}`. Erros sempre como `{error}`.
+   - **WebSocket** `/ws?token=...`: o servidor manda `welcome` (params, mapa estático, Núcleos e o estado
+     dinâmico) e depois `state {state, status}` no máximo 5 vezes por segundo. O cliente manda `{type: "command",
+     ref, command}` e recebe `ack {ref, tick}` ou `reject {ref, reason}`. Token inválido fecha com 4401; mundo não
+     hospedado, com 4404. Tipos e validação (zod) em `@geometrix/protocol`.
+   - O token é a única credencial: guardado no cliente, reconecta o mesmo jogador. O `join` entra no tick
+     seguinte, então logo após o `welcome` o jogador pode ainda não estar em `state.players`.
+   - O estado dinâmico vai inteiro em cada mensagem: creeps sem `path`, estradas como índices de célula.
+   - **Medições do F6:** mensagem de estado com 6,7 KB (12 creeps), 13,7 KB (28) e 26,9 KB (60). Tick + commit no
+     SQLite: 0,08 ms no ext4 e 1,7 ms no `/mnt/c` (WSL), contra 28 ms por tick no ×36. 3 dias bot×bot do seed 42
+     com o `default.json` atual: 12,1 s.
 
 ## Pendências e pontos a esclarecer
 
+- **Interpretações do F6 a validar** (o plan não fixa):
+  - a recuperação restaura o último snapshot e reaplica os comandos do log com `tick >=` o do snapshot até o
+    último tick gravado (`worlds.tick`, coluna além do esquema do plan, como `players.bot`);
+  - um crash perde os comandos aceitos (com ack) do tick em andamento (no máximo 1 tick); um desligamento limpo
+    (SIGTERM) grava o snapshot, mas perde os comandos ainda na fila. Os `join` na fila não se perdem: a
+    recuperação reenvia o `join` de quem está na tabela `players` e não está no estado;
+  - depois de um restart, os relógios de desconexão e de inatividade começam quando o servidor sobe;
+  - o `release` automático é um comando do próprio jogador, gravado no log;
+  - `metrics`: uma linha por time e uma do mundo (`team_id` nulo, com estradas e depósitos), a cada 60 ticks;
+  - mundo encerrado continua hospedado, só para leitura (status `ended` e snapshot final). O relatório final a
+    partir do banco não entra no F6;
+  - sem `seed`, o servidor sorteia um; `multiplier` vai de 1 a 10 000 (padrão 1). Nome de jogador não é único;
+  - `join` na fila conta para o limite de 3 humanos por time;
+  - mensagem inválida sem `ref` legível volta com `ref: -1`.
+- **`SIM_VERSION` = 1 passou a valer:** mundos persistidos guardam a versão. Mudou o comportamento do `sim`?
+  Suba a versão; um mundo de outra versão não é recuperado (o servidor loga e o pula).
 - **Interpretações do F5 a validar** (a spec e o plan não fixam):
   - tempo dos creeps em 5 atividades: as 4 da spec §7 (coletando, carregando, andando vazio, parado) mais
     **construindo**. "Andando" conta desde o tick em que o creep ganha pontos de movimento; esperar a obra de outro
@@ -60,13 +80,16 @@ por um portão de aprovação ou quando surgir um bloqueio.
     "humanos" do time (no harness não há humanos);
   - o `geo sweep` guarda só o `run.json` de cada run (o `samples.jsonl` de 3 dias tem ~11 MB); `--keep-runs` guarda
     tudo.
-- **Sinais do relatório de 3 dias (checkpoint do F5; base do balanceamento):** com os parâmetros atuais e o `balanced`, a economia trava
+- **Testes de mecânica** usam `packages/sim/test/params.json` (os valores do F5), não o `default.json`; o
+  balanceamento não quebra mais os testes. O `default.json` continua no `geo verify` e no orçamento do CI.
+- **Correção do A* (2026-11-14, branch `m1/f6-server`):** o time 1 desempata na ordem de células rotacionada, e
+  a rota dele é o espelho da do time 0. Antes, os times construíam estradas diferentes no mapa simétrico (até ~19%
+  de diferença na entrega). Com o `default.json` atual (candidato B, `teams.maxHumans`), o hash de 3 dias do seed 42 é `d6d6e003…`.
+- **Sinais do relatório de 3 dias (checkpoint do F5, anterior à correção do A*):** com os parâmetros atuais e o `balanced`, a economia trava
   em ~4 h: teto de população em 4,2 h, todo o cristal esgotado em 2,5 h, estradas param em 113 células; depois os
   30 creeps disputam 6 depósitos de matéria que regeneram 1/min (andam vazios 58–76% do tempo), o Núcleo fica 94%
-  ocioso e 91% da matéria entregue sobra no estoque. O time 1 viaja quase o dobro do time 0 (37,7 × 19,6 min),
-  apesar do mapa simétrico, e disputa mais os depósitos de matéria do lado do time 0. Hipótese não verificada: os
-  desempates por menor id (o creep de menor id coleta primeiro; o depósito de menor id ganha o empate) favorecem o
-  time 0 quando a matéria é escassa.
+  ocioso e 91% da matéria entregue sobra no estoque. Análise em [balance.md](../specs/m1-ciclo-da-riqueza/balance.md).
+  A diferença entre os times vinha do A* (corrigida); a hipótese dos desempates por menor id não se confirmou.
 - **Interpretações do F4 a validar** (a spec não fixa):
   - jogadores entram no estado por um comando de sistema `join {team}`, que o servidor emite e grava no log como
     o `release` de desconexão;

@@ -15,6 +15,8 @@ import type { Creep, WorldState } from "./world.ts";
 export type Player = {
   id: number;
   team: number;
+  /** A harness or server bot (spec section 5, F6 details): not a human. */
+  bot: boolean;
   /** Tick of the last accepted dominate, for the cooldown; null before any. */
   lastDominateTick: number | null;
 };
@@ -55,20 +57,32 @@ export function dominatedCreep(
   return state.creeps.find((c) => c.dominatedBy === playerId);
 }
 
-export type JoinRefusal = "alreadyJoined" | "unknownTeam";
+export type JoinRefusal = "alreadyJoined" | "unknownTeam" | "teamFull";
 
+/**
+ * Why the player cannot join `team`, or null. A team takes at most
+ * teams.maxHumans humans (spec D6); bots do not count.
+ */
 export function joinRefusal(
   state: WorldState,
   playerId: number,
   team: number,
+  bot: boolean,
 ): JoinRefusal | null {
   if (findPlayer(state, playerId) !== undefined) return "alreadyJoined";
   if (state.teams[team] === undefined) return "unknownTeam";
+  const humans = state.players.filter((p) => p.team === team && !p.bot);
+  if (!bot && humans.length >= state.params.teams.maxHumans) return "teamFull";
   return null;
 }
 
-export function join(state: WorldState, playerId: number, team: number): void {
-  const player: Player = { id: playerId, team, lastDominateTick: null };
+export function join(
+  state: WorldState,
+  playerId: number,
+  team: number,
+  bot: boolean,
+): void {
+  const player: Player = { id: playerId, team, bot, lastDominateTick: null };
   const at = state.players.findIndex((p) => p.id > playerId);
   state.players.splice(at < 0 ? state.players.length : at, 0, player);
 }

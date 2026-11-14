@@ -1,8 +1,12 @@
 // A* on the 4-connected grid (plan section 5). Entering a cell costs the
 // inverse of its speed modifier, so routes converge on roads. Ties between
 // equal f-scores go to the lower cell index, which makes paths deterministic.
+// On the rotated side (team 1) the index order is rotated too: on the
+// point-symmetric map, a route of team 1 is the mirror of the same route of
+// team 0, not just one of the same cost. Lower-index ties alone gave the teams
+// differently shaped roads and up to ~20% apart in delivered materia.
 
-import type { Cell, GameMap } from "./map.ts";
+import { isRotatedSide, type Cell, type GameMap } from "./map.ts";
 import { cellModifier } from "./movement.ts";
 import type { Params } from "./params.ts";
 import type { Creep, WorldState } from "./world.ts";
@@ -74,12 +78,15 @@ class OpenSet {
 /**
  * Cheapest path from `from` to `to`: the cell indices to enter, in order,
  * ending with `to`. [] when already there; null when `to` cannot be reached.
+ * With `rotated`, ties go to the higher cell index (the lower one in the map
+ * rotated 180°): the route a team on the rotated side takes.
  */
 export function findPath(
   map: GameMap,
   from: Cell,
   to: Cell,
   params: Params,
+  rotated = false,
 ): number[] | null {
   const { width, height } = map;
   const start = from.y * width + from.x;
@@ -98,11 +105,13 @@ export function findPath(
   const parent = new Array<number>(size).fill(-1);
   const closed = new Array<boolean>(size).fill(false);
   const open = new OpenSet();
+  // The open set orders ties by this key; it maps to itself both ways.
+  const key = (i: number) => (rotated ? size - 1 - i : i);
   g[start] = 0;
-  open.push([heuristic(start), start]);
+  open.push([heuristic(start), key(start)]);
 
   while (open.size > 0) {
-    const [, current] = open.pop();
+    const current = key(open.pop()[1]);
     if (closed[current]) continue;
     if (current === goal) {
       const path: number[] = [];
@@ -111,13 +120,15 @@ export function findPath(
     }
     closed[current] = true;
     const x = current % width;
-    // Neighbors in increasing index order: up, left, right, down.
+    // Neighbors in increasing key order: up, left, right, down (reversed on
+    // the rotated side).
     const neighbors = [
       current >= width ? current - width : -1,
       x > 0 ? current - 1 : -1,
       x < width - 1 ? current + 1 : -1,
       current + width < size ? current + width : -1,
     ];
+    if (rotated) neighbors.reverse();
     for (const next of neighbors) {
       if (next < 0 || closed[next]) continue;
       const cost = stepCost(map, next, params);
@@ -126,7 +137,7 @@ export function findPath(
       if (g[next] === -1 || tentative < g[next]!) {
         g[next] = tentative;
         parent[next] = current;
-        open.push([tentative + heuristic(next), next]);
+        open.push([tentative + heuristic(next), key(next)]);
       }
     }
   }
@@ -161,7 +172,13 @@ export function pathTo(
   ) {
     return cache.cells;
   }
-  const cells = findPath(state.map, creep, target, state.params);
+  const cells = findPath(
+    state.map,
+    creep,
+    target,
+    state.params,
+    isRotatedSide(creep.team),
+  );
   creep.path =
     cells === null
       ? null

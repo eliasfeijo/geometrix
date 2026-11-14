@@ -15,9 +15,9 @@ import { textWorld } from "./helpers.ts";
 /** Players 1 and 2 on team 0, player 3 on team 1; core A at x=0. */
 function world(): WorldState {
   const w = textWorld(["A.m......B"]);
-  join(w, 1, 0);
-  join(w, 2, 0);
-  join(w, 3, 1);
+  join(w, 1, 0, false);
+  join(w, 2, 0, false);
+  join(w, 3, 1, false);
   return w;
 }
 

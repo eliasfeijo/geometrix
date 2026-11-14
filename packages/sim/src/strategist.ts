@@ -2,26 +2,19 @@
 // 2026-11-13). A strategist is a team policy that issues the same external
 // commands a human would (produce, buyUpgrade, applyPreset). It decides from
 // the state alone, with no memory of its own, so a run restored from a
-// snapshot or replayed from the log takes the same decisions. Harness only:
-// in the game, teams without humans run on autopilot (plan P5). The same
-// determinism lint as the sim applies to this file.
+// snapshot or replayed from the log takes the same decisions. The harness
+// runs it for every team; a server world may give each team one bot (spec
+// section 5, F6 details). Its commands go into the log like a human's.
 
-import {
-  canAfford,
-  canonicalJson,
-  collectorRules,
-  DNAS,
-  manhattan,
-  nextSegment,
-  productionRefusal,
-  roadBuilderRules,
-  type Cell,
-  type Command,
-  type Creep,
-  type Dna,
-  type Team,
-  type WorldState,
-} from "@geometrix/sim";
+import { canAfford } from "./economy.ts";
+import type { Command } from "./commands.ts";
+import { manhattan, type Cell } from "./map.ts";
+import { DNAS, type Dna } from "./params.ts";
+import { collectorRules, roadBuilderRules } from "./presets.ts";
+import { productionRefusal } from "./production.ts";
+import { nextSegment } from "./roads.ts";
+import { canonicalJson } from "./serialize.ts";
+import type { Creep, Team, WorldState } from "./world.ts";
 
 export const STRATEGISTS = ["balanced", "none"] as const;
 export type StrategistId = (typeof STRATEGISTS)[number];

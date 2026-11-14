@@ -6,17 +6,15 @@
 import {
   createWorld,
   step,
+  strategistActs,
+  strategistCommands,
   validate,
   type Command,
   type CommandInput,
   type Params,
+  type StrategistId,
   type WorldState,
 } from "@geometrix/sim";
-import {
-  strategistActs,
-  strategistCommands,
-  type StrategistId,
-} from "./strategist.ts";
 
 /** One bot player per team; player ids are team + 1. */
 export type Bot = { playerId: number; team: number; strategist: StrategistId };
@@ -45,7 +43,7 @@ export function botCommands(
   if (state.tick === 0) {
     return bots.map((bot) => ({
       playerId: bot.playerId,
-      command: { type: "join", team: bot.team },
+      command: { type: "join", team: bot.team, bot: true },
     }));
   }
   if (!strategistActs(state.tick)) return [];
