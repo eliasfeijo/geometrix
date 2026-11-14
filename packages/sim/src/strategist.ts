@@ -9,15 +9,15 @@
 // section 5, F6 details). Its commands go into the log like a human's.
 
 import { canAfford } from "./economy.ts";
-import type { Command } from "./commands.ts";
+import type { Command, CommandInput } from "./commands.ts";
 import { manhattan, type Cell, type GameMap } from "./map.ts";
 import { DNAS, type Dna, type Params } from "./params.ts";
 import { collectorRules, roadBuilderRules } from "./presets.ts";
 import { productionRefusal } from "./production.ts";
 import { nextSegment, type RoadContext } from "./roads.ts";
 import { canonicalJson } from "./serialize.ts";
-import type { TeamView } from "./view.ts";
-import type { Creep, Deposit, Team } from "./world.ts";
+import { view, type TeamView } from "./view.ts";
+import type { Creep, Deposit, Team, WorldState } from "./world.ts";
 
 export const STRATEGISTS = ["balanced", "none"] as const;
 export type StrategistId = (typeof STRATEGISTS)[number];
@@ -31,6 +31,46 @@ export const BALANCED = {
   /** Creeps building roads while some deposit still lacks one. */
   builders: 1,
 } as const;
+
+/** One bot player per team; player ids are team + 1. */
+export type Bot = {
+  playerId: number;
+  team: number;
+  strategist: StrategistId;
+};
+
+export function botsFor(strategists: readonly StrategistId[]): Bot[] {
+  return strategists.map((strategist, team) => ({
+    playerId: team + 1,
+    team,
+    strategist,
+  }));
+}
+
+/** What the bots send on this tick: their join at tick 0, then decisions. */
+export function botCommands(
+  state: WorldState,
+  bots: readonly Bot[],
+): CommandInput[] {
+  if (state.tick === 0) {
+    return bots.map((bot) => ({
+      playerId: bot.playerId,
+      command: { type: "join", team: bot.team, bot: true },
+    }));
+  }
+  if (!strategistActs(state.tick)) return [];
+  return bots.flatMap((bot) =>
+    strategistCommands(
+      bot.strategist,
+      view(state, bot.team),
+      state.map,
+      state.params,
+    ).map((command) => ({
+      playerId: bot.playerId,
+      command,
+    })),
+  );
+}
 
 /** The terrain every client gets in the welcome; roads come from the view. */
 export type StaticMap = Omit<GameMap, "road">;

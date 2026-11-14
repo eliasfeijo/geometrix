@@ -5,6 +5,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import {
+  botsFor,
   BALANCED,
   canonicalJson,
   sampleMetrics,
@@ -16,7 +17,7 @@ import {
   type StrategistId,
   type WorldState,
 } from "@geometrix/sim";
-import { botsFor, runBots, type LoggedCommand } from "./harness.ts";
+import { runBots, type LoggedCommand } from "./harness.ts";
 import { stateHash } from "./hash.ts";
 import { renderReport } from "./report.ts";
 

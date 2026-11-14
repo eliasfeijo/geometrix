@@ -1,6 +1,8 @@
 import { readFileSync } from "node:fs";
 import {
   BALANCED,
+  botCommands,
+  botsFor,
   createWorld,
   parseParams,
   serialize,
@@ -10,8 +12,6 @@ import {
 } from "@geometrix/sim";
 import { describe, expect, test } from "vitest";
 import {
-  botCommands,
-  botsFor,
   logCursor,
   runBots,
   stepWithBots,

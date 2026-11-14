@@ -7,21 +7,21 @@
 //   4. a replay of run 1's command log, through JSON, without the bots.
 
 import {
+  botsFor,
   canonicalJson,
   createWorld,
   restore,
   serialize,
   step,
+  type Bot,
   type Params,
   type StrategistId,
   type WorldState,
 } from "@geometrix/sim";
 import {
-  botsFor,
   logCursor,
   runBots,
   stepWithBots,
-  type Bot,
   type LoggedCommand,
 } from "./harness.ts";
 import { stateHash } from "./hash.ts";
