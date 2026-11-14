@@ -27,6 +27,12 @@
 - **A população precisa de um limitador.** Num mundo de dias, sem limite, o número de creeps cresce sem parar e
   pesa na performance e no balanceamento. Candidatos: manutenção (consumo contínuo de recurso), teto por moradia, ou
   envelhecimento.
+- **Nome do creep no estado do mundo** (levantada no F7, 2026-11-14): cada creep ganha um nome curto ao nascer,
+  guardado no estado (igual para todos, persistido e no replay), e um comando para renomear. Ganha sentido quando
+  o creep tiver identidade de jogo (o herói dominado, level/XP e progressão no M3). Precisa chegar no M2, no
+  mais tardar: no M1 o cliente gera o nome pela ordem de nascimento, que só é estável porque nenhum creep morre;
+  com morte (M2), a ordem muda e os nomes trocariam. Renomear é um comando novo no vocabulário versionado
+  ([ADR-0002](../adr/0002-tudo-e-comando.md)).
 
 ## Ideias em incubação (não entram antes do M3)
 - **Reprodução e gerações:** creeps M/F, idade, morte natural, herança de DNA. Seria um limitador de população
