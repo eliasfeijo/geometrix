@@ -5,6 +5,7 @@ import { capacity, type Deposit } from "@geometrix/sim";
 import { useGame } from "../context.ts";
 import { toggleRoadMode } from "../interaction.ts";
 import { cellmates } from "../map/pick.ts";
+import { creepName } from "../names.ts";
 import { creepStatus, STATUS_TEXTS } from "../creep-status.ts";
 import {
   DNA_NAMES,
@@ -58,9 +59,14 @@ function CreepInspector({ id }: { id: number }) {
   const roadMode = store.mode.value.type === "road";
   return (
     <div class={`inspector team-${creep.team}`}>
-      <h2 class="title">
+      <h2 class="title creep-title">
         <DnaIcon dna={creep.dna} team={creep.team} />
-        {DNA_NAMES[creep.dna]} #{creep.id}
+        <span>
+          {creepName(state.creeps, creep.id)}
+          <span class="subtitle muted">
+            {DNA_NAMES[creep.dna]} · #{creep.id}
+          </span>
+        </span>
         <span class="team-name">{teamName(creep.team)}</span>
       </h2>
       <Cellmates id={creep.id} />
