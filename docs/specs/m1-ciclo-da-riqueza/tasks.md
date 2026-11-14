@@ -71,7 +71,7 @@ Marque `[x]` ao concluir. Cada task deve terminar com os testes verdes. Referên
 
 ## F8 — Replay e multi-cliente
 - [x] Modo replay no navegador (o `sim` roda no cliente)
-- [ ] Verificar o hash do replay no Safari/JSC
+- [x] Verificar o hash do replay no Safari/JSC
 - [ ] Script `npm run dev:multi -- --clients K`
 
 ## F9 — Deploy e playtest

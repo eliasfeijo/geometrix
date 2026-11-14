@@ -90,6 +90,17 @@ por um portão de aprovação ou quando surgir um bloqueio.
     seguidos ganham nomes distantes na lista. Estável só porque ninguém morre no M1; o nome no estado é
     proposta no GDD 02 para o M2;
   - os botões de produção usam o `productionRefusal` do `sim` (alargado para aceitar o estado da rede).
+- **Replay no Safari/JSC (F8, 2026-11-14): o hash confere.** WebKit 27.2 do Playwright (WPE headless, engine
+  JSC), com o build do cliente servido pelo `npm run server`: o replay.json de um `geo sim` de 6 h (seed 42) e o de
+  3 dias (seed 7) terminam com ✓, assim como o export de um mundo do servidor de 3 dias com saltos para 80%, 30% e o
+  fim. No Chromium os mesmos 3 dias levam 5,7 s (35–73 mil ticks/s no "máximo"); no WebKit, 22 s (8–11 mil
+  ticks/s). Sem divergência, a verificação permanente com Bun não entra (plan §8). **Como repetir sem sudo:** o
+  WebKit precisa de bibliotecas que o WSL não tem; `apt-get download` dos pacotes (`libgtk-4-1`,
+  `libevent-2.1-7t64`, `libgstreamer-plugins-bad1.0-0`, `libavif16`, `libgav1-1`, `libyuv0`,
+  `libcairo-script-interpreter2`, `libnice10`, `libabsl20220623t64`, `libgupnp-igd-1.6-0`, `libgssdp-1.6-0`,
+  `libgupnp-1.6-0`), `dpkg-deb -x` num diretório do scratchpad, e `webkit.launch({ executablePath })` com um
+  script que repete o `minibrowser-wpe/MiniBrowser` acrescentando esse diretório ao `LD_LIBRARY_PATH`, mais
+  `PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=1`. Com sudo, `npx playwright install-deps webkit` resolve de vez.
 - **Servidor no `/mnt/c`:** subir o `npm run server` às vezes leva mais de 5 s (WSL). Scripts que sobem o
   servidor devem esperar a porta responder, não um `sleep` fixo.
 - **Interpretações do F6 a validar** (o plan não fixa):
