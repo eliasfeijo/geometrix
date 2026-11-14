@@ -5,6 +5,7 @@ export * from "./movement.ts";
 export * from "./orders.ts";
 export * from "./params.ts";
 export * from "./pathfinding.ts";
+export * from "./presets.ts";
 export * from "./production.ts";
 export * from "./rng.ts";
 export * from "./roads.ts";

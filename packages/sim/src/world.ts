@@ -3,6 +3,7 @@
 
 import type { Rule } from "./autopilot.ts";
 import type { UpgradeId } from "./economy.ts";
+import { collectorRules } from "./presets.ts";
 import { generateMap, type Cell, type GameMap } from "./map.ts";
 import { DNAS, type Dna, type Params, type Resource } from "./params.ts";
 import type { Order } from "./orders.ts";
@@ -135,7 +136,10 @@ export function createWorld(seed: number, params: Params): WorldState {
   };
 }
 
-/** A creep standing stopped and empty on its team's core. */
+/**
+ * A creep standing stopped and empty on its team's core, with the materia
+ * collector rules (F4 decision, spec section 5).
+ */
 export function newCreep(id: number, team: Team, dna: Dna): Creep {
   return {
     id,
@@ -146,7 +150,7 @@ export function newCreep(id: number, team: Team, dna: Dna): Creep {
     order: { type: "stop" },
     movePoints: 0,
     path: null,
-    rules: [],
+    rules: collectorRules("materia"),
     dominatedBy: null,
   };
 }
