@@ -48,8 +48,8 @@ por um portão de aprovação ou quando surgir um bloqueio.
    estradas e obras; memória de depósitos (último valor), estradas e obras; caminho e piloto pelo que o time sabe;
    sem depósito garantido à vista no início. **O escopo da fatia cresceu** (nota no [ROADMAP](../ROADMAP.md)).
    Ficaram em aberto, para a spec: como os creeps começam explorando (regra no preset coletor, preset "batedor" ou
-   os dois; GDD 07) e as propostas do GDD 01 (terreno e Núcleo inimigo vistos ficam conhecidos; três estados na
-   tela).
+   os dois; GDD 07). Terreno e Núcleo inimigo vistos ficam conhecidos, e a tela tem três estados (nunca visto,
+   lembrado, visível): confirmados pelo dono na mesma rodada.
 2. **Spec da fatia de fog** (`docs/specs/m1.5-fog/`, skill `spec-slice`), depois das decisões. O ROADMAP pede
    playtest local de legibilidade ("esconder informação cria decisões sem tornar o mapa ilegível?"). O que a fatia
    de rede deixou pronto:

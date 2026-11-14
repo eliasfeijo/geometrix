@@ -22,6 +22,9 @@
     creeps inimigos somem quando saem da visão.
   - **Caminho pelo que o time sabe:** uma célula nunca vista conta como jungle passável; quando o creep descobre
     pedra ou rio no caminho, recalcula. Nenhuma ordem revela terreno escondido.
+  - **O que já foi visto e não muda fica conhecido:** o terreno explorado e a posição do Núcleo inimigo, depois de
+    vistos, ficam no mapa do time.
+  - **Três estados na tela:** nunca visto (negro), lembrado (esmaecido, com o último valor) e visível agora.
   - O piloto automático também decide só pelo que o time sabe ([07](07-piloto-automatico.md)).
 
 ## Proposta
@@ -49,12 +52,6 @@ do Núcleo conforme o time constrói.
 - **Destruir a base é um processo, não um instante.** Um cerco ao Núcleo leva horas e avisa o time atacado. Sem
   isso, um time perde a partida enquanto dorme.
 - A defesa offline vem de fortificações + piloto automático de defesa.
-
-### Fog of war: detalhes ainda não decididos
-- **O que já foi visto e não muda fica conhecido:** o terreno explorado e a posição do Núcleo inimigo, depois de
-  vistos, ficam no mapa do time (é o que o "caminho pelo que o time sabe" pressupõe).
-- **Três estados na tela:** nunca visto (negro), lembrado (esmaecido, com o último valor) e visível agora. É o que o
-  playtest de legibilidade do M1.5 vai avaliar.
 
 ## Perguntas abertas
 - O Núcleo pode ser movido ou reconstruído? Pode existir mais de uma base por time?
