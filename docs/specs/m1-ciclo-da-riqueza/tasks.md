@@ -86,7 +86,7 @@ Decidida pelo dono em 2026-11-14, no fim do F8 (spec §8, itens 3 e 4).
 - [x] Feedback de entrega no Núcleo
 - [x] Nome do creep no mapa
 - [x] `docs/PLAYTEST.md`: acesso ao servidor local, roteiro e questionário de legibilidade
-- [ ] **Checkpoint:** playtest humano de legibilidade e mecânica; replay validado pelo dono; melhorias seguintes
+- [x] **Checkpoint:** playtest humano de legibilidade e mecânica; replay validado pelo dono; melhorias seguintes
   registradas
 
 ## Fora do M1 — Deploy e playtest de diversão
