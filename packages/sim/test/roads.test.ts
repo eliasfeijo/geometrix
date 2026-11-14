@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import type { Cell } from "../src/map.ts";
-import { buildRoadOrder, canBuildRoad } from "../src/roads.ts";
+import { buildRoadOrder, canBuildRoad, nextSegment } from "../src/roads.ts";
 import { step } from "../src/step.ts";
 import { createWorld, type WorldState } from "../src/world.ts";
 import {
@@ -171,6 +171,23 @@ describe("buildRoad", () => {
       false,
       false,
     ]);
+  });
+
+  test("the checks need only the map, the params and the cores", () => {
+    // What a bot has from its team view (M1.5 plan R3), not the whole state.
+    const world = textWorld(["A.r.......", "......#..B"]);
+    const context = {
+      map: { ...world.map, road: [...world.map.road] },
+      params: world.params,
+      teams: world.teams.map((t) => ({ core: { ...t.core } })),
+    };
+    const team = { id: 0, core: world.teams[0]!.core };
+    expect(canBuildRoad(context, 1)).toBe(true);
+    expect(canBuildRoad(context, 2)).toBe(false);
+    expect(nextSegment(context, team, { x: 8, y: 0 })).toBe(
+      nextSegment(world, world.teams[0]!, { x: 8, y: 0 }),
+    );
+    expect(nextSegment(context, team, { x: 8, y: 0 })).toBe(1);
   });
 
   test("follows road.cost and road.buildSeconds", () => {
