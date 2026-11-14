@@ -52,7 +52,8 @@ funções transcendentais, `Date`, `for…in` e literais de ponto flutuante. Al�
   `state.roadRevision` (invalida os caminhos em cache).
 - **Exports:** todo módulo público entra em `packages/sim/src/index.ts`; os outros pacotes importam de
   `@geometrix/sim`.
-- **Testes** em `packages/<pacote>/test/`, com `test/helpers.ts` (`loadDefaultParams`). Mapas pequenos de teste
+- **Testes** em `packages/<pacote>/test/`, com `test/helpers.ts` (`loadTestParams`: os parâmetros fixos de
+  `test/params.json`, que não acompanham o balanceamento). Mapas pequenos de teste
   desenhados em texto (ver `pathfinding.test.ts`).
 
 ## Regras de trabalho
