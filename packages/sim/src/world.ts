@@ -51,6 +51,14 @@ export type Creep = {
 
 export type Deposit = { id: number; kind: Resource; amount: number } & Cell;
 
+/** A road segment under construction, already paid for by `team`. */
+export type RoadJob = {
+  id: number;
+  team: number;
+  /** Build time still missing; the segment is done at 0. */
+  remainingSeconds: number;
+} & Cell;
+
 export type WorldState = {
   simVersion: number;
   /** Seed the world was created with. */
@@ -67,6 +75,8 @@ export type WorldState = {
   teams: Team[];
   creeps: Creep[];
   deposits: Deposit[];
+  /** Segments under construction, by id. */
+  roadJobs: RoadJob[];
   nextId: number;
 };
 
@@ -115,6 +125,7 @@ export function createWorld(seed: number, params: Params): WorldState {
     teams,
     creeps,
     deposits,
+    roadJobs: [],
     nextId,
   };
 }
