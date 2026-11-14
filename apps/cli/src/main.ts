@@ -35,11 +35,12 @@ commands:
            --keep-runs           also write every run's full directory
   report   rewrites report.md of a run from its files
            geo report <run dir>
-  verify   determinism check: two runs and a snapshot -> restore run must
-           reach the same state hash
+  verify   determinism check with bots: two runs, a snapshot -> restore run
+           and a replay of the command log must reach the same state hash
            --seed <n>      world seed (default 42)
            --ticks <n>     ticks to simulate (default 50000)
-           --params <file> params JSON (default params/default.json)`;
+           --params <file> params JSON (default params/default.json)
+           --strategist <a[,b]>  as in sim (default balanced)`;
 
 export type Output = { log(line: string): void; error(line: string): void };
 
@@ -209,14 +210,16 @@ function runVerify(args: string[], out: Output): number {
       seed: { type: "string", default: "42" },
       ticks: { type: "string", default: "50000" },
       params: { type: "string" },
+      strategist: { type: "string", default: "balanced" },
     },
     strict: true,
   });
   const seed = parseSeed(values.seed);
   const ticks = parseUint("ticks", values.ticks, 1);
   const params = loadParams(values.params ?? DEFAULT_PARAMS);
+  const strategists = parseStrategists(values.strategist, TEAMS);
 
-  const result = verify(seed, ticks, params);
+  const result = verify(seed, ticks, params, strategists);
   out.log(`geo verify --seed ${seed} --ticks ${ticks}`);
   for (const run of result.runs) out.log(`  ${run.hash}  ${run.name}`);
   out.log(result.ok ? "OK: deterministic" : "FAIL: hashes differ");
