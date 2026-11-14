@@ -12,7 +12,10 @@ export class NetStats {
   /** Seq of the last delta applied (or of the last welcome). */
   seq = 0;
   deltas = 0;
-  /** Reconnects that went on from the buffer, without a welcome. */
+  /**
+   * Reconnects that went on from the buffer: deltas with no welcome first.
+   * One resumed with nothing missed counts at its next delta.
+   */
   resumes = 0;
   readonly welcomes: Record<WelcomeCause, number> = {
     join: 0,

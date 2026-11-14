@@ -406,6 +406,45 @@ h3 {
   cursor: pointer;
 }
 
+/* Network panel (?net=1, M1.5 spec D8): not game UI, kept small. */
+.net-panel {
+  position: fixed;
+  right: 8px;
+  bottom: 8px;
+  z-index: 20;
+  margin: 0;
+  padding: 6px 8px;
+  background: color-mix(in srgb, var(--panel) 88%, transparent);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  font:
+    11px/1.4 ui-monospace,
+    "SFMono-Regular",
+    Menlo,
+    Consolas,
+    monospace;
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.net-panel > div {
+  display: flex;
+  gap: 8px;
+}
+
+.net-panel dt {
+  width: 9ch;
+}
+
+.net-panel dd {
+  margin: 0;
+  color: var(--text);
+}
+
+.net-panel dd.bad {
+  color: var(--danger);
+}
+
 /* Map */
 
 .map {

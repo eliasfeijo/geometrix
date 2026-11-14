@@ -8,6 +8,7 @@ import { browserDeps, Connection, socketUrl } from "./connection.ts";
 import type { Game as GameValue } from "./context.ts";
 import { FATAL_TEXTS, REJECT_TEXTS } from "./format.ts";
 import { GameLayout } from "./game-layout.tsx";
+import { NetPanel, showNetPanel } from "./net-panel.tsx";
 import type { Session } from "./session.ts";
 import { GameStore } from "./store.ts";
 import { TopBar } from "./top-bar.tsx";
@@ -44,6 +45,7 @@ export function Game({ session, onLeave, onInvalid }: Props) {
             console.warn(`resync reason=${reason} seq=${seq}`),
         },
         browserDeps,
+        store.net,
       ),
     [],
   );
@@ -69,11 +71,14 @@ export function Game({ session, onLeave, onInvalid }: Props) {
   );
 
   return (
-    <GameLayout
-      game={game}
-      header={<TopBar session={session} onLeave={onLeave} />}
-      orders
-    />
+    <>
+      <GameLayout
+        game={game}
+        header={<TopBar session={session} onLeave={onLeave} />}
+        orders
+      />
+      {showNetPanel(window.location) && <NetPanel stats={store.net} />}
+    </>
   );
 }
 

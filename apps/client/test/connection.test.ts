@@ -61,6 +61,7 @@ function setup() {
         const i = timers.findIndex((t) => t.id === id);
         if (i >= 0) timers.splice(i, 1);
       },
+      now: () => 0,
     },
   );
   const fireTimer = () => {
@@ -222,6 +223,32 @@ describe("Connection", () => {
     expect(t.last().sent).toEqual([
       { type: "resync", reason: "hashMismatch", seq: 5 },
     ]);
+  });
+
+  it("counts what the network panel shows", () => {
+    const t = setup();
+    const { stats } = t.connection;
+    t.openWithWelcome();
+    t.last().serverSends({ type: "delta", seq: 1, delta: { tick: 2 } });
+    t.last().handlers.close(1006);
+    t.fireTimer();
+    t.last().handlers.open();
+    t.last().serverSends({ type: "delta", seq: 2, delta: { tick: 3 } });
+    t.last().serverSends({ type: "delta", seq: 9, delta: { tick: 9 } });
+    t.last().serverSends({ ...t.welcome, seq: 9 });
+    t.last().handlers.close(1006);
+    t.fireTimer();
+    t.last().handlers.open();
+    t.last().serverSends({ ...t.welcome, stream: "new", seq: 0 });
+    // That resume was refused (a restart): only the first one counts.
+    expect(stats).toMatchObject({
+      seq: 0,
+      deltas: 2,
+      resumes: 1,
+      welcomes: { join: 1, reconnect: 1, resync: 1 },
+      resyncs: { seqGap: 1, hashMismatch: 0 },
+    });
+    expect(stats.totalBytes).toBeGreaterThan(0);
   });
 
   it("stops for good on another protocol version", () => {
