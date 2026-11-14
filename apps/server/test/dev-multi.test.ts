@@ -16,6 +16,7 @@ describe("parseDevMultiArgs", () => {
       multiplier: 36,
       build: true,
       open: true,
+      net: false,
     });
   });
 
@@ -30,6 +31,7 @@ describe("parseDevMultiArgs", () => {
         "600",
         "--no-build",
         "--no-open",
+        "--net",
       ]),
     ).toEqual({
       clients: 4,
@@ -37,6 +39,7 @@ describe("parseDevMultiArgs", () => {
       multiplier: 600,
       build: false,
       open: false,
+      net: true,
     });
   });
 
@@ -72,6 +75,17 @@ describe("players and tabs", () => {
     );
     expect(url.pathname).toBe("/");
     expect(url.search).toBe("?world=3&slot=2");
+    expect(
+      new URL(
+        tabUrl(
+          "http://localhost:8080",
+          3,
+          2,
+          { playerId: 5, team: 1, name: "J", token: "t" },
+          true,
+        ),
+      ).search,
+    ).toBe("?world=3&slot=2&net=1");
     const fragment = new URLSearchParams(url.hash.slice(1));
     expect(Object.fromEntries(fragment)).toEqual({
       token: "a-b_c",
