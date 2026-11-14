@@ -2,11 +2,12 @@
 //   1. apply the tick's external commands, in seq order       (F4)
 //   2. per creep, by id: dominated keeps its order, free ones
 //      evaluate their rules                                    (F4)
-//   3. resolve orders: movement, gathering, delivery, roads    (F2, F3)
+//   3. resolve orders: movement, gathering, delivery, roads    (F2 / F3)
 //   4. core production queues, spawning                        (F3)
 //   5. materia regeneration                                    (F3)
 //   6. stats accumulators; tick++                              (F5 / now)
 
+import { resolveOrders } from "./orders.ts";
 import type { WorldState } from "./world.ts";
 
 /**
@@ -22,5 +23,6 @@ export type Command = never;
  */
 export function step(state: WorldState, commands: readonly Command[]): void {
   void commands;
+  resolveOrders(state);
   state.tick += 1;
 }
