@@ -81,7 +81,7 @@ Decidida pelo dono em 2026-11-14, no fim do F8 (spec §8, itens 3 e 4).
 - [x] `npm run soak`: teste de resistência comprimido (quedas forçadas, restart, hash no servidor, no Node e no
   navegador; memória, SQLite e atraso do loop)
 - [x] Estrada e pedra distinguíveis no mapa
-- [ ] Feedback do custo da estrada (modo estrada, pagamento, obra em andamento)
+- [x] Feedback do custo da estrada (modo estrada, pagamento, obra em andamento)
 - [x] Sinal de carga cheia no creep
 - [x] Feedback de entrega no Núcleo
 - [x] Nome do creep no mapa

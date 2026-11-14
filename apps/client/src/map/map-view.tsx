@@ -129,6 +129,7 @@ export function MapView({ onSelect, onOrder, children }: Props) {
 
   const onPointerMove = (e: PointerEvent) => {
     const d = drag.current;
+    if (d === null || d.moved) trackCell(d === null ? e : null);
     if (d === null || d.pointerId !== e.pointerId) return;
     if (
       !d.moved &&
@@ -139,6 +140,24 @@ export function MapView({ onSelect, onOrder, children }: Props) {
     if (d.moved) pan(e.clientX - d.lastX, e.clientY - d.lastY);
     d.lastX = e.clientX;
     d.lastY = e.clientY;
+  };
+
+  /** Keeps store.pointerCell on the cell under `e`, or null. */
+  const trackCell = (e: MouseEvent | null) => {
+    const point = e === null ? null : mapPoint(e);
+    const { width, height } = info.map;
+    const cell =
+      point === null ||
+      point.x < 0 ||
+      point.y < 0 ||
+      point.x >= width ||
+      point.y >= height
+        ? null
+        : { x: Math.floor(point.x), y: Math.floor(point.y) };
+    const old = store.pointerCell.value;
+    if (cell?.x !== old?.x || cell?.y !== old?.y) {
+      store.pointerCell.value = cell;
+    }
   };
 
   const onPointerUp = (e: PointerEvent) => {
@@ -196,6 +215,7 @@ export function MapView({ onSelect, onOrder, children }: Props) {
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onPointerCancel={() => (drag.current = null)}
+      onPointerLeave={() => trackCell(null)}
       onContextMenu={onContextMenu}
       onKeyDown={onKeyDown}
     >
