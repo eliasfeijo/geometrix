@@ -2,13 +2,14 @@
 // decided 2026-11-13). Each free creep takes as its order the action of the
 // first rule whose condition holds and whose action is possible now. With no
 // such rule it keeps its current order. Dominated creeps are skipped: only
-// their player changes their order.
+// their player changes their order. Rules decide by what the creep's team
+// knows (M1.5 fog spec A-1): deposits from its memory, cells from its known
+// map.
 
 import {
   canAfford,
   capacity,
   cargoTotal,
-  findDeposit,
   regenerates,
   teamOf,
 } from "./economy.ts";
@@ -16,7 +17,7 @@ import { isInMap, manhattan, type Cell } from "./map.ts";
 import { cellModifier } from "./movement.ts";
 import type { Order } from "./orders.ts";
 import type { Resource } from "./params.ts";
-import { knownRoadContext, knownRoadJob, memoryOf } from "./known.ts";
+import { knownMap, knownRoadContext, knownRoadJob, memoryOf } from "./known.ts";
 import { canBuildRoad, nextSegment } from "./roads.ts";
 import type { Creep, Deposit, WorldState } from "./world.ts";
 
@@ -55,21 +56,27 @@ export function runAutopilot(state: WorldState): void {
   }
 }
 
+/** The creep's team memory. */
+const known = (state: WorldState, creep: Creep) => memoryOf(state, creep.team);
+
 function isFull(state: WorldState, creep: Creep): boolean {
   return (
     cargoTotal(creep) >= capacity(creep, teamOf(state, creep), state.params)
   );
 }
 
-/** The nearest deposit of `kind` that is not empty; ties go to the lower id. */
+/**
+ * The nearest deposit of `kind` among `deposits` (the team's memory) that is
+ * not empty; ties go to the lower id.
+ */
 export function nearestDeposit(
-  state: WorldState,
+  deposits: readonly Deposit[],
   from: Cell,
   kind: Resource,
 ): Deposit | null {
   let best: Deposit | null = null;
   let bestDistance = 0;
-  for (const deposit of state.deposits) {
+  for (const deposit of deposits) {
     if (deposit.kind !== kind || deposit.amount === 0) continue;
     const distance = manhattan(from, deposit);
     if (best === null || distance < bestDistance) {
@@ -81,9 +88,9 @@ export function nearestDeposit(
 }
 
 /**
- * The deposit of `kind` the creep is already gathering at, while it still has
- * some or regenerates (owner decision, 2026-11-14): no switching on the way,
- * and waiting there when it runs dry.
+ * The deposit of `kind` the creep is already gathering at, while the team
+ * remembers it with some left or it regenerates (owner decision, 2026-11-14):
+ * no switching on the way, and waiting there when it runs dry.
  */
 function committedDeposit(
   state: WorldState,
@@ -91,7 +98,8 @@ function committedDeposit(
   kind: Resource,
 ): Deposit | null {
   if (creep.order.type !== "gather") return null;
-  const deposit = findDeposit(state, creep.order.depositId);
+  const { depositId } = creep.order;
+  const deposit = known(state, creep).deposits.find((d) => d.id === depositId);
   if (deposit === undefined || deposit.kind !== kind) return null;
   return deposit.amount > 0 || regenerates(deposit, state.params)
     ? deposit
@@ -107,7 +115,8 @@ function holds(state: WorldState, creep: Creep, condition: Condition): boolean {
     case "cargoEmpty":
       return cargoTotal(creep) === 0;
     case "resourceInRange": {
-      const deposit = nearestDeposit(state, creep, condition.resource);
+      const deposits = known(state, creep).deposits;
+      const deposit = nearestDeposit(deposits, creep, condition.resource);
       return deposit !== null && manhattan(creep, deposit) <= condition.radius;
     }
     case "stockBelow":
@@ -126,7 +135,7 @@ function orderFor(
       if (isFull(state, creep)) return null;
       const deposit =
         committedDeposit(state, creep, action.resource) ??
-        nearestDeposit(state, creep, action.resource);
+        nearestDeposit(known(state, creep).deposits, creep, action.resource);
       return deposit === null
         ? null
         : { type: "gather", depositId: deposit.id };
@@ -136,8 +145,10 @@ function orderFor(
       return { type: action.type };
     case "moveTo": {
       if (!isInMap(state.map, action)) return null;
-      const index = action.y * state.map.width + action.x;
-      if (cellModifier(state.map, index, state.params) === 0) return null;
+      // A cell never seen counts as jungle: the creep goes and finds out.
+      const map = knownMap(state, creep.team);
+      const index = action.y * map.width + action.x;
+      if (cellModifier(map, index, state.params) === 0) return null;
       return { type: "moveTo", x: action.x, y: action.y };
     }
     case "buildRoad":

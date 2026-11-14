@@ -108,20 +108,21 @@ function walk(state: WorldState, creep: Creep, target: Cell): WalkResult {
 /**
  * Walks to the deposit, then gathers until full. At an empty deposit that
  * regenerates the creep waits (idle) for it; one that never does ends the
- * order (owner decision, 2026-11-14).
+ * order (owner decision, 2026-11-14). The creep finds out how much is left
+ * only there: on the way it goes by what its team remembers (fog spec A-2).
  */
 function gather(state: WorldState, creep: Creep, depositId: number): void {
   const deposit = findDeposit(state, depositId);
-  if (
-    deposit === undefined ||
-    isFull(state, creep) ||
-    exhausted(state, deposit)
-  ) {
+  if (deposit === undefined || isFull(state, creep)) {
     halt(creep);
     return;
   }
   if (!isAt(creep, deposit)) {
     if (walk(state, creep, deposit) === "unreachable") halt(creep);
+    return;
+  }
+  if (exhausted(state, deposit)) {
+    halt(creep);
     return;
   }
   if (deposit.amount === 0) return;
