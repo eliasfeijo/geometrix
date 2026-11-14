@@ -1,9 +1,9 @@
 import { describe, expect, test } from "vitest";
 import { generateMap } from "../src/map.ts";
 import { createWorld, SIM_VERSION } from "../src/world.ts";
-import { loadDefaultParams } from "./helpers.ts";
+import { loadTestParams } from "./helpers.ts";
 
-const params = loadDefaultParams();
+const params = loadTestParams();
 
 describe("createWorld", () => {
   const world = createWorld(42, params);

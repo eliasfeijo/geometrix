@@ -8,9 +8,9 @@ import {
 } from "../src/map.ts";
 import { findPath, pathTo, stepCost } from "../src/pathfinding.ts";
 import { createWorld } from "../src/world.ts";
-import { loadDefaultParams, parseMap } from "./helpers.ts";
+import { loadTestParams, parseMap } from "./helpers.ts";
 
-const params = loadDefaultParams();
+const params = loadTestParams();
 
 /** The path drawn as `*` over the map rows. The start cell is not part of it. */
 function draw(map: GameMap, rows: string[], path: number[] | null): string[] {

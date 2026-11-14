@@ -9,9 +9,9 @@ import {
   type MapLayout,
 } from "../src/map.ts";
 import type { Params } from "../src/params.ts";
-import { loadDefaultParams } from "./helpers.ts";
+import { loadTestParams } from "./helpers.ts";
 
-const params = loadDefaultParams();
+const params = loadTestParams();
 const SEEDS = Array.from({ length: 500 }, (_, i) => i);
 const layouts = new Map<number, MapLayout>(
   SEEDS.map((seed) => [seed, generateMap(seed, params).layout]),
