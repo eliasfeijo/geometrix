@@ -1,6 +1,6 @@
 # Status atual
 
-**Atualizado:** 2026-11-14 · **Marco:** M1.5 — A névoa, fatia de rede · **Fase:** F4 ✅ concluída · **Próximo:** F5 (soak com clientes e viabilidade)
+**Atualizado:** 2026-11-14 · **Marco:** M1.5 — A névoa, fatia de rede · **Fase:** F5 ✅ tasks concluídas, 🟡 checkpoint do dono pendente · **Próximo:** sessão do dono e decisão de viabilidade
 
 Resumo de bolso. A fonte de verdade continua nos docs linkados. Atualize este arquivo ao fechar uma fase, ao passar
 por um portão de aprovação ou quando surgir um bloqueio.
@@ -32,6 +32,7 @@ por um portão de aprovação ou quando surgir um bloqueio.
 | M1.5 rede — F2 Delta no `protocol` | ✅ Concluída, merge em `main`. `diffView`/`applyDelta`/`viewJson`, propriedade de 6 h × 3 seeds no CI, `geo net`. **Checkpoint** (3 dias, seed 42): 227 B/s por cliente a ×1 (alvo ≤ 2 KB/s), 83 µs por envio (alvo ≤ 250 µs), 0 divergências em 518 400 verificações, hash `10662729…` igual | [tasks.md](../specs/m1.5-rede/tasks.md) · `packages/protocol/src/delta.ts` · `apps/cli/src/net.ts` |
 | M1.5 rede — F3 Servidor | ✅ Concluída, merge em `main`. Protocolo 2: `welcome` com a última visão enviada ao time, `delta` numerado por time (inclusive sem socket), hash a cada 60 ticks, retomada pelo buffer de 30 s, `resync` com linha no log. O store do cliente já aplica os deltas (1ª task da F4) | [tasks.md](../specs/m1.5-rede/tasks.md) · `apps/server/src/{stream,ws}.ts` |
 | M1.5 rede — F4 Cliente | ✅ Concluída, merge em `main`. Retomada com `&stream=…&seq=…`, `resync` por `seqGap` e por hash divergente (Web Crypto), recarga com outra versão do protocolo, painel `?net=1`. Conferido no Chromium com `kill -9` + restart do servidor | [tasks.md](../specs/m1.5-rede/tasks.md) · `apps/client/src/{connection,store,net-panel}.ts*` |
+| M1.5 rede — F5 Soak e viabilidade | ✅ Tasks concluídas, merge em `main`. `npm run soak` com 2 clientes sem interface por time: 0 hashes divergentes, visões finais iguais à do servidor, retomadas pelo buffer e `welcome` depois de cada restart. **Todos os critérios da spec §7 verdes.** 🟡 Checkpoint do dono pendente | [viability.md](../specs/m1.5-rede/viability.md) · `apps/server/src/soak-client.ts` |
 | M2–M4 | ⬜ Não iniciados | [ROADMAP](../ROADMAP.md) |
 
 ## Próximos passos imediatos
@@ -40,18 +41,13 @@ por um portão de aprovação ou quando surgir um bloqueio.
 ([spec](../specs/m1.5-rede/spec.md) · [plan](../specs/m1.5-rede/plan.md) · [tasks](../specs/m1.5-rede/tasks.md)),
 depois a de fog of war. O repo está no GitHub e o CI passa lá.
 
-1. **F5 — Soak com clientes e viabilidade**, pela skill `implement-phase`, na branch `m1.5/f5-soak` (criar a partir
-   de `main`). O que a F5 precisa saber:
-   - **O soak** está em `apps/server/src/soak.ts` (lógica) e `soak-main.ts` (processo); hoje ele sobe o servidor
-     filho, derruba com `kill -9`, reinicia e compara o replay exportado com o hash do servidor.
-   - **Clientes sem interface:** o protocolo está em `@geometrix/protocol` (tipos, `parseClientMessage`) e
-     `@geometrix/protocol/stream` (`applyDelta`, `viewJson`, `PROTOCOL_VERSION`). A lógica de conexão do
-     navegador (`apps/client/src/connection.ts`: retomada, `seqGap`, `resync`, contadores do `NetStats`) não
-     depende do DOM além do `browserDeps`; dá para reaproveitar o raciocínio (ou a classe) com o `ws` do Node.
-   - **A visão final** de cada cliente deve bater com a do servidor: o hash periódico vem nos deltas (a cada 60
-     ticks); no fim, comparar `viewJson` do cliente com o da última visão enviada (o `welcome` de uma conexão
-     nova, por exemplo).
-   - **Checkpoint do dono:** `npm run dev:multi` com `?net=1` (o `dev:multi` ainda não acrescenta `net=1` às URLs).
+1. **Checkpoint da fatia de rede (dono):**
+   - ler o [viability.md](../specs/m1.5-rede/viability.md);
+   - sessão com `npm run dev:multi -- --clients 3 --net` (abas com o painel `?net=1`): a tela deve ser a do M1;
+     derrubar o servidor (Ctrl+C) e subir de novo com `npm run server` (mesmo `GEO_DB`) para ver a reconexão
+     (`welcome` por reconexão no painel, hashes ✓);
+   - decidir: (a) a viabilidade (segue para a fatia de fog, ou o ADR-0006 volta à mesa); (b) o id do stream na URL
+     de retomada (`&stream=…&seq=…`), que vai além da R5.
 2. **Rodada de design do fog**, em paralelo, pela skill `gdd-decision`: as perguntas do [GDD 01](../gdd/01-mundo.md)
    (o que dá visão e até onde, o que se vê do outro time, se o piloto automático respeita o fog, se o que já foi
    visto continua visível). Precisa estar decidida antes da spec da fatia de fog.
@@ -75,6 +71,17 @@ Um item por problema: o que a pessoa não entendeu ou não conseguiu, a tarefa o
 
 ## Pendências e pontos a esclarecer
 
+- **Interpretações da F5 do M1.5** (o plan não fixa):
+  - os clientes do soak entram como jogadores humanos (`soak-<time>-<n>`, pelo `POST /join`): os `join` vão para o
+    log e o replay os reproduz. Ficam parados (sem comandos);
+  - além das quedas do servidor, cada cliente derruba a própria conexão a cada 60 s (escalonado, `--drop-every`),
+    para o soak exercitar a retomada pelo buffer; "quedas" contam só conexões que chegaram a abrir;
+  - a visão final de cada cliente é comparada com `view(estado reconstruído do replay, time)`;
+  - o soak continua em inglês no `summary.md`, como no M1; o relatório de viabilidade é em PT-BR;
+  - `dev:multi --net` abre as abas com `?net=1`, e o cliente mantém o `net=1` ao navegar entre o lobby e o mundo.
+- **Medições da F5:** `npm run soak` completo (×360, seed 42): OK em 12,4 min; 4 clientes, 3 593 hashes ✓ e 0 ✗ cada,
+  12,9 KB/s por cliente a ×360 (pico 48 KB/s); memória por processo até ~200 MB; SQLite 55,2 MB; velocidade do loop
+  mediana 100%, **amostra mais lenta 10%** (no M1, 93%; uma amostra de 2 s, não investigada). 2093 testes.
 - **Interpretações da F4 do M1.5** (o plan não fixa):
   - uma conexão que pediu retomada fica "conectado" ao abrir o socket; a retomada só conta no painel quando chega
     um delta sem `welcome` antes (uma retomada recusada depois de um restart vira "reconexão");
