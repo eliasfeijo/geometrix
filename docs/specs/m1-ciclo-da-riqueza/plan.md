@@ -183,7 +183,7 @@ metrics   (world_id, tick, team_id, sample_json)
 
 | Comando | Saída |
 |---|---|
-| `geo sim --seed 42 --params params/default.json --days 3 [--strategist balanced]` | `runs/<id>/`: métricas (SQLite + CSV), replay, `report.md` |
+| `geo sim --seed 42 --params params/default.json --days 3 [--strategist balanced]` | `runs/<id>/`: métricas (CSV + JSON; o SQLite chega no F6), replay, `report.md` |
 | `geo sweep --set creep.cost.materia=30,40,50 --seeds 1-5` | tabela comparativa em `report.md` |
 | `geo verify --seed 42 --ticks 50000` | determinismo: roda 2×; snapshot → restore → continua; replay a partir do log. Os três hashes têm de ser iguais |
 | `geo report runs/<id>` | `report.md` legível por humanos **e por IA**, para discutir balanceamento com o Claude |
@@ -193,6 +193,24 @@ metrics   (world_id, tick, team_id, sample_json)
 - **Métricas:** `sampleMetrics(state)` é uma função pura, amostrada a cada 60 ticks (1 min de mundo) e calculada
   a partir dos acumuladores de `stats`. Cobre a lista da spec §7.
 
+### Detalhes do harness decididos pelo dono no F5 (2026-11-13)
+
+- **Estrategista `balanced`** (provisório até o checkpoint do F5): um jogador bot por time, com `join` no tick 0.
+  Age a cada 60 ticks (1 min de mundo) e decide só pelo estado, sem memória própria (o snapshot → restore e o
+  replay continuam fiéis).
+  - *Produção:* com o Núcleo livre, produz o DNA com menos creeps no time (empate: ■ ▲ ●), sem "repetir", até o
+    teto.
+  - *Upgrade:* compra o de capacidade assim que o estoque permitir.
+  - *Papéis:* ⅓ dos creeps (arredondado para cima) coleta cristal enquanto houver cristal no mapa; 1 constrói
+    estrada; o resto coleta matéria. Sem cristal, os coletores de cristal passam para matéria. Troca de papel o
+    creep de menor id.
+  - *Estradas:* o alvo é o depósito não vazio mais perto do Núcleo (Manhattan) ainda sem estrada e com segmento
+    construível; ligado esse, o próximo.
+- **Saída do `geo sim`:** métricas em CSV + JSON no F5. O SQLite das métricas entra no F6, com o módulo de
+  persistência, para a CLI não puxar o `better-sqlite3` (módulo nativo) antes da hora.
+- **Orçamento no CI:** 6 h de mundo bot×bot em no máximo **60 s** de relógio (o alvo de 3 dias em 10 min dá 50 s;
+  a folga é para máquinas de CI mais lentas).
+
 ## 10. Testes
 
 | Tipo | O quê |
@@ -200,7 +218,7 @@ metrics   (world_id, tick, team_id, sample_json)
 | Unitários (`sim`) | movimento com pontos, A* e desempate, coleta e capacidade, entrega, regeneração, produção, teto de população, upgrade, estrada, regras de domínio D-1..D-4, interpretador de regras |
 | Propriedade | mapa simétrico e conectado para 500 seeds |
 | Determinismo (CI) | `geo verify` com 3 seeds |
-| Orçamento de performance | CI: 6 h de mundo bot×bot, com limite de tempo. Manual: 3 dias em menos de 10 min (spec §7) |
+| Orçamento de performance | CI: 6 h de mundo bot×bot, em no máximo 60 s. Manual: 3 dias em menos de 10 min (spec §7) |
 | Integração (`server`) | join → ws → comando → broadcast; matar e reiniciar o processo → o mundo continua com o mesmo hash |
 | Cliente | smoke manual no M1. Playwright só se for necessário |
 
