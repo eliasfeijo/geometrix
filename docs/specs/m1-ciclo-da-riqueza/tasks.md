@@ -50,7 +50,7 @@ Marque `[x]` ao concluir. Cada task deve terminar com os testes verdes. Referên
 - [x] **Checkpoint:** primeiro relatório de 3 dias bot×bot revisado com o dono
 
 ## F6 — Servidor
-- [ ] Esquema SQLite + módulo de persistência
+- [x] Esquema SQLite + módulo de persistência
 - [ ] `world-host`: loop de tick com multiplicador, fila de comandos, snapshots
 - [ ] HTTP: criar mundo, join, estáticos
 - [ ] WebSocket: autenticação, comandos com ack/reject, broadcast limitado a 5 por segundo
