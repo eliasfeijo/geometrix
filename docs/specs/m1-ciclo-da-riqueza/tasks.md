@@ -22,7 +22,7 @@ Marque `[x]` ao concluir. Cada task deve terminar com os testes verdes. Referên
 
 ## F2 — Movimento
 - [x] Pontos de movimento com modificadores de terreno, estrada e carga em ‰
-- [ ] A* em 4 direções com desempate determinístico e cache de caminho
+- [x] A* em 4 direções com desempate determinístico e cache de caminho
 - [ ] Ordens `moveTo` e `stop`
 
 ## F3 — Economia
