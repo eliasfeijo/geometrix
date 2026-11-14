@@ -54,3 +54,11 @@ export function gatherFrom(
   creep.cargo[deposit.kind] += taken;
   return free - taken > 0 && deposit.amount > 0;
 }
+
+/** Moves the whole cargo into the team stock (spec R-3). */
+export function unload(creep: Creep, team: Team): void {
+  team.stock.materia += creep.cargo.materia;
+  team.stock.cristal += creep.cargo.cristal;
+  creep.cargo.materia = 0;
+  creep.cargo.cristal = 0;
+}

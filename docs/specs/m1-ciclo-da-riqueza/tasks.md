@@ -27,7 +27,7 @@ Marque `[x]` ao concluir. Cada task deve terminar com os testes verdes. Referên
 
 ## F3 — Economia
 - [x] Coleta com capacidade (DNA × upgrade) e taxa por tick
-- [ ] Entrega no Núcleo e estoque do time
+- [x] Entrega no Núcleo e estoque do time
 - [ ] Regeneração de matéria; esgotamento de cristal
 - [ ] Produção de creep: custo, tempo, teto de população, opção "repetir" (P5)
 - [ ] Upgrade de capacidade

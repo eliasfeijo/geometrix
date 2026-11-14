@@ -9,6 +9,7 @@ import {
   findDeposit,
   gatherFrom,
   teamOf,
+  unload,
 } from "./economy.ts";
 import type { Cell } from "./map.ts";
 import { CELL_COST, movePointsPerTick } from "./movement.ts";
@@ -18,7 +19,8 @@ import type { Creep, WorldState } from "./world.ts";
 export type Order =
   | { type: "stop" }
   | ({ type: "moveTo" } & Cell)
-  | { type: "gather"; depositId: number };
+  | { type: "gather"; depositId: number }
+  | { type: "deliver" };
 
 export function resolveOrders(state: WorldState): void {
   for (const creep of state.creeps) {
@@ -32,6 +34,9 @@ export function resolveOrders(state: WorldState): void {
         break;
       case "gather":
         gather(state, creep, order.depositId);
+        break;
+      case "deliver":
+        deliver(state, creep);
         break;
     }
   }
@@ -87,4 +92,17 @@ function gather(state: WorldState, creep: Creep, depositId: number): void {
     return;
   }
   if (!gatherFrom(state, creep, deposit)) halt(creep);
+}
+
+/**
+ * Walks to the team's core and unloads on arrival, in the same tick
+ * (spec R-3). Stops there, or at once if the core cannot be reached.
+ */
+function deliver(state: WorldState, creep: Creep): void {
+  const team = teamOf(state, creep);
+  if (!isAt(creep, team.core) && walk(state, creep, team.core) === "moving") {
+    return;
+  }
+  if (isAt(creep, team.core)) unload(creep, team);
+  halt(creep);
 }
