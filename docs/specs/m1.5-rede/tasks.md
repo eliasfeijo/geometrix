@@ -19,7 +19,7 @@ na sua branch `m1.5/f<n>-<slug>` (skill `commit`), com merge `--no-ff` em `main`
 - [x] `nextSegment`, `roadTarget` e o que mais o estrategista usa aceitam tipos estruturais (R3); hash de 6 h igual
 - [x] Estrategista lê a visão do time + o mapa + os parâmetros, no harness e no servidor (spec V-3); hash de 6 h
       igual
-- [ ] Convenção no `CLAUDE.md`: regras são substituídas inteiras, nunca mutadas no lugar (R4)
+- [x] Convenção no `CLAUDE.md`: regras são substituídas inteiras, nunca mutadas no lugar (R4)
 
 ## F2 — Delta no `protocol` (`m1.5/f2-delta`)
 

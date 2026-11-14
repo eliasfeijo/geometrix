@@ -53,6 +53,11 @@ funções transcendentais, `Date`, `for…in` e literais de ponto flutuante. Al�
   ou classes; o `serialize` recusa). Atualize o hash fixo (ver skill `implement-phase`).
 - **Estado:** arrays ordenados por id; ids do contador `nextId`, nunca reaproveitados. O `step` muta in place.
 - **RNG:** só o `state.rng` (`nextInt`/`nextRange`), sempre na mesma ordem de chamadas.
+- **Regras de um creep são substituídas inteiras, nunca mutadas no lugar** (`creep.rules = …`, como `setRules` e
+  os presets). O delta da rede compara as regras por referência (plan M1.5, R4). A ordem, ao contrário, é recriada
+  a cada tick pelo piloto automático com o mesmo valor e é comparada por valor.
+- **Visão do time** (`view.ts`): o que um time enxerga, e a única entrada do estrategista (com o mapa estático e
+  os parâmetros). Cópia rasa: aninhados compartilhados com o estado, que o `step` muta.
 - **Pipeline do tick** (plan §5) em `step.ts`; ordens novas em `orders.ts`. Estrada concluída incrementa
   `state.roadRevision` (invalida os caminhos em cache).
 - **Exports:** todo módulo público entra em `packages/sim/src/index.ts`; os outros pacotes importam de
