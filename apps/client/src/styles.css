@@ -763,3 +763,9 @@ h3 {
 .cellmates button {
   padding: 0 6px;
 }
+
+.creep-title .subtitle {
+  display: block;
+  font-size: 12px;
+  font-weight: 400;
+}
