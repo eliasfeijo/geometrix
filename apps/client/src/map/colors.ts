@@ -15,6 +15,8 @@ export const COLORS = {
   road: "#b8a07a",
   roadEdge: "#8a7552",
   teams: ["#4ea8ff", "#ff8c42"],
+  /** Light team tones for text on the map (creep names). */
+  teamText: ["#b5dbff", "#ffcaa3"],
   materia: "#7fdba0",
   cristal: "#c48cff",
   outline: "#f2f4f8",
@@ -25,3 +27,6 @@ export const COLORS = {
 
 export const teamColor = (team: number): string =>
   COLORS.teams[team] ?? COLORS.outline;
+
+export const teamTextColor = (team: number): string =>
+  COLORS.teamText[team] ?? COLORS.outline;

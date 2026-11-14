@@ -1,7 +1,19 @@
 /* Dark theme (owner decision, F7): graphite background, team blue × orange,
    materia and cristal with their own colors. Map colors live in map/colors.ts. */
 
+/* In-game text on the map (owner decision, F9): Chakra Petch SemiBold, latin
+   subset, OFL (src/fonts/OFL.txt). The rest of the interface uses the system
+   font. */
+@font-face {
+  font-family: "Chakra Petch";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("./fonts/chakra-petch-latin-600-normal.woff2") format("woff2");
+}
+
 :root {
+  --font-game: "Chakra Petch", ui-sans-serif, system-ui, sans-serif;
   --bg: #111317;
   --panel: #1a1d23;
   --panel-2: #22262e;
@@ -833,4 +845,15 @@ h3 {
   display: block;
   font-size: 12px;
   font-weight: 400;
+}
+
+/* In-game text: a dark outline keeps it legible over any terrain. */
+.map-text {
+  font-family: var(--font-game);
+  font-weight: 600;
+  paint-order: stroke;
+  stroke: var(--bg);
+  stroke-linejoin: round;
+  pointer-events: none;
+  user-select: none;
 }
