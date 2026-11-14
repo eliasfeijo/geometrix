@@ -1,7 +1,8 @@
 import { diffView, emptySent, viewJson } from "@geometrix/protocol";
 import { join, step, view, type WorldState } from "@geometrix/sim";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { duration, durationWords, worldClock } from "../src/format.ts";
+import { sha256Hex } from "../src/hash.ts";
 import { GameStore, NOTICE_MS } from "../src/store.ts";
 import { viewOf, testWorld, welcomeOf } from "./helpers.ts";
 
@@ -42,6 +43,31 @@ describe("GameStore", () => {
     // A welcome after a reconnect starts over, without interpolation.
     store.receive(welcomeOf(world), 900);
     expect(store.previous.value).toBeNull();
+  });
+
+  it("checks the view hash of a delta and reports a mismatch", async () => {
+    const world = testWorld();
+    const store = new GameStore();
+    let mismatches = 0;
+    store.hashMismatch = () => mismatches++;
+    const sent = emptySent();
+    diffView(sent, view(world, 0));
+    store.receive(welcomeOf(world), 0);
+    const next = async (seq: number, wrong?: string) => {
+      run(world, 1);
+      const seen = view(world, 0);
+      const hash = wrong ?? (await sha256Hex(viewJson(seen)));
+      const delta = JSON.parse(JSON.stringify(diffView(sent, seen)));
+      return { type: "delta" as const, seq, delta, hash };
+    };
+    store.receive(await next(1), 1);
+    store.receive(await next(2, "0".repeat(64)), 2);
+    await vi.waitFor(() => expect(mismatches).toBe(1));
+    // A mismatch found after a welcome is about the old base: ignored.
+    store.receive(await next(3, "f".repeat(64)), 3);
+    store.receive(welcomeOf(world), 4);
+    await new Promise((done) => setTimeout(done, 20));
+    expect(mismatches).toBe(1);
   });
 
   it("knows the player once the join is in the state", () => {

@@ -37,12 +37,14 @@ function setup() {
   const statuses: ConnectionStatus[] = [];
   const messages: WorldMessage[] = [];
   const fatal: FatalReason[] = [];
+  const resyncs: [string, number][] = [];
   const connection = new Connection(
     "ws://test/ws?token=t",
     {
       message: (m) => messages.push(m),
       status: (s) => statuses.push(s),
       fatal: (r) => fatal.push(r),
+      resync: (reason, seq) => resyncs.push([reason, seq]),
     },
     {
       openSocket: (url, handlers) => {
@@ -59,6 +61,7 @@ function setup() {
         const i = timers.findIndex((t) => t.id === id);
         if (i >= 0) timers.splice(i, 1);
       },
+      now: () => 0,
     },
   );
   const fireTimer = () => {
@@ -80,9 +83,11 @@ function setup() {
     statuses,
     messages,
     fatal,
+    resyncs,
     fireTimer,
     last,
     openWithWelcome,
+    welcome,
   };
 }
 
@@ -144,7 +149,12 @@ describe("Connection", () => {
       RECONNECT_MAX_MS,
     ]);
     expect(t.sockets).toHaveLength(7);
-    expect(t.sockets.every((s) => s.url === "ws://test/ws?token=t")).toBe(true);
+    expect(t.sockets[0]!.url).toBe("ws://test/ws?token=t");
+    expect(
+      t.sockets
+        .slice(1)
+        .every((s) => s.url === "ws://test/ws?token=t&stream=test&seq=0"),
+    ).toBe(true);
 
     // A welcome resets the backoff.
     t.fireTimer();
@@ -152,6 +162,104 @@ describe("Connection", () => {
     expect(t.statuses.at(-1)).toBe("open");
     t.last().handlers.close(1006);
     expect(t.fireTimer()).toBe(RECONNECT_MIN_MS);
+  });
+
+  it("resumes the stream on a reconnect, without a welcome", () => {
+    const t = setup();
+    t.openWithWelcome();
+    t.last().serverSends({ type: "delta", seq: 1, delta: { tick: 2 } });
+    t.last().serverSends({ type: "delta", seq: 2, delta: { tick: 3 } });
+    t.last().handlers.close(1006);
+    t.fireTimer();
+    expect(t.last().url).toBe("ws://test/ws?token=t&stream=test&seq=2");
+    expect(t.statuses.at(-1)).toBe("reconnecting");
+    t.last().handlers.open();
+    expect(t.statuses.at(-1)).toBe("open");
+    t.last().serverSends({ type: "delta", seq: 3, delta: { tick: 4 } });
+    expect(t.messages.map((m) => m.type)).toEqual([
+      "welcome",
+      "delta",
+      "delta",
+      "delta",
+    ]);
+    // The backoff starts over once resumed.
+    t.last().handlers.close(1006);
+    expect(t.fireTimer()).toBe(RECONNECT_MIN_MS);
+    // A server that cannot resume sends a welcome: a new base.
+    t.last().handlers.open();
+    t.last().serverSends({ ...t.welcome, stream: "new", seq: 0 });
+    t.last().handlers.close(1006);
+    t.fireTimer();
+    expect(t.last().url).toBe("ws://test/ws?token=t&stream=new&seq=0");
+  });
+
+  it("asks for a resync on a gap in the seqs and drops deltas until the welcome", () => {
+    const t = setup();
+    t.openWithWelcome();
+    t.last().serverSends({ type: "delta", seq: 1, delta: { tick: 2 } });
+    t.last().serverSends({ type: "delta", seq: 3, delta: { tick: 4 } });
+    t.last().serverSends({ type: "delta", seq: 4, delta: { tick: 5 } });
+    expect(t.last().sent).toEqual([
+      { type: "resync", reason: "seqGap", seq: 1 },
+    ]);
+    expect(t.resyncs).toEqual([["seqGap", 1]]);
+    // Asked once: a hash mismatch now changes nothing.
+    t.connection.resync("hashMismatch");
+    expect(t.last().sent).toHaveLength(1);
+    // A drop now asks for a welcome, not a resume.
+    t.last().handlers.close(1006);
+    t.fireTimer();
+    expect(t.last().url).toBe("ws://test/ws?token=t");
+    t.last().handlers.open();
+    t.last().serverSends({ ...t.welcome, seq: 4 });
+    t.last().serverSends({ type: "delta", seq: 5, delta: { tick: 6 } });
+    expect(t.messages.map((m) => m.type)).toEqual([
+      "welcome",
+      "delta",
+      "welcome",
+      "delta",
+    ]);
+    t.connection.resync("hashMismatch");
+    expect(t.last().sent).toEqual([
+      { type: "resync", reason: "hashMismatch", seq: 5 },
+    ]);
+  });
+
+  it("counts what the network panel shows", () => {
+    const t = setup();
+    const { stats } = t.connection;
+    t.openWithWelcome();
+    t.last().serverSends({ type: "delta", seq: 1, delta: { tick: 2 } });
+    t.last().handlers.close(1006);
+    t.fireTimer();
+    t.last().handlers.open();
+    t.last().serverSends({ type: "delta", seq: 2, delta: { tick: 3 } });
+    t.last().serverSends({ type: "delta", seq: 9, delta: { tick: 9 } });
+    t.last().serverSends({ ...t.welcome, seq: 9 });
+    t.last().handlers.close(1006);
+    t.fireTimer();
+    t.last().handlers.open();
+    t.last().serverSends({ ...t.welcome, stream: "new", seq: 0 });
+    // That resume was refused (a restart): only the first one counts.
+    expect(stats).toMatchObject({
+      seq: 0,
+      deltas: 2,
+      resumes: 1,
+      welcomes: { join: 1, reconnect: 1, resync: 1 },
+      resyncs: { seqGap: 1, hashMismatch: 0 },
+    });
+    expect(stats.totalBytes).toBeGreaterThan(0);
+  });
+
+  it("stops for good on another protocol version", () => {
+    const t = setup();
+    t.last().handlers.open();
+    t.last().serverSends({ ...t.welcome, protocol: 1 });
+    expect(t.fatal).toEqual(["outdated"]);
+    expect(t.messages).toEqual([]);
+    expect(t.last().closed).toBe(true);
+    expect(t.statuses.at(-1)).toBe("closed");
+    expect(t.timers).toEqual([]);
   });
 
   it.each([
