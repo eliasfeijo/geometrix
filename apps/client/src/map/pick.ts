@@ -1,7 +1,8 @@
-// What a left click selects: a creep under the pointer (clicking again on a
-// crowd cycles through it), else the deposit or core at that cell.
+// What a left click selects: the creep under the pointer, a stack of creeps
+// (to choose one from a list), else the deposit or core at that cell.
 
 import type { Cell, Deposit, OrderInput } from "@geometrix/sim";
+import { markerAt, type Marker } from "./layout.ts";
 import { cellAt, type Point } from "./view.ts";
 
 export type Selection =
@@ -9,31 +10,21 @@ export type Selection =
   | { kind: "deposit"; id: number }
   | { kind: "core"; team: number };
 
-/** Hit radius of a creep, in cells, before its drawn scale. */
-export const CREEP_HIT_RADIUS = 0.5;
+/** What a click hits: a selection, or a stack whose creeps to list. */
+export type Pick = Selection | { kind: "stack"; ids: number[] };
+
 /** Hit radius of a core around its cell center. */
 export const CORE_HIT_RADIUS = 1;
 
 export function pickAt(
   point: Point,
-  centers: ReadonlyMap<number, Point & { scale: number }>,
+  markers: readonly Marker[],
   deposits: readonly Deposit[],
   cores: readonly Cell[],
-  previous: Selection | null,
-): Selection | null {
-  const hits = [...centers]
-    .filter(
-      ([, c]) =>
-        Math.hypot(c.x - point.x, c.y - point.y) <=
-        CREEP_HIT_RADIUS * Math.max(c.scale, 0.7),
-    )
-    .map(([id]) => id)
-    .sort((a, b) => a - b);
-  if (hits.length > 0) {
-    // Clicking a crowd again picks the next creep in it, by id.
-    const at = previous?.kind === "creep" ? hits.indexOf(previous.id) : -1;
-    return { kind: "creep", id: hits[(at + 1) % hits.length]! };
-  }
+): Pick | null {
+  const marker = markerAt(point, markers);
+  if (marker?.kind === "creep") return { kind: "creep", id: marker.id };
+  if (marker?.kind === "stack") return { kind: "stack", ids: marker.ids };
   const cell = cellAt(point);
   const deposit = deposits.find((d) => d.x === cell.x && d.y === cell.y);
   if (deposit !== undefined) return { kind: "deposit", id: deposit.id };
@@ -44,6 +35,19 @@ export function pickAt(
   );
   if (team >= 0) return { kind: "core", team };
   return null;
+}
+
+/** Ids of the creeps on the same cell as creep `id`, itself included. */
+export function cellmates(
+  creeps: readonly (Cell & { id: number })[],
+  id: number,
+): number[] {
+  const creep = creeps.find((c) => c.id === id);
+  if (creep === undefined) return [];
+  return creeps
+    .filter((c) => c.x === creep.x && c.y === creep.y)
+    .map((c) => c.id)
+    .sort((a, b) => a - b);
 }
 
 export const sameSelection = (a: Selection | null, b: Selection | null) =>

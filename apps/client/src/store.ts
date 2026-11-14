@@ -15,7 +15,7 @@ import type {
 } from "./connection.ts";
 import type { Cell } from "@geometrix/sim";
 import type { Selection } from "./map/pick.ts";
-import type { Size, View } from "./map/view.ts";
+import type { Point, Size, View } from "./map/view.ts";
 
 /**
  * What a click on the map does besides selecting: pick a cell for a form
@@ -52,6 +52,10 @@ export class GameStore {
   readonly view = signal<View | null>(null);
   readonly mapSize = signal<Size>({ width: 0, height: 0 });
   readonly selection = signal<Selection | null>(null);
+  /** The list of a clicked stack, opened at a pixel of the map. */
+  readonly stack = signal<{ ids: number[]; at: Point } | null>(null);
+  /** Creep under the pointer in the stack list, highlighted on the map. */
+  readonly hovered = signal<number | null>(null);
   readonly mode = signal<Mode>({ type: "select" });
   /** Last order target, drawn briefly as feedback. */
   readonly ping = signal<{ cell: Cell; id: number } | null>(null);

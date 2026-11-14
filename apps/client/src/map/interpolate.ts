@@ -51,18 +51,5 @@ export function creepPositions(
   return positions;
 }
 
-/**
- * Offsets that spread `n` creeps sharing a cell around its center, so a
- * crowd at a deposit reads as several creeps. Index 0 of 1 stays centered.
- */
-export function crowdOffsets(n: number): Point[] {
-  if (n <= 1) return [{ x: 0, y: 0 }];
-  const radius = n <= 4 ? 0.2 : 0.26;
-  return Array.from({ length: n }, (_, i) => {
-    const a = (2 * Math.PI * i) / n - Math.PI / 2;
-    return { x: radius * Math.cos(a), y: radius * Math.sin(a) };
-  });
-}
-
 const clamp = (v: number, lo: number, hi: number) =>
   Math.min(Math.max(v, lo), hi);
