@@ -11,7 +11,7 @@ import {
 } from "@geometrix/sim";
 import { useState } from "preact/hooks";
 import { useGame } from "../context.ts";
-import type { Creep } from "../creep-status.ts";
+import type { CreepView } from "@geometrix/sim";
 import { RESOURCE_NAMES, ruleText } from "../format.ts";
 import {
   ACTION_LABELS,
@@ -30,12 +30,12 @@ import {
 
 type Draft = { base: Rule[]; rules: Rule[] };
 
-export function RulesEditor({ creep }: { creep: Creep }) {
+export function RulesEditor({ creep }: { creep: CreepView }) {
   const { store, viewer, send } = useGame();
   const [draft, setDraft] = useState<Draft | null>(null);
   const params = store.info.value?.params;
   const core = store.current.value?.state.teams[creep.team]?.core;
-  if (params === undefined || core === undefined) return null;
+  if (params === undefined || core === undefined || core === null) return null;
 
   const editable = creep.team === viewer.team;
   const canAct = editable && store.canAct.value;

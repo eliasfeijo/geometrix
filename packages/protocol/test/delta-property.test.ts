@@ -14,7 +14,6 @@ import {
   step,
   validate,
   view,
-  type TeamView,
 } from "@geometrix/sim";
 import { expect, test } from "vitest";
 import params from "../../sim/test/params.json" with { type: "json" };
@@ -22,22 +21,12 @@ import {
   applyDelta,
   diffView,
   emptySent,
+  emptyView,
   viewJson,
   type Delta,
 } from "../src/delta.ts";
 
 const HOURS = 6;
-
-const emptyView = (team: number): TeamView => ({
-  tick: 0,
-  team,
-  teams: [],
-  creeps: [],
-  deposits: [],
-  roads: [],
-  roadJobs: [],
-  players: [],
-});
 
 test.each([1, 42, 649])(
   "seed %i: 6 h of deltas rebuild each team's view in every tick",
@@ -47,10 +36,13 @@ test.each([1, 42, 649])(
     const bots = botsFor(["balanced", "balanced"]);
     const teams = [0, 1];
     const sent = teams.map(() => emptySent());
-    const client = teams.map(emptyView);
+    const cells = state.map.width * state.map.height;
+    const client = teams.map((team) => emptyView(team, cells));
     let upserts = 0;
     let removes = 0;
     let roads = 0;
+    let explored = 0;
+    let sight = 0;
     for (;;) {
       for (const team of teams) {
         const seen = view(state, team);
@@ -60,6 +52,8 @@ test.each([1, 42, 649])(
         upserts += delta.creeps?.upsert?.length ?? 0;
         removes += delta.creeps?.remove?.length ?? 0;
         roads += delta.roads?.length ?? 0;
+        explored += delta.known?.length ?? 0;
+        sight += delta.visible?.remove?.length ?? 0;
         client[team] = applyDelta(client[team]!, delta);
         const same = JSON.stringify(client[team]) === JSON.stringify(seen);
         if (
@@ -80,9 +74,12 @@ test.each([1, 42, 649])(
       );
       step(state, accepted);
     }
-    // The world did move: creeps were born and changed, roads were built.
-    expect(state.creeps.length).toBeGreaterThan(12);
-    expect(upserts).toBeGreaterThan(ticks);
+    // The world did move: creeps changed, roads were built, cells were
+    // explored and left sight. (Until the autopilot explores, fog F2, the
+    // bots know no cristal and produce none.)
+    expect(upserts).toBeGreaterThan(ticks / 4);
+    expect(explored).toBeGreaterThan(300);
+    expect(sight).toBeGreaterThan(1000);
     expect(roads).toBeGreaterThan(10);
     expect(removes).toBe(0);
   },

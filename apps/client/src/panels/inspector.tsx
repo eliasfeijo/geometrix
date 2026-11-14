@@ -1,12 +1,18 @@
 // The selection panel (spec C-2): a creep's DNA, cargo, order, rules and who
 // dominates it, with dominate / release; a deposit's amount; a core's panel.
 
-import { capacity, type Deposit } from "@geometrix/sim";
+import {
+  capacity,
+  isOwnCreep,
+  isOwnTeam,
+  type Deposit,
+  type ForeignCreepView,
+} from "@geometrix/sim";
 import { useGame } from "../context.ts";
 import { toggleRoadMode } from "../interaction.ts";
 import { cellmates } from "../map/pick.ts";
 import { creepName } from "../names.ts";
-import { creepStatus, STATUS_TEXTS } from "../creep-status.ts";
+import { creepStatus, STATUS_TEXTS, viewCapacity } from "../creep-status.ts";
 import {
   DNA_NAMES,
   durationWords,
@@ -50,12 +56,15 @@ function CreepInspector({ id }: { id: number }) {
   if (state === undefined || params === undefined || creep === undefined) {
     return <p class="muted">Esse creep não existe mais.</p>;
   }
-  const team = state.teams[creep.team]!;
+  const team = state.teams[creep.team];
+  if (team === undefined || !isOwnCreep(creep) || !isOwnTeam(team)) {
+    return <ForeignCreepInspector creep={creep} />;
+  }
   const max = capacity(creep, team, params);
   const own = creep.team === viewer.team;
   const mine = creep.dominatedBy === viewer.playerId;
   const canAct = store.canAct.value;
-  const status = creepStatus(creep, state.deposits);
+  const status = creepStatus(creep, state.deposits) ?? "idle";
   const roadMode = store.mode.value.type === "road";
   return (
     <div class={`inspector team-${creep.team}`}>
@@ -170,6 +179,50 @@ function CreepInspector({ id }: { id: number }) {
   );
 }
 
+/**
+ * Another team's creep: what the view has of it (M1.5 fog spec D7). Its
+ * team's upgrades are hidden, so the cargo shows the DNA's base capacity.
+ */
+function ForeignCreepInspector({ creep }: { creep: ForeignCreepView }) {
+  const { store } = useGame();
+  const state = store.current.value?.state;
+  const params = store.info.value?.params;
+  if (state === undefined || params === undefined) return null;
+  const max = viewCapacity(creep, state.teams[creep.team], params);
+  return (
+    <div class={`inspector team-${creep.team}`}>
+      <h2 class="title creep-title">
+        <DnaIcon dna={creep.dna} team={creep.team} />
+        <span>
+          {creepName(state.creeps, creep.id)}
+          <span class="subtitle muted">
+            {DNA_NAMES[creep.dna]} · #{creep.id}
+          </span>
+        </span>
+        <span class="team-name">{teamName(creep.team)}</span>
+      </h2>
+      <Cellmates id={creep.id} />
+      <dl class="facts">
+        <dt>Carga</dt>
+        <dd>
+          <CargoBar
+            materia={creep.cargo.materia}
+            cristal={creep.cargo.cristal}
+            max={max}
+          />
+        </dd>
+        <dt>Posição</dt>
+        <dd>
+          ({creep.x}, {creep.y})
+        </dd>
+      </dl>
+      <p class="hint muted">
+        Ordem, regras e domínio de um creep de outro time ficam escondidos.
+      </p>
+    </div>
+  );
+}
+
 /** Other creeps on the same cell: step through them without the map. */
 function Cellmates({ id }: { id: number }) {
   const { store } = useGame();
@@ -234,10 +287,12 @@ function DepositInspector({ id }: { id: number }) {
   }
   const full = params.deposits[deposit.kind].amount;
   const regen = params.deposits.materia.regen;
+  // Only the own creeps' orders are in the view (spec D7).
   const heading = (team: number) =>
     state.creeps.filter(
       (c) =>
         c.team === team &&
+        isOwnCreep(c) &&
         c.order.type === "gather" &&
         c.order.depositId === deposit.id,
     ).length;
@@ -266,7 +321,7 @@ function DepositInspector({ id }: { id: number }) {
         </dd>
         <dt>Coletando aqui</dt>
         <dd>
-          {state.teams.map((team) => (
+          {state.teams.filter(isOwnTeam).map((team) => (
             <span key={team.id} class={`team-${team.id} team-count`}>
               <span class="team-name">{teamName(team.id)}</span>{" "}
               {heading(team.id)}

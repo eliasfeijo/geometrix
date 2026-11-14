@@ -1,6 +1,7 @@
 // Road mode feedback (F9, owner decision): the road a right click on the cell
 // under the pointer would build, and its cost, red when the stock is short.
 
+import { isOwnTeam } from "@geometrix/sim";
 import { useMemo } from "preact/hooks";
 import { useGame } from "../context.ts";
 import { COLORS } from "./colors.ts";
@@ -26,7 +27,8 @@ export function RoadPreviewLayer() {
 
   const width = info.map.width;
   const at = (i: number) => ({ x: i % width, y: Math.floor(i / width) });
-  const stock = state.teams[viewer.team]?.stock;
+  const team = state.teams[viewer.team];
+  const stock = team !== undefined && isOwnTeam(team) ? team.stock : undefined;
   const fontSize = TEXT_PX / (store.view.value?.scale ?? 1);
   const [text, short] = roadPlanLabel(plan, stock);
   return (

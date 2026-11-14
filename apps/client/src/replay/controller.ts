@@ -9,7 +9,7 @@ import {
   type Replay,
 } from "@geometrix/protocol";
 import { signal } from "@preact/signals";
-import { SIM_VERSION, view } from "@geometrix/sim";
+import { fullView, SIM_VERSION } from "@geometrix/sim";
 import { GameStore } from "../store.ts";
 import { stateHash } from "./hash.ts";
 import { ReplayPlayer } from "./player.ts";
@@ -165,7 +165,7 @@ export class ReplayController {
   /** Hands the state now to the store, detached from the sim's objects. */
   private publish(kind: "welcome" | "state", now: number): void {
     const state = this.player.state;
-    const seen = structuredClone(view(state, 0));
+    const seen = structuredClone(fullView(state));
     if (kind === "state") {
       this.store.show(seen, now);
       return;

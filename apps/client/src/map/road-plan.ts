@@ -38,7 +38,7 @@ export function roadPlan(
   target: Cell,
 ): RoadPlan {
   const core = state.teams[team]?.core;
-  if (core === undefined) return { kind: "unreachable" };
+  if (core === undefined || core === null) return { kind: "unreachable" };
   const road = new Array<number>(map.width * map.height).fill(0);
   for (const i of state.roads) road[i] = 1;
   const path = findPath(
@@ -55,7 +55,9 @@ export function roadPlan(
   );
   if (path === null) return { kind: "unreachable" };
   const cores = new Set(
-    state.teams.map((t) => t.core.y * map.width + t.core.x),
+    state.teams.flatMap((t) =>
+      t.core === null ? [] : [t.core.y * map.width + t.core.x],
+    ),
   );
   const jobs = new Set(state.roadJobs.map((j) => j.y * map.width + j.x));
   const paid: number[] = [];

@@ -57,12 +57,9 @@ export function order(
   }
   const roadMode = store.mode.value.type === "road";
   if (roadMode) store.mode.value = { type: "select" };
-  const input = orderAt(
-    point,
-    state.deposits,
-    state.teams[me.team]!.core,
-    roadMode,
-  );
+  const core = state.teams[me.team]?.core;
+  if (core === undefined || core === null) return;
+  const input = orderAt(point, state.deposits, core, roadMode);
   store.ping.value = { cell: cellAt(point), id: ++pings };
   void send({ type: "order", creepId: creep.id, order: input });
 }

@@ -1,10 +1,11 @@
 // Core panel (spec C-3): stock, production (with "repeat", plan P5), the
-// capacity upgrade and population. The own team's panel has the buttons; the
-// other team's is read-only (no fog in M1, spec D5).
+// capacity upgrade and population, with the buttons. Of another team's core
+// the view has only where it is (M1.5 fog spec D7), and so does the panel.
 
 import {
   canAfford,
   DNAS,
+  isOwnTeam,
   population,
   productionRefusal,
   type Cost,
@@ -31,6 +32,7 @@ export function CorePanel({ team: teamId }: { team: number }) {
   if (state === undefined || params === undefined || team === undefined) {
     return null;
   }
+  if (!isOwnTeam(team)) return <ForeignCorePanel team={teamId} />;
   const own = teamId === viewer.team;
   const canAct = own && store.canAct.value;
   const view = { params, creeps: state.creeps };
@@ -251,5 +253,20 @@ export function CoreDock() {
         <span class={`team-${viewer.team} team-name`}>Núcleo</span>
       )}
     </aside>
+  );
+}
+
+/** Another team's core: its name, and that nothing else is known. */
+function ForeignCorePanel({ team }: { team: number }) {
+  return (
+    <div class={`core-panel team-${team}`}>
+      <h2 class="title">
+        Núcleo <span class="team-name">{teamName(team)}</span>
+      </h2>
+      <p class="muted">
+        Do Núcleo de outro time só se sabe onde fica: estoque, produção e
+        upgrades ficam escondidos.
+      </p>
+    </div>
   );
 }
