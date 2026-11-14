@@ -3,7 +3,12 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, test } from "vitest";
 import { parseReplay } from "@geometrix/protocol";
-import { createWorld, step, type CommandInput } from "@geometrix/sim";
+import {
+  createWorld,
+  SIM_VERSION,
+  step,
+  type CommandInput,
+} from "@geometrix/sim";
 import { stateHash } from "../src/hash.ts";
 import { hashToken } from "../src/http.ts";
 import { testApp } from "./helpers.ts";
@@ -128,7 +133,11 @@ describe("HTTP", () => {
     const res = await get("/api/worlds/1/replay");
     expect(res.status).toBe(200);
     const replay = parseReplay(await res.res.json());
-    expect(replay).toMatchObject({ simVersion: 2, seed: 5, ticks: 250 });
+    expect(replay).toMatchObject({
+      simVersion: SIM_VERSION,
+      seed: 5,
+      ticks: 250,
+    });
     expect(replay.finalHash).toBe(stateHash(host.state));
     expect(replay.commands.map((c) => c.command.type)).toContain("dominate");
 
