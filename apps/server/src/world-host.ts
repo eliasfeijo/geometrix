@@ -147,6 +147,13 @@ export class WorldHost {
     return humans >= this.state.params.teams.maxHumans ? "teamFull" : null;
   }
 
+  /** Whether a `type` command from the player waits for the next tick. */
+  queued(playerId: number, type: Command["type"]): boolean {
+    return this.pending.some(
+      (c) => c.playerId === playerId && c.command.type === type,
+    );
+  }
+
   /** Runs one tick: bot decisions, step, then one stored transaction. */
   tick(): void {
     if (this.status === "ended") return;

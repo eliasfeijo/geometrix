@@ -7,6 +7,7 @@ import type { ServerConfig } from "./config.ts";
 import { createHttpHandler } from "./http.ts";
 import type { Timers } from "./loop.ts";
 import type { Store } from "./persistence.ts";
+import { PresenceTracker } from "./presence.ts";
 import { Worlds } from "./worlds.ts";
 import { attachWebSocket } from "./ws.ts";
 
@@ -31,7 +32,8 @@ export type App = {
 
 export async function startApp(options: AppOptions): Promise<App> {
   const { store, config, timers, params, clock } = options;
-  const worlds = new Worlds(store, config, timers, params);
+  const presence = new PresenceTracker(timers, config);
+  const worlds = new Worlds(store, config, timers, params, presence);
   const server = createServer(
     createHttpHandler({ store, worlds, staticDir: config.staticDir, clock }),
   );
@@ -40,6 +42,7 @@ export async function startApp(options: AppOptions): Promise<App> {
     worlds,
     timers,
     broadcastIntervalMs: config.broadcastIntervalMs,
+    presence,
   });
   await new Promise<void>((done) => server.listen(config.port, done));
   return {
