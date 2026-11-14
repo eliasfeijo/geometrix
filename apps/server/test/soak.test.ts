@@ -14,12 +14,14 @@ import { Store } from "../src/persistence.ts";
 import { testParams } from "./helpers.ts";
 
 describe("parseSoakArgs", () => {
-  test("defaults: ×360, 5 kills, seed 42, port 8089, temp db, runs/", () => {
+  test("defaults: ×360, 5 kills, seed 42, port 8089, 2 clients per team dropping every 60 s, temp db, runs/", () => {
     expect(parseSoakArgs([])).toEqual({
       multiplier: 360,
       kills: 5,
       seed: 42,
       port: 8089,
+      clients: 2,
+      dropEverySeconds: 60,
       db: undefined,
       out: "runs",
     });
@@ -32,6 +34,8 @@ describe("parseSoakArgs", () => {
         "--kills=0",
         "--seed=7",
         "--port=9000",
+        "--clients=3",
+        "--drop-every=20",
         "--db=x.db",
         "--out=o",
       ]),
@@ -40,17 +44,23 @@ describe("parseSoakArgs", () => {
       kills: 0,
       seed: 7,
       port: 9000,
+      clients: 3,
+      dropEverySeconds: 20,
       db: "x.db",
       out: "o",
     });
   });
 
-  test.each([[["--mult=0"]], [["--kills=-1"]], [["--port=70000"]], [["--x"]]])(
-    "refuses %j",
-    (args) => {
-      expect(() => parseSoakArgs(args)).toThrow(SoakError);
-    },
-  );
+  test.each([
+    [["--mult=0"]],
+    [["--kills=-1"]],
+    [["--port=70000"]],
+    [["--clients=4"]],
+    [["--drop-every=1"]],
+    [["--x"]],
+  ])("refuses %j", (args) => {
+    expect(() => parseSoakArgs(args)).toThrow(SoakError);
+  });
 });
 
 describe("interruptions", () => {
