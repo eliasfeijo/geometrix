@@ -13,7 +13,8 @@
   [spec M1 §5](../specs/m1-ciclo-da-riqueza/spec.md)): coleta de 1 unidade/s (provisório), com a capacidade
   contando os dois recursos somados; entrega instantânea no Núcleo; matéria regenera até o valor inicial; o Núcleo
   produz um creep por vez, com "repetir" que espera recurso; estradas são neutras (os dois times andam nelas),
-  construídas célula a célula a partir da rede, nunca numa travessia do rio.
+  construídas célula a célula a partir da rede, nunca numa travessia do rio. Por isso, no M1 nenhuma estrada
+  cruza o rio.
 
 ## Proposta
 
@@ -47,6 +48,10 @@ Candidato para depois do M1:
 ### Sumidouros
 Uma partida de dias precisa de sumidouros para a economia não inflacionar: manutenção, desgaste de estruturas,
 consumo de cristal em evoluções.
+
+## Ideias em incubação (sem marco definido)
+- **Pontes e construções no rio:** um conceito próprio de travessia construída, que deixaria a estrada cruzar o rio.
+  O dono quer considerar mais à frente; não entra no M1.
 
 ## Perguntas abertas
 - Validar os eixos de recurso.

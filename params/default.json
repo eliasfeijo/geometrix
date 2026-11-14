@@ -102,6 +102,9 @@
       "bonusPermille": 500
     }
   },
+  "autopilot": {
+    "maxRules": 10
+  },
   "domination": {
     "cost": {
       "materia": 0,

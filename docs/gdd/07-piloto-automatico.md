@@ -4,6 +4,9 @@
 - Os creeps têm um piloto automático **configurável** e, possivelmente, **scriptável**.
 - A configuração persiste depois que o domínio termina.
 - Macros no cliente, personalizáveis pelo jogador, automatizam tarefas.
+- **M1** (2026-11-13; detalhes na [spec M1 §5](../specs/m1-ciclo-da-riqueza/spec.md)): piloto automático
+  declarativo por creep. A 1ª regra com condição verdadeira e ação possível vira a ordem; sem regra válida, o creep
+  mantém o que fazia. Creeps nascem com o preset *coletor de matéria*.
 
 ## Proposta
 - Humanos, macros, piloto automático e bots emitem os **mesmos comandos** ([ADR-0002](../adr/0002-tudo-e-comando.md)).

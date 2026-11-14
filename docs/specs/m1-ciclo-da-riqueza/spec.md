@@ -111,7 +111,7 @@ Formato: *Quando [gatilho], o sistema deve [resposta].*
 - **Produção:** um creep por vez por Núcleo, sem fila; um pedido com o Núcleo ocupado é recusado. O custo é
   debitado ao iniciar. O teto de população conta os creeps vivos + o que está em produção. O creep nasce no Núcleo,
   parado. **"Repetir"** (P5): ao terminar, recomeça o mesmo DNA; sem estoque ou sem espaço no teto, fica armado e
-  tenta de novo a cada tick. Desarmar é um comando do F4.
+  tenta de novo a cada tick. Desarmar é o comando `stopRepeat` (plan §4).
 - **Construção de estrada:** segmento = 1 célula. `buildRoad{x,y}` segue o caminho mais barato do próprio Núcleo
   até P; o próximo segmento é a 1ª célula sem estrada nesse caminho. O creep vai até a célula; a matéria é debitada
   ao começar; ele fica lá pelo tempo de construção e segue para o próximo segmento até P ter estrada. Sem matéria
@@ -120,6 +120,8 @@ Formato: *Quando [gatilho], o sistema deve [resposta].*
 - **Estradas são neutras:** os dois times andam nelas. A conexão de I-2 vale para qualquer estrada ou para o
   próprio Núcleo. Não dá para construir em travessia (ela continua lenta, gargalo para o M2) nem na célula de um
   Núcleo.
+  Consequência aceita pelo dono: como todo segmento encosta na rede, **no M1 nenhuma estrada cruza o rio**; um
+  `buildRoad` para a outra margem constrói até a travessia e para.
 
 ### Domínio
 - **D-1** Quando um jogador domina um creep livre do próprio time, o creep deve passar a executar só os comandos
@@ -140,6 +142,28 @@ Formato: *Quando [gatilho], o sistema deve [resposta].*
 - **P-3** Presets prontos: *coletor de matéria*, *coletor de cristal*, *construtor de estrada*.
 - **P-4** Piloto automático e humano emitem os mesmos comandos ([ADR-0002](../../adr/0002-tudo-e-comando.md)). O
   servidor valida todos do mesmo jeito.
+
+#### Detalhes de piloto automático e domínio decididos pelo dono na F4 (2026-11-13)
+
+- **Avaliação (P-1):** a cada tick, num creep livre, a 1ª regra cuja condição é verdadeira **e** cuja ação é
+  possível vira a ordem. Uma ação impossível (ex.: coletar cristal sem cristal no mapa) pula para a próxima regra.
+  A mesma ação da ordem atual não reinicia nada. Se nenhuma regra vale, o creep mantém a ordem atual. Limite de
+  regras por creep: parâmetro (10, provisório).
+- **Regras de nascença:** os creeps iniciais e os produzidos nascem com o preset *coletor de matéria*.
+- **Vocabulário (P-2):** "mais próximo" e "raio R" usam a distância Manhattan a partir do creep, só contam
+  depósitos com quantidade > 0, e o empate vai para o menor id. "Cheio" = carga ≥ capacidade; "vazio" = carga 0.
+- **Presets (P-3):**
+  - *Coletor de matéria:* cheio → entregar; sempre → coletar matéria; sempre → entregar (a última entrega a
+    sobra quando não há depósito).
+  - *Coletor de cristal:* igual, com cristal.
+  - *Construtor de estrada* (o `applyPreset` leva o ponto P): cheio → entregar; sempre → construir estrada até P;
+    sempre → coletar matéria; sempre → entregar. Sem matéria no estoque ou com a estrada pronta, a construção é
+    impossível e ele coleta matéria.
+- **Domínio:** o creep dominado mantém a ordem atual e só muda com uma `order` de quem o domina; terminada a
+  ordem, fica parado. Ao ser liberado, volta às regras no tick seguinte. Os parâmetros de D2 (todos em 0 no M1)
+  valem assim: o custo sai do estoque do time ao dominar (sem estoque, recusa); o cooldown é por jogador, contado
+  a partir do último domínio aceito; a distância máxima é Manhattan, do Núcleo do time até o creep (0 = sem
+  limite).
 
 ### Cliente
 - **C-1** Mapa estratégico em SVG com pan e zoom, mostrando terreno, rio, depósitos, estradas, Núcleos e creeps

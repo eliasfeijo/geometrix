@@ -1,6 +1,6 @@
 # Status atual
 
-**Atualizado:** 2026-11-13 · **Marco:** M1 — O ciclo da riqueza · **Fase:** F3 concluída, F4 a iniciar
+**Atualizado:** 2026-11-13 · **Marco:** M1 — O ciclo da riqueza · **Fase:** F4 concluída, F5 a iniciar
 
 Resumo de bolso. A fonte de verdade continua nos docs linkados. Atualize este arquivo ao fechar uma fase, ao passar
 por um portão de aprovação ou quando surgir um bloqueio.
@@ -16,27 +16,46 @@ por um portão de aprovação ou quando surgir um bloqueio.
 | M1 — F1 Núcleo do sim | ✅ Concluída, merge em `main`. RNG, params, mapa simétrico, `WorldState`, serialize/restore, `step` vazio, `geo verify` no CI | [tasks.md §F1](../specs/m1-ciclo-da-riqueza/tasks.md) · `packages/sim/src/` |
 | M1 — F2 Movimento | ✅ Concluída, merge em `main`. Pontos de movimento em ‰, A* com cache, ordens `moveTo`/`stop` no pipeline | [tasks.md §F2](../specs/m1-ciclo-da-riqueza/tasks.md) · `packages/sim/src/{movement,pathfinding,orders}.ts` |
 | M1 — F3 Economia | ✅ Concluída, merge em `main`. Ordens `gather`/`deliver`/`buildRoad`, regeneração, produção com "repetir", upgrade de capacidade. Detalhes decididos pelo dono na [spec §5](../specs/m1-ciclo-da-riqueza/spec.md) | [tasks.md §F3](../specs/m1-ciclo-da-riqueza/tasks.md) · `packages/sim/src/{economy,production,roads,orders}.ts` |
-| M1 — F4 Piloto automático e domínio | ⏭️ Próxima. `validate`, domínio, interpretador de regras, presets | [tasks.md §F4](../specs/m1-ciclo-da-riqueza/tasks.md) · [spec §5 D/P](../specs/m1-ciclo-da-riqueza/spec.md) |
-| M1 — F5…F9 | ⬜ Pendentes. Checkpoints: F5 primeiro relatório de 3 dias bot×bot; F7 playtest local; F9 playtest comprimido | [plan.md §13](../specs/m1-ciclo-da-riqueza/plan.md) |
+| M1 — F4 Piloto automático e domínio | ✅ Concluída, merge em `main`. Vocabulário de comandos + `validate`, jogadores, domínio D-1..D-4, interpretador de regras, presets, `setRules`/`applyPreset`. Detalhes decididos pelo dono na [spec §5](../specs/m1-ciclo-da-riqueza/spec.md) | [tasks.md §F4](../specs/m1-ciclo-da-riqueza/tasks.md) · `packages/sim/src/{commands,domination,autopilot,presets,rules}.ts` |
+| M1 — F5 Harness | ⏭️ Próxima. Métricas, estrategista bot, `geo sim`/`sweep`/`verify`. **Checkpoint:** primeiro relatório de 3 dias bot×bot | [tasks.md §F5](../specs/m1-ciclo-da-riqueza/tasks.md) · [plan §9](../specs/m1-ciclo-da-riqueza/plan.md) |
+| M1 — F6…F9 | ⬜ Pendentes. Checkpoints: F7 playtest local; F9 playtest comprimido | [plan.md §13](../specs/m1-ciclo-da-riqueza/plan.md) |
 | M2–M4 | ⬜ Não iniciados | [ROADMAP](../ROADMAP.md) |
 
 ## Próximos passos imediatos
 
 1. **Publicar o repo no GitHub** (dono). Ainda não há remote, então o CI ([ci.yml](../../.github/workflows/ci.yml))
    nunca rodou fora da máquina local.
-2. **F4:** criar a branch `m1/f4-autopilot` a partir de `main` e usar a skill `implement-phase`. O que ela precisa
+2. **F5:** criar a branch `m1/f5-harness` a partir de `main` e usar a skill `implement-phase`. O que ela precisa
    saber do código atual:
-   - `Command` em `step.ts` ainda é `never`. O F3 expôs a mecânica como funções que devolvem o motivo da recusa
-     (ou `null`): `startProduction(state, teamId, dna, repeat)` e `buyUpgrade(state, teamId, "capacity")`. Os
-     comandos `produce`/`buyUpgrade` do F4 devem chamá-las. Falta um comando para **desarmar o "repetir"**
-     (`team.repeat = null`); o `produce` sem repetir já desarma.
-   - Ordens (`Order` em `orders.ts`): `stop`, `moveTo{x,y}`, `gather{depositId}`, `deliver`,
-     `buildRoad{x,y,segment}`. Crie a de estrada com `buildRoadOrder(cell)` (`segment: -1`); o comando externo
-     `buildRoad{x,y}` não carrega `segment`.
-   - O sim ainda não conhece jogadores: o `validate(state, cmd, playerId)` vai precisar do vínculo jogador → time
-     no estado (decisão de modelagem do F4).
+   - Toda entrada do sim é `step(state, commands)`, com `commands: CommandInput[]` = `{ playerId, command }` na
+     ordem de `seq` (`commands.ts`). O `step` valida de novo cada comando e pula os recusados; o servidor usa
+     `validate` para o ack/reject. O log de replay é esse array por tick.
+   - Os jogadores entram no estado pelo comando de sistema `join {team}`. O estrategista bot precisa de um
+     `playerId` por time e de um `join` no tick 0.
+   - Os creeps nascem com o preset *coletor de matéria*. O estrategista age com `produce {dna, repeat}`,
+     `stopRepeat`, `buyUpgrade` e `applyPreset` (o `roadBuilder` leva `target`).
+   - Ainda não há `stats` no estado: as métricas da spec §7 começam do zero.
+   - **Medição do F4:** 3 dias bot×bot só com comandos (2 coletores de cristal + 1 construtor por time,
+     produção em "repetir") rodam em ~46 s; com 2 construtores travados num alvo inalcançável, ~71 s.
 
 ## Pendências e pontos a esclarecer
+
+- **Interpretações do F4 a validar** (a spec não fixa):
+  - jogadores entram no estado por um comando de sistema `join {team}`, que o servidor emite e grava no log como
+    o `release` de desconexão;
+  - o `step` revalida cada comando no estágio 1, na ordem recebida, contra o estado deixado pelos anteriores (ex.:
+    dois `produce` no mesmo tick: o 2º é recusado com `busy`);
+  - "possível" para as ações: `gather` precisa de carga não cheia e de um depósito não vazio do recurso;
+    `moveTo` precisa de célula transitável; `buildRoad` precisa de alvo que aceite estrada, de um próximo segmento
+    e de estoque (ou de uma obra já paga nele); `deliver` e `stop` são sempre possíveis;
+  - comandos manuais (`order`) só checam limites do mapa e a existência do depósito; uma ordem para célula
+    intransponível vira `stop` na execução;
+  - um `applyPreset` recusado (ex.: `roadBuilder` sem alvo) não mexe nas regras.
+- **Custo do piloto automático:** com o "construtor de estrada" travado (alvo na outra margem ou sem caminho), a
+  regra refaz o A* a cada tick. Dentro do orçamento hoje; se o F5 mostrar muitos construtores travados, guardar em
+  cache o próximo segmento por `roadRevision`.
+- **Sinal para o F5:** no bot improvisado do F4, o cristal do mapa (2400) se esgota bem antes de 3 dias e a
+  matéria acumula ~13 000 por time.
 
 - **Interpretações do F3 a validar no playtest** (detalhes de implementação que a spec não fixa):
   - o tick em que o creep chega a um depósito ou a um segmento é gasto andando; a coleta e a obra começam no
@@ -45,11 +64,7 @@ por um portão de aprovação ou quando surgir um bloqueio.
     até o Núcleo e para;
   - a regeneração usa o relógio do mundo (a cada `everySeconds` desde o tick 0), não um contador por depósito;
   - uma obra de estrada pertence ao time que pagou, mas qualquer creep com `buildRoad` naquela célula a continua
-    (inclusive do outro time) sem pagar de novo; obras abandonadas ficam no estado para sempre;
-  - **consequência da regra "não constrói em travessia"**: como todo segmento precisa encostar na rede, nenhuma
-    estrada cruza o rio. Um `buildRoad` para a outra margem constrói até a travessia e para.
-- **Sinal da medição do F3** (bot improvisado, não é o estrategista do F5): em 3 dias, os dois times batem o teto
-  de 30 creeps, acumulam ~13 000 de matéria e esgotam todo o cristal. Material para a calibragem do F5.
+    (inclusive do outro time) sem pagar de novo; obras abandonadas ficam no estado para sempre.
 
 - **Interpretações do F2 a validar no playtest** (o plan não detalha): o modificador vale para a célula em que o
   creep **entra**; "carregado" = qualquer carga > 0; creeps não colidem; `moveTo` inalcançável vira `stop`; ao

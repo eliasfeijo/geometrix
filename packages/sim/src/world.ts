@@ -1,7 +1,10 @@
 // World state (plan section 3) and world creation. Arrays are ordered by id;
 // ids come from one increasing counter and are never reused.
 
+import type { Rule } from "./autopilot.ts";
+import type { Player } from "./domination.ts";
 import type { UpgradeId } from "./economy.ts";
+import { collectorRules } from "./presets.ts";
 import { generateMap, type Cell, type GameMap } from "./map.ts";
 import { DNAS, type Dna, type Params, type Resource } from "./params.ts";
 import type { Order } from "./orders.ts";
@@ -47,6 +50,10 @@ export type Creep = {
   movePoints: number;
   /** Cached route; see pathTo. */
   path: PathCache | null;
+  /** Autopilot rules, in priority order (spec P-1). */
+  rules: Rule[];
+  /** Id of the player dominating the creep, or null when it is free. */
+  dominatedBy: number | null;
 } & Cell;
 
 export type Deposit = { id: number; kind: Resource; amount: number } & Cell;
@@ -73,6 +80,8 @@ export type WorldState = {
   /** Incremented when a road is completed: invalidates cached paths. */
   roadRevision: number;
   teams: Team[];
+  /** Players who joined, by id (system command join). */
+  players: Player[];
   creeps: Creep[];
   deposits: Deposit[];
   /** Segments under construction, by id. */
@@ -123,6 +132,7 @@ export function createWorld(seed: number, params: Params): WorldState {
     map: layout.map,
     roadRevision: 0,
     teams,
+    players: [],
     creeps,
     deposits,
     roadJobs: [],
@@ -130,7 +140,10 @@ export function createWorld(seed: number, params: Params): WorldState {
   };
 }
 
-/** A creep standing stopped and empty on its team's core. */
+/**
+ * A creep standing stopped and empty on its team's core, with the materia
+ * collector rules (F4 decision, spec section 5).
+ */
 export function newCreep(id: number, team: Team, dna: Dna): Creep {
   return {
     id,
@@ -141,5 +154,7 @@ export function newCreep(id: number, team: Team, dna: Dna): Creep {
     order: { type: "stop" },
     movePoints: 0,
     path: null,
+    rules: collectorRules("materia"),
+    dominatedBy: null,
   };
 }

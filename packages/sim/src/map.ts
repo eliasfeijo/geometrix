@@ -45,11 +45,24 @@ export function isPassable(terrain: Terrain): boolean {
   return terrain === Terrain.jungle || terrain === Terrain.crossing;
 }
 
+/** Whether `cell` has integer coordinates inside the map. */
+export function isInMap(map: GameMap, cell: Cell): boolean {
+  return (
+    Number.isSafeInteger(cell.x) &&
+    Number.isSafeInteger(cell.y) &&
+    cell.x >= 0 &&
+    cell.y >= 0 &&
+    cell.x < map.width &&
+    cell.y < map.height
+  );
+}
+
 export function mirrorCell({ x, y }: Cell, map: GameMap): Cell {
   return { x: map.width - 1 - x, y: map.height - 1 - y };
 }
 
-const manhattan = (a: Cell, b: Cell) =>
+/** Distance in 4-direction steps, ignoring terrain. */
+export const manhattan = (a: Cell, b: Cell) =>
   Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
 
 /** Left column of each crossing, symmetric around the vertical center. */

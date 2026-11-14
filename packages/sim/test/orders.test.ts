@@ -7,7 +7,10 @@ import { loadDefaultParams, run } from "./helpers.ts";
 
 const params = loadDefaultParams();
 
-/** A world on an open 12×3 jungle strip, with its first creep at (0, 1). */
+/**
+ * A world on an open 12×3 jungle strip, with its first creep at (0, 1) and no
+ * creep running autopilot rules.
+ */
 function strip(dna: Dna = "square"): { world: WorldState; creep: Creep } {
   const world = createWorld(42, params);
   const map: GameMap = {
@@ -21,6 +24,7 @@ function strip(dna: Dna = "square"): { world: WorldState; creep: Creep } {
   Object.assign(creep, { dna, x: 0, y: 1 });
   for (const other of world.creeps.slice(1))
     Object.assign(other, { x: 0, y: 0 });
+  for (const c of world.creeps) c.rules = [];
   return { world, creep };
 }
 
@@ -138,6 +142,7 @@ describe("on a generated map", () => {
   test("a creep walks from its core to the other core", () => {
     const world = createWorld(42, params);
     const creep = world.creeps.find((c) => c.dna === "circle")!;
+    creep.rules = [];
     const target = world.teams[1]!.core;
     creep.order = { type: "moveTo", ...target };
     let ticks = 0;

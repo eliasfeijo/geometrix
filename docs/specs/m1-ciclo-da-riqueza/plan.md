@@ -96,7 +96,7 @@ Os comandos **externos** são os únicos que entram no log:
 | `release {}` | jogador que domina | Também é emitido **pelo adaptador do servidor** em caso de desconexão ou de inatividade em tempo real, e entra no log como qualquer outro. Assim o timeout não quebra o determinismo. |
 | `order {creepId, order}` | só quem domina o creep | `order` ∈ `moveTo{x,y}` · `gather{depositId}` · `deliver` · `buildRoad{x,y}` · `stop` |
 | `setRules {creepId, rules}` · `applyPreset {creepId, preset}` | qualquer jogador do time | Responde à pergunta aberta da spec: dá para editar regras sem dominar (P4) |
-| `produce {dna}` · `buyUpgrade {id}` | qualquer jogador do time | |
+| `produce {dna, repeat}` · `stopRepeat {}` · `buyUpgrade {id}` | qualquer jogador do time | `stopRepeat` desarma o "repetir" (P5) sem pedir outro creep; acrescentado com o OK do dono em 2026-11-13 |
 
 - `validate(state, cmd, playerId) → ok | motivo`: a validação **semântica** fica no `sim`. A validação
   **estrutural** (formato, tipos) fica no `protocol`, com zod.
