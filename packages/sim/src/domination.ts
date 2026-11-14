@@ -73,16 +73,30 @@ export function join(state: WorldState, playerId: number, team: number): void {
   state.players.splice(at < 0 ? state.players.length : at, 0, player);
 }
 
+export type TeamCreepRefusal = "unknownPlayer" | "unknownCreep" | "notYourTeam";
+
+/** Checks that the player exists and the creep belongs to the player's team. */
+export function teamCreepRefusal(
+  state: WorldState,
+  playerId: number,
+  creepId: number,
+): TeamCreepRefusal | null {
+  const player = findPlayer(state, playerId);
+  if (player === undefined) return "unknownPlayer";
+  const creep = findCreep(state, creepId);
+  if (creep === undefined) return "unknownCreep";
+  return creep.team === player.team ? null : "notYourTeam";
+}
+
 export function dominateRefusal(
   state: WorldState,
   playerId: number,
   creepId: number,
 ): DominationRefusal | null {
-  const player = findPlayer(state, playerId);
-  if (player === undefined) return "unknownPlayer";
-  const creep = findCreep(state, creepId);
-  if (creep === undefined) return "unknownCreep";
-  if (creep.team !== player.team) return "notYourTeam";
+  const refusal = teamCreepRefusal(state, playerId, creepId);
+  if (refusal !== null) return refusal;
+  const player = findPlayer(state, playerId)!;
+  const creep = findCreep(state, creepId)!;
   if (creep.dominatedBy === playerId) return "alreadyDominating";
   if (creep.dominatedBy !== null) return "dominatedByOther";
   const { domination, world } = state.params;
