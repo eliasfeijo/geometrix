@@ -1,16 +1,17 @@
 // Bot strategists (plan section 9; balanced decided by the owner in F5,
 // 2026-11-13). A strategist is a team policy that issues the same external
 // commands a human would (produce, buyUpgrade, applyPreset). It decides from
-// its team's view, the static map and the params alone (M1.5 spec V-3: a bot
+// its team's view and the params alone (M1.5 spec V-3, fog spec B-1: a bot
 // knows no more than a human of the team, ADR-0006 rule 2), with no memory of
 // its own, so a run restored from a snapshot or replayed from the log takes the
-// same decisions. The harness
+// same decisions. It has no scouting logic: exploring is up to the presets
+// (fog plan N8). The harness
 // runs it for every team; a server world may give each team one bot (spec
 // section 5, F6 details). Its commands go into the log like a human's.
 
 import { canAfford } from "./economy.ts";
 import type { Command, CommandInput } from "./commands.ts";
-import { manhattan, type Cell, type GameMap } from "./map.ts";
+import { manhattan, Terrain, type Cell, type GameMap } from "./map.ts";
 import { DNAS, type Dna, type Params } from "./params.ts";
 import { collectorRules, roadBuilderRules } from "./presets.ts";
 import { productionRefusal } from "./production.ts";
@@ -72,28 +73,28 @@ export function botCommands(
   );
 }
 
-/** The terrain every client gets in the welcome; roads come from the view. */
-export type StaticMap = Omit<GameMap, "road">;
+/** The map's size, all a client gets of it in the welcome (fog plan section 8). */
+export type MapSize = Pick<GameMap, "width" | "height">;
 
 /**
- * The commands of the team's bot. `map` may be the world's map: its road
- * layer is ignored and rebuilt from `seen.roads`.
+ * The commands of the team's bot, from its view. Only the size of `size` is
+ * read: it may be the world's map.
  */
 export function strategistCommands(
   id: StrategistId,
   seen: TeamView,
-  map: StaticMap,
+  size: MapSize,
   params: Params,
 ): Command[] {
   switch (id) {
     case "balanced":
-      return balanced(knowledge(seen, map, params));
+      return balanced(knowledge(seen, size, params));
     case "none":
       return [];
   }
 }
 
-/** All a strategist decides from: the team's view on the static map. */
+/** All a strategist decides from: the team's view and the map it knows. */
 type Knowledge = {
   seen: TeamView;
   team: Team;
@@ -101,10 +102,20 @@ type Knowledge = {
   params: Params;
 };
 
-function knowledge(seen: TeamView, map: StaticMap, params: Params): Knowledge {
-  const road: number[] = new Array<number>(map.terrain.length).fill(0);
+/**
+ * The map the team knows, from the view: terrain never seen counts as
+ * passable jungle, as in the sim's known map (known.ts).
+ */
+function knowledge(
+  seen: TeamView,
+  { width, height }: MapSize,
+  params: Params,
+): Knowledge {
+  const terrain = seen.known.map((t) =>
+    t === -1 ? Terrain.jungle : (t as Terrain),
+  );
+  const road: number[] = new Array<number>(terrain.length).fill(0);
   for (const i of seen.roads) road[i] = 1;
-  const { width, height, terrain } = map;
   return {
     seen,
     team: ownTeam(seen),
