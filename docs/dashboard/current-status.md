@@ -1,6 +1,6 @@
 # Status atual
 
-**Atualizado:** 2026-11-14 · **Marco:** M1 — O ciclo da riqueza · **Fase:** F8 (replay e multi-cliente) é a próxima
+**Atualizado:** 2026-11-14 · **Marco:** M1 — O ciclo da riqueza · **Fase:** F8 (replay e multi-cliente) em andamento
 
 Resumo de bolso. A fonte de verdade continua nos docs linkados. Atualize este arquivo ao fechar uma fase, ao passar
 por um portão de aprovação ou quando surgir um bloqueio.
@@ -21,7 +21,7 @@ por um portão de aprovação ou quando surgir um bloqueio.
 | M1 — Balanceamento 1 | ✅ Decidido pelo dono (2026-11-14): candidato B no `params/default.json` provisório; DNAs economicamente equivalentes de propósito; playtest humano e deploy saem do M1. Assimetria entre os times corrigida (desempate do A*). Na branch `m1/f6-server` | [balance.md](../specs/m1-ciclo-da-riqueza/balance.md) |
 | M1 — F6 Servidor | ✅ Concluída, merge em `main`. SQLite (log de comandos, snapshots, métricas), loop de tick com multiplicador, HTTP (criar, listar, entrar), WebSocket com ack/reject e broadcast ≤5/s, `release` automático, bots e limite de humanos, recuperação após restart. Detalhes decididos pelo dono na [spec §5](../specs/m1-ciclo-da-riqueza/spec.md) | [tasks.md §F6](../specs/m1-ciclo-da-riqueza/tasks.md) · `apps/server/src/` · `packages/protocol/src/` |
 | M1 — F7 Cliente | ✅ Concluída, merge em `main`. Checkpoint aprovado pelo dono (2026-11-14). Lobby, mapa SVG com pan/zoom, creeps interpolados com nomes gerados, pilhas de creeps com lista para escolher, inspetor, dominar/liberar, painel do Núcleo, editor de regras e presets, controle direto pelo botão direito. Detalhes decididos pelo dono na [spec §5](../specs/m1-ciclo-da-riqueza/spec.md) | [tasks.md §F7](../specs/m1-ciclo-da-riqueza/tasks.md) · `apps/client/src/` |
-| M1 — F8 | ⬜ Pendente (replay no navegador, Safari/JSC, `dev:multi`). O M1 fecha com o critério da [spec §8](../specs/m1-ciclo-da-riqueza/spec.md) | [plan.md §13](../specs/m1-ciclo-da-riqueza/plan.md) |
+| M1 — F8 | 🔄 Em andamento na branch `m1/f8-replay`: lacunas decididas, código não começou (replay no navegador, Safari/JSC, `dev:multi`). O M1 fecha com o critério da [spec §8](../specs/m1-ciclo-da-riqueza/spec.md) | [plan.md §13](../specs/m1-ciclo-da-riqueza/plan.md) |
 | ~~M1 — F9~~ | Deploy e playtest comprimido saíram do M1 (dono, 2026-11-14): abrem o M2 | [ROADMAP](../ROADMAP.md) |
 | M2–M4 | ⬜ Não iniciados | [ROADMAP](../ROADMAP.md) |
 
@@ -32,17 +32,33 @@ por um portão de aprovação ou quando surgir um bloqueio.
 2. **Rodar o cliente:** `npm run build && npm run server` e abrir `http://localhost:8080`, ou `npm run server` +
    `npm run client` e abrir `http://localhost:5173` (recarga automática). Outra aba com `?slot=2` é outro jogador
    no mesmo navegador.
-3. **F8 (replay e multi-cliente):** branch `m1/f8-replay`, a partir de `main`. O que ele precisa saber do F7:
-   - O cliente é Vite + Preact + signals em `apps/client/src/`. O estado da tela é o `GameStore` (`store.ts`);
-     o mapa recebe `DynamicState` + a parte estática do `welcome`. O replay pode alimentar o mesmo `GameStore`
-     com `receive()` a partir do `sim` rodando no navegador (sem `Connection`).
-   - `?slot=N` já separa sessões no mesmo navegador: o `dev:multi -- --clients K` pode abrir K abas com slots
-     diferentes, entrando por `POST /api/worlds/:id/join` e gravando o token no `localStorage`
-     (`geometrix:session:<slot>:<world>`), ou deixando cada aba entrar pelo lobby.
-   - Os screenshots do F7 usaram o Chromium headless do cache do Playwright (`~/.cache/ms-playwright`) com o
-     `playwright-core` instalado só no scratchpad; o repo continua sem Playwright (plan §10).
+3. **F8 (replay e multi-cliente):** branch `m1/f8-replay` já criada a partir de `main`, sem código ainda. As
+   lacunas foram respondidas pelo dono (2026-11-14): siga direto para as tasks, sem perguntar de novo. As decisões
+   estão no [plan §8, "Detalhes do F8"](../specs/m1-ciclo-da-riqueza/plan.md). O que o F8 precisa saber do código:
+   - **Replay:** o `geo sim` grava `runs/<id>/replay.json` (`canonicalJson` de `{simVersion, seed, params, ticks,
+     finalHash, commands}`; ver `writeRun` em `apps/cli/src/sim.ts`). O estado inicial é `createWorld(seed, params)`;
+     os comandos (`LoggedCommand`: tick, seq, playerId, command) entram por tick com o `logCursor` de
+     `apps/cli/src/harness.ts`, que é o modelo para o replay no navegador (o `replay()` de `apps/cli/src/verify.ts`
+     faz o mesmo). Um mundo de 3 dias tem 259.200 ticks (`tickSeconds` 1). Há runs prontos em `runs/` para testar.
+   - **Hash:** `stateHash` (`apps/cli/src/hash.ts`, `apps/server/src/hash.ts`) é SHA-256 do `serialize(state)` via
+     `node:crypto`; no navegador use o Web Crypto sobre a mesma string.
+   - **Export do servidor:** `apps/server/src/persistence.ts` tem os snapshots e `commandsFrom(worldId, fromTick)`;
+     o `GET /api/worlds/:id/replay` sai do snapshot inicial + log, no mesmo formato do `replay.json`.
+   - **Cliente:** Vite + Preact + signals em `apps/client/src/`. O estado da tela é o `GameStore` (`store.ts`): o
+     replay pode alimentá-lo com `receive()` (um `welcome` sintético e depois `state`) a partir do `sim` rodando no
+     navegador, sem `Connection`. `app.tsx` escolhe Lobby ou Game pela URL; o replay precisa de uma terceira tela
+     (ou de um modo do Game sem comandos: `canAct` falso).
+   - **dev:multi:** `?slot=N` já separa sessões no mesmo navegador; a sessão fica no `localStorage`
+     (`geometrix:session:<slot>:<world>`, `session.ts`). O join é `POST /api/worlds/:id/join`; criar mundo é
+     `POST /api/worlds` (ver `api.ts` e `lobby.tsx`). O `serve.sh` do F7 mostrou que o servidor demora a subir no
+     `/mnt/c`: espere a porta responder em vez de um `sleep` fixo.
+   - **JSC:** o cache do Playwright (`~/.cache/ms-playwright`) só tem Chromium; o WebKit precisa de
+     `npx playwright install webkit` com o `playwright-core` instalado no scratchpad (o repo continua sem
+     Playwright, plan §10); no WSL o WebKit pode pedir bibliotecas do sistema
+     (`npx playwright install-deps webkit`, com sudo: peça ao dono). Abra o replay de um run curto, espere o ✓ e registre o resultado no dashboard.
    - **Medições do F7:** 60 fps estáveis com 60 creeps no Chromium headless (mediana 16,7 ms por frame, nenhuma
-     long task); bundle de 72,6 KB (26,2 KB gzip). 50 testes no cliente (1952 no total).
+     long task); bundle de 72,6 KB (26,2 KB gzip). 56 testes no cliente (1961 no total). Meça também quantos
+     ticks/s o `sim` faz no navegador (o "máximo" do replay).
 
 ## Pendências e pontos a esclarecer
 
