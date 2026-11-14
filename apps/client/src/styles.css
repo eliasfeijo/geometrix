@@ -247,6 +247,12 @@ h3 {
   border-radius: 4px;
 }
 
+.world-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 @media (max-width: 560px) {
   .world-teams {
     grid-template-columns: 1fr;
@@ -275,6 +281,65 @@ h3 {
 
 .spacer {
   flex: 1;
+}
+
+/* Replay */
+
+.replay-loading {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.replay-bar {
+  flex-wrap: wrap;
+  row-gap: 6px;
+}
+
+.replay-bar .play {
+  min-width: 2.6em;
+}
+
+.replay-bar .speeds,
+.replay-bar .viewer-team {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.replay-bar .timeline {
+  flex: 1 1 160px;
+  min-width: 120px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  accent-color: var(--team-0);
+}
+
+.replay-bar .rate {
+  min-width: 9em;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.hash {
+  font-size: 12px;
+}
+
+.hash-ok {
+  color: var(--ok);
+  font-weight: 600;
+}
+
+.hash-bad {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.warning {
+  color: #ffd166;
+  font-size: 12px;
 }
 
 .clock {
