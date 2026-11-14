@@ -1,7 +1,7 @@
 // SHA-256 with the Web Crypto API, as hex: the view hash a delta carries
 // (M1.5 spec C-3) and, in the replay, the state hash of geo verify.
 
-import { viewJson } from "@geometrix/protocol";
+import { viewJson } from "@geometrix/protocol/stream";
 import type { TeamView } from "@geometrix/sim";
 
 export async function sha256Hex(text: string): Promise<string> {
