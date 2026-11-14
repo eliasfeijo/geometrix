@@ -23,6 +23,8 @@ export type AppOptions = {
 
 export type App = {
   worlds: Worlds;
+  /** Stored worlds that could not be hosted again, and why. */
+  recoveryFailures: { worldId: number; error: string }[];
   server: Server;
   /** The port it listens on (config.port, or the one picked for 0). */
   port: number;
@@ -34,6 +36,7 @@ export async function startApp(options: AppOptions): Promise<App> {
   const { store, config, timers, params, clock } = options;
   const presence = new PresenceTracker(timers, config);
   const worlds = new Worlds(store, config, timers, params, presence);
+  const recoveryFailures = worlds.recoverAll();
   const server = createServer(
     createHttpHandler({ store, worlds, staticDir: config.staticDir, clock }),
   );
@@ -47,6 +50,7 @@ export async function startApp(options: AppOptions): Promise<App> {
   await new Promise<void>((done) => server.listen(config.port, done));
   return {
     worlds,
+    recoveryFailures,
     server,
     port: (server.address() as AddressInfo).port,
     close: async () => {

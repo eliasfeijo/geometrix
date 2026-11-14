@@ -7,7 +7,7 @@ import type { ServerConfig } from "./config.ts";
 import { TickLoop, type Timers } from "./loop.ts";
 import type { Store } from "./persistence.ts";
 import type { PresenceTracker } from "./presence.ts";
-import { WorldHost } from "./world-host.ts";
+import { RecoveryError, WorldHost } from "./world-host.ts";
 
 export class Worlds {
   private readonly store: Store;
@@ -53,6 +53,26 @@ export class Worlds {
     );
     this.host(host);
     return host;
+  }
+
+  /**
+   * Hosts every stored world again (ADR-0004): running ones resume their
+   * clock, ended ones stay viewable. A world that cannot be recovered (other
+   * sim version, broken snapshot) is skipped; returns why, per world.
+   */
+  recoverAll(): { worldId: number; error: string }[] {
+    const failures: { worldId: number; error: string }[] = [];
+    for (const row of this.store.worlds()) {
+      try {
+        this.host(
+          WorldHost.recover({ store: this.store, config: this.config }, row),
+        );
+      } catch (error) {
+        if (!(error instanceof RecoveryError)) throw error;
+        failures.push({ worldId: row.id, error: error.message });
+      }
+    }
+    return failures;
   }
 
   /** Starts hosting `host`; its loop runs while the world is running. */

@@ -9,6 +9,7 @@ import type { RejectReason, WorldStatus } from "@geometrix/protocol";
 import {
   createWorld,
   findPlayer,
+  restore,
   sampleMetrics,
   serialize,
   SIM_VERSION,
@@ -22,7 +23,12 @@ import {
 } from "@geometrix/sim";
 import type { ServerConfig } from "./config.ts";
 import { stateHash } from "./hash.ts";
-import type { LoggedCommand, Snapshot, Store } from "./persistence.ts";
+import type {
+  LoggedCommand,
+  Snapshot,
+  Store,
+  WorldRow,
+} from "./persistence.ts";
 
 export type HostContext = {
   store: Store;
@@ -37,6 +43,8 @@ export type NewWorld = {
   botTeams: readonly number[];
   createdAt: string;
 };
+
+export class RecoveryError extends Error {}
 
 type Bot = { playerId: number; team: number };
 
@@ -102,6 +110,58 @@ export class WorldHost {
       }
       return host;
     });
+  }
+
+  /**
+   * Rebuilds a stored world (ADR-0004): the latest snapshot, then the logged
+   * commands of the ticks after it, up to the tick the world had reached.
+   * Players stored without a join in the state (it was still queued when the
+   * process stopped) join again.
+   */
+  static recover(context: HostContext, row: WorldRow): WorldHost {
+    const { store } = context;
+    if (row.simVersion !== SIM_VERSION) {
+      throw new RecoveryError(
+        `world ${row.id}: sim version ${row.simVersion}, this server runs ${SIM_VERSION}`,
+      );
+    }
+    const snapshot = store.latestSnapshot(row.id);
+    if (snapshot === undefined) {
+      throw new RecoveryError(`world ${row.id}: no snapshot`);
+    }
+    const state = restore(snapshot.stateJson);
+    if (stateHash(state) !== snapshot.stateHash) {
+      throw new RecoveryError(`world ${row.id}: snapshot hash mismatch`);
+    }
+    const log = store.commandsFrom(row.id, snapshot.tick);
+    let at = 0;
+    while (state.tick < row.tick) {
+      const commands = [];
+      while (at < log.length && log[at]!.tick === state.tick) {
+        const { playerId, command } = log[at++]!;
+        commands.push({ playerId, command });
+      }
+      step(state, commands);
+    }
+    const players = store.players(row.id);
+    const bots = players
+      .filter((p) => p.bot)
+      .map((p) => ({ playerId: p.id, team: p.team }));
+    const host = new WorldHost(
+      context,
+      row.id,
+      row.multiplier,
+      state,
+      bots,
+      row.status,
+    );
+    if (host.status === "running") {
+      for (const p of players) {
+        if (findPlayer(state, p.id) !== undefined) continue;
+        host.submit(p.id, { type: "join", team: p.team, bot: p.bot });
+      }
+    }
+    return host;
   }
 
   /** Ticks in the world's duration (spec M-4). */
