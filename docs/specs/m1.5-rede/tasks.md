@@ -15,7 +15,7 @@ na sua branch `m1.5/f<n>-<slug>` (skill `commit`), com merge `--no-ff` em `main`
 ## F1 — Visão no `sim` (`m1.5/f1-view`)
 
 - [x] Teste com o hash de um mundo bot × bot de 6 h do seed 42, travando o comportamento do estrategista (plan §7)
-- [ ] `view.ts`: `CreepView`, `TeamView`, `view(state, team)`, exportados no `index.ts`, com testes (plan §3, §8)
+- [x] `view.ts`: `CreepView`, `TeamView`, `view(state, team)`, exportados no `index.ts`, com testes (plan §3, §8)
 - [ ] `nextSegment`, `roadTarget` e o que mais o estrategista usa aceitam tipos estruturais (R3); hash de 6 h igual
 - [ ] Estrategista lê a visão do time + o mapa + os parâmetros, no harness e no servidor (spec V-3); hash de 6 h
       igual
