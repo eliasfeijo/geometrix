@@ -90,6 +90,14 @@ const schema = {
     /** 0 = no distance limit. */
     maxDistanceCells: nonNegative,
   },
+  /**
+   * Sight radii (M1.5 fog spec V-1), Manhattan, in cells: the core's and each
+   * creep's by DNA. Rocks block the line of sight.
+   */
+  vision: {
+    core: nonNegative,
+    dna: { square: nonNegative, triangle: nonNegative, circle: nonNegative },
+  },
 } as const satisfies Schema;
 
 type FromSchema<S> = {
