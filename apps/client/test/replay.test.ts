@@ -1,9 +1,10 @@
 import type { Replay } from "@geometrix/protocol";
-import { restore, serialize } from "@geometrix/sim";
+import { createWorld, isOwnTeam, restore, serialize } from "@geometrix/sim";
 import { beforeAll, describe, expect, test, vi } from "vitest";
 import { ReplayController } from "../src/replay/controller.ts";
 import { stateHash } from "../src/replay/hash.ts";
 import { sha256Hex } from "../src/hash.ts";
+import { fogPaths } from "../src/map/fog.ts";
 import { dueTicks, MAX_FRAME_MS, RateMeter } from "../src/replay/playback.ts";
 import { ReplayPlayer } from "../src/replay/player.ts";
 import { botReplay } from "./helpers.ts";
@@ -136,6 +137,23 @@ describe("ReplayController", () => {
     expect(store.info.value).toMatchObject({ playerId: -1 });
     expect(store.current.value?.state.tick).toBe(0);
     expect(store.canAct.value).toBe(false);
+  });
+
+  test("shows the whole world, with no fog (fog spec C-5)", () => {
+    const controller = new ReplayController(replay, 0, () => 0);
+    const { store } = controller;
+    const state = store.current.value!.state;
+    expect(state.team).toBe(-1);
+    expect(state.known).not.toContain(-1);
+    // Both teams whole, cores included, and the map as it is.
+    expect(state.teams.every(isOwnTeam)).toBe(true);
+    expect(store.cores.value.every((core) => core !== null)).toBe(true);
+    const world = createWorld(replay.seed, replay.params);
+    expect(store.map.value!.terrain).toEqual(world.map.terrain);
+    expect(fogPaths(state.known, state.visible, world.map.width)).toEqual({
+      unseen: "",
+      remembered: "",
+    });
   });
 
   test("plays at a speed, frame by frame", () => {

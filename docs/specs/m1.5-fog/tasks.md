@@ -67,7 +67,8 @@ na sua branch (plan §12, skill `commit`), com merge `--no-ff` em `main`.
 - [x] Cursor e traçado de estrada pelo mapa conhecido (spec C-3). O traçado já usava o mapa conhecido desde a F3;
       sobre célula nunca vista, o rótulo diz "nunca vista · custo desconhecido" e o traçado continua desenhado
 - [x] Editor de regras: ação explorar, condição "não conhece depósito de X", preset batedor (spec C-4)
-- [ ] Replay com `fullView`, sem névoa (spec C-5)
+- [x] Replay com `fullView`, sem névoa (spec C-5). O controller já usava a `fullView` desde a F1; a névoa não
+      desenha nada com `team = -1`, e um teste confere o mundo inteiro no replay
 
 ## F5 — Soak e legibilidade (`m1.5/fog-f5-playtest`)
 
