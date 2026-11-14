@@ -127,3 +127,30 @@ export function replayWorldOf(search: string): number | null {
   const id = Number(value);
   return value !== null && Number.isSafeInteger(id) && id > 0 ? id : null;
 }
+
+/**
+ * A session handed over in the URL fragment by `npm run dev:multi`
+ * (#token=…&player=…&team=…&name=…), for the world in the query. The
+ * fragment never reaches the server; the app stores it and clears the URL.
+ */
+export function sessionFromHash(
+  hash: string,
+  worldId: number | null,
+): Session | null {
+  if (worldId === null) return null;
+  const params = new URLSearchParams(hash.replace(/^#/, ""));
+  const session = {
+    worldId,
+    playerId: Number(params.get("player")),
+    team: Number(params.get("team")),
+    name: params.get("name") ?? "",
+    token: params.get("token") ?? "",
+  };
+  return params.has("player") &&
+    params.has("team") &&
+    isSession(session) &&
+    session.token !== "" &&
+    session.name !== ""
+    ? session
+    : null;
+}
