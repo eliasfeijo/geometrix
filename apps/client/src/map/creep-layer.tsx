@@ -22,6 +22,8 @@ import type { Point } from "./view.ts";
 
 const SHAPE_RADIUS = 0.3;
 const CARGO_RADIUS = 0.43;
+const CARGO_WIDTH = 0.1;
+const CARGO_FULL_WIDTH = 0.17;
 
 /**
  * Re-renders on each animation frame while a glide is under way, and stays
@@ -346,6 +348,9 @@ function CreepMark({ creep, center, team, params, mine, waiting }: MarkProps) {
   const ring = CARGO_RADIUS * scale;
   const circumference = 2 * Math.PI * ring;
   const rotate = `rotate(-90 ${cx} ${cy})`;
+  // A full load thickens the ring (F9); the flash plays once when it fills.
+  const full = creep.cargo.materia + creep.cargo.cristal >= max;
+  const ringWidth = (full ? CARGO_FULL_WIDTH : CARGO_WIDTH) * scale;
   return (
     <g class="creep">
       {creep.dominatedBy !== null && (
@@ -367,7 +372,7 @@ function CreepMark({ creep, center, team, params, mine, waiting }: MarkProps) {
         fill="none"
         stroke={COLORS.background}
         stroke-opacity="0.7"
-        stroke-width={0.1 * scale}
+        stroke-width={ringWidth}
       />
       {materia > 0 && (
         <circle
@@ -376,7 +381,7 @@ function CreepMark({ creep, center, team, params, mine, waiting }: MarkProps) {
           r={ring}
           fill="none"
           stroke={COLORS.materia}
-          stroke-width={0.1 * scale}
+          stroke-width={ringWidth}
           stroke-dasharray={arcDash(ring, materia)}
           transform={rotate}
         />
@@ -388,10 +393,21 @@ function CreepMark({ creep, center, team, params, mine, waiting }: MarkProps) {
           r={ring}
           fill="none"
           stroke={COLORS.cristal}
-          stroke-width={0.1 * scale}
+          stroke-width={ringWidth}
           stroke-dasharray={arcDash(ring, cristal)}
           stroke-dashoffset={-circumference * materia}
           transform={rotate}
+        />
+      )}
+      {full && (
+        <circle
+          class="cargo-flash"
+          cx={cx}
+          cy={cy}
+          r={ring}
+          fill="none"
+          stroke={cristal > materia ? COLORS.cristal : COLORS.materia}
+          stroke-width={ringWidth}
         />
       )}
       <DnaShape
