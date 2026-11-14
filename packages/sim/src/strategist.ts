@@ -11,7 +11,14 @@
 
 import { canAfford } from "./economy.ts";
 import type { Command, CommandInput } from "./commands.ts";
-import { manhattan, Terrain, type Cell, type GameMap } from "./map.ts";
+import { nearestUnseen } from "./known.ts";
+import {
+  isRotatedSide,
+  manhattan,
+  Terrain,
+  type Cell,
+  type GameMap,
+} from "./map.ts";
 import { DNAS, type Dna, type Params } from "./params.ts";
 import { collectorRules, roadBuilderRules } from "./presets.ts";
 import { productionRefusal } from "./production.ts";
@@ -27,7 +34,11 @@ export type StrategistId = (typeof STRATEGISTS)[number];
 export const BALANCED = {
   /** Acts once per world minute. */
   everyTicks: 60,
-  /** Share of the team's creeps gathering cristal while there is any. */
+  /**
+   * Share of the team's creeps gathering cristal while there may be any: the
+   * team knows a cristal deposit with some left, or can still reach cells it
+   * never saw (the cristal collectors explore for it, fog spec A-4).
+   */
   cristalShare: { numerator: 1, denominator: 3 },
   /** Creeps building roads while some deposit still lacks one. */
   builders: 1,
@@ -99,6 +110,8 @@ type Knowledge = {
   seen: TeamView;
   team: Team;
   map: GameMap;
+  /** 1 for each cell the team has seen. */
+  explored: number[];
   params: Params;
 };
 
@@ -120,6 +133,7 @@ function knowledge(
     seen,
     team: ownTeam(seen),
     map: { width, height, terrain, road },
+    explored: seen.known.map((t) => (t === -1 ? 0 : 1)),
     params,
   };
 }
@@ -213,13 +227,13 @@ export function roadTarget(
  * creeps that fill a role short of creeps.
  */
 function assignRoles(known: Knowledge): Command[] {
-  const { seen, team, map, params } = known;
+  const { seen, team, map, explored, params } = known;
   const creeps = seen.creeps
     .filter(isOwnCreep)
     .filter((c) => c.team === team.id);
-  const hasCristal = seen.deposits.some(
-    (d) => d.kind === "cristal" && d.amount > 0,
-  );
+  const hasCristal =
+    seen.deposits.some((d) => d.kind === "cristal" && d.amount > 0) ||
+    nearestUnseen(map, explored, team.core, isRotatedSide(team.id)) !== null;
   const { numerator, denominator } = BALANCED.cristalShare;
   const wantCristal = hasCristal
     ? Math.floor((creeps.length * numerator + denominator - 1) / denominator)

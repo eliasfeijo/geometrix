@@ -56,24 +56,44 @@ export function knownRoadJob(
 
 /**
  * Where the creep explores next (fog spec D4, plan N4): the cell never seen
- * that is fewest steps away on the team's known map (cells never seen count
- * as passable), and that no other creep of the team is exploring toward. Ties
- * go to the lower index in the team's frame, as in paths. null when no cell
- * never seen can be reached.
+ * that is fewest steps away on the team's known map, and that no other creep
+ * of the team is exploring toward. null when no cell never seen can be
+ * reached.
  */
 export function exploreTarget(state: WorldState, creep: Creep): Cell | null {
   const memory = memoryOf(state, creep.team);
-  const { width, height } = state.map;
-  const size = width * height;
-  const rotated = isRotatedSide(creep.team);
   const taken = new Set<number>();
   for (const other of state.creeps) {
     if (other === creep || other.team !== creep.team) continue;
     if (other.order.type === "explore") {
-      taken.add(other.order.y * width + other.order.x);
+      taken.add(other.order.y * state.map.width + other.order.x);
     }
   }
-  const start = creep.y * width + creep.x;
+  return nearestUnseen(
+    { ...state.map, terrain: memory.terrain },
+    memory.explored,
+    creep,
+    isRotatedSide(creep.team),
+    taken,
+  );
+}
+
+/**
+ * The cell never seen (explored 0) fewest steps away from `from` on the
+ * known terrain, where cells never seen count as passable, leaving out
+ * `taken`. Ties go to the lower index in the team's frame, as in paths. null
+ * when none can be reached. Breadth-first, in the team frame's neighbor order.
+ */
+export function nearestUnseen(
+  map: Pick<GameMap, "width" | "height" | "terrain">,
+  explored: readonly number[],
+  from: Cell,
+  rotated: boolean,
+  taken: ReadonlySet<number> = new Set(),
+): Cell | null {
+  const { width, height, terrain } = map;
+  const size = width * height;
+  const start = from.y * width + from.x;
   const steps = new Array<number>(size).fill(-1);
   steps[start] = 0;
   const queue = [start];
@@ -83,7 +103,7 @@ export function exploreTarget(state: WorldState, creep: Creep): Cell | null {
   for (let head = 0; head < queue.length; head++) {
     const i = queue[head]!;
     if (best >= 0 && steps[i]! > steps[best]!) break;
-    if (memory.explored[i] === 0 && !taken.has(i)) {
+    if (explored[i] === 0 && !taken.has(i)) {
       const key = rotated ? size - 1 - i : i;
       const bestKey = rotated ? size - 1 - best : best;
       if (best < 0 || key < bestKey) best = i;
@@ -98,7 +118,7 @@ export function exploreTarget(state: WorldState, creep: Creep): Cell | null {
     if (rotated) neighbors.reverse();
     for (const next of neighbors) {
       if (next < 0 || steps[next] !== -1) continue;
-      if (!isPassable(memory.terrain[next]!)) continue;
+      if (!isPassable(terrain[next]!)) continue;
       steps[next] = steps[i]! + 1;
       queue.push(next);
     }

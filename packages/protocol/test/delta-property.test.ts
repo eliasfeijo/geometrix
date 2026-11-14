@@ -74,14 +74,15 @@ test.each([1, 42, 649])(
       );
       step(state, accepted);
     }
-    // The world did move: creeps changed, roads were built, cells were
-    // explored and left sight. (Until the autopilot explores, fog F2, the
-    // bots know no cristal and produce none.)
-    expect(upserts).toBeGreaterThan(ticks / 4);
+    // The world did move: creeps were born and changed, roads were built,
+    // cells were explored and left sight, enemy creeps came into sight and
+    // left it (no creep dies in M1.5: every remove is one leaving sight).
+    expect(state.creeps.length).toBeGreaterThan(12);
+    expect(upserts).toBeGreaterThan(ticks);
     expect(explored).toBeGreaterThan(300);
     expect(sight).toBeGreaterThan(1000);
     expect(roads).toBeGreaterThan(10);
-    expect(removes).toBe(0);
+    expect(removes).toBeGreaterThan(0);
   },
   60_000,
 );
