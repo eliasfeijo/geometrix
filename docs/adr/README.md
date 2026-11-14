@@ -10,3 +10,4 @@ vira `Superseded by NNNN`.
 | [0003](0003-stack-typescript-node.md) | TypeScript + Node LTS, com simulação pura e math inteira | Accepted | 2026-11-13 |
 | [0004](0004-persistencia-sqlite-log-de-comandos.md) | Persistência do mundo: SQLite + snapshots + log de comandos + Litestream | Accepted | 2026-11-13 |
 | [0005](0005-deploy-mvp-vps-websocket.md) | Deploy do MVP: VPS única + Docker Compose + Caddy; transporte por WebSocket | Accepted | 2026-11-13 |
+| [0006](0006-sync-do-mundo-por-comandos.md) | Sincronização do mundo por fluxo de comandos, com a simulação rodando no cliente | Proposed | 2026-11-14 |

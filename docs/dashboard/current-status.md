@@ -1,6 +1,6 @@
 # Status atual
 
-**Atualizado:** 2026-11-14 · **Marco:** M1 — O ciclo da riqueza ✅ concluído · **Próximo:** publicar o repo e abrir o M2
+**Atualizado:** 2026-11-14 · **Marco:** M1 — O ciclo da riqueza ✅ concluído · **Próximo:** decidir o ADR-0006 e abrir o M2
 
 Resumo de bolso. A fonte de verdade continua nos docs linkados. Atualize este arquivo ao fechar uma fase, ao passar
 por um portão de aprovação ou quando surgir um bloqueio.
@@ -32,15 +32,20 @@ por um portão de aprovação ou quando surgir um bloqueio.
 cumpridos: bot × bot de 3 dias sem travar, `geo verify` e recuperação verdes, soak com o mesmo hash no servidor, no
 Node e no navegador, legibilidade aprovada pelo dono.
 
-1. **Publicar o repo no GitHub** (dono) antes de abrir o M2. Ainda não há remote, então o CI
-   ([ci.yml](../../.github/workflows/ci.yml)) nunca rodou fora da máquina local. É o primeiro teste real do CI
-   (Node 26, `better-sqlite3` nativo, `geo verify` com 3 seeds, orçamento de 6 h em 60 s).
-2. **Abrir o M2 (A emboscada) pela skill `spec-slice`:** spec → plan → tasks em `docs/specs/m2-…/`. Pelo
+1. **Repo publicado no GitHub** (dono, 2026-11-14). Conferir o primeiro run do CI
+   ([ci.yml](../../.github/workflows/ci.yml)) fora da máquina local: Node 26, `better-sqlite3` nativo, `geo verify`
+   com 3 seeds, orçamento de 6 h em 60 s. A visão geral para quem chega está no [OVERVIEW](../OVERVIEW.md).
+2. **Decidir o [ADR-0006](../adr/0006-sync-do-mundo-por-comandos.md) (`Proposed`)** antes da spec do M2: trocar o
+   estado completo a cada tick por só os comandos, com o `sim` no cliente. Veio de uma revisão de fora do OVERVIEW
+   (deflate tem custo no servidor; mandar só o que muda) e das medições do ADR. Depende da pergunta de fog of war do
+   [GDD 01](../gdd/01-mundo.md), que entra na rodada de perguntas do item 3. Se aceito, é implementado na etapa de
+   deploy do M2.
+3. **Abrir o M2 (A emboscada) pela skill `spec-slice`:** spec → plan → tasks em `docs/specs/m2-…/`. Pelo
    [ROADMAP](../ROADMAP.md), a primeira etapa é o deploy e o playtest de diversão que saíram do M1 (lista em
    "Fora do M1" no tasks.md). Antes da spec, revisar as **perguntas abertas** e propostas do GDD que o M2 toca
-   (ex.: batalha, emboscada, auto-resolve, nome do creep no estado) e levar ao dono numa rodada
+   (ex.: batalha, emboscada, auto-resolve, nome do creep no estado, fog of war no mundo) e levar ao dono numa rodada
    agrupada.
-3. **Olhos novos na legibilidade:** o playtest da F9 foi do próprio dono, que já conhece o jogo. O roteiro e o
+4. **Olhos novos na legibilidade:** o playtest da F9 foi do próprio dono, que já conhece o jogo. O roteiro e o
    questionário do [PLAYTEST.md](../PLAYTEST.md) servem de base para o primeiro playtest do M2, com pessoas que
    nunca viram o jogo.
 

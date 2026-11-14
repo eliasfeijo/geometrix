@@ -37,7 +37,9 @@ do Núcleo conforme o time constrói.
 
 ## Perguntas abertas
 - O Núcleo pode ser movido ou reconstruído? Pode existir mais de uma base por time?
-- Existe fog of war no mundo?
+- Existe fog of war no mundo? *(Consequência técnica, 2026-11-14: com fog, a sincronização proposta no
+  [ADR-0006](../adr/0006-sync-do-mundo-por-comandos.md), em que o cliente roda a simulação inteira, entregaria ao
+  cliente o que ele não deveria ver; a parte escondida precisaria de deltas por jogador, mais caros.)*
 - Jogadores podem entrar num mundo já em andamento?
 - O que se pode construir e onde (só perto do Núcleo, em território controlado, em qualquer lugar)?
 - O rio é só obstáculo, ou também é rota de transporte (barcos levam carga pesada mais rápido, mas ficam expostos)?
