@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { capacity } from "../src/economy.ts";
+import { buyUpgrade, capacity } from "../src/economy.ts";
 import { DNAS } from "../src/params.ts";
 import type { WorldState } from "../src/world.ts";
 import { creepOf, loadDefaultParams, run, textWorld } from "./helpers.ts";
@@ -267,5 +267,51 @@ describe("deposits over time", () => {
     materia.amount = 0;
     run(world, 30);
     expect(materia.amount).toBe(9);
+  });
+});
+
+describe("buyUpgrade", () => {
+  test("pays 150 cristal and raises the capacity of every team creep at once", () => {
+    const world = textWorld(NEXT_TO_MATERIA);
+    const team = world.teams[0]!;
+    team.stock = { materia: 10, cristal: 160 };
+    expect(buyUpgrade(world, 0, "capacity")).toBeNull();
+    expect(team.stock).toEqual({ materia: 10, cristal: 10 });
+    for (const creep of world.creeps.filter((c) => c.team === 0)) {
+      expect(capacity(creep, team, params)).toBe(
+        (params.dna[creep.dna].capacity * 3) / 2,
+      );
+    }
+    const enemy = creepOf(world, 1, "square");
+    expect(capacity(enemy, world.teams[1]!, params)).toBe(30);
+  });
+
+  test("a creep already gathering keeps going up to the new capacity", () => {
+    const world = textWorld(NEXT_TO_MATERIA);
+    const creep = creepOf(world, 0, "circle");
+    Object.assign(creep, { x: 1, cargo: { materia: 10, cristal: 0 } });
+    world.teams[0]!.stock.cristal = 150;
+    buyUpgrade(world, 0, "capacity");
+    creep.order = { type: "gather", depositId: depositAt(world, 1).id };
+    run(world, 10);
+    expect(creep.cargo.materia).toBe(15);
+  });
+
+  test("refuses without enough cristal, changing nothing", () => {
+    const world = textWorld(NEXT_TO_MATERIA);
+    world.teams[0]!.stock = { materia: 500, cristal: 149 };
+    expect(buyUpgrade(world, 0, "capacity")).toBe("stock");
+    expect(world.teams[0]).toMatchObject({
+      stock: { materia: 500, cristal: 149 },
+      upgrades: { capacity: false },
+    });
+  });
+
+  test("is bought once", () => {
+    const world = textWorld(NEXT_TO_MATERIA);
+    world.teams[0]!.stock.cristal = 300;
+    buyUpgrade(world, 0, "capacity");
+    expect(buyUpgrade(world, 0, "capacity")).toBe("owned");
+    expect(world.teams[0]!.stock.cristal).toBe(150);
   });
 });

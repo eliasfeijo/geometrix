@@ -30,7 +30,7 @@ Marque `[x]` ao concluir. Cada task deve terminar com os testes verdes. Referên
 - [x] Entrega no Núcleo e estoque do time
 - [x] Regeneração de matéria; esgotamento de cristal
 - [x] Produção de creep: custo, tempo, teto de população, opção "repetir" (P5)
-- [ ] Upgrade de capacidade
+- [x] Upgrade de capacidade
 - [ ] `buildRoad`: segmentos conectados, débito de matéria, tempo de construção, invalidação de caminhos
 
 ## F4 — Piloto automático e domínio
