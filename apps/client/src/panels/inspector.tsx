@@ -10,6 +10,7 @@ import {
 } from "@geometrix/sim";
 import { useGame } from "../context.ts";
 import { toggleRoadMode } from "../interaction.ts";
+import { inSight } from "../map/fog.ts";
 import { cellmates } from "../map/pick.ts";
 import { creepName } from "../names.ts";
 import { creepStatus, STATUS_TEXTS, viewCapacity } from "../creep-status.ts";
@@ -287,6 +288,9 @@ function DepositInspector({ id }: { id: number }) {
   }
   const full = params.deposits[deposit.kind].amount;
   const regen = params.deposits.materia.regen;
+  // Out of sight, the view has the amount the team saw last (spec C-1).
+  const width = store.info.value?.map.width ?? 0;
+  const remembered = !inSight(state, deposit, width);
   // Only the own creeps' orders are in the view (spec D7).
   const heading = (team: number) =>
     state.creeps.filter(
@@ -306,6 +310,7 @@ function DepositInspector({ id }: { id: number }) {
         <dt>Quantidade</dt>
         <dd>
           {deposit.amount}/{full}
+          {remembered && <span class="muted"> · último valor visto</span>}
         </dd>
         <dt>Regeneração</dt>
         <dd>

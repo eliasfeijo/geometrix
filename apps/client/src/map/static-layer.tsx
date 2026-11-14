@@ -76,15 +76,28 @@ export const StaticLayer = memo(function StaticLayer({
         <path d={edges.shade} stroke={COLORS.rockShade} />
         <path d={edges.lit} stroke={COLORS.rockLit} />
       </g>
-      <rect
-        x="0"
-        y="0"
-        width={map.width}
-        height={map.height}
-        fill="none"
-        stroke={COLORS.border}
-        stroke-width="0.1"
-      />
+      <MapBorder width={map.width} height={map.height} />
     </g>
   );
 });
+
+/** The map's edge; the fog draws it again on top, so it shows in the dark. */
+export function MapBorder({
+  width,
+  height,
+}: {
+  width: number;
+  height: number;
+}) {
+  return (
+    <rect
+      x="0"
+      y="0"
+      width={width}
+      height={height}
+      fill="none"
+      stroke={COLORS.border}
+      stroke-width="0.1"
+    />
+  );
+}
