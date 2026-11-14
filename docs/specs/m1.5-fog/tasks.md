@@ -53,7 +53,9 @@ na sua branch (plan §12, skill `commit`), com merge `--no-ff` em `main`.
       `known` (nunca visto como selva, sem a névoa ainda) e a ler os Núcleos da visão
 - [x] `WorldSummary.seed` `null` em mundo vivo; replay de mundo vivo → 409 (spec D9, D10, N9). O lobby só mostra
       a seed e o botão "Assistir replay" de mundo encerrado
-- [ ] **Checkpoint:** `geo net --seed 42 --days 3` contra os alvos da spec da rede §7
+- [x] **Checkpoint:** `geo net --seed 42 --days 3` contra os alvos da spec da rede §7. Os três verdes (2026-11-14):
+      195 B/s por cliente (antes do fog 227), 121 µs por envio na mediana (antes 83; alvo 250), 0 divergências em
+      518 400 verificações; hash `a6bde918…`, o mesmo da F2 (`runs/m1.5-fog-f3-checkpoint-net/net.md`)
 
 ## F4 — Cliente (`m1.5/fog-f4-client`)
 
