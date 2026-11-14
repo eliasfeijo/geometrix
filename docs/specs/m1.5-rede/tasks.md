@@ -49,7 +49,7 @@ na sua branch `m1.5/f<n>-<slug>` (skill `commit`), com merge `--no-ff` em `main`
 
 ## F5 — Soak com clientes e viabilidade (`m1.5/f5-soak`)
 
-- [ ] Clientes WebSocket sem interface no soak (2 por time), com `applyDelta` e hash; seção por cliente no
+- [x] Clientes WebSocket sem interface no soak (2 por time), com `applyDelta` e hash; seção por cliente no
       `summary.md`
 - [ ] `npm run soak` completo; relatório de viabilidade em `viability.md` contra a spec §7
 - [ ] Dashboard atualizado

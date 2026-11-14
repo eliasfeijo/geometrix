@@ -16,12 +16,17 @@ export const SOAK_USAGE = `usage: npm run soak -- [options]
 Runs a whole bot x bot world through the real server loop, kills the server
 (kill -9) at random ticks and restarts it, stops it once cleanly (SIGTERM),
 and at the end rebuilds the exported replay in Node: its hash must match the
-server's. Samples memory, database size and loop speed into runs/soak-<id>/.
+server's. Headless clients follow their team streams the whole time, dropping
+their own connection now and then; each must end with the server's view and
+no hash mismatch (M1.5). Samples memory, database size and loop speed into
+runs/soak-<id>/.
 
   --mult <n>      time multiplier (default 360: 3 world days in ~12 min)
   --kills <n>     kill -9 + restart count (default 5)
   --seed <n>      world seed and kill schedule seed (default 42)
   --port <n>      server port (default 8089)
+  --clients <n>   headless clients per team, 0..3 (default 2)
+  --drop-every <s>  real seconds between a client's own drops (default 60)
   --db <file>     SQLite file (default: a new one in the OS temp dir)
   --out <dir>     runs directory (default runs)
 `;
@@ -31,6 +36,10 @@ export type SoakOptions = {
   kills: number;
   seed: number;
   port: number;
+  /** Headless clients per team (teams.maxHumans is 3). */
+  clients: number;
+  /** Real seconds between a client's own drops (short drops, spec S-5). */
+  dropEverySeconds: number;
   db: string | undefined;
   out: string;
 };
@@ -55,6 +64,8 @@ export function parseSoakArgs(args: readonly string[]): SoakOptions {
         kills: { type: "string" },
         seed: { type: "string" },
         port: { type: "string" },
+        clients: { type: "string" },
+        "drop-every": { type: "string" },
         db: { type: "string" },
         out: { type: "string" },
       },
@@ -76,6 +87,14 @@ export function parseSoakArgs(args: readonly string[]): SoakOptions {
       values.port === undefined
         ? 8089
         : integer("port", values.port, 1, 65_535),
+    clients:
+      values.clients === undefined
+        ? 2
+        : integer("clients", values.clients, 0, 3),
+    dropEverySeconds:
+      values["drop-every"] === undefined
+        ? 60
+        : integer("drop-every", values["drop-every"], 5, 3600),
     db: values.db,
     out: values.out ?? "runs",
   };
