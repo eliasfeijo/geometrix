@@ -82,7 +82,6 @@ const schema = {
   autopilot: { maxRules: positive },
   domination: {
     cost,
-    timeoutSeconds: positive,
     cooldownSeconds: nonNegative,
     /** 0 = no distance limit. */
     maxDistanceCells: nonNegative,
@@ -154,7 +153,6 @@ function checkConsistency(p: Params, issues: string[]): void {
     ],
     ["creep.productionSeconds", p.creep.productionSeconds],
     ["road.buildSeconds", p.road.buildSeconds],
-    ["domination.timeoutSeconds", p.domination.timeoutSeconds],
     ["domination.cooldownSeconds", p.domination.cooldownSeconds],
   ];
   for (const [path, seconds] of durations) {
