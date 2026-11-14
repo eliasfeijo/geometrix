@@ -1,6 +1,6 @@
 # Status atual
 
-**Atualizado:** 2026-11-14 · **Marco:** M1.5 — A névoa · **Fatia de rede:** ✅ concluída (viabilidade aprovada) · **Design do fog:** ✅ decidido (GDD 01, 02, 07) · **Spec do fog:** ✅ aprovada · **Próximo:** plan da fatia de fog
+**Atualizado:** 2026-11-14 · **Marco:** M1.5 — A névoa · **Fatia de rede:** ✅ concluída (viabilidade aprovada) · **Design do fog:** ✅ decidido (GDD 01, 02, 07) · **Spec e plan do fog:** ✅ aprovados · **Próximo:** fog F1 (visão e memória no `sim`)
 
 Resumo de bolso. A fonte de verdade continua nos docs linkados. Atualize este arquivo ao fechar uma fase, ao passar
 por um portão de aprovação ou quando surgir um bloqueio.
@@ -24,10 +24,11 @@ por um portão de aprovação ou quando surgir um bloqueio.
 | M1 — F8 Replay e multi-cliente | ✅ Concluída, merge em `main`. Replay no navegador (arquivo do `geo sim` ou `GET /api/worlds/:id/replay`) com velocidades, linha do tempo e hash ✓/✗; hash confere no WebKit/JSC; `npm run dev:multi`. Detalhes decididos pelo dono no [plan §8](../specs/m1-ciclo-da-riqueza/plan.md) | [tasks.md §F8](../specs/m1-ciclo-da-riqueza/tasks.md) · `apps/client/src/replay/` · `apps/server/src/dev-multi*.ts` |
 | M1 — F9 Legibilidade e playtest | ✅ Concluída, merge em `main`. Fecha o M1. Feito: `npm run soak` (teste de resistência comprimido, no lugar do mundo de 24 h), estrada × pedra, nomes no mapa (Chakra Petch), carga cheia, `+N`/`−N` no Núcleo, custo da estrada sob o cursor e tempo da obra, [PLAYTEST.md](../PLAYTEST.md). **Checkpoint** (dono, 2026-11-14): playtest parcial e replay validados, sem achados | [tasks.md §F9](../specs/m1-ciclo-da-riqueza/tasks.md) · [spec §8](../specs/m1-ciclo-da-riqueza/spec.md) |
 | Deploy e playtest de diversão | Saíram do M1 (dono, 2026-11-14): abrem o M2 | [ROADMAP](../ROADMAP.md) |
-| M1.5 — A névoa | 🟡 Em andamento (dono, 2026-11-14). Duas fatias: rede (deltas da visão de cada time, [ADR-0006](../adr/0006-sync-do-mundo.md), aceito) ✅ concluída, e depois fog of war 🟡 (rodada de design ✅, spec ✅ 2026-11-14; plan ⬜) | [ROADMAP](../ROADMAP.md) |
+| M1.5 — A névoa | 🟡 Em andamento (dono, 2026-11-14). Duas fatias: rede (deltas da visão de cada time, [ADR-0006](../adr/0006-sync-do-mundo.md), aceito) ✅ concluída, e depois fog of war 🟡 (rodada de design, spec e plan ✅ 2026-11-14; F1 ⬜) | [ROADMAP](../ROADMAP.md) |
 | M1.5 rede — spec | ✅ Aprovada (2026-11-14). Decisões D1–D8; critérios de viabilidade na §7 | [spec.md](../specs/m1.5-rede/spec.md) |
 | M1.5 rede — plan | ✅ Aprovado (2026-11-14), com R1–R7 decididas | [plan.md](../specs/m1.5-rede/plan.md) |
 | M1.5 fog — spec | ✅ Aprovada (2026-11-14). Decisões D1–D12 (D1: pedras bloqueiam a visão, escolha do dono; D3/D4: como e para onde se explora, no GDD 07); critérios na §7 | [spec.md](../specs/m1.5-fog/spec.md) |
+| M1.5 fog — plan | ✅ Aprovado (2026-11-14), com N1–N10 (N4 trocou a distância do "explorar" para passos; N8: bot sem batedor até medir; N9: campo de seed fica no lobby). Fases F1–F5 | [plan.md](../specs/m1.5-fog/plan.md) · [tasks.md](../specs/m1.5-fog/tasks.md) |
 | M1.5 rede — F0 Spike | ✅ Concluída, merge em `main`. Diff à mão em JSON por uma visão com cópia rasa: ~41 µs por mundo por envio (2 times), ~257 bytes por delta; o schema do Colyseus funciona, mas não foi adotado (R1) | [plan §1](../specs/m1.5-rede/plan.md) · [tasks.md](../specs/m1.5-rede/tasks.md) |
 | M1.5 rede — F1 Visão no `sim` | ✅ Concluída, merge em `main`. `view(state, team)` e `TeamView`; o estrategista decide pela visão do time + mapa estático + parâmetros; hash de 6 h travado em teste e o de 3 dias (`10662729…`) inalterado | [tasks.md](../specs/m1.5-rede/tasks.md) · `packages/sim/src/view.ts` |
 | M1.5 rede — F2 Delta no `protocol` | ✅ Concluída, merge em `main`. `diffView`/`applyDelta`/`viewJson`, propriedade de 6 h × 3 seeds no CI, `geo net`. **Checkpoint** (3 dias, seed 42): 227 B/s por cliente a ×1 (alvo ≤ 2 KB/s), 83 µs por envio (alvo ≤ 250 µs), 0 divergências em 518 400 verificações, hash `10662729…` igual | [tasks.md](../specs/m1.5-rede/tasks.md) · `packages/protocol/src/delta.ts` · `apps/cli/src/net.ts` |
@@ -51,22 +52,15 @@ por um portão de aprovação ou quando surgir um bloqueio.
    Ficaram em aberto, para a spec: como os creeps começam explorando (regra no preset coletor, preset "batedor" ou
    os dois; GDD 07). Terreno e Núcleo inimigo vistos ficam conhecidos, e a tela tem três estados (nunca visto,
    lembrado, visível): confirmados pelo dono na mesma rodada.
-2. **Plan da fatia de fog** (skill `spec-slice`), a partir da [spec aprovada](../specs/m1.5-fog/spec.md). Pontos
-   técnicos que a spec deixou para o plan: o algoritmo da linha de visão (só inteiros, equivalente para os dois
-   times), o formato da memória do time no estado, o cache de caminhos por time e o terreno explorado no delta.
-   O ROADMAP pede playtest local de legibilidade no fim. O que a fatia de rede deixou pronto:
-   - a visão de cada time sai de `view(state, team)` (`packages/sim/src/view.ts`), que hoje devolve tudo. Diff, protocolo, servidor,
-     cliente e o estrategista dos bots já trabalham com a visão de cada time (ADR-0006, regra 2);
-   - o `diffView` já remove entidades (`remove` por coleção), mas **lança erro se uma estrada some**
-     (`packages/protocol/src/delta.ts`): se estradas fora da visão saírem da visão, isso muda;
-   - o estrategista recebe o mapa estático e monta a camada de estradas de `seen.roads`; com fog, ele passa a
-     decidir com menos informação, e o hash de 3 dias (`10662729…`) e o de 6 h travado em
-     `packages/sim/test/bot-world.test.ts` vão mudar de propósito;
-   - a memória do time (aprovada) é estado novo no `WorldState` (convenções do `CLAUDE.md`), e o caminho pelo que
-     o time sabe pede um cache de caminhos por time (hoje invalidado só pelo `roadRevision`);
-   - com a névoa negra, o terreno deixa de ir inteiro no `welcome` (`toStaticMap`, `packages/protocol/src/index.ts`)
-     e o estrategista deixa de receber o mapa estático: o terreno explorado entra na visão e no delta;
-   - `geo net` e `npm run soak` medem a banda e conferem cliente × servidor: rodar de novo no fim da fatia.
+2. **Implementar o fog** ([tasks](../specs/m1.5-fog/tasks.md), skill `implement-phase`), começando pela **F1**
+   (`m1.5/fog-f1-vision`): params de visão, `TeamMemory` e `updateVision` com a linha de visão, `view` filtrada e
+   `fullView`, `SIM_VERSION` 3 e hashes novos. Lembretes do plan:
+   - dois vazamentos do código entram nas fases: o `welcome` manda `cores` (F3) e a recusa `notYourTeam` revela
+     creep inimigo (F2);
+   - o hash de 3 dias (`10662729…`) e o de 6 h do `bot-world.test.ts` mudam de propósito;
+   - checkpoints: início de partida e economia na F2 (seeds 1–20), `geo net` na F3, legibilidade na F5;
+   - **anotado para o deploy (M2):** quem cria o mundo escolhe a seed no lobby (N9); criar mundo deixa de ser
+     público.
 3. **Depois do M1.5, o M2 (A emboscada):** deploy e playtest de diversão primeiro (lista em "Fora do M1" no
    [tasks.md do M1](../specs/m1-ciclo-da-riqueza/tasks.md)), com uma rodada agrupada sobre as perguntas abertas de
    batalha antes da spec.

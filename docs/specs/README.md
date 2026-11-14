@@ -14,4 +14,4 @@ Regra: a spec é a fonte de verdade. Diante de uma ambiguidade não coberta, par
 |---|---|
 | [M1 — O ciclo da riqueza](m1-ciclo-da-riqueza/spec.md) | Concluída (2026-11-14) |
 | [M1.5 — Rede: deltas da visão de cada time](m1.5-rede/spec.md) | Concluída (2026-11-14): viabilidade aprovada pelo dono |
-| [M1.5 — Fog of war](m1.5-fog/spec.md) | Aprovada (2026-11-14) · plan em rascunho (N1–N10 aguardam o dono) |
+| [M1.5 — Fog of war](m1.5-fog/spec.md) | Aprovada (2026-11-14) · plan aprovado (N1–N10) · em implementação |

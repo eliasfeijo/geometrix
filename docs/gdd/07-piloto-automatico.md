@@ -18,8 +18,8 @@
   - **Como começam** (spec do fog, D3): o preset coletor ganha "explorar" logo depois de "coletar", e a regra só
     vale quando o time não conhece depósito do recurso. Um preset novo, **batedor**, só explora; sem nada a
     explorar, volta ao Núcleo.
-  - **Alvo** (spec do fog, D4): a célula nunca vista mais próxima que nenhum outro creep do time já tenha como
-    alvo; desempate no referencial do time, para os dois lados ficarem equivalentes no mapa espelhado.
+  - **Alvo** (spec do fog, D4; plan N4): a célula nunca vista mais próxima em passos pelo mapa que o time conhece,
+    que nenhum outro creep do time já tenha como alvo; desempate no referencial do time, para os dois lados ficarem equivalentes no mapa espelhado.
 
 ## Proposta
 - Humanos, macros, piloto automático e bots emitem os **mesmos comandos** ([ADR-0002](../adr/0002-tudo-e-comando.md)).

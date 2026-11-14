@@ -9,7 +9,7 @@ na sua branch (plan §12, skill `commit`), com merge `--no-ff` em `main`.
 
 - [x] Rodada de design do fog no GDD 01, 02 e 07 (2026-11-14)
 - [x] Spec aprovada, com D1–D12 (2026-11-14)
-- [ ] **Checkpoint:** plan aprovado (decisões N1–N10)
+- [x] **Checkpoint:** plan aprovado (decisões N1–N10, 2026-11-14)
 
 ## F1 — Visão e memória no `sim` (`m1.5/fog-f1-vision`)
 

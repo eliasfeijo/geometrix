@@ -1,11 +1,11 @@
 # Plan M1.5 — Fog of war
 
-**Status:** Rascunho · **Data:** 2026-11-14
+**Status:** Aprovado (2026-11-14) · **Data:** 2026-11-14
 **Spec:** [spec.md](spec.md) · **ADRs:** [0006](../../adr/0006-sync-do-mundo.md) (sync do mundo) ·
 [0002](../../adr/0002-tudo-e-comando.md) (vocabulário de comandos) · [0003](../../adr/0003-stack-typescript-node.md)
 (determinismo) · [0004](../../adr/0004-persistencia-sqlite-log-de-comandos.md) (snapshot e log)
 
-Este documento descreve **como** construir a spec. As decisões `N1`–`N10` (seção 10) precisam do OK do dono junto
+Este documento descreve **como** construir a spec. As decisões `N1`–`N10` (seção 10) foram aprovadas pelo dono junto
 com o plano.
 
 ## 1. O que o código faz hoje e o que muda
@@ -223,9 +223,12 @@ ADR-0002, com `BREAKING CHANGE` no commit e `PROTOCOL_VERSION` 3.
   batedor.
 - **Replay** (spec C-5): usa `fullView`, sem névoa.
 
-## 10. Decisões para o dono
+## 10. Decisões aprovadas
 
-| # | Decisão | Proposta | Alternativa |
+Aprovadas pelo dono em 2026-11-14, junto com o plano. A coluna "Alternativa" fica como registro do que foi
+descartado. N4 ajustou a D4 da spec (distância em passos, não Manhattan).
+
+| # | Decisão | Escolha | Alternativa descartada |
 |---|---|---|---|
 | N1 | Formato da memória | `state.memory: TeamMemory[]` com bitmaps `number[]` (§3) | Listas de índices: menor no snapshot, mas o A* e a visão leem por célula |
 | N2 | Algoritmo da linha de visão | Bresenham inteiro, traçado no referencial do time (§3) | Shadowcasting simétrico: mais permissivo e simétrico entre quem vê e quem é visto, mas bem mais código, com frações |
