@@ -192,6 +192,7 @@ describe("buildRoad", () => {
 describe("on a generated map", () => {
   test("a road toward a deposit is one chain connected to the core", () => {
     const world = createWorld(42, params);
+    for (const c of world.creeps) c.rules = [];
     const team = world.teams[0]!;
     team.stock.materia = 1000;
     const deposit = world.deposits.find((d) => d.kind === "materia")!;
