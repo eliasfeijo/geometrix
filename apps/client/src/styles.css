@@ -706,3 +706,60 @@ h3 {
     opacity: 0;
   }
 }
+
+/* Stacks of creeps */
+
+.stack-list {
+  position: absolute;
+  z-index: 4;
+  padding: 8px;
+  box-shadow: 0 6px 24px rgb(0 0 0 / 0.5);
+}
+
+.stack-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.stack-list ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.stack-row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  column-gap: 8px;
+  align-items: center;
+  text-align: left;
+  background: transparent;
+  border-color: transparent;
+  padding: 4px 6px;
+}
+
+.stack-row:hover {
+  background: var(--panel-2);
+}
+
+.stack-row .icon {
+  grid-row: span 2;
+}
+
+.cellmates {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: -4px 0 8px;
+  font-size: 12px;
+}
+
+.cellmates button {
+  padding: 0 6px;
+}

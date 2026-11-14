@@ -11,6 +11,7 @@ import { handleKey, order, select } from "./interaction.ts";
 import { ModeBanner } from "./mode-banner.tsx";
 import { CoreDock } from "./panels/core-panel.tsx";
 import { Inspector } from "./panels/inspector.tsx";
+import { StackList } from "./panels/stack-list.tsx";
 import type { Session } from "./session.ts";
 import { CreepLayer } from "./map/creep-layer.tsx";
 import { MapView } from "./map/map-view.tsx";
@@ -83,7 +84,9 @@ export function Game({ session, onLeave, onInvalid }: Props) {
         <TopBar onLeave={onLeave} />
         <div class="game-body">
           <MapView
-            onSelect={(point) => select(store, point, performance.now())}
+            onSelect={(point, px) =>
+              select(store, point, px, performance.now())
+            }
             onOrder={(point) =>
               order(store, point, game.send, performance.now())
             }
@@ -93,6 +96,7 @@ export function Game({ session, onLeave, onInvalid }: Props) {
           <CoreDock />
           <Inspector />
           <ModeBanner />
+          <StackList />
         </div>
         <Notices />
       </div>

@@ -27,7 +27,8 @@ const WHEEL_ZOOM = 0.0015;
 const KEY_PAN = 80;
 
 type Props = {
-  onSelect?(point: Point, event: MouseEvent): void;
+  /** `px` is the pointer within the map element. */
+  onSelect?(point: Point, px: Point): void;
   onOrder?(point: Point, event: MouseEvent): void;
   /** Layers drawn above the world (creeps, selection). */
   children?: ComponentChildren;
@@ -146,7 +147,9 @@ export function MapView({ onSelect, onOrder, children }: Props) {
     drag.current = null;
     if (!d.moved && d.button === 0) {
       const point = mapPoint(e);
-      if (point !== null) onSelect?.(point, e);
+      if (point !== null && element.current !== null) {
+        onSelect?.(point, local(element.current, e));
+      }
     }
   };
 

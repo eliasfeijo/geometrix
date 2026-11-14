@@ -2,13 +2,18 @@
 // a right click orders the dominated creep, R toggles road mode, Esc
 // cancels, F centers the view on the selection.
 
-import { centersNow } from "./map/creep-layer.tsx";
+import { markersNow } from "./map/creep-layer.tsx";
 import type { ClientCommand } from "@geometrix/protocol";
 import { orderAt, pickAt } from "./map/pick.ts";
 import { cellAt, centerOn, type Point } from "./map/view.ts";
 import type { GameStore } from "./store.ts";
 
-export function select(store: GameStore, point: Point, now: number): void {
+export function select(
+  store: GameStore,
+  point: Point,
+  px: Point,
+  now: number,
+): void {
   const mode = store.mode.value;
   if (mode.type === "pickCell") {
     store.mode.value = { type: "select" };
@@ -18,13 +23,19 @@ export function select(store: GameStore, point: Point, now: number): void {
   const state = store.current.value?.state;
   const info = store.info.value;
   if (state === undefined || info === null) return;
-  store.selection.value = pickAt(
+  const pick = pickAt(
     point,
-    centersNow(store, now),
+    markersNow(store, now),
     state.deposits,
     info.cores,
-    store.selection.value,
   );
+  if (pick?.kind === "stack") {
+    store.stack.value = { ids: pick.ids, at: px };
+    return;
+  }
+  store.stack.value = null;
+  store.hovered.value = null;
+  store.selection.value = pick;
 }
 
 let pings = 0;
@@ -92,7 +103,10 @@ export function handleKey(
   if (event.ctrlKey || event.metaKey || event.altKey) return false;
   switch (event.key) {
     case "Escape":
-      if (store.mode.value.type !== "select") {
+      if (store.stack.value !== null) {
+        store.stack.value = null;
+        store.hovered.value = null;
+      } else if (store.mode.value.type !== "select") {
         store.mode.value = { type: "select" };
       } else {
         store.selection.value = null;

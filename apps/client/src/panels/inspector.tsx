@@ -4,6 +4,7 @@
 import { capacity, type Deposit } from "@geometrix/sim";
 import { useGame } from "../context.ts";
 import { toggleRoadMode } from "../interaction.ts";
+import { cellmates } from "../map/pick.ts";
 import { creepStatus, STATUS_TEXTS } from "../creep-status.ts";
 import {
   DNA_NAMES,
@@ -62,6 +63,7 @@ function CreepInspector({ id }: { id: number }) {
         {DNA_NAMES[creep.dna]} #{creep.id}
         <span class="team-name">{teamName(creep.team)}</span>
       </h2>
+      <Cellmates id={creep.id} />
       <dl class="facts">
         <dt>Estado</dt>
         <dd class={status === "waiting" ? "waiting" : undefined}>
@@ -158,6 +160,33 @@ function CreepInspector({ id }: { id: number }) {
         </p>
       )}
       <RulesEditor key={creep.id} creep={creep} />
+    </div>
+  );
+}
+
+/** Other creeps on the same cell: step through them without the map. */
+function Cellmates({ id }: { id: number }) {
+  const { store } = useGame();
+  const creeps = store.current.value?.state.creeps ?? [];
+  const ids = cellmates(creeps, id);
+  if (ids.length < 2) return null;
+  const i = ids.indexOf(id);
+  const go = (delta: number) => {
+    const next = ids[(i + delta + ids.length) % ids.length]!;
+    store.selection.value = { kind: "creep", id: next };
+  };
+  return (
+    <div class="cellmates">
+      <span class="muted">Nesta célula:</span>
+      <button class="ghost" title="Anterior" onClick={() => go(-1)}>
+        ◀
+      </button>
+      <span>
+        {i + 1}/{ids.length}
+      </span>
+      <button class="ghost" title="Próximo" onClick={() => go(1)}>
+        ▶
+      </button>
     </div>
   );
 }

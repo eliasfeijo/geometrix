@@ -1,13 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   creepPositions,
-  crowdOffsets,
   glide,
   glideProgress,
   MAX_GLIDE_CELLS,
   MAX_GLIDE_MS,
 } from "../src/map/interpolate.ts";
-import { drawnCenters } from "../src/map/creep-layer.tsx";
 import { dynamicOf, testWorld } from "./helpers.ts";
 
 describe("interpolation", () => {
@@ -49,24 +47,5 @@ describe("interpolation", () => {
       x: second!.x - 0.5,
       y: second!.y,
     });
-  });
-
-  it("spreads creeps that share a cell", () => {
-    expect(crowdOffsets(1)).toEqual([{ x: 0, y: 0 }]);
-    const four = crowdOffsets(4);
-    expect(four).toHaveLength(4);
-    const distinct = new Set(
-      four.map((p) => `${p.x.toFixed(3)},${p.y.toFixed(3)}`),
-    );
-    expect(distinct.size).toBe(4);
-
-    // All 6 creeps of a team start on its core.
-    const team0 = state.creeps.filter((c) => c.team === 0);
-    const centers = drawnCenters(team0, creepPositions(null, state, 1));
-    const drawn = new Set(
-      [...centers.values()].map((p) => `${p.x.toFixed(3)},${p.y.toFixed(3)}`),
-    );
-    expect(drawn.size).toBe(team0.length);
-    for (const p of centers.values()) expect(p.scale).toBeLessThan(1);
   });
 });
