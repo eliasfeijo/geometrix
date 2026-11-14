@@ -1,5 +1,6 @@
 // HTTP (plan section 7): create and list worlds, join one (name + team ->
-// session token), and the built client as static files.
+// session token), export one as a replay (plan section 8, F8 details), and the
+// built client as static files.
 
 import { createHash, randomBytes } from "node:crypto";
 import { existsSync, readFileSync, statSync } from "node:fs";
@@ -9,8 +10,10 @@ import {
   createWorldRequest,
   joinRequest,
   type JoinResponse,
+  type Replay,
   type WorldSummary,
 } from "@geometrix/protocol";
+import { stateHash } from "./hash.ts";
 import type { Store } from "./persistence.ts";
 import type { Worlds } from "./worlds.ts";
 
@@ -96,6 +99,10 @@ async function route(
     const request = parse(joinRequest, await readJson(req));
     return { status: 201, body: joinWorld(context, Number(join[1]), request) };
   }
+  const replay = /^\/api\/worlds\/(\d+)\/replay$/.exec(path);
+  if (replay !== null && req.method === "GET") {
+    return { status: 200, body: exportReplay(context, Number(replay[1])) };
+  }
   if (path.startsWith("/api/")) throw new HttpError(404, { error: "notFound" });
   if (req.method !== "GET") throw new HttpError(405, { error: "method" });
   const file = staticFile(context.staticDir, path);
@@ -119,6 +126,28 @@ function listWorlds(context: HttpContext): WorldSummary[] {
         .map(({ id, team, name, bot }) => ({ id, team, name, bot })),
     };
   });
+}
+
+/**
+ * A hosted world as a replay, in the format of geo sim's replay.json: the
+ * world's seed and params rebuild its initial snapshot, then the whole log up
+ * to the tick it reached. Reading the state and the log in one synchronous
+ * call keeps them in step (the commands of a tick are stored with it).
+ */
+function exportReplay(context: HttpContext, worldId: number): Replay {
+  const host = context.worlds.get(worldId);
+  const row = context.store.world(worldId);
+  if (host === undefined || row === undefined) {
+    throw new HttpError(404, { error: "unknownWorld" });
+  }
+  return {
+    simVersion: row.simVersion,
+    seed: row.seed,
+    params: row.params,
+    ticks: host.state.tick,
+    finalHash: stateHash(host.state),
+    commands: context.store.commandsFrom(worldId, 0),
+  };
 }
 
 function joinWorld(

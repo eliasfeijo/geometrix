@@ -2,6 +2,9 @@ import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, test } from "vitest";
+import { parseReplay } from "@geometrix/protocol";
+import { createWorld, step, type CommandInput } from "@geometrix/sim";
+import { stateHash } from "../src/hash.ts";
 import { hashToken } from "../src/http.ts";
 import { testApp } from "./helpers.ts";
 
@@ -107,5 +110,39 @@ describe("HTTP", () => {
     expect((await get("/missing.js")).status).toBe(404);
     expect((await get("/..%2f..%2fpackage.json")).status).toBe(404);
     expect((await get("/api/nothing")).status).toBe(404);
+  });
+
+  test("exports a world as a replay that rebuilds its state", async () => {
+    const { post, get, app } = await setup();
+    await post("/api/worlds", { seed: 5, botTeams: [0, 1] });
+    const joined = await post("/api/worlds/1/join", { name: "Ana", team: 0 });
+    const { playerId } = joined.body as { playerId: number };
+    const host = app.worlds.get(1)!;
+    for (let i = 0; i < 200; i++) host.tick();
+    const creep = host.state.creeps.find((c) => c.team === 0)!;
+    expect(
+      host.submit(playerId, { type: "dominate", creepId: creep.id }),
+    ).toBeNull();
+    for (let i = 0; i < 50; i++) host.tick();
+
+    const res = await get("/api/worlds/1/replay");
+    expect(res.status).toBe(200);
+    const replay = parseReplay(await res.res.json());
+    expect(replay).toMatchObject({ simVersion: 2, seed: 5, ticks: 250 });
+    expect(replay.finalHash).toBe(stateHash(host.state));
+    expect(replay.commands.map((c) => c.command.type)).toContain("dominate");
+
+    const state = createWorld(replay.seed, replay.params);
+    let at = 0;
+    while (state.tick < replay.ticks) {
+      const commands: CommandInput[] = [];
+      while (replay.commands[at]?.tick === state.tick) {
+        const { playerId: id, command } = replay.commands[at++]!;
+        commands.push({ playerId: id, command });
+      }
+      step(state, commands);
+    }
+    expect(stateHash(state)).toBe(replay.finalHash);
+    expect((await get("/api/worlds/9/replay")).status).toBe(404);
   });
 });
