@@ -60,12 +60,14 @@ export async function testApp(
   store = new Store(":memory:"),
 ) {
   const timers = new FakeTimers();
+  const logs: string[] = [];
   const app = await startApp({
     store,
     config: { ...DEFAULT_CONFIG, port: 0, dbFile: ":memory:", ...config },
     timers,
     params: testParams(),
     clock: () => "2026-11-14T00:00:00.000Z",
+    log: (line) => logs.push(line),
   });
   const base = `http://127.0.0.1:${app.port}`;
   const post = async (path: string, body: unknown) => {
@@ -80,5 +82,5 @@ export async function testApp(
     const res = await fetch(base + path);
     return { status: res.status, res };
   };
-  return { app, store, timers, base, post, get };
+  return { app, store, timers, base, post, get, logs };
 }
