@@ -81,12 +81,13 @@ design antes do próximo ([`ROADMAP.md`](ROADMAP.md)):
 ```mermaid
 flowchart LR
     M0["M0 · Design<br/>O que estamos construindo?"] --> M1["M1 · O ciclo da riqueza<br/>Coletar, transportar e investir<br/>já é interessante sozinho?"]
-    M1 --> M2["M2 · A emboscada<br/>A batalha muda o rumo do mundo<br/>sem dominar o jogo?"]
+    M1 --> M15["M1.5 · A névoa<br/>Esconder informação cria decisões<br/>sem tornar o mapa ilegível?"]
+    M15 --> M2["M2 · A emboscada<br/>A batalha muda o rumo do mundo<br/>sem dominar o jogo?"]
     M2 --> M3["M3 · O time<br/>A governança gera decisões,<br/>ou só burocracia?"]
     M3 --> M4["M4 · O mundo vivo<br/>tribos, diplomacia,<br/>piloto automático scriptável"]
     style M0 fill:#2e7d32,color:#fff
     style M1 fill:#2e7d32,color:#fff
-    style M2 fill:#f9a825,color:#000
+    style M15 fill:#f9a825,color:#000
 ```
 
 Verde: concluído. Amarelo: o próximo.
@@ -98,7 +99,7 @@ O [GDD](gdd/README.md) tem um arquivo por sistema, e cada um separa **Decidido**
 
 | Sistema | O que está decidido | O que ainda está em aberto | Marco |
 |---|---|---|---|
-| [01 Mundo e mapa](gdd/01-mundo.md) | Mundo persistente de dias (hipótese: 3); times de 3; vitória = destruir a base inimiga; início "fundação" (cada time começa com um Núcleo e cresce a partir dele) | Fog of war, entrar no meio da partida, onde se pode construir, rio como rota | M1 |
+| [01 Mundo e mapa](gdd/01-mundo.md) | Mundo persistente de dias (hipótese: 3); times de 3; vitória = destruir a base inimiga; início "fundação" (cada time começa com um Núcleo e cresce a partir dele) | Fog of war (proposta para o M1.5, com os detalhes em aberto), entrar no meio da partida, onde se pode construir, rio como rota | M1 · M1.5 |
 | [02 Creeps e domínio](gdd/02-creeps-e-dominio.md) | Herói = creep dominado; 1 domínio por jogador; DNA = forma inata; morte permanente; inventário; os 3 DNAs se equivalem na economia (a diferença vem do combate) | Custo de dominar, limite de população, vários creeps na mesma célula, nome do creep no estado | M1 (domínio) · M3 (genética) |
 | [03 Economia](gdd/03-economia-e-logistica.md) | Transporte físico; dois recursos no M1: **matéria** (pesada, renovável, perto da base) e **cristal** (leve, valioso, esgotável, disputado); imposto votado | Moeda cunhada × recurso; sumidouros; papel do cristal depois de ~8 h | M1 · M3 |
 | [04 Governança](gdd/04-governanca.md) | Votação com níveis de autoridade (bots podem decidir / só humanos / unanimidade); representantes em times grandes | Quais decisões existem, quórum, prazo, voto delegado | M3 |
@@ -147,18 +148,22 @@ Os números são provisórios (candidato B da [passada de balanceamento 1](specs
 | `apps/client` | 5 469 | 1 674 |
 | `apps/cli` | 1 392 | 641 |
 
-### Pendente (abre o M2)
+### Pendente
 
-- **Publicar o repo** e ver o CI rodar fora da máquina local pela primeira vez.
-- **Deploy:** Dockerfile, `compose.yml` (app + Caddy + Litestream), workflow de deploy manual. Desenhado no
+- **M1.5 · A névoa** (novo marco, antes do M2): a sincronização por deltas da visão de cada time
+  ([ADR-0006](adr/0006-sync-do-mundo.md)), validada localmente, e depois o fog of war no mundo.
+- **Deploy** (abre o M2): Dockerfile, `compose.yml` (app + Caddy + Litestream), workflow de deploy manual. Desenhado no
   [plan §11](specs/m1-ciclo-da-riqueza/plan.md), ainda não escrito (não existe `infra/`).
 - **Playtest de diversão** com pessoas que nunca viram o jogo (o roteiro está em [`PLAYTEST.md`](PLAYTEST.md)).
 - **Spec do M2** pela skill `spec-slice`, depois de uma rodada com o dono sobre as perguntas abertas de batalha.
+
+O repo foi publicado em 2026-11-14, e o CI passa no GitHub.
 
 ### Planejado
 
 | Marco | Escopo |
 |---|---|
+| **M1.5 · A névoa** | Deltas da visão de cada time no lugar do estado completo (ADR-0006), validados localmente; fog of war no mundo, com clientes e bots vendo só o que o time enxerga |
 | **M2 · A emboscada** | Uma emboscada numa carga em trânsito abre uma instância de batalha; um humano domina um creep e luta; o resultado volta ao mundo como eventos; sem humano presente, a mesma simulação roda acelerada (auto-resolve) |
 | **M3 · O time** | 3v3, impostos, votação com níveis de autoridade, genética e progressão dos creeps |
 | **M4 · O mundo vivo** | Jungle com tribos e diplomacia, piloto automático scriptável (JS em sandbox), construção ampla |

@@ -4,7 +4,7 @@ Documento vivo. Cada arquivo separa **Decidido**, **Proposta** (não aprovada) e
 
 | # | Sistema | Marco |
 |---|---|---|
-| [01](01-mundo.md) | Mundo persistente e mapa | M1 |
+| [01](01-mundo.md) | Mundo persistente e mapa | M1 · M1.5 (fog of war) |
 | [02](02-creeps-e-dominio.md) | Creeps, domínio e progressão | M1 (domínio) · M3 (genética) |
 | [03](03-economia-e-logistica.md) | Economia, transporte e impostos | M1 (transporte) · M3 (impostos) |
 | [04](04-governanca.md) | Governança e votação | M3 |

@@ -35,7 +35,7 @@ do Núcleo conforme o time constrói.
   isso, um time perde a partida enquanto dorme.
 - A defesa offline vem de fortificações + piloto automático de defesa.
 
-### Fog of war
+### Fog of war (marco M1.5)
 - **Inclinação do dono (2026-11-14): o mundo deve ter fog of war**, e nenhum cliente, nem um bot, deve enxergar o
   estado completo; só o que o próprio time vê. Ainda não decidido. A sincronização aceita no
   [ADR-0006](../adr/0006-sync-do-mundo.md) (delta da visão de cada time, calculado no servidor) foi escolhida para

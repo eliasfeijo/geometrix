@@ -1,6 +1,6 @@
 # Status atual
 
-**Atualizado:** 2026-11-14 · **Marco:** M1 — O ciclo da riqueza ✅ concluído · **Próximo:** fatia de rede (ADR-0006) e fog of war, antes do M2
+**Atualizado:** 2026-11-14 · **Marco:** M1 — O ciclo da riqueza ✅ concluído · **Próximo:** M1.5 — A névoa (rede pelo ADR-0006, depois fog of war)
 
 Resumo de bolso. A fonte de verdade continua nos docs linkados. Atualize este arquivo ao fechar uma fase, ao passar
 por um portão de aprovação ou quando surgir um bloqueio.
@@ -24,6 +24,7 @@ por um portão de aprovação ou quando surgir um bloqueio.
 | M1 — F8 Replay e multi-cliente | ✅ Concluída, merge em `main`. Replay no navegador (arquivo do `geo sim` ou `GET /api/worlds/:id/replay`) com velocidades, linha do tempo e hash ✓/✗; hash confere no WebKit/JSC; `npm run dev:multi`. Detalhes decididos pelo dono no [plan §8](../specs/m1-ciclo-da-riqueza/plan.md) | [tasks.md §F8](../specs/m1-ciclo-da-riqueza/tasks.md) · `apps/client/src/replay/` · `apps/server/src/dev-multi*.ts` |
 | M1 — F9 Legibilidade e playtest | ✅ Concluída, merge em `main`. Fecha o M1. Feito: `npm run soak` (teste de resistência comprimido, no lugar do mundo de 24 h), estrada × pedra, nomes no mapa (Chakra Petch), carga cheia, `+N`/`−N` no Núcleo, custo da estrada sob o cursor e tempo da obra, [PLAYTEST.md](../PLAYTEST.md). **Checkpoint** (dono, 2026-11-14): playtest parcial e replay validados, sem achados | [tasks.md §F9](../specs/m1-ciclo-da-riqueza/tasks.md) · [spec §8](../specs/m1-ciclo-da-riqueza/spec.md) |
 | Deploy e playtest de diversão | Saíram do M1 (dono, 2026-11-14): abrem o M2 | [ROADMAP](../ROADMAP.md) |
+| M1.5 — A névoa | ⬜ Não iniciado (dono, 2026-11-14). Duas fatias: rede (deltas da visão de cada time, [ADR-0006](../adr/0006-sync-do-mundo.md)) e fog of war | [ROADMAP](../ROADMAP.md) |
 | M2–M4 | ⬜ Não iniciados | [ROADMAP](../ROADMAP.md) |
 
 ## Próximos passos imediatos
@@ -38,16 +39,22 @@ Node e no navegador, legibilidade aprovada pelo dono.
 2. **[ADR-0006](../adr/0006-sync-do-mundo.md) aceito (dono, 2026-11-14):** deltas por campo da visão de cada time,
    no lugar do estado completo a cada tick. Entra **antes do M2**, numa fatia própria, validada localmente antes de
    qualquer deploy (critérios na spec da fatia; se reprovar, o ADR volta à mesa). Medição ingênua: ~0,4 KB por
-   delta, mas ~0,8 ms de CPU por mundo por envio (~6× o de hoje). Depois vem o fog of war (inclinação do dono, GDD
-   01), que precisa de uma rodada de design antes da spec. **Falta decidir onde as duas fatias entram no
-   [ROADMAP](../ROADMAP.md)** (guarda de escopo do CLAUDE.md).
-3. **Abrir o M2 (A emboscada) pela skill `spec-slice`:** spec → plan → tasks em `docs/specs/m2-…/`. Pelo
-   [ROADMAP](../ROADMAP.md), a primeira etapa é o deploy e o playtest de diversão que saíram do M1 (lista em
-   "Fora do M1" no tasks.md). Antes da spec, revisar as **perguntas abertas** e propostas do GDD que o M2 toca
-   (ex.: batalha, emboscada, auto-resolve, nome do creep no estado, fog of war no mundo) e levar ao dono numa rodada
-   agrupada.
-4. **Olhos novos na legibilidade:** o playtest da F9 foi do próprio dono, que já conhece o jogo. O roteiro e o
-   questionário do [PLAYTEST.md](../PLAYTEST.md) servem de base para o primeiro playtest do M2, com pessoas que
+   delta, mas ~0,8 ms de CPU por mundo por envio (~6× o de hoje).
+3. **Abrir o M1.5 (A névoa)**, novo marco antes do M2 ([ROADMAP](../ROADMAP.md), dono 2026-11-14):
+   - **fatia de rede** pela skill `spec-slice` (`docs/specs/m1.5-…/`): `view(state, team)` no `sim` sem fog, diff e
+     patch, `seq`, retomada com buffer, hash da visão, teste de propriedade, estrategista lendo a visão, `soak` com
+     clientes conectados, e o spike da alternativa E (schema do Colyseus) no plan. Não depende de decisão de design
+     e pode começar já;
+   - **rodada de design do fog** pela skill `gdd-decision`, em paralelo: o que dá visão e até onde, o que se vê do
+     outro time, se o piloto automático respeita o fog, se o que já foi visto continua visível ([GDD
+     01](../gdd/01-mundo.md));
+   - **fatia de fog** depois das duas: a visão filtra o escondido, o cliente desenha a névoa, o export de replay fica
+     restrito a mundos encerrados, e um playtest local de legibilidade fecha o marco.
+4. **Depois, o M2 (A emboscada)** pela skill `spec-slice`. A primeira etapa é o deploy e o playtest de diversão que
+   saíram do M1 (lista em "Fora do M1" no tasks.md). Antes da spec, levar ao dono numa rodada agrupada as perguntas
+   abertas e propostas do GDD que o M2 toca (ex.: batalha, emboscada, auto-resolve, nome do creep no estado).
+5. **Olhos novos na legibilidade:** o playtest da F9 foi do próprio dono, que já conhece o jogo. O roteiro e o
+   questionário do [PLAYTEST.md](../PLAYTEST.md) servem de base para o playtest do M1.5 e o do M2, com pessoas que
    nunca viram o jogo.
 
 ## Achados do playtest
