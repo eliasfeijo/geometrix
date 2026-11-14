@@ -186,6 +186,14 @@ Formato: *Quando [gatilho], o sistema deve [resposta].*
 - **C-3** Painel do Núcleo: estoque, produção de creeps, upgrade, população.
 - **C-4** Editor das regras de piloto automático (lista ordenada; aplicar um preset).
 
+#### Detalhes de cliente decididos pelo dono no F7 (2026-11-14)
+
+- **Ordens pelo botão direito** (convenção RTS/MOBA): o esquerdo sempre seleciona e inspeciona; o direito dá a
+  ordem ao creep que o jogador domina: no mapa, `moveTo`; num depósito, `gather`; no próprio Núcleo, `deliver`.
+  No modo estrada, o clique direito vira `buildRoad`.
+- **Visual escuro:** fundo grafite, jungle em verde-escuro discreto, rio azul, rochas cinza; times em azul e
+  laranja (distinguíveis com daltonismo); matéria e cristal com cores próprias; formas com contorno claro.
+
 ## 6. Parâmetros iniciais (chutes, para serem quebrados)
 
 Todos ficam num arquivo de parâmetros versionado, nunca no código.
