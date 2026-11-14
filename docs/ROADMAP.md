@@ -6,7 +6,7 @@
 |---|---|---|
 | **M0 — Design** | Pilares, GDD, ADRs, harness de DX (CLAUDE.md, fluxo de spec) | O que estamos construindo? |
 | **M1 — O ciclo da riqueza** | Mundo mínimo: 2 Núcleos num mapa pequeno e simétrico, matéria + cristal, creeps que coletam e carregam até a base, produção de creeps, construção de estrada, piloto automático declarativo básico, dominar/liberar | Coletar, transportar e investir já é interessante sozinho? |
-| **M1.5 — A névoa** | Sincronização por deltas da visão de cada time ([ADR-0006](adr/0006-sync-do-mundo.md)), com a viabilidade validada localmente; fog of war no mundo, em que clientes e bots só veem o que o próprio time enxerga (detalhes de design no [GDD 01](gdd/01-mundo.md), a decidir) | Esconder informação cria decisões interessantes (explorar, proteger rotas) sem tornar o mapa ilegível? |
+| **M1.5 — A névoa** | Sincronização por deltas da visão de cada time ([ADR-0006](adr/0006-sync-do-mundo.md)), com a viabilidade validada localmente; fog of war no mundo, em que clientes e bots só veem o que o próprio time enxerga (design decidido em 2026-11-14 no [GDD 01](gdd/01-mundo.md): névoa negra, visão por DNA, memória do time, piloto e caminho pelo que o time sabe) | Esconder informação cria decisões interessantes (explorar, proteger rotas) sem tornar o mapa ilegível? |
 | **M2 — A emboscada** | Uma emboscada numa carga em trânsito abre uma instância de batalha; um humano domina um creep; o resultado volta ao mundo; auto-resolve quando não há humano | A batalha muda o rumo do mundo sem dominar o jogo? |
 | **M3 — O time** | 3v3, impostos, votação com níveis de autoridade, genética e progressão | A governança gera decisões interessantes, ou só burocracia? |
 | **M4 — O mundo vivo** | Jungle com tribos e diplomacia, piloto automático scriptável, construção ampla | — |
@@ -21,5 +21,10 @@ sem mudar o gameplay, com a viabilidade validada localmente antes de qualquer de
 se reprovar, o ADR-0006 volta à mesa). (2) **Fog of war:** depois de uma rodada de design sobre as perguntas abertas
 do GDD 01, com playtest local de legibilidade. Motivo: a emboscada do M2 pressupõe que nem tudo é visível. O deploy
 e o playtest de diversão continuam abrindo o M2.
+
+**Escopo da fatia de fog** (rodada de design, 2026-11-14): o dono escolheu a névoa negra e a visão por DNA, que vão
+além de só filtrar a visão. A fatia passa a incluir a ação "explorar" do piloto automático, o caminho calculado pelo
+que o time sabe (cache por time), o terreno explorado no delta da rede (hoje o mapa vai inteiro no `welcome`) e a
+exploração no estrategista dos bots.
 
 O mapa completo de 3 lanes + 2 jungles entra conforme os marcos pedirem, não antes.

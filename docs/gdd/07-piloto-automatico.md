@@ -10,6 +10,11 @@
 - **Coletar com os depósitos zerados** (2026-11-14): o creep escolhe o depósito não vazio mais próximo e fica com
   ele até encher. Se o depósito zerar, espera ali a regeneração; se for cristal esgotado, escolhe outro. Deixar um
   depósito rico sem uso é uma decisão do jogador, que pode mandar creeps para lá.
+- **O piloto automático respeita o fog** (M1.5, 2026-11-14): as condições (ex.: `resourceInRange`) e a escolha
+  do depósito usam só o que o time sabe, a visão mais a memória ([01](01-mundo.md)). Um creep não coleta de um
+  depósito que o time nunca viu.
+- **Ação "explorar"** (M1.5, 2026-11-14): ir até a célula nunca vista mais próxima. Nenhum depósito é garantido à
+  vista do Núcleo no início: os creeps começam explorando.
 
 ## Proposta
 - Humanos, macros, piloto automático e bots emitem os **mesmos comandos** ([ADR-0002](../adr/0002-tudo-e-comando.md)).
@@ -23,4 +28,7 @@
 ## Perguntas abertas
 - Onde fica o piloto automático: por creep, por grupo de creeps, ou por jogador?
 - A complexidade permitida (número de regras, CPU do script) é uma mecânica de progressão?
+- **Como os creeps começam explorando** (M1.5)? Uma regra "explorar" no preset coletor, para quando o time não
+  conhece depósito do recurso; um preset "batedor" à parte; ou os dois? E o desempate entre células nunca vistas à
+  mesma distância.
 - Qual é a diferença entre uma macro de cliente (só quando você está online) e o piloto automático (no servidor)?
