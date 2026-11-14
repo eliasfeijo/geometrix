@@ -13,6 +13,7 @@ import {
   serialize,
   step,
   type Params,
+  type StrategistId,
   type WorldState,
 } from "@geometrix/sim";
 import {
@@ -24,7 +25,6 @@ import {
   type LoggedCommand,
 } from "./harness.ts";
 import { stateHash } from "./hash.ts";
-import type { StrategistId } from "./strategist.ts";
 
 export type VerifyRun = { name: string; hash: string };
 export type VerifyResult = { ok: boolean; runs: VerifyRun[] };
