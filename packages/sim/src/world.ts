@@ -2,6 +2,7 @@
 // ids come from one increasing counter and are never reused.
 
 import type { Rule } from "./autopilot.ts";
+import type { Player } from "./domination.ts";
 import type { UpgradeId } from "./economy.ts";
 import { collectorRules } from "./presets.ts";
 import { generateMap, type Cell, type GameMap } from "./map.ts";
@@ -79,6 +80,8 @@ export type WorldState = {
   /** Incremented when a road is completed: invalidates cached paths. */
   roadRevision: number;
   teams: Team[];
+  /** Players who joined, by id (system command join). */
+  players: Player[];
   creeps: Creep[];
   deposits: Deposit[];
   /** Segments under construction, by id. */
@@ -129,6 +132,7 @@ export function createWorld(seed: number, params: Params): WorldState {
     map: layout.map,
     roadRevision: 0,
     teams,
+    players: [],
     creeps,
     deposits,
     roadJobs: [],
