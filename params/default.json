@@ -60,12 +60,12 @@
     "materia": {
       "amount": 500,
       "regen": {
-        "amount": 1,
+        "amount": 8,
         "everySeconds": 60
       },
-      "perSide": 3,
+      "perSide": 6,
       "minCoreDistance": 3,
-      "maxCoreDistance": 8
+      "maxCoreDistance": 20
     },
     "cristal": {
       "amount": 300,
@@ -81,14 +81,14 @@
   },
   "creep": {
     "cost": {
-      "materia": 40,
+      "materia": 3000,
       "cristal": 10
     },
     "productionSeconds": 600
   },
   "road": {
     "cost": {
-      "materia": 5,
+      "materia": 150,
       "cristal": 0
     },
     "buildSeconds": 120
