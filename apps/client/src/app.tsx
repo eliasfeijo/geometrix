@@ -1,7 +1,8 @@
 // Three screens: the lobby (list, create and join worlds), the game and the
 // replay. The URL says which (?world=3, plus ?slot=2 for another player in the
 // same browser; ?replay=3 for a server world's replay). A replay file opened
-// from the lobby lives only in memory.
+// from the lobby lives only in memory. `npm run dev:multi` hands each tab its
+// session in the fragment (#token=…).
 
 import { useEffect, useState } from "preact/hooks";
 import { Game } from "./game.tsx";
@@ -13,6 +14,8 @@ import {
   locationFor,
   parseLocation,
   replayWorldOf,
+  saveSession,
+  sessionFromHash,
 } from "./session.ts";
 
 type Where = ReturnType<typeof parseLocation> & { replay: number | null };
@@ -22,8 +25,22 @@ function here(): Where {
   return { ...parseLocation(search), replay: replayWorldOf(search) };
 }
 
+/** Stores a session handed over in the fragment and clears it from the URL. */
+function adoptSessionFromHash(): void {
+  const { hash, search, pathname } = window.location;
+  if (hash === "") return;
+  const where = parseLocation(search);
+  const session = sessionFromHash(hash, where.worldId);
+  if (session === null) return;
+  saveSession(window.localStorage, where.slot, session);
+  window.history.replaceState(null, "", pathname + search);
+}
+
 export function App() {
-  const [where, setWhere] = useState(here);
+  const [where, setWhere] = useState(() => {
+    adoptSessionFromHash();
+    return here();
+  });
   const [file, setFile] = useState<ReplaySource | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
