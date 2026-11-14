@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { orderAt } from "../src/map/pick.ts";
 import { GameStore } from "../src/store.ts";
 import { order, toggleRoadMode } from "../src/interaction.ts";
-import { dynamicOf, testWorld, welcomeOf } from "./helpers.ts";
+import { viewOf, testWorld, welcomeOf } from "./helpers.ts";
 
 describe("orderAt", () => {
   const deposits = [{ id: 4, kind: "cristal" as const, amount: 0, x: 2, y: 2 }];
@@ -79,10 +79,7 @@ describe("right click", () => {
     const creep = world.creeps.find((c) => c.team === 0)!;
     dominate(world, 7, creep.id);
     step(world, []);
-    store.receive(
-      { type: "state", state: dynamicOf(world), status: "running" },
-      1,
-    );
+    store.show(viewOf(world), 1);
     toggleRoadMode(store);
     expect(store.mode.value.type).toBe("road");
     order(store, { x: 3.5, y: 4.5 }, send, 1);

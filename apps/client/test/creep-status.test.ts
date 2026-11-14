@@ -1,7 +1,7 @@
 import { step } from "@geometrix/sim";
 import { describe, expect, it } from "vitest";
 import { creepStatus } from "../src/creep-status.ts";
-import { dynamicOf, testWorld } from "./helpers.ts";
+import { viewOf, testWorld } from "./helpers.ts";
 
 /** A creep ordered to gather at a deposit it already stands on. */
 function atDeposit(kind: "materia" | "cristal", amount: number) {
@@ -14,7 +14,7 @@ function atDeposit(kind: "materia" | "cristal", amount: number) {
   creep.y = deposit.y;
   creep.order = { type: "gather", depositId: deposit.id };
   step(world, []);
-  const state = dynamicOf(world);
+  const state = viewOf(world);
   return creepStatus(state.creeps[0]!, state.deposits);
 }
 
@@ -32,7 +32,7 @@ describe("creep status", () => {
   });
 
   it("follows the activity otherwise", () => {
-    const state = dynamicOf(testWorld());
+    const state = viewOf(testWorld());
     expect(creepStatus(state.creeps[0]!, state.deposits)).toBe("idle");
   });
 });

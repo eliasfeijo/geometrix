@@ -51,7 +51,7 @@ function CreepInspector({ id }: { id: number }) {
     return <p class="muted">Esse creep não existe mais.</p>;
   }
   const team = state.teams[creep.team]!;
-  const max = capacity({ ...creep, path: null }, team, params);
+  const max = capacity(creep, team, params);
   const own = creep.team === viewer.team;
   const mine = creep.dominatedBy === viewer.playerId;
   const canAct = store.canAct.value;

@@ -45,6 +45,9 @@ type Entity = { id: number } & Record<string, unknown>;
  * mutated). Build one with emptySent; diffView advances it.
  */
 export type Sent = {
+  /** Tick and team of the view last diffed (-1 before any). */
+  tick: number;
+  team: number;
   teams: Entity[];
   creeps: Entity[];
   deposits: Entity[];
@@ -55,6 +58,8 @@ export type Sent = {
 
 export function emptySent(): Sent {
   return {
+    tick: -1,
+    team: -1,
     teams: [],
     creeps: [],
     deposits: [],
@@ -82,7 +87,7 @@ const KINDS = {
   deposits: {},
   roadJobs: {},
   players: {},
-} satisfies Record<keyof Omit<Sent, "roads">, FieldKinds>;
+} satisfies Record<keyof Omit<Sent, "roads" | "tick" | "team">, FieldKinds>;
 
 const COLLECTIONS = Object.keys(KINDS) as (keyof typeof KINDS)[];
 
@@ -93,6 +98,8 @@ const COLLECTIONS = Object.keys(KINDS) as (keyof typeof KINDS)[];
  */
 export function diffView(sent: Sent, view: TeamView): Delta {
   const delta: Delta = { tick: view.tick };
+  sent.tick = view.tick;
+  sent.team = view.team;
   for (const name of COLLECTIONS) {
     const items = view[name] as unknown as Entity[];
     const { changes, copies } = diffEntities(sent[name], items, KINDS[name]);
@@ -186,6 +193,24 @@ function copyEntity(item: Entity, kinds: FieldKinds): Entity {
     }
   }
   return copy;
+}
+
+/**
+ * The view the team last received, rebuilt from `sent`: what a welcome
+ * carries (spec S-1). Its objects are never mutated afterwards: diffView
+ * replaces what changes.
+ */
+export function sentView(sent: Sent): TeamView {
+  return {
+    tick: sent.tick,
+    team: sent.team,
+    teams: sent.teams,
+    creeps: sent.creeps,
+    deposits: sent.deposits,
+    roads: [...sent.roads].sort((a, b) => a - b),
+    roadJobs: sent.roadJobs,
+    players: sent.players,
+  } as unknown as TeamView;
 }
 
 /**

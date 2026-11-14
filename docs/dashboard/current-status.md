@@ -1,6 +1,6 @@
 # Status atual
 
-**Atualizado:** 2026-11-14 · **Marco:** M1.5 — A névoa, fatia de rede · **Fase:** F2 ✅ concluída · **Próximo:** F3 (servidor)
+**Atualizado:** 2026-11-14 · **Marco:** M1.5 — A névoa, fatia de rede · **Fase:** F3 ✅ concluída · **Próximo:** F4 (cliente)
 
 Resumo de bolso. A fonte de verdade continua nos docs linkados. Atualize este arquivo ao fechar uma fase, ao passar
 por um portão de aprovação ou quando surgir um bloqueio.
@@ -30,6 +30,7 @@ por um portão de aprovação ou quando surgir um bloqueio.
 | M1.5 rede — F0 Spike | ✅ Concluída, merge em `main`. Diff à mão em JSON por uma visão com cópia rasa: ~41 µs por mundo por envio (2 times), ~257 bytes por delta; o schema do Colyseus funciona, mas não foi adotado (R1) | [plan §1](../specs/m1.5-rede/plan.md) · [tasks.md](../specs/m1.5-rede/tasks.md) |
 | M1.5 rede — F1 Visão no `sim` | ✅ Concluída, merge em `main`. `view(state, team)` e `TeamView`; o estrategista decide pela visão do time + mapa estático + parâmetros; hash de 6 h travado em teste e o de 3 dias (`10662729…`) inalterado | [tasks.md](../specs/m1.5-rede/tasks.md) · `packages/sim/src/view.ts` |
 | M1.5 rede — F2 Delta no `protocol` | ✅ Concluída, merge em `main`. `diffView`/`applyDelta`/`viewJson`, propriedade de 6 h × 3 seeds no CI, `geo net`. **Checkpoint** (3 dias, seed 42): 227 B/s por cliente a ×1 (alvo ≤ 2 KB/s), 83 µs por envio (alvo ≤ 250 µs), 0 divergências em 518 400 verificações, hash `10662729…` igual | [tasks.md](../specs/m1.5-rede/tasks.md) · `packages/protocol/src/delta.ts` · `apps/cli/src/net.ts` |
+| M1.5 rede — F3 Servidor | ✅ Concluída, merge em `main`. Protocolo 2: `welcome` com a última visão enviada ao time, `delta` numerado por time (inclusive sem socket), hash a cada 60 ticks, retomada pelo buffer de 30 s, `resync` com linha no log. O store do cliente já aplica os deltas (1ª task da F4) | [tasks.md](../specs/m1.5-rede/tasks.md) · `apps/server/src/{stream,ws}.ts` |
 | M2–M4 | ⬜ Não iniciados | [ROADMAP](../ROADMAP.md) |
 
 ## Próximos passos imediatos
@@ -38,20 +39,20 @@ por um portão de aprovação ou quando surgir um bloqueio.
 ([spec](../specs/m1.5-rede/spec.md) · [plan](../specs/m1.5-rede/plan.md) · [tasks](../specs/m1.5-rede/tasks.md)),
 depois a de fog of war. O repo está no GitHub e o CI passa lá.
 
-1. **F3 — Servidor**, pela skill `implement-phase`, na branch `m1.5/f3-server` (criar a partir de `main`). O que a F3
+1. **F4 — Cliente**, pela skill `implement-phase`, na branch `m1.5/f4-client` (criar a partir de `main`). O que a F4
    precisa saber:
-   - **O delta** (`packages/protocol/src/delta.ts`): `emptySent()`, `diffView(sent, view)` (avança o `sent` e
-     devolve o `Delta`), `applyDelta(view, delta)`, `viewJson(view)` (JSON canônico, para o hash). O `Delta` leva o
-     `tick` dentro dele; a mensagem `delta` do plan §4 pode levar só `seq`, `delta`, `status?` e `hash?`. O delta
-     compartilha objetos com o estado: serialize antes do próximo `step`.
-   - **Base do stream:** para o `welcome` partir de uma base certa, `diffView(emptySent(), view)` uma vez ao
-     hospedar o mundo (o delta é descartado) e guarde `viewJson`/`JSON.stringify` da visão como `lastView`, com
-     `seq` 0. Assim faz o `geo net`.
-   - **Custos medidos** (`geo net`, 3 dias, 60 creeps): visão 11 µs, diff 58 µs, `stringify` 1 µs por envio
-     (2 times); o hash (`viewJson` + SHA-256) custa ~390 µs, por isso só a cada `viewHashEveryTicks`. A visão
-     completa de um `welcome` tem ~23 KB no fim do mundo.
-   - **Times sem socket** também calculam o delta (R7). O `Broadcaster` de hoje está em `apps/server/src/ws.ts`
-     (um por mundo, `toDynamicState`, teto de 5 envios/s).
+   - **A 1ª task já está feita** (no commit da troca de formato da F3, para cliente e servidor nunca falarem
+     formatos diferentes em `main`): `GameStore.receive` aplica `delta` com `applyDelta` e guarda a visão anterior
+     para a interpolação; `GameStore.show(view, now)` é a entrada do replay.
+   - **Falta no store/conexão:** guardar o `seq` e o `stream` do `welcome` e de cada delta; reconectar com
+     `&stream=…&seq=…` só na mesma página (`socketUrl` e `Connection.connect`); `seq` fora de ordem → mandar
+     `{type: "resync", reason: "seqGap", seq}` e ignorar deltas até o próximo `welcome`; `hash` no delta →
+     SHA-256 (Web Crypto) de `viewJson` da visão daquele `seq`, diferente → `resync` `hashMismatch`;
+     `welcome.protocol !== PROTOCOL_VERSION` → aviso e `location.reload()`.
+   - **O servidor responde** a um `resync` com um `welcome` (o store já trata `welcome` como recomeço) e a uma
+     retomada aceita mandando só os deltas perdidos, sem `welcome`.
+   - **Painel `?net=1`** (spec D8): bytes/s (média de 10 s), `seq`, deltas, retomadas, `welcome`s por causa,
+     hashes conferidos e divergentes.
 2. **Rodada de design do fog**, em paralelo, pela skill `gdd-decision`: as perguntas do [GDD 01](../gdd/01-mundo.md)
    (o que dá visão e até onde, o que se vê do outro time, se o piloto automático respeita o fog, se o que já foi
    visto continua visível). Precisa estar decidida antes da spec da fatia de fog.
@@ -75,6 +76,21 @@ Um item por problema: o que a pessoa não entendeu ou não conseguiu, a tarefa o
 
 ## Pendências e pontos a esclarecer
 
+- **Interpretações da F3 do M1.5** (o plan não fixa):
+  - **o `welcome` leva um id do stream** (`stream`, novo a cada processo do servidor) e a retomada é
+    `/ws?token=…&stream=…&seq=…`, não só `&seq=` (R5): sem o id, depois de um restart um `seq` antigo do cliente
+    poderia cair no buffer novo e o servidor mandaria deltas sobre a base errada. **Precisa do OK do dono**;
+  - a troca de formato (protocolo, servidor e o store do cliente) foi num commit só, que também fez a 1ª task da
+    F4;
+  - os streams de um mundo nascem na primeira conexão a ele (a base é a visão daquele momento, `seq` 0); daí em
+    diante todos os times avançam a cada envio, com ou sem socket (R7);
+  - a última visão enviada é remontada do `Sent` quando um `welcome` sai (custo zero por envio), não guardada
+    serializada a cada envio. O `status` do `welcome` é o da última visão enviada;
+  - o delta leva o hash quando os ticks que ele cobre passam por um múltiplo de `viewHashEveryTicks`: a cada 60
+    ticks a ×1, e uma vez a cada 60 ticks quando um envio cobre vários (×360);
+  - o buffer é aparado pelo relógio real a cada envio; uma retomada com o `seq` atual não recebe nada; um `seq`
+    à frente do atual, de outro stream ou malformado recebe `welcome`;
+  - a linha do `resync` leva o tick do mundo no momento do pedido; o log do servidor é injetável (testes).
 - **Interpretações da F2 do M1.5** (o plan não fixa):
   - o `Delta` leva o `tick`; a entidade nova vai inteira no `upsert`, a existente como `{id, ...campos}`; campos
     aninhados (`cargo`, `order`, `stock`, `upgrades`, `production`, `core`) vão inteiros quando mudam. Uma estrada

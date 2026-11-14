@@ -19,6 +19,8 @@ export type AppOptions = {
   params: Params;
   /** ISO timestamp, for new worlds. */
   clock: () => string;
+  /** Server log for incidents (default console.log). */
+  log?: (line: string) => void;
 };
 
 export type App = {
@@ -33,7 +35,7 @@ export type App = {
 };
 
 export async function startApp(options: AppOptions): Promise<App> {
-  const { store, config, timers, params, clock } = options;
+  const { store, config, timers, params, clock, log } = options;
   const presence = new PresenceTracker(timers, config);
   const worlds = new Worlds(store, config, timers, params, presence);
   const recoveryFailures = worlds.recoverAll();
@@ -45,7 +47,10 @@ export async function startApp(options: AppOptions): Promise<App> {
     worlds,
     timers,
     broadcastIntervalMs: config.broadcastIntervalMs,
+    viewHashEveryTicks: config.viewHashEveryTicks,
+    deltaBufferMs: config.deltaBufferMs,
     presence,
+    log,
   });
   await new Promise<void>((done) => server.listen(config.port, done));
   return {

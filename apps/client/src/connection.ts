@@ -1,5 +1,5 @@
-// WebSocket session with the server (plan section 7): welcome, then state at
-// most 5 times per second; commands go out with a ref and come back as ack or
+// WebSocket session with the server (plan section 7): welcome, then the
+// deltas of the team's view at most 5 times per second (M1.5 plan section 6); commands go out with a ref and come back as ack or
 // reject. A dropped connection reconnects with the same token (backoff); a
 // refused token or an unhosted world is final.
 
@@ -26,7 +26,7 @@ export type CommandResult =
 
 export type WorldMessage = Extract<
   ServerMessage,
-  { type: "welcome" | "state" }
+  { type: "welcome" | "delta" }
 >;
 
 export type ConnectionEvents = {
@@ -124,7 +124,7 @@ export class Connection {
         this.events.status("open");
         this.events.message(message);
         break;
-      case "state":
+      case "delta":
         this.events.message(message);
         break;
       case "ack":

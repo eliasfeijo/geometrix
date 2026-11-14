@@ -6,15 +6,15 @@ import {
   stockDeltas,
   type StockFloat,
 } from "../src/map/stock-floats.ts";
-import { dynamicOf, testWorld } from "./helpers.ts";
+import { viewOf, testWorld } from "./helpers.ts";
 
 describe("stockDeltas", () => {
   it("tells deliveries and payments of each team", () => {
     const state = testWorld();
-    const before = dynamicOf(state);
+    const before = viewOf(state);
     state.teams[0]!.stock.materia += 40;
     state.teams[1]!.stock.cristal -= 10;
-    expect(stockDeltas(before, dynamicOf(state))).toEqual([
+    expect(stockDeltas(before, viewOf(state))).toEqual([
       { team: 0, resource: "materia", amount: 40 },
       { team: 1, resource: "cristal", amount: -10 },
     ]);

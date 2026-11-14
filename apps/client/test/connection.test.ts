@@ -87,16 +87,15 @@ function setup() {
 }
 
 describe("Connection", () => {
-  it("connects with the url and reports the welcome and states", () => {
+  it("connects with the url and reports the welcome and deltas", () => {
     const t = setup();
     expect(t.sockets).toHaveLength(1);
     expect(t.last().url).toBe("ws://test/ws?token=t");
     expect(t.statuses).toEqual(["connecting"]);
     t.openWithWelcome();
     expect(t.statuses).toEqual(["connecting", "open"]);
-    const state = { ...welcomeOf(testWorld()).state, tick: 5 };
-    t.last().serverSends({ type: "state", state, status: "running" });
-    expect(t.messages.map((m) => m.type)).toEqual(["welcome", "state"]);
+    t.last().serverSends({ type: "delta", seq: 1, delta: { tick: 5 } });
+    expect(t.messages.map((m) => m.type)).toEqual(["welcome", "delta"]);
   });
 
   it("resolves commands with their ack or reject, by ref", async () => {
@@ -173,7 +172,7 @@ describe("Connection", () => {
     t.connection.close();
     expect(socket.closed).toBe(true);
     socket.handlers.close(1000);
-    socket.serverSends({ type: "state", state: {}, status: "running" });
+    socket.serverSends({ type: "delta", seq: 1, delta: { tick: 5 } });
     expect(t.timers).toEqual([]);
     expect(t.messages).toHaveLength(1);
     expect(t.statuses.at(-1)).toBe("closed");
