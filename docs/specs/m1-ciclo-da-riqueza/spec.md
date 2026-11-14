@@ -143,6 +143,28 @@ Formato: *Quando [gatilho], o sistema deve [resposta].*
 - **P-4** Piloto automático e humano emitem os mesmos comandos ([ADR-0002](../../adr/0002-tudo-e-comando.md)). O
   servidor valida todos do mesmo jeito.
 
+#### Detalhes de piloto automático e domínio decididos pelo dono na F4 (2026-11-13)
+
+- **Avaliação (P-1):** a cada tick, num creep livre, a 1ª regra cuja condição é verdadeira **e** cuja ação é
+  possível vira a ordem. Uma ação impossível (ex.: coletar cristal sem cristal no mapa) pula para a próxima regra.
+  A mesma ação da ordem atual não reinicia nada. Se nenhuma regra vale, o creep mantém a ordem atual. Limite de
+  regras por creep: parâmetro (10, provisório).
+- **Regras de nascença:** os creeps iniciais e os produzidos nascem com o preset *coletor de matéria*.
+- **Vocabulário (P-2):** "mais próximo" e "raio R" usam a distância Manhattan a partir do creep, só contam
+  depósitos com quantidade > 0, e o empate vai para o menor id. "Cheio" = carga ≥ capacidade; "vazio" = carga 0.
+- **Presets (P-3):**
+  - *Coletor de matéria:* cheio → entregar; sempre → coletar matéria; sempre → entregar (a última entrega a
+    sobra quando não há depósito).
+  - *Coletor de cristal:* igual, com cristal.
+  - *Construtor de estrada* (o `applyPreset` leva o ponto P): cheio → entregar; sempre → construir estrada até P;
+    sempre → coletar matéria; sempre → entregar. Sem matéria no estoque ou com a estrada pronta, a construção é
+    impossível e ele coleta matéria.
+- **Domínio:** o creep dominado mantém a ordem atual e só muda com uma `order` de quem o domina; terminada a
+  ordem, fica parado. Ao ser liberado, volta às regras no tick seguinte. Os parâmetros de D2 (todos em 0 no M1)
+  valem assim: o custo sai do estoque do time ao dominar (sem estoque, recusa); o cooldown é por jogador, contado
+  a partir do último domínio aceito; a distância máxima é Manhattan, do Núcleo do time até o creep (0 = sem
+  limite).
+
 ### Cliente
 - **C-1** Mapa estratégico em SVG com pan e zoom, mostrando terreno, rio, depósitos, estradas, Núcleos e creeps
   (forma = DNA, cor = time, indicador de carga).

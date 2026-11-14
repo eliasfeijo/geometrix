@@ -12,6 +12,9 @@
 - Cada creep tem um **inventário**. A capacidade varia com level, stats e DNA.
 - **A morte é permanente.** A exceção é uma eventual skill, magia ou ultimate de reviver.
 - *(Do conceito inicial)* 3 skills base + 1 ultimate desbloqueada por level-up.
+- **M1** (2026-11-13): dominar é livre (custo, cooldown e distância existem como parâmetros, em 0). O custo sai do
+  estoque do time; o cooldown é por jogador; a distância vai do Núcleo do time ao creep. O creep dominado só muda
+  de ordem por comando de quem o domina. Detalhes na [spec M1 §5](../specs/m1-ciclo-da-riqueza/spec.md).
 
 ## Proposta
 - Dominar só troca **quem emite os comandos** do creep. Ver [ADR-0002](../adr/0002-tudo-e-comando.md).
