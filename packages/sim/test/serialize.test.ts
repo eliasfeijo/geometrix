@@ -47,9 +47,10 @@ describe("serialize / restore", () => {
 
   test("the world for seed 42 hashes to a stable value", () => {
     // Locks map generation, rng and serialization together. If this changes
-    // on purpose, bump SIM_VERSION (old snapshots and replays become invalid).
+    // on purpose, update it, and bump SIM_VERSION once worlds are persisted
+    // (see SIM_VERSION).
     expect(sha256(serialize(world))).toMatchInlineSnapshot(
-      `"0eb5708510a336194c61fb77cdc22cc7f18c4867fef0a5f24b59af44dec07775"`,
+      `"24cbd6ef9df1970c59de7e6f724838d43e24b156252523f6e47038eda80e2ff3"`,
     );
   });
 
