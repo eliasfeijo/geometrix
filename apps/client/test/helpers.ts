@@ -5,16 +5,14 @@ import type {
   WelcomeMessage,
 } from "@geometrix/protocol";
 import {
+  botCommands,
+  botsFor,
   createWorld,
   parseParams,
   serialize,
   SIM_VERSION,
   step,
-  strategistActs,
-  strategistCommands,
   validate,
-  view,
-  type CommandInput,
   type WorldState,
 } from "@geometrix/sim";
 import { toDynamicState, toStaticMap } from "@geometrix/protocol";
@@ -75,26 +73,9 @@ export function botReplay(
   const state = testWorld(seed);
   const params = state.params;
   const commands: LoggedCommand[] = [];
+  const bots = botsFor(["balanced", "balanced"]);
   while (state.tick < ticks) {
-    const inputs: CommandInput[] =
-      state.tick === 0
-        ? [0, 1].map((team) => ({
-            playerId: team + 1,
-            command: { type: "join", team, bot: true },
-          }))
-        : strategistActs(state.tick)
-          ? [0, 1].flatMap((team) =>
-              strategistCommands(
-                "balanced",
-                view(state, team),
-                state.map,
-                state.params,
-              ).map((command) => ({
-                playerId: team + 1,
-                command,
-              })),
-            )
-          : [];
+    const inputs = botCommands(state, bots);
     const accepted = inputs.filter(
       ({ playerId, command }) => validate(state, command, playerId) === null,
     );

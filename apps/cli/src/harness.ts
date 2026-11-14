@@ -4,29 +4,16 @@
 // the command log, and step validates them again when it applies them.
 
 import {
+  botCommands,
   createWorld,
   step,
-  strategistActs,
-  strategistCommands,
   validate,
-  view,
+  type Bot,
   type Command,
   type CommandInput,
   type Params,
-  type StrategistId,
   type WorldState,
 } from "@geometrix/sim";
-
-/** One bot player per team; player ids are team + 1. */
-export type Bot = { playerId: number; team: number; strategist: StrategistId };
-
-export function botsFor(strategists: readonly StrategistId[]): Bot[] {
-  return strategists.map((strategist, team) => ({
-    playerId: team + 1,
-    team,
-    strategist,
-  }));
-}
 
 /** An accepted command, as the log keeps it (ADR-0004). */
 export type LoggedCommand = {
@@ -35,31 +22,6 @@ export type LoggedCommand = {
   playerId: number;
   command: Command;
 };
-
-/** What the bots send on this tick: their join at tick 0, then decisions. */
-export function botCommands(
-  state: WorldState,
-  bots: readonly Bot[],
-): CommandInput[] {
-  if (state.tick === 0) {
-    return bots.map((bot) => ({
-      playerId: bot.playerId,
-      command: { type: "join", team: bot.team, bot: true },
-    }));
-  }
-  if (!strategistActs(state.tick)) return [];
-  return bots.flatMap((bot) =>
-    strategistCommands(
-      bot.strategist,
-      view(state, bot.team),
-      state.map,
-      state.params,
-    ).map((command) => ({
-      playerId: bot.playerId,
-      command,
-    })),
-  );
-}
 
 /** Steps one tick with the bots' accepted commands, appending them to `log`. */
 export function stepWithBots(
