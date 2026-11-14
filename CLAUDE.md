@@ -17,7 +17,7 @@ fica no `tasks.md`; a estrutura do repositório, no `plan.md` §1.
 | Decisões de arquitetura | `docs/adr/` |
 | Specs de fatias (spec → plan → tasks) | `docs/specs/` |
 | Ordem de construção | `docs/ROADMAP.md` |
-| Skills do workflow (commit, ADR, GDD, fatia) | `.claude/skills/` |
+| Skills do workflow (commit, fase, ADR, GDD, fatia) | `.claude/skills/` (implementar uma fase: `implement-phase`) |
 
 ## Comandos
 
@@ -33,6 +33,27 @@ Node 26 (`.nvmrc`). O Node roda `.ts` direto; só o cliente tem build (Vite).
 | `npm test` | Vitest em todos os workspaces |
 | `npm test -- --project @geometrix/sim` | Vitest num workspace só |
 | `npm run geo -- verify --seed 42` | Determinismo: 2 execuções + snapshot → restore têm de dar o mesmo hash |
+
+## Convenções do `sim`
+
+O `packages/sim` é puro e determinístico (ADR-0003). O tsconfig e o lint já barram APIs do runtime, `Math.random`,
+funções transcendentais, `Date`, `for…in` e literais de ponto flutuante. Além disso:
+
+- **Unidades inteiras:** posições em células, durações em segundos de mundo, modificadores em ‰, movimento em
+  pontos (`CELL_COST`). Toda divisão tem de dar inteiro: `Math.floor`, ou divisibilidade garantida (ex.:
+  `CELL_COST` é múltiplo de 60) ou validada nos params (ex.: largura par).
+- **Parâmetro novo:** entra no `schema` de `params.ts` (o tipo `Params` deriva dele), em `params/default.json` e,
+  se tiver relação com outros, em `checkConsistency`. Número de balanceamento nunca fica no código.
+- **Campo novo no estado:** tipo em `world.ts`, valor inicial no `createWorld`, só dados JSON (nada de `Map`, `Set`
+  ou classes; o `serialize` recusa). Atualize o hash fixo (ver skill `implement-phase`).
+- **Estado:** arrays ordenados por id; ids do contador `nextId`, nunca reaproveitados. O `step` muta in place.
+- **RNG:** só o `state.rng` (`nextInt`/`nextRange`), sempre na mesma ordem de chamadas.
+- **Pipeline do tick** (plan §5) em `step.ts`; ordens novas em `orders.ts`. Estrada concluída incrementa
+  `state.roadRevision` (invalida os caminhos em cache).
+- **Exports:** todo módulo público entra em `packages/sim/src/index.ts`; os outros pacotes importam de
+  `@geometrix/sim`.
+- **Testes** em `packages/<pacote>/test/`, com `test/helpers.ts` (`loadDefaultParams`). Mapas pequenos de teste
+  desenhados em texto (ver `pathfinding.test.ts`).
 
 ## Regras de trabalho
 
