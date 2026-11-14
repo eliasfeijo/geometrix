@@ -14,10 +14,10 @@ import { createStats, type Activity, type Stats, type Trip } from "./stats.ts";
 
 /**
  * Bump when a rule or state change makes old snapshots or replays invalid
- * (ADR-0004). Nothing is persisted before the server exists (F6), so until then
- * it stays at 1 and only the golden hash test is updated.
+ * (ADR-0004): the server persists worlds since F6 and refuses to recover one
+ * of another version. 2: gather keeps its deposit and waits for regeneration.
  */
-export const SIM_VERSION = 1;
+export const SIM_VERSION = 2;
 
 export type Stock = Record<Resource, number>;
 

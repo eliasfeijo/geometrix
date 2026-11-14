@@ -1,0 +1,86 @@
+// The creeps of a clicked stack, to choose one: each row says what tells
+// them apart (DNA, team, status, cargo, who dominates it). Hovering a row
+// highlights that creep on the map.
+
+import { capacity } from "@geometrix/sim";
+import { useGame } from "../context.ts";
+import { creepStatus, STATUS_TEXTS } from "../creep-status.ts";
+import { DNA_NAMES, teamName } from "../format.ts";
+import { creepName } from "../names.ts";
+import { DnaIcon } from "./dna-icon.tsx";
+
+const WIDTH = 280;
+
+export function StackList() {
+  const { store, session } = useGame();
+  const stack = store.stack.value;
+  const state = store.current.value?.state;
+  const params = store.info.value?.params;
+  if (stack === null || state === undefined || params === undefined) {
+    return null;
+  }
+  const creeps = state.creeps.filter((c) => stack.ids.includes(c.id));
+  const size = store.mapSize.value;
+  const close = () => {
+    store.stack.value = null;
+    store.hovered.value = null;
+  };
+  const left = Math.max(8, Math.min(stack.at.x + 12, size.width - WIDTH - 8));
+  const top = Math.max(8, Math.min(stack.at.y - 12, size.height - 220));
+  return (
+    <div
+      class="stack-list panel"
+      style={{ left: `${left}px`, top: `${top}px`, width: `${WIDTH}px` }}
+      role="listbox"
+      aria-label="Creeps nesta célula"
+      onMouseLeave={() => (store.hovered.value = null)}
+    >
+      <div class="stack-head">
+        <strong>{creeps.length} creeps nesta célula</strong>
+        <button class="ghost" title="Fechar (Esc)" onClick={close}>
+          ×
+        </button>
+      </div>
+      <ul>
+        {creeps.map((creep) => {
+          const team = state.teams[creep.team]!;
+          const max = capacity({ ...creep, path: null }, team, params);
+          const status = creepStatus(creep, state.deposits);
+          return (
+            <li key={creep.id}>
+              <button
+                class={`stack-row team-${creep.team}`}
+                role="option"
+                onMouseEnter={() => (store.hovered.value = creep.id)}
+                onClick={() => {
+                  store.selection.value = { kind: "creep", id: creep.id };
+                  close();
+                }}
+              >
+                <DnaIcon dna={creep.dna} team={creep.team} size={16} />
+                <span class="stack-name">
+                  <strong>{creepName(state.creeps, creep.id)}</strong>{" "}
+                  <span class="muted small">
+                    {DNA_NAMES[creep.dna]} · #{creep.id}
+                  </span>
+                  {creep.team !== session.team && (
+                    <span class="team-name"> {teamName(creep.team)}</span>
+                  )}
+                </span>
+                <span class="muted small">
+                  {STATUS_TEXTS[status]} ·{" "}
+                  {creep.cargo.materia + creep.cargo.cristal}/{max}
+                  {creep.dominatedBy === session.playerId
+                    ? " · você"
+                    : creep.dominatedBy !== null
+                      ? " · dominado"
+                      : ""}
+                </span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
