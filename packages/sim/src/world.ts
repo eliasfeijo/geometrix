@@ -1,6 +1,7 @@
 // World state (plan section 3) and world creation. Arrays are ordered by id;
 // ids come from one increasing counter and are never reused.
 
+import type { UpgradeId } from "./economy.ts";
 import { generateMap, type Cell, type GameMap } from "./map.ts";
 import { DNAS, type Dna, type Params, type Resource } from "./params.ts";
 import type { Order } from "./orders.ts";
@@ -16,7 +17,14 @@ export const SIM_VERSION = 1;
 
 export type Stock = Record<Resource, number>;
 
-export type Team = { id: number; core: Cell; stock: Stock };
+/** Team ids match their index in WorldState.teams. */
+export type Team = {
+  id: number;
+  core: Cell;
+  stock: Stock;
+  /** Upgrades bought (spec I-3). */
+  upgrades: Record<UpgradeId, boolean>;
+};
 
 export type Creep = {
   id: number;
@@ -72,6 +80,7 @@ export function createWorld(seed: number, params: Params): WorldState {
       materia: params.teams.initialStock.materia,
       cristal: params.teams.initialStock.cristal,
     },
+    upgrades: { capacity: false },
   }));
 
   const creeps: Creep[] = [];

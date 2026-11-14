@@ -1,3 +1,4 @@
+export * from "./economy.ts";
 export * from "./map.ts";
 export * from "./movement.ts";
 export * from "./orders.ts";
