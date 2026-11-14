@@ -8,7 +8,9 @@
   },
   "dependencies": {
     "better-sqlite3": "^13.1.1",
-    "ws": "^8.23.0"
+    "ws": "^8.23.0",
+    "@geometrix/sim": "*",
+    "@geometrix/protocol": "*"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^9.6.0",
