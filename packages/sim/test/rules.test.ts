@@ -38,6 +38,10 @@ describe("setRules", () => {
         then: { type: "moveTo", x: 3, y: 0 },
       },
       { when: always, then: { type: "buildRoad", x: 5, y: 0 } },
+      {
+        when: { type: "resourceUnknown", resource: "cristal" },
+        then: { type: "explore" },
+      },
     ];
     expect(setRulesRefusal(w, 2, creep.id, rules)).toBeNull();
     setRules(w, creep.id, rules);
@@ -110,6 +114,13 @@ describe("setRules", () => {
     [
       "a road target outside the map",
       { when: always, then: { type: "buildRoad", x: -1, y: 0 } },
+    ],
+    [
+      "an unknown resource in resourceUnknown",
+      {
+        when: { type: "resourceUnknown", resource: "ouro" },
+        then: { type: "explore" },
+      },
     ],
   ])("refuses %s", (_, rule) => {
     const w = world();

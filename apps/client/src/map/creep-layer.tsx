@@ -305,6 +305,7 @@ export function orderTarget(creep: CreepView, state: TeamView): Cell | null {
     case "stop":
       return null;
     case "moveTo":
+    case "explore":
     case "buildRoad":
       return { x: order.x, y: order.y };
     case "gather":

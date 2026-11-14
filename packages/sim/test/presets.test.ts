@@ -11,18 +11,29 @@ import { creepOf, loadTestParams, run, textWorld } from "./helpers.ts";
 const params = loadTestParams();
 
 describe("preset rules", () => {
-  test("collectors deliver when full, gather, then bring the leftover home", () => {
+  test("collectors deliver when full, gather, explore while they know no deposit, then bring the leftover home", () => {
     expect(presetRules("cristalCollector", null)).toEqual([
       { when: { type: "cargoFull" }, then: { type: "deliver" } },
       {
         when: { type: "always" },
         then: { type: "gather", resource: "cristal" },
       },
+      {
+        when: { type: "resourceUnknown", resource: "cristal" },
+        then: { type: "explore" },
+      },
       { when: { type: "always" }, then: { type: "deliver" } },
     ]);
     expect(presetRules("materiaCollector", null)).toEqual(
       collectorRules("materia"),
     );
+  });
+
+  test("the scout explores, then goes back to the core", () => {
+    expect(presetRules("scout", null)).toEqual([
+      { when: { type: "always" }, then: { type: "explore" } },
+      { when: { type: "always" }, then: { type: "deliver" } },
+    ]);
   });
 
   test("the road builder builds toward its target before gathering materia", () => {

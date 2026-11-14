@@ -27,6 +27,7 @@ export type OrderInput =
   | { type: "deliver" }
   | { type: "gather"; depositId: number }
   | ({ type: "moveTo" } & Cell)
+  | ({ type: "explore" } & Cell)
   | ({ type: "buildRoad" } & Cell);
 
 export type DominationRefusal =
@@ -183,6 +184,7 @@ export function orderRefusal(
         ? "invalidOrder"
         : null;
     case "moveTo":
+    case "explore":
     case "buildRoad":
       return isInMap(state.map, order) ? null : "invalidOrder";
   }
@@ -204,7 +206,8 @@ function toOrder(input: OrderInput): Order {
     case "gather":
       return { type: "gather", depositId: input.depositId };
     case "moveTo":
-      return { type: "moveTo", x: input.x, y: input.y };
+    case "explore":
+      return { type: input.type, x: input.x, y: input.y };
     case "buildRoad":
       return buildRoadOrder(input);
   }

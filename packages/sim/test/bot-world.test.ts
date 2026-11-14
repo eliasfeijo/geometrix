@@ -33,6 +33,6 @@ test("a 6 h bot world of seed 42 hashes to a stable value", () => {
   expect(
     createHash("sha256").update(serialize(state)).digest("hex"),
   ).toMatchInlineSnapshot(
-    `"76a2abdb3419c3d13e3cdd0e9800a1c66eeaf517539f67aa29545bd1e7aeeadf"`,
+    `"da1878fc3a971f341416000a32543c05e69fc633cf5da49da1a0f30af14f7c11"`,
   );
 });
