@@ -1,6 +1,6 @@
 # Status atual
 
-**Atualizado:** 2026-11-14 · **Marco:** M1.5 — A névoa · **Fatia de rede:** ✅ concluída (viabilidade aprovada) · **Design do fog:** ✅ decidido (GDD 01, 02, 07) · **Spec e plan do fog:** ✅ aprovados · **Fog F1:** ✅ · **Fog F2:** ✅ · **Fog F3:** ✅ · **Fog F4:** ✅ · **Próximo:** fog F5 (soak e legibilidade)
+**Atualizado:** 2026-11-14 · **Marco:** M1.5 — A névoa · **Fatia de rede:** ✅ concluída (viabilidade aprovada) · **Design do fog:** ✅ decidido (GDD 01, 02, 07) · **Spec e plan do fog:** ✅ aprovados · **Fog F1:** ✅ · **Fog F2:** ✅ · **Fog F3:** ✅ · **Fog F4:** ✅ · **Fog F5:** 🟡 soak ✅, aguarda a sessão de legibilidade do dono (fecha o M1.5)
 
 Resumo de bolso. A fonte de verdade continua nos docs linkados. Atualize este arquivo ao fechar uma fase, ao passar
 por um portão de aprovação ou quando surgir um bloqueio.
@@ -24,7 +24,7 @@ por um portão de aprovação ou quando surgir um bloqueio.
 | M1 — F8 Replay e multi-cliente | ✅ Concluída, merge em `main`. Replay no navegador (arquivo do `geo sim` ou `GET /api/worlds/:id/replay`) com velocidades, linha do tempo e hash ✓/✗; hash confere no WebKit/JSC; `npm run dev:multi`. Detalhes decididos pelo dono no [plan §8](../specs/m1-ciclo-da-riqueza/plan.md) | [tasks.md §F8](../specs/m1-ciclo-da-riqueza/tasks.md) · `apps/client/src/replay/` · `apps/server/src/dev-multi*.ts` |
 | M1 — F9 Legibilidade e playtest | ✅ Concluída, merge em `main`. Fecha o M1. Feito: `npm run soak` (teste de resistência comprimido, no lugar do mundo de 24 h), estrada × pedra, nomes no mapa (Chakra Petch), carga cheia, `+N`/`−N` no Núcleo, custo da estrada sob o cursor e tempo da obra, [PLAYTEST.md](../PLAYTEST.md). **Checkpoint** (dono, 2026-11-14): playtest parcial e replay validados, sem achados | [tasks.md §F9](../specs/m1-ciclo-da-riqueza/tasks.md) · [spec §8](../specs/m1-ciclo-da-riqueza/spec.md) |
 | Deploy e playtest de diversão | Saíram do M1 (dono, 2026-11-14): abrem o M2 | [ROADMAP](../ROADMAP.md) |
-| M1.5 — A névoa | 🟡 Em andamento (dono, 2026-11-14). Duas fatias: rede (deltas da visão de cada time, [ADR-0006](../adr/0006-sync-do-mundo.md), aceito) ✅ concluída, e depois fog of war 🟡 (rodada de design, spec e plan ✅ 2026-11-14; F1 ✅; F2 ✅; F3 ✅; F4 ✅; F5 ⬜) | [ROADMAP](../ROADMAP.md) |
+| M1.5 — A névoa | 🟡 Em andamento (dono, 2026-11-14). Duas fatias: rede (deltas da visão de cada time, [ADR-0006](../adr/0006-sync-do-mundo.md), aceito) ✅ concluída, e depois fog of war 🟡 (rodada de design, spec e plan ✅ 2026-11-14; F1 ✅; F2 ✅; F3 ✅; F4 ✅; F5 🟡 checkpoint) | [ROADMAP](../ROADMAP.md) |
 | M1.5 rede — spec | ✅ Aprovada (2026-11-14). Decisões D1–D8; critérios de viabilidade na §7 | [spec.md](../specs/m1.5-rede/spec.md) |
 | M1.5 rede — plan | ✅ Aprovado (2026-11-14), com R1–R7 decididas | [plan.md](../specs/m1.5-rede/plan.md) |
 | M1.5 fog — spec | ✅ Aprovada (2026-11-14). Decisões D1–D12 (D1: pedras bloqueiam a visão, escolha do dono; D3/D4: como e para onde se explora, no GDD 07); critérios na §7 | [spec.md](../specs/m1.5-fog/spec.md) |
@@ -56,10 +56,10 @@ por um portão de aprovação ou quando surgir um bloqueio.
    Ficaram em aberto, para a spec: como os creeps começam explorando (regra no preset coletor, preset "batedor" ou
    os dois; GDD 07). Terreno e Núcleo inimigo vistos ficam conhecidos, e a tela tem três estados (nunca visto,
    lembrado, visível): confirmados pelo dono na mesma rodada.
-2. **Implementar o fog** ([tasks](../specs/m1.5-fog/tasks.md), skill `implement-phase`). F1–F4 ✅. Próxima:
-   **F5** (`m1.5/fog-f5-playtest`, a criar a partir de `main`): `npm run soak` completo com o fog, perguntas de
-   névoa no [PLAYTEST.md](../PLAYTEST.md) (spec §8) e o **checkpoint** da sessão de legibilidade do dono com
-   `dev:multi`, que fecha o M1.5. O que a F5 precisa saber da F4:
+2. **Implementar o fog** ([tasks](../specs/m1.5-fog/tasks.md), skill `implement-phase`). F1–F4 ✅. **F5**
+   (`m1.5/fog-f5-playtest`, sem merge): soak ✅ e perguntas de névoa no [PLAYTEST.md](../PLAYTEST.md) ✅;
+   **aguarda o checkpoint**: a sessão de legibilidade do dono (seção "Névoa (M1.5)" do PLAYTEST) e as respostas em
+   "Checkpoint da F5 do fog", abaixo. Com elas, o merge da F5 fecha o M1.5. O que a F5 sabe da F4:
    - **num mundo só de humanos, ninguém explora sem ordem:** todo creep nasce coletor de matéria, que só explora
      quando o time não conhece depósito do recurso (spec D3), e no seed 42 há matéria à vista do Núcleo. Em 4 h de
      mundo (×360) o time Azul ficou no losango inicial, com 0 cristal. É a regra da spec; o jogador explora com o
@@ -93,6 +93,42 @@ Um item por problema: o que a pessoa não entendeu ou não conseguiu, a tarefa o
   item 3).
 
 ## Pendências e pontos a esclarecer
+
+- **Checkpoint da F5 do fog: fecha o M1.5** (spec §8, "Critério para fechar o M1.5"). Critérios da spec §7:
+
+  | Critério | Resultado | Onde |
+  |---|---|---|
+  | Início de partida (seeds 1–20) | ✅ 1ª matéria em 2–7 min (alvo 30) | F2 |
+  | Equivalência entre os times | ✅ diferença 0 na 1ª entrega; divergência depois de ~15 h aceita (rebalanceamento) | F2 |
+  | Economia (3 dias, seed 42) | ✅ aceita pelo dono (matéria −13% a −20%) | F2 |
+  | Determinismo | ✅ `geo verify` | F2–F4 |
+  | Correção do diff | ✅ 0 divergências (6 h × 3 seeds no CI; 518 400 verificações no `geo net`) | F3 |
+  | Banda e CPU | ✅ 195 B/s, 121 µs por envio | F3 |
+  | Custo do tick | ❌ 2,2× (alvo 2×), **aceito** pelo dono | F2 |
+  | Sem divergência (soak) | ✅ abaixo | F5 |
+  | Linha de visão; nada vaza | ✅ testes do `sim` | F1 |
+
+  **Soak** (`npm run soak`, `runs/soak-20261114-230613-s42/summary.md`; antes do fog,
+  `runs/soak-20261114-172301-s42/`): resultado OK, 12,3 min reais; 6 interrupções (5 `kill -9` e 1 SIGTERM), cada
+  uma de volta em 1,5–2,3 s; replay reconstruído no Node com o hash do servidor; 4 clientes, **0 hashes
+  divergentes** em 14 364 conferidos, as 4 visões finais iguais às do servidor, 0 resyncs. Banda a ×360: 10,6–10,8
+  KB/s em média por cliente, pico 32,7 KB/s (antes 12,9 e 47,9). Laço: mediana 100% do ritmo, o tick mais lento a
+  95% (antes 10%). Memória: máximo 212 MB (antes 202). **SQLite no fim: 115 MB (antes 55 MB):** a memória dos
+  times (bitmaps de 4 096 células por time: `explored`, `visible`, `terrain`, `road`) é 71% de cada snapshot (66 de
+  93 KB na 1ª hora do seed 42), e há um snapshot a cada 300 ticks.
+
+  **Perguntas ao dono:**
+  1. **Sessão de legibilidade:** rodar a seção "Névoa (M1.5)" do [PLAYTEST.md](../PLAYTEST.md) (de preferência
+     com alguém que nunca viu o jogo) e responder à hipótese: *esconder informação cria decisões interessantes
+     (explorar, proteger rotas) sem tornar o mapa ilegível?* Os achados entram em "Achados do playtest".
+  2. **Interpretações da F4** (abaixo): nomes de creep pelo id, com sufixo nos últimos ~30 creeps de um mundo
+     longo; véu com opacidade 0,55. Ok, ou algo a mudar depois da sessão?
+  3. **Num mundo só de humanos, ninguém explora sem ordem** (regra D3: o coletor só explora sem depósito
+     conhecido do recurso). Recomendo manter e observar na tarefa N3 da sessão; se as pessoas travarem, a resposta
+     vira proposta no GDD 07.
+  4. **Tamanho do snapshot:** o banco de um mundo de 3 dias dobrou (55 → 115 MB). Recomendo deixar como está no
+     M1.5 e rever no deploy do M2: guardar a memória compactada (a alternativa descartada da N1, listas de índices,
+     ou bitsets em base64) muda o formato do snapshot e pede o `SIM_VERSION` seguinte.
 
 - **Interpretações da F4 do fog** (o plan não fixa; a validar na sessão de legibilidade):
   - **nomes de creep pelo id**, não pela posição na lista da visão: com o fog a lista só tem os inimigos à vista, e
