@@ -1,7 +1,6 @@
 # Status atual
 
-**Atualizado:** 2026-11-14 · **Marco:** M1 — O ciclo da riqueza · **Fase:** F7 (cliente) implementado, aguardando o
-checkpoint (sessão do dono) para o merge; branch `m1/f7-client`
+**Atualizado:** 2026-11-14 · **Marco:** M1 — O ciclo da riqueza · **Fase:** F8 (replay e multi-cliente) é a próxima
 
 Resumo de bolso. A fonte de verdade continua nos docs linkados. Atualize este arquivo ao fechar uma fase, ao passar
 por um portão de aprovação ou quando surgir um bloqueio.
@@ -21,7 +20,7 @@ por um portão de aprovação ou quando surgir um bloqueio.
 | M1 — F5 Harness | ✅ Concluída, merge em `main`. Checkpoint revisado pelo dono (2026-11-13): a economia precisa de balanceamento. Stats + `sampleMetrics`, estrategista `balanced`, `geo sim`/`report`/`sweep`, `geo verify` com bots e replay do log, orçamento de 6 h no CI. Detalhes decididos pelo dono no [plan §9](../specs/m1-ciclo-da-riqueza/plan.md) | [tasks.md §F5](../specs/m1-ciclo-da-riqueza/tasks.md) · `apps/cli/src/` · `packages/sim/src/stats.ts` |
 | M1 — Balanceamento 1 | ✅ Decidido pelo dono (2026-11-14): candidato B no `params/default.json` provisório; DNAs economicamente equivalentes de propósito; playtest humano e deploy saem do M1. Assimetria entre os times corrigida (desempate do A*). Na branch `m1/f6-server` | [balance.md](../specs/m1-ciclo-da-riqueza/balance.md) |
 | M1 — F6 Servidor | ✅ Concluída, merge em `main`. SQLite (log de comandos, snapshots, métricas), loop de tick com multiplicador, HTTP (criar, listar, entrar), WebSocket com ack/reject e broadcast ≤5/s, `release` automático, bots e limite de humanos, recuperação após restart. Detalhes decididos pelo dono na [spec §5](../specs/m1-ciclo-da-riqueza/spec.md) | [tasks.md §F6](../specs/m1-ciclo-da-riqueza/tasks.md) · `apps/server/src/` · `packages/protocol/src/` |
-| M1 — F7 Cliente | 🟨 Tasks concluídas na branch `m1/f7-client`, **sem merge**: falta o checkpoint (sessão do dono: interface, legibilidade, editor de regras, domínio, multi-cliente local). Lobby, mapa SVG com pan/zoom, creeps interpolados, inspetor, dominar/liberar, painel do Núcleo, editor de regras e presets, controle direto pelo botão direito. Detalhes decididos pelo dono na [spec §5](../specs/m1-ciclo-da-riqueza/spec.md) | [tasks.md §F7](../specs/m1-ciclo-da-riqueza/tasks.md) · `apps/client/src/` |
+| M1 — F7 Cliente | ✅ Concluída, merge em `main`. Checkpoint aprovado pelo dono (2026-11-14). Lobby, mapa SVG com pan/zoom, creeps interpolados com nomes gerados, pilhas de creeps com lista para escolher, inspetor, dominar/liberar, painel do Núcleo, editor de regras e presets, controle direto pelo botão direito. Detalhes decididos pelo dono na [spec §5](../specs/m1-ciclo-da-riqueza/spec.md) | [tasks.md §F7](../specs/m1-ciclo-da-riqueza/tasks.md) · `apps/client/src/` |
 | M1 — F8 | ⬜ Pendente (replay no navegador, Safari/JSC, `dev:multi`). O M1 fecha com o critério da [spec §8](../specs/m1-ciclo-da-riqueza/spec.md) | [plan.md §13](../specs/m1-ciclo-da-riqueza/plan.md) |
 | ~~M1 — F9~~ | Deploy e playtest comprimido saíram do M1 (dono, 2026-11-14): abrem o M2 | [ROADMAP](../ROADMAP.md) |
 | M2–M4 | ⬜ Não iniciados | [ROADMAP](../ROADMAP.md) |
@@ -30,20 +29,10 @@ por um portão de aprovação ou quando surgir um bloqueio.
 
 1. **Publicar o repo no GitHub** (dono). Ainda não há remote, então o CI ([ci.yml](../../.github/workflows/ci.yml))
    nunca rodou fora da máquina local.
-2. **Checkpoint do F7 (dono):** a sessão de interface e legibilidade. Roteiro:
-   - `npm run build && npm run server` e abrir `http://localhost:8080` (ou `npm run server` + `npm run client` e
-     abrir `http://localhost:5173`, com recarga automática do cliente).
-   - No lobby: nome, "Criar" (padrão ×36 com bot no Laranja), "Entrar" no Azul.
-   - Mapa: arrastar com o botão esquerdo (ou setas), roda do mouse para zoom, `0` para ver o mapa todo, `F` para
-     centralizar na seleção. Clique esquerdo seleciona; numa pilha, abre a lista dos creeps dela; `Esc` limpa.
-   - Creep: "Dominar", depois botão direito no mapa (`moveTo`), num depósito (`gather`) ou no seu Núcleo
-     (`deliver`); `R` liga o modo estrada para o próximo clique direito. Editar regras e aplicar presets no
-     inspetor (o "Construtor de estrada…" pede o ponto no mapa).
-   - Núcleo (painel à esquerda): produzir, "repetir", upgrade.
-   - Multi-cliente local: outra aba com `?slot=2` é outro jogador no mesmo navegador (o token fica por mundo e
-     slot).
-   - Depois do OK: marcar o checkpoint no `tasks.md`, merge em `main` e seguir para o F8.
-3. **F8 (replay e multi-cliente):** o que ele precisa saber do F7:
+2. **Rodar o cliente:** `npm run build && npm run server` e abrir `http://localhost:8080`, ou `npm run server` +
+   `npm run client` e abrir `http://localhost:5173` (recarga automática). Outra aba com `?slot=2` é outro jogador
+   no mesmo navegador.
+3. **F8 (replay e multi-cliente):** branch `m1/f8-replay`, a partir de `main`. O que ele precisa saber do F7:
    - O cliente é Vite + Preact + signals em `apps/client/src/`. O estado da tela é o `GameStore` (`store.ts`);
      o mapa recebe `DynamicState` + a parte estática do `welcome`. O replay pode alimentar o mesmo `GameStore`
      com `receive()` a partir do `sim` rodando no navegador (sem `Connection`).
@@ -57,7 +46,8 @@ por um portão de aprovação ou quando surgir um bloqueio.
 
 ## Pendências e pontos a esclarecer
 
-- **Interpretações do F7 a validar na sessão do dono** (a spec e o plan não fixam):
+- **Interpretações do F7** (a spec e o plan não fixam; checkpoint aprovado pelo dono em 2026-11-14, ficam
+  registradas para o playtest do M2):
   - o lobby cria mundos (seed, multiplicador, bot por time; padrão ×36 com bot no Laranja) e entra com nome de
     convidado; o token fica no `localStorage` por mundo e por slot da URL;
   - interpolação um estado atrás: o creep desliza entre os dois últimos estados no intervalo entre as mensagens;
