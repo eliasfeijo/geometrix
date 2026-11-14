@@ -1,6 +1,6 @@
 # Status atual
 
-**Atualizado:** 2026-11-14 · **Marco:** M1 — O ciclo da riqueza · **Fase:** F6 (servidor) concluída; próxima: F7 (cliente), branch `m1/f7-client`
+**Atualizado:** 2026-11-14 · **Marco:** M1 — O ciclo da riqueza · **Fase:** F7 (cliente) em preparação, branch `m1/f7-client`
 
 Resumo de bolso. A fonte de verdade continua nos docs linkados. Atualize este arquivo ao fechar uma fase, ao passar
 por um portão de aprovação ou quando surgir um bloqueio.
@@ -28,9 +28,11 @@ por um portão de aprovação ou quando surgir um bloqueio.
 
 1. **Publicar o repo no GitHub** (dono). Ainda não há remote, então o CI ([ci.yml](../../.github/workflows/ci.yml))
    nunca rodou fora da máquina local.
-2. **Antes do F7:** fechar a pergunta da coleta com depósitos zerados ([GDD 07](../gdd/07-piloto-automatico.md)):
-   no cliente, o vaivém dos creeps parece bug.
-3. **F7 (cliente):** branch `m1/f7-client`, a partir de `main`. O que ele precisa saber do servidor:
+2. **F7 (cliente):** branch `m1/f7-client`. Ela já tem a decisão da coleta com depósitos zerados (dono,
+   2026-11-14, [GDD 07](../gdd/07-piloto-automatico.md)): o creep fica com o depósito escolhido até encher e espera
+   a regeneração ali (`SIM_VERSION` 2). No fim de jogo, a maioria dos creeps fica parada em volta dos depósitos,
+   com o anel de carga enchendo devagar: o cliente deve mostrar isso como espera, não como travamento. O que o F7
+   precisa saber do servidor:
    - `npm run server` sobe em `http://localhost:8080` e serve `apps/client/dist` como estáticos. Variáveis:
      `GEO_PORT`, `GEO_DB` (padrão `data/geometrix.db`, ignorado pelo git), `GEO_PARAMS` (padrão
      `params/default.json`), `GEO_STATIC`. O dev server do Vite precisa de proxy para `/api` e `/ws`.
@@ -46,7 +48,10 @@ por um portão de aprovação ou quando surgir um bloqueio.
    - O estado dinâmico vai inteiro em cada mensagem: creeps sem `path`, estradas como índices de célula.
    - **Medições do F6:** mensagem de estado com 6,7 KB (12 creeps), 13,7 KB (28) e 26,9 KB (60). Tick + commit no
      SQLite: 0,08 ms no ext4 e 1,7 ms no `/mnt/c` (WSL), contra 28 ms por tick no ×36. 3 dias bot×bot do seed 42
-     com o `default.json` atual: 12,1 s.
+     com o `default.json` atual: 12,1 s; com a coleta que espera a regeneração, 3,9 s.
+   - **Efeito da coleta que espera** (3 dias bot×bot, seeds 42, 1 e 2): viagem média de 61–69 para 22–28 células;
+     andando vazio de 22–34% para 13–19%; parado (inclui esperar no depósito) de 1% para 52–66%; todos os 12
+     depósitos de matéria são usados; matéria entregue +16 a +28%.
 
 ## Pendências e pontos a esclarecer
 
@@ -64,7 +69,7 @@ por um portão de aprovação ou quando surgir um bloqueio.
   - sem `seed`, o servidor sorteia um; `multiplier` vai de 1 a 10 000 (padrão 1). Nome de jogador não é único;
   - `join` na fila conta para o limite de 3 humanos por time;
   - mensagem inválida sem `ref` legível volta com `ref: -1`.
-- **`SIM_VERSION` = 1 passou a valer:** mundos persistidos guardam a versão. Mudou o comportamento do `sim`?
+- **`SIM_VERSION` vale desde o F6 (hoje 2):** mundos persistidos guardam a versão. Mudou o comportamento do `sim`?
   Suba a versão; um mundo de outra versão não é recuperado (o servidor loga e o pula).
 - **Interpretações do F5 a validar** (a spec e o plan não fixam):
   - tempo dos creeps em 5 atividades: as 4 da spec §7 (coletando, carregando, andando vazio, parado) mais
@@ -84,7 +89,7 @@ por um portão de aprovação ou quando surgir um bloqueio.
   balanceamento não quebra mais os testes. O `default.json` continua no `geo verify` e no orçamento do CI.
 - **Correção do A* (2026-11-14, branch `m1/f6-server`):** o time 1 desempata na ordem de células rotacionada, e
   a rota dele é o espelho da do time 0. Antes, os times construíam estradas diferentes no mapa simétrico (até ~19%
-  de diferença na entrega). Com o `default.json` atual (candidato B, `teams.maxHumans`), o hash de 3 dias do seed 42 é `d6d6e003…`.
+  de diferença na entrega). Com o `default.json` atual (candidato B, `teams.maxHumans`), o hash de 3 dias do seed 42 é `10662729…` (`SIM_VERSION` 2).
 - **Sinais do relatório de 3 dias (checkpoint do F5, anterior à correção do A*):** com os parâmetros atuais e o `balanced`, a economia trava
   em ~4 h: teto de população em 4,2 h, todo o cristal esgotado em 2,5 h, estradas param em 113 células; depois os
   30 creeps disputam 6 depósitos de matéria que regeneram 1/min (andam vazios 58–76% do tempo), o Núcleo fica 94%
@@ -108,7 +113,9 @@ por um portão de aprovação ou quando surgir um bloqueio.
 - **Interpretações do F3 a validar no playtest** (detalhes de implementação que a spec não fixa):
   - o tick em que o creep chega a um depósito ou a um segmento é gasto andando; a coleta e a obra começam no
     tick seguinte. A entrega é no próprio tick da chegada ("instantânea");
-  - `gather` com o creep já cheio, depósito vazio ou inexistente vira `stop` na hora; `deliver` sem carga anda
+  - `gather` com o creep já cheio, depósito inexistente ou de cristal esgotado vira `stop` na hora. Num depósito
+    de matéria vazio, o creep anda até lá e espera a regeneração (decisão do dono, 2026-11-14); esperar conta
+    como **parado** nas métricas; `deliver` sem carga anda
     até o Núcleo e para;
   - a regeneração usa o relógio do mundo (a cada `everySeconds` desde o tick 0), não um contador por depósito;
   - uma obra de estrada pertence ao time que pagou, mas qualquer creep com `buildRoad` naquela célula a continua
