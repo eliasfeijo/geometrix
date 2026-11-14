@@ -18,9 +18,9 @@ afterEach(async () => {
 });
 
 /** A client that keeps every message it gets. */
-async function connect(base: string, token: string) {
+async function connect(base: string, token: string, query = "") {
   const socket = new WebSocket(
-    `${base.replace("http", "ws")}/ws?token=${token}`,
+    `${base.replace("http", "ws")}/ws?token=${token}${query}`,
   );
   const messages: ServerMessage[] = [];
   const waiters: (() => void)[] = [];
@@ -51,8 +51,8 @@ async function connect(base: string, token: string) {
   return { socket, messages, next, delta, send, closed };
 }
 
-async function setup() {
-  const t = await testApp();
+async function setup(config: Parameters<typeof testApp>[0] = {}) {
+  const t = await testApp(config);
   close = t.app.close;
   await t.post("/api/worlds", { seed: 3 });
   const joined = await t.post("/api/worlds/1/join", { name: "Ana", team: 0 });
@@ -212,6 +212,52 @@ describe("WebSocket", () => {
     expect(anaDeltas.map((m) => m.seq)).toEqual([1, 2, 3, 4]);
     ana.socket.close();
     bia.socket.close();
+  });
+
+  test("a client back within the buffer gets the missed deltas, no welcome", async () => {
+    const { base, token, host, timers } = await setup();
+    const first = await connect(base, token);
+    const welcome = await first.next("welcome");
+    host.tick();
+    await first.delta(1);
+    first.socket.close();
+    await first.closed;
+    for (let i = 0; i < 3; i++) {
+      host.tick();
+      timers.advance(200);
+    }
+    const query = `&stream=${welcome.stream}&seq=1`;
+    const back = await connect(base, token, query);
+    const missed = [
+      await back.delta(2),
+      await back.delta(3),
+      await back.delta(4),
+    ];
+    expect(back.messages.some((m) => m.type === "welcome")).toBe(false);
+    let seen = applyDelta(welcome.view, (await first.delta(1)).delta);
+    for (const m of missed) seen = applyDelta(seen, m.delta);
+    expect(viewJson(seen)).toBe(viewJson(view(host.state, 0)));
+    back.socket.close();
+  });
+
+  test.each([
+    ["a seq out of the buffer", (stream: string) => `&stream=${stream}&seq=0`],
+    ["another stream (a restart)", () => "&stream=old&seq=1"],
+    ["a seq not sent yet", (stream: string) => `&stream=${stream}&seq=99`],
+    ["a malformed seq", (stream: string) => `&stream=${stream}&seq=x`],
+  ])("a client back with %s gets a welcome", async (_, query) => {
+    const { base, token, host, timers } = await setup({ deltaBufferMs: 1000 });
+    const first = await connect(base, token);
+    const welcome = await first.next("welcome");
+    for (let i = 0; i < 10; i++) {
+      host.tick();
+      timers.advance(200);
+    }
+    await first.delta(10);
+    first.socket.close();
+    const back = await connect(base, token, query(welcome.stream));
+    expect(await back.next("welcome")).toMatchObject({ seq: 10 });
+    back.socket.close();
   });
 
   test("a socket closed for 15 s releases the domination", async () => {

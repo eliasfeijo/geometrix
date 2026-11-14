@@ -71,7 +71,13 @@ export function attachWebSocket(server: Server, context: WsContext) {
       return;
     }
     const broadcaster = broadcasterOf(host);
-    send(socket, welcome(host, player, broadcaster.stream(player.team)));
+    const stream = broadcaster.stream(player.team);
+    const missed = resumeFrom(stream, req.url);
+    if (missed === null) {
+      send(socket, welcome(host, player, stream));
+    } else {
+      for (const json of missed) socket.send(json);
+    }
     broadcaster.add(socket, player.team);
     context.presence?.connected(player);
 
@@ -135,6 +141,22 @@ function welcome(
   };
 }
 
+/**
+ * The deltas a reconnecting client missed, from `&stream=…&seq=…` in the URL
+ * (plan R5), or null when it gets a welcome: a first connection, or a seq the
+ * stream can no longer resume from.
+ */
+function resumeFrom(
+  stream: TeamStream,
+  url: string | undefined,
+): string[] | null {
+  const params = new URL(url ?? "", "http://localhost").searchParams;
+  const id = params.get("stream");
+  const raw = params.get("seq");
+  if (id === null || raw === null || !/^\d+$/.test(raw)) return null;
+  return stream.since(id, Number(raw));
+}
+
 /** The ref of a message that failed validation, or -1 when there is none. */
 function refOf(raw: string): number {
   try {
@@ -170,7 +192,10 @@ class Broadcaster {
     this.host = host;
     this.timers = context.timers;
     this.intervalMs = context.broadcastIntervalMs;
-    const options = { hashEveryTicks: context.viewHashEveryTicks };
+    const options = {
+      hashEveryTicks: context.viewHashEveryTicks,
+      bufferMs: context.deltaBufferMs,
+    };
     this.streams = host.state.teams.map(
       (team) => new TeamStream(host.state, team.id, host.status, options),
     );
@@ -208,9 +233,10 @@ class Broadcaster {
   }
 
   private flush(): void {
-    this.lastSent = this.timers.now();
+    const now = this.timers.now();
+    this.lastSent = now;
     const { state, status } = this.host;
-    const messages = this.streams.map((s) => s.advance(state, status));
+    const messages = this.streams.map((s) => s.advance(state, status, now));
     for (const [socket, team] of this.sockets) {
       if (socket.readyState === WebSocket.OPEN) socket.send(messages[team]!);
     }
