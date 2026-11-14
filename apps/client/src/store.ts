@@ -4,17 +4,16 @@
 // (selection, notices).
 
 import { computed, signal } from "@preact/signals";
-import {
-  applyDelta,
-  type WelcomeMessage,
-  type WorldStatus,
-} from "@geometrix/protocol";
+import type { WelcomeMessage, WorldStatus } from "@geometrix/protocol";
+import { applyDelta } from "@geometrix/protocol/stream";
 import type {
   ConnectionStatus,
   FatalReason,
   WorldMessage,
 } from "./connection.ts";
 import type { Cell, TeamView } from "@geometrix/sim";
+import { viewHash } from "./hash.ts";
+import { NetStats } from "./net-stats.ts";
 import type { Selection } from "./map/pick.ts";
 import type { Point, Size, View } from "./map/view.ts";
 
@@ -82,8 +81,16 @@ export class GameStore {
       this.status.value === "running",
   );
 
+  /** Network counters (spec D8): the connection's, plus the hash checks. */
+  readonly net = new NetStats();
+  /** Called when a delta's view hash does not match ours (spec C-3). */
+  hashMismatch: (() => void) | null = null;
+  /** Bumped by each welcome: a hash check of an older base is moot. */
+  private base = 0;
+
   receive(message: WorldMessage, now: number): void {
     if (message.type === "welcome") {
+      this.base++;
       const { type, protocol, stream, seq, view, status, ...info } = message;
       void [type, protocol, stream, seq];
       this.info.value = info;
@@ -94,8 +101,23 @@ export class GameStore {
     }
     const current = this.current.value;
     if (current === null) return;
-    this.show(applyDelta(current.state, message.delta), now);
+    const next = applyDelta(current.state, message.delta);
+    this.show(next, now);
     if (message.status !== undefined) this.status.value = message.status;
+    if (message.hash !== undefined) void this.checkHash(next, message.hash);
+  }
+
+  /** Compares the server's hash with the view this delta left us with. */
+  private async checkHash(view: TeamView, expected: string): Promise<void> {
+    const base = this.base;
+    const hash = await viewHash(view);
+    if (base !== this.base) return;
+    if (hash === expected) {
+      this.net.hashes.ok++;
+    } else {
+      this.net.hashes.mismatch++;
+      this.hashMismatch?.();
+    }
   }
 
   /**

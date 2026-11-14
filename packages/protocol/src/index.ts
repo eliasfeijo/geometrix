@@ -164,12 +164,6 @@ export function toStaticMap(state: WorldState): WelcomeMessage["map"] {
 export type WorldStatus = "running" | "ended";
 
 /**
- * Version of the messages below. A client of another version reloads the page
- * (M1.5 spec D6). 1: M1, the whole state each time. 2: view deltas.
- */
-export const PROTOCOL_VERSION = 2;
-
-/**
  * Server -> client: the start of a team stream (M1.5 plan section 4), on
  * connecting and on a resync. The static map goes only here.
  */
@@ -326,4 +320,4 @@ export function parseReplay(input: unknown): Replay {
   return { ...data, params };
 }
 
-export * from "./delta.ts";
+export * from "./stream.ts";
