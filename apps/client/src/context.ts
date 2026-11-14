@@ -1,12 +1,17 @@
 import type { ClientCommand } from "@geometrix/protocol";
 import { createContext } from "preact";
 import { useContext } from "preact/hooks";
-import type { Session } from "./session.ts";
 import type { GameStore } from "./store.ts";
+
+/**
+ * Whose eyes the screen uses: the player (own team's panels, own creep
+ * highlighted) or, in a replay, a spectator of one team with no player id.
+ */
+export type Viewer = { playerId: number; team: number };
 
 export type Game = {
   store: GameStore;
-  session: Session;
+  viewer: Viewer;
   /** Sends a command; a reject shows up as a notice. True when acked. */
   send(command: ClientCommand): Promise<boolean>;
 };

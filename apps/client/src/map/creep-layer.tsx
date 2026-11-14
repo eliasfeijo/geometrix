@@ -87,7 +87,7 @@ export function markersNow(store: GameStore, now: number): Marker[] {
 }
 
 export function CreepLayer() {
-  const { store, session } = useGame();
+  const { store, viewer } = useGame();
   const t = useGlide();
   const current = store.current.value;
   const info = store.info.value;
@@ -109,7 +109,7 @@ export function CreepLayer() {
       center={center}
       team={state.teams[creep.team]!}
       params={info.params}
-      mine={creep.dominatedBy === session.playerId}
+      mine={creep.dominatedBy === viewer.playerId}
       waiting={creepStatus(creep, state.deposits) === "waiting"}
     />
   );

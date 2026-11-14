@@ -1,6 +1,7 @@
 import { useEffect } from "preact/hooks";
 import { useGame } from "./context.ts";
 import { teamName, worldClock } from "./format.ts";
+import type { Session } from "./session.ts";
 import { NOTICE_MS } from "./store.ts";
 
 const CONNECTION_TEXTS = {
@@ -10,8 +11,14 @@ const CONNECTION_TEXTS = {
   closed: "desconectado",
 } as const;
 
-export function TopBar({ onLeave }: { onLeave(): void }) {
-  const { store, session } = useGame();
+export function TopBar({
+  session,
+  onLeave,
+}: {
+  session: Session;
+  onLeave(): void;
+}) {
+  const { store } = useGame();
   const info = store.info.value;
   const state = store.current.value?.state;
   const connection = store.connection.value;
