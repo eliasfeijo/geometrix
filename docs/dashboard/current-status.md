@@ -1,6 +1,6 @@
 # Status atual
 
-**Atualizado:** 2026-11-14 · **Marco:** M1 — O ciclo da riqueza · **Fase:** F9 (legibilidade e playtest): tasks prontas, falta o checkpoint do dono
+**Atualizado:** 2026-11-14 · **Marco:** M1 — O ciclo da riqueza · **Fase:** F9 (legibilidade e playtest): checkpoint feito pelo dono, aguardando o OK para o merge que fecha o M1
 
 Resumo de bolso. A fonte de verdade continua nos docs linkados. Atualize este arquivo ao fechar uma fase, ao passar
 por um portão de aprovação ou quando surgir um bloqueio.
@@ -22,31 +22,40 @@ por um portão de aprovação ou quando surgir um bloqueio.
 | M1 — F6 Servidor | ✅ Concluída, merge em `main`. SQLite (log de comandos, snapshots, métricas), loop de tick com multiplicador, HTTP (criar, listar, entrar), WebSocket com ack/reject e broadcast ≤5/s, `release` automático, bots e limite de humanos, recuperação após restart. Detalhes decididos pelo dono na [spec §5](../specs/m1-ciclo-da-riqueza/spec.md) | [tasks.md §F6](../specs/m1-ciclo-da-riqueza/tasks.md) · `apps/server/src/` · `packages/protocol/src/` |
 | M1 — F7 Cliente | ✅ Concluída, merge em `main`. Checkpoint aprovado pelo dono (2026-11-14). Lobby, mapa SVG com pan/zoom, creeps interpolados com nomes gerados, pilhas de creeps com lista para escolher, inspetor, dominar/liberar, painel do Núcleo, editor de regras e presets, controle direto pelo botão direito. Detalhes decididos pelo dono na [spec §5](../specs/m1-ciclo-da-riqueza/spec.md) | [tasks.md §F7](../specs/m1-ciclo-da-riqueza/tasks.md) · `apps/client/src/` |
 | M1 — F8 Replay e multi-cliente | ✅ Concluída, merge em `main`. Replay no navegador (arquivo do `geo sim` ou `GET /api/worlds/:id/replay`) com velocidades, linha do tempo e hash ✓/✗; hash confere no WebKit/JSC; `npm run dev:multi`. Detalhes decididos pelo dono no [plan §8](../specs/m1-ciclo-da-riqueza/plan.md) | [tasks.md §F8](../specs/m1-ciclo-da-riqueza/tasks.md) · `apps/client/src/replay/` · `apps/server/src/dev-multi*.ts` |
-| M1 — F9 Legibilidade e playtest | 🔄 Na branch `m1/f9-legibility`, sem merge. Feito: `npm run soak` (teste de resistência comprimido, no lugar do mundo de 24 h), estrada × pedra, nomes no mapa (Chakra Petch), carga cheia, `+N`/`−N` no Núcleo, custo da estrada sob o cursor e tempo da obra, [PLAYTEST.md](../PLAYTEST.md). **Falta o checkpoint** (dono): playtest humano, replay validado, melhorias registradas. Fecha o M1 | [tasks.md §F9](../specs/m1-ciclo-da-riqueza/tasks.md) · [spec §8](../specs/m1-ciclo-da-riqueza/spec.md) |
+| M1 — F9 Legibilidade e playtest | 🔄 Na branch `m1/f9-legibility`, sem merge. Feito: `npm run soak` (teste de resistência comprimido, no lugar do mundo de 24 h), estrada × pedra, nomes no mapa (Chakra Petch), carga cheia, `+N`/`−N` no Núcleo, custo da estrada sob o cursor e tempo da obra, [PLAYTEST.md](../PLAYTEST.md). **Checkpoint** (dono, 2026-11-14): playtest parcial e replay validados, sem achados. Falta o OK para o merge, que fecha o M1 | [tasks.md §F9](../specs/m1-ciclo-da-riqueza/tasks.md) · [spec §8](../specs/m1-ciclo-da-riqueza/spec.md) |
 | Deploy e playtest de diversão | Saíram do M1 (dono, 2026-11-14): abrem o M2 | [ROADMAP](../ROADMAP.md) |
 | M2–M4 | ⬜ Não iniciados | [ROADMAP](../ROADMAP.md) |
 
 ## Próximos passos imediatos
 
-1. **Checkpoint da F9 (dono):** branch `m1/f9-legibility`, roteiro em [PLAYTEST.md](../PLAYTEST.md).
-   - **Playtest de legibilidade:** 1 a 3 pessoas, de preferência quem nunca viu o jogo, com
-     `npm run dev:multi -- --clients 2 --mult 36` (ou `--mult 12` para ver as obras). Roteiro de tarefas e
-     questionário no PLAYTEST.md. Os achados entram em "Achados do playtest", abaixo.
-   - **Replay** (pendente desde o F8): "Assistir replay" no lobby, velocidades, linha do tempo, "Ver como" e o
-     selo "✓ hash confere" no fim (passos no PLAYTEST.md). O mundo do último `npm run soak` também serve: o
-     `summary.md` dele diz como abrir.
-   - Também já validado pelo dono no F8: `npm run dev:multi -- --clients 3` (3 abas no Chrome, token fora da URL)
-     ✓ e o cliente pelo `npm run build && npm run server` ✓.
-   - Depois do checkpoint: melhorias que forem só legibilidade e couberem no M1 viram uma rodada seguinte da F9;
-     mudanças de **regra** vão para o GDD como proposta (skill `gdd-decision`). Com o OK do dono, merge da F9 em
-     `main`, e o M1 fecha.
-2. **Publicar o repo no GitHub** (dono). Ainda não há remote, então o CI ([ci.yml](../../.github/workflows/ci.yml))
-   nunca rodou fora da máquina local.
+Recomendações do Claude depois do checkpoint da F9 (2026-11-14):
+
+1. **Fechar a F9 e o M1 (precisa do OK do dono):** marcar o checkpoint no [tasks.md](../specs/m1-ciclo-da-riqueza/tasks.md),
+   merge `--no-ff` de `m1/f9-legibility` em `main` e `npm run check` em `main`. Todos os critérios da spec §8
+   para avançar ao M2 estão cumpridos: bot × bot de 3 dias sem travar, `geo verify` e recuperação verdes, soak com
+   o mesmo hash no servidor, no Node e no navegador, legibilidade aprovada pelo dono. Se o dono notou algo pequeno
+   no playtest e não anotou, vale registrar em "Achados do playtest" antes do merge.
+2. **Publicar o repo no GitHub** (dono) antes de abrir o M2. Ainda não há remote, então o CI
+   ([ci.yml](../../.github/workflows/ci.yml)) nunca rodou fora da máquina local. É o primeiro teste real do CI
+   (Node 26, `better-sqlite3` nativo, `geo verify` com 3 seeds, orçamento de 6 h em 60 s).
+3. **Abrir o M2 (A emboscada) pela skill `spec-slice`:** spec → plan → tasks em `docs/specs/m2-…/`. Pelo
+   [ROADMAP](../ROADMAP.md), a primeira etapa é o deploy e o playtest de diversão que saíram do M1 (lista em
+   "Fora do M1" no tasks.md). Antes da spec, revisar as **perguntas abertas** e propostas do GDD que o M2 toca
+   (ex.: batalha, emboscada, auto-resolve, nome do creep no estado) e levar ao dono numa rodada
+   agrupada.
+4. **Olhos novos na legibilidade:** o playtest da F9 foi do próprio dono, que já conhece o jogo. O roteiro e o
+   questionário do [PLAYTEST.md](../PLAYTEST.md) servem de base para o primeiro playtest do M2, com pessoas que
+   nunca viram o jogo.
 
 ## Achados do playtest
 
 Um item por problema: o que a pessoa não entendeu ou não conseguiu, a tarefa ou pergunta do
-[PLAYTEST.md](../PLAYTEST.md) que mostrou, e quantas pessoas tropeçaram nele. Vazio até a primeira sessão.
+[PLAYTEST.md](../PLAYTEST.md) que mostrou, e quantas pessoas tropeçaram nele.
+
+- **Sessão 1 (dono, 2026-11-14):** `npm run dev:multi -- --clients 3 --mult 36` (padrão de 3 dias de mundo), sem
+  ir até o fim do mundo (o fim já é coberto pelo `npm run soak`). Replay testado pelo dono: ok, o pendente do F8
+  está resolvido. **Nenhum problema reportado.** Ainda sem uma pessoa que nunca viu o jogo (ver próximos passos,
+  item 4).
 
 ## Pendências e pontos a esclarecer
 
