@@ -72,6 +72,8 @@ na sua branch (plan §12, skill `commit`), com merge `--no-ff` em `main`.
 
 ## F5 — Soak e legibilidade (`m1.5/fog-f5-playtest`)
 
-- [ ] `npm run soak` completo com o fog: 0 divergências, visões finais iguais às do servidor
+- [x] `npm run soak` completo com o fog: 0 divergências, visões finais iguais às do servidor (2026-11-14,
+      `runs/soak-20261114-230613-s42/`): 14 364 hashes conferidos, 0 divergentes; as 4 visões finais iguais; replay
+      com o hash do servidor; 6 interrupções retomadas
 - [ ] Perguntas de névoa no `PLAYTEST.md` (spec §8)
 - [ ] **Checkpoint:** sessão de legibilidade do dono com `dev:multi`; resposta à hipótese; fecha o M1.5
