@@ -162,7 +162,7 @@ function DepositMark({
   );
 }
 
-const CORE_RADIUS = 0.95;
+export const CORE_RADIUS = 0.95;
 
 function CoreMark({ team, params }: { team: Team; params: Params }) {
   const cx = team.core.x + 0.5;

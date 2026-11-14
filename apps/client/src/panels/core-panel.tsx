@@ -10,7 +10,7 @@ import {
   type Cost,
   type Dna,
 } from "@geometrix/sim";
-import { useState } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 import { useGame } from "../context.ts";
 import { DNA_NAMES, durationWords, teamName } from "../format.ts";
 import { COLORS } from "../map/colors.ts";
@@ -181,6 +181,14 @@ function Amount({
   kind: "materia" | "cristal";
   value: number;
 }) {
+  // The number flashes when it changes (F9): a new key replays the animation.
+  const last = useRef(value);
+  const [flash, setFlash] = useState<{ up: boolean; n: number } | null>(null);
+  useEffect(() => {
+    if (value === last.current) return;
+    setFlash((f) => ({ up: value > last.current, n: (f?.n ?? 0) + 1 }));
+    last.current = value;
+  }, [value]);
   return (
     <span class="amount" title={kind === "materia" ? "matéria" : "cristal"}>
       <svg class="icon" viewBox="0 0 1 1" width="14" height="14">
@@ -196,7 +204,14 @@ function Amount({
           />
         )}
       </svg>
-      <strong>{value}</strong>
+      <strong
+        key={flash?.n ?? 0}
+        class={
+          flash === null ? undefined : flash.up ? "stock-up" : "stock-down"
+        }
+      >
+        {value}
+      </strong>
       <span class="muted">{kind === "materia" ? "matéria" : "cristal"}</span>
     </span>
   );
