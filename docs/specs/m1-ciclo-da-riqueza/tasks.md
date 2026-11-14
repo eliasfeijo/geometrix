@@ -43,7 +43,7 @@ Marque `[x]` ao concluir. Cada task deve terminar com os testes verdes. Referên
 ## F5 — Harness
 - [x] Acumuladores de stats + `sampleMetrics` puro
 - [x] Estrategista bot `balanced`
-- [ ] `geo sim` → `runs/<id>/` (métricas, replay, `report.md`)
+- [x] `geo sim` → `runs/<id>/` (métricas, replay, `report.md`)
 - [ ] `geo sweep`
 - [ ] `geo verify` completo (incluindo o replay a partir do log)
 - [ ] Orçamento de performance: 6 h de mundo no CI; 3 dias em menos de 10 min medido manualmente

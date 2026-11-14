@@ -89,8 +89,8 @@ export function logCursor(log: readonly LoggedCommand[]) {
 export type BotRun = { state: WorldState; log: LoggedCommand[] };
 
 /**
- * Creates a world and runs `ticks` ticks with the bots. `onTick` sees the
- * state after each tick (for metric samples).
+ * Creates a world and runs `ticks` ticks with the bots. `onTick` sees the new
+ * world (tick 0) and the state after each tick, for metric samples.
  */
 export function runBots(
   seed: number,
@@ -101,6 +101,7 @@ export function runBots(
 ): BotRun {
   const state = createWorld(seed, params);
   const log: LoggedCommand[] = [];
+  onTick(state);
   for (let i = 0; i < ticks; i++) {
     stepWithBots(state, bots, log);
     onTick(state);

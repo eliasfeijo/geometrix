@@ -1,9 +1,14 @@
 #!/usr/bin/env node
 // geo: headless simulation tools (plan section 9).
 
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { join, relative } from "node:path";
+import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import { parseParams, type Params } from "@geometrix/sim";
+import { renderReport } from "./report.ts";
+import { readRun, RUN_FILES, runId, simulate, writeRun } from "./sim.ts";
+import { STRATEGISTS, type StrategistId } from "./strategist.ts";
 import { verify } from "./verify.ts";
 
 const DEFAULT_PARAMS = new URL("../../../params/default.json", import.meta.url);
@@ -11,6 +16,18 @@ const DEFAULT_PARAMS = new URL("../../../params/default.json", import.meta.url);
 const USAGE = `usage: geo <command> [options]
 
 commands:
+  sim      runs a bot x bot world and writes runs/<id>/: run.json,
+           samples.jsonl, metrics.csv, replay.json, report.md
+           --seed <n>            world seed (default 42)
+           --params <file>       params JSON (default params/default.json)
+           --days <n> | --hours <n>
+                                 world time (default world.durationSeconds)
+           --strategist <a[,b]>  per team: ${STRATEGISTS.join(" | ")}
+                                 (default balanced; one name = both teams)
+           --out <dir>           runs directory (default runs)
+           --id <id>             run id (default <utc time>-s<seed>)
+  report   rewrites report.md of a run from its files
+           geo report <run dir>
   verify   determinism check: two runs and a snapshot -> restore run must
            reach the same state hash
            --seed <n>      world seed (default 42)
@@ -33,6 +50,102 @@ function loadParams(file: string | URL): Params {
   return parseParams(JSON.parse(readFileSync(file, "utf8")));
 }
 
+/** A path as typed, or the default params relative to the working directory. */
+function paramsSource(file: string | undefined): string {
+  return file ?? relative(process.cwd(), fileURLToPath(DEFAULT_PARAMS));
+}
+
+function parseSeed(raw: string): number {
+  const seed = parseUint("seed", raw, 0);
+  if (seed >= 2 ** 32) throw new UsageError(`--seed must be < 2^32: ${seed}`);
+  return seed;
+}
+
+function parseStrategists(raw: string, teams: number): StrategistId[] {
+  const names = raw.split(",");
+  for (const name of names) {
+    if (!STRATEGISTS.includes(name as StrategistId)) {
+      throw new UsageError(`unknown strategist: ${name}`);
+    }
+  }
+  if (names.length === 1) return new Array(teams).fill(names[0]);
+  if (names.length !== teams) {
+    throw new UsageError(`--strategist needs 1 or ${teams} names: ${raw}`);
+  }
+  return names as StrategistId[];
+}
+
+/** World ticks from --days / --hours, or the params' world duration. */
+function parseTicks(
+  values: { days?: string; hours?: string },
+  params: Params,
+): number {
+  const { tickSeconds, durationSeconds } = params.world;
+  if (values.days !== undefined && values.hours !== undefined) {
+    throw new UsageError("use --days or --hours, not both");
+  }
+  let seconds = durationSeconds;
+  if (values.days !== undefined) {
+    seconds = parseUint("days", values.days, 1) * 86400;
+  } else if (values.hours !== undefined) {
+    seconds = parseUint("hours", values.hours, 1) * 3600;
+  }
+  return Math.floor(seconds / tickSeconds);
+}
+
+/** Two teams in M1 (spec D6). */
+const TEAMS = 2;
+
+function runSim(args: string[], out: Output): number {
+  const { values } = parseArgs({
+    args,
+    options: {
+      seed: { type: "string", default: "42" },
+      params: { type: "string" },
+      days: { type: "string" },
+      hours: { type: "string" },
+      strategist: { type: "string", default: "balanced" },
+      out: { type: "string", default: "runs" },
+      id: { type: "string" },
+    },
+    strict: true,
+  });
+  const seed = parseSeed(values.seed);
+  const params = loadParams(values.params ?? DEFAULT_PARAMS);
+  const ticks = parseTicks(values, params);
+  const strategists = parseStrategists(values.strategist, TEAMS);
+  const id = values.id ?? runId(seed);
+  const dir = join(values.out, id);
+  if (existsSync(dir)) throw new UsageError(`run already exists: ${dir}`);
+
+  out.log(`geo sim --seed ${seed}: ${ticks} ticks, ${strategists.join(" x ")}`);
+  const result = simulate({
+    id,
+    seed,
+    params,
+    paramsSource: paramsSource(values.params),
+    ticks,
+    strategists,
+  });
+  writeRun(dir, result);
+  out.log(
+    `  ${result.meta.wallSeconds.toFixed(1)} s, ${result.meta.commands} commands, hash ${result.meta.finalHash}`,
+  );
+  out.log(`  ${join(dir, RUN_FILES.report)}`);
+  return 0;
+}
+
+function runReport(args: string[], out: Output): number {
+  const { positionals } = parseArgs({ args, allowPositionals: true });
+  if (positionals.length !== 1) {
+    throw new UsageError("geo report takes one run directory");
+  }
+  const dir = positionals[0]!;
+  writeFileSync(join(dir, RUN_FILES.report), renderReport(readRun(dir)));
+  out.log(join(dir, RUN_FILES.report));
+  return 0;
+}
+
 function runVerify(args: string[], out: Output): number {
   const { values } = parseArgs({
     args,
@@ -43,8 +156,7 @@ function runVerify(args: string[], out: Output): number {
     },
     strict: true,
   });
-  const seed = parseUint("seed", values.seed, 0);
-  if (seed >= 2 ** 32) throw new UsageError(`--seed must be < 2^32: ${seed}`);
+  const seed = parseSeed(values.seed);
   const ticks = parseUint("ticks", values.ticks, 1);
   const params = loadParams(values.params ?? DEFAULT_PARAMS);
 
@@ -60,6 +172,10 @@ export function run(argv: string[], out: Output = console): number {
   const [command, ...args] = argv;
   try {
     switch (command) {
+      case "sim":
+        return runSim(args, out);
+      case "report":
+        return runReport(args, out);
       case "verify":
         return runVerify(args, out);
       case undefined:
