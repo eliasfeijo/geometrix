@@ -8,6 +8,7 @@ import { browserDeps, Connection, socketUrl } from "./connection.ts";
 import { GameContext, type Game as GameValue } from "./context.ts";
 import { FATAL_TEXTS, REJECT_TEXTS } from "./format.ts";
 import { handleKey, select } from "./interaction.ts";
+import { ModeBanner } from "./mode-banner.tsx";
 import { CoreDock } from "./panels/core-panel.tsx";
 import { Inspector } from "./panels/inspector.tsx";
 import type { Session } from "./session.ts";
@@ -78,6 +79,7 @@ export function Game({ session, onLeave, onInvalid }: Props) {
           </MapView>
           <CoreDock />
           <Inspector />
+          <ModeBanner />
         </div>
         <Notices />
       </div>

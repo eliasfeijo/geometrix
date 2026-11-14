@@ -9,12 +9,12 @@ import {
   durationWords,
   orderText,
   RESOURCE_NAMES,
-  ruleText,
   teamName,
 } from "../format.ts";
 import { COLORS } from "../map/colors.ts";
 import { CorePanel } from "./core-panel.tsx";
 import { DnaIcon } from "./dna-icon.tsx";
+import { RulesEditor } from "./rules-editor.tsx";
 
 export function Inspector() {
   const { store, session } = useGame();
@@ -116,13 +116,12 @@ function CreepInspector({ id }: { id: number }) {
         </div>
       )}
       <h3>Piloto automático</h3>
-      {mine && <p class="hint muted">Dominado: as regras voltam ao liberar.</p>}
-      <ol class="rules-readonly">
-        {creep.rules.map((rule, i) => (
-          <li key={i}>{ruleText(rule)}</li>
-        ))}
-        {creep.rules.length === 0 && <li class="muted">sem regras</li>}
-      </ol>
+      {mine && (
+        <p class="hint muted">
+          Dominado: as regras só voltam a valer quando você liberar.
+        </p>
+      )}
+      <RulesEditor key={creep.id} creep={creep} />
     </div>
   );
 }

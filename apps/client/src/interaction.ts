@@ -3,10 +3,16 @@
 
 import { centersNow } from "./map/creep-layer.tsx";
 import { pickAt } from "./map/pick.ts";
-import { centerOn, type Point } from "./map/view.ts";
+import { cellAt, centerOn, type Point } from "./map/view.ts";
 import type { GameStore } from "./store.ts";
 
 export function select(store: GameStore, point: Point, now: number): void {
+  const mode = store.mode.value;
+  if (mode.type === "pickCell") {
+    store.mode.value = { type: "select" };
+    mode.pick(cellAt(point));
+    return;
+  }
   const state = store.current.value?.state;
   const info = store.info.value;
   if (state === undefined || info === null) return;
@@ -47,7 +53,11 @@ export function handleKey(
   if (event.ctrlKey || event.metaKey || event.altKey) return false;
   switch (event.key) {
     case "Escape":
-      store.selection.value = null;
+      if (store.mode.value.type !== "select") {
+        store.mode.value = { type: "select" };
+      } else {
+        store.selection.value = null;
+      }
       return true;
     case "f":
     case "F": {
