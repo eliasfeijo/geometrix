@@ -1,26 +1,43 @@
-import { join } from "@geometrix/sim";
+import { diffView, emptySent, viewJson } from "@geometrix/protocol";
+import { join, step, view, type WorldState } from "@geometrix/sim";
 import { describe, expect, it } from "vitest";
 import { duration, durationWords, worldClock } from "../src/format.ts";
 import { GameStore, NOTICE_MS } from "../src/store.ts";
-import { dynamicOf, testWorld, welcomeOf } from "./helpers.ts";
+import { viewOf, testWorld, welcomeOf } from "./helpers.ts";
+
+function run(world: WorldState, ticks: number): void {
+  for (let i = 0; i < ticks; i++) step(world, []);
+}
 
 describe("GameStore", () => {
-  it("keeps the two latest states, dropping late ones", () => {
+  it("applies deltas to the view, keeping the two latest", () => {
     const world = testWorld();
     const store = new GameStore();
+    const sent = emptySent();
+    diffView(sent, view(world, 0));
     store.receive(welcomeOf(world), 100);
     expect(store.previous.value).toBeNull();
     expect(store.current.value?.at).toBe(100);
 
-    const at = (tick: number) => ({ ...dynamicOf(world), tick });
-    store.receive({ type: "state", state: at(3), status: "running" }, 300);
-    store.receive({ type: "state", state: at(5), status: "ended" }, 500);
+    const delta = (seq: number) => ({
+      type: "delta" as const,
+      seq,
+      delta: JSON.parse(JSON.stringify(diffView(sent, view(world, 0)))),
+    });
+    run(world, 3);
+    store.receive(delta(1), 300);
+    run(world, 2);
+    store.receive({ ...delta(2), status: "ended" }, 500);
     expect(store.previous.value?.state.tick).toBe(3);
     expect(store.current.value?.state.tick).toBe(5);
+    expect(viewJson(store.current.value!.state)).toBe(viewJson(view(world, 0)));
     expect(store.status.value).toBe("ended");
 
-    store.receive({ type: "state", state: at(4), status: "running" }, 600);
-    expect(store.current.value?.state.tick).toBe(5);
+    // What did not change is shared with the previous view.
+    const before = store.previous.value!.state;
+    const after = store.current.value!.state;
+    expect(after.deposits).toBe(before.deposits);
+    expect(after).not.toBe(before);
 
     // A welcome after a reconnect starts over, without interpolation.
     store.receive(welcomeOf(world), 900);
@@ -37,10 +54,7 @@ describe("GameStore", () => {
     expect(store.missingNames()).toBe(false);
 
     join(world, 1, 0, false);
-    store.receive(
-      { type: "state", state: dynamicOf(world), status: "running" },
-      1,
-    );
+    store.show(viewOf(world), 1);
     expect(store.me.value?.team).toBe(0);
     expect(store.canAct.value).toBe(true);
     expect(store.missingNames()).toBe(true);

@@ -1,12 +1,13 @@
 // WebSocket (plan section 7). A client connects to /ws?token=..., gets the
-// welcome with the static map, then sends commands and gets an ack (with the
-// tick the command will apply on) or a reject. After ticks, the whole dynamic
-// state goes to the world's sockets, at most once per broadcastIntervalMs.
+// welcome with the static map and the last view sent to its team, then sends
+// commands and gets an ack (with the tick the command will apply on) or a
+// reject. After ticks, each team's stream sends the delta of its view to the
+// team's sockets, at most once per broadcastIntervalMs (M1.5 plan section 5).
 
 import type { Server } from "node:http";
 import {
   parseClientMessage,
-  toDynamicState,
+  PROTOCOL_VERSION,
   toStaticMap,
   type ServerMessage,
   type WelcomeMessage,
@@ -15,6 +16,7 @@ import { WebSocket, WebSocketServer } from "ws";
 import { hashToken } from "./http.ts";
 import type { Timers } from "./loop.ts";
 import type { PlayerRow, Store } from "./persistence.ts";
+import { TeamStream } from "./stream.ts";
 import type { WorldHost } from "./world-host.ts";
 import type { Worlds } from "./worlds.ts";
 
@@ -32,8 +34,12 @@ export type WsContext = {
   worlds: Worlds;
   timers: Timers;
   broadcastIntervalMs: number;
+  viewHashEveryTicks: number;
+  deltaBufferMs: number;
   /** Told about connections and inputs (domination release, F6). */
   presence?: Presence;
+  /** Server log, for incidents such as a resync (default console.log). */
+  log?: (line: string) => void;
 };
 
 export function attachWebSocket(server: Server, context: WsContext) {
@@ -43,7 +49,7 @@ export function attachWebSocket(server: Server, context: WsContext) {
   const broadcasterOf = (host: WorldHost) => {
     let b = broadcasters.get(host.id);
     if (b === undefined) {
-      b = new Broadcaster(host, context.timers, context.broadcastIntervalMs);
+      b = new Broadcaster(host, context);
       broadcasters.set(host.id, b);
     }
     return b;
@@ -67,8 +73,14 @@ export function attachWebSocket(server: Server, context: WsContext) {
       return;
     }
     const broadcaster = broadcasterOf(host);
-    send(socket, welcome(host, player));
-    broadcaster.add(socket);
+    const stream = broadcaster.stream(player.team);
+    const missed = resumeFrom(stream, req.url);
+    if (missed === null) {
+      send(socket, welcome(host, player, stream));
+    } else {
+      for (const json of missed) socket.send(json);
+    }
+    broadcaster.add(socket, player.team);
     context.presence?.connected(player);
 
     socket.on("message", (data) => {
@@ -81,6 +93,14 @@ export function attachWebSocket(server: Server, context: WsContext) {
           ref: refOf(raw),
           reason: "invalidMessage",
         });
+        return;
+      }
+      if (message.type === "resync") {
+        // Spec S-6: the full view again, and the incident in the log.
+        (context.log ?? console.log)(
+          `resync world=${host.id} team=${player.team} player=${player.id} tick=${host.state.tick} seq=${message.seq} reason=${message.reason}`,
+        );
+        send(socket, welcome(host, player, stream));
         return;
       }
       const tick = host.state.tick;
@@ -107,19 +127,43 @@ export function attachWebSocket(server: Server, context: WsContext) {
   };
 }
 
-function welcome(host: WorldHost, player: PlayerRow): WelcomeMessage {
+function welcome(
+  host: WorldHost,
+  player: PlayerRow,
+  stream: TeamStream,
+): WelcomeMessage {
+  const { seq, view, status } = stream.lastView();
   return {
     type: "welcome",
+    protocol: PROTOCOL_VERSION,
     worldId: host.id,
     playerId: player.id,
     team: player.team,
-    status: host.status,
+    status,
     multiplier: host.multiplier,
     params: host.state.params,
     map: toStaticMap(host.state),
     cores: host.state.teams.map((t) => t.core),
-    state: toDynamicState(host.state),
+    stream: stream.id,
+    seq,
+    view,
   };
+}
+
+/**
+ * The deltas a reconnecting client missed, from `&stream=…&seq=…` in the URL
+ * (plan R5), or null when it gets a welcome: a first connection, or a seq the
+ * stream can no longer resume from.
+ */
+function resumeFrom(
+  stream: TeamStream,
+  url: string | undefined,
+): string[] | null {
+  const params = new URL(url ?? "", "http://localhost").searchParams;
+  const id = params.get("stream");
+  const raw = params.get("seq");
+  if (id === null || raw === null || !/^\d+$/.test(raw)) return null;
+  return stream.since(id, Number(raw));
 }
 
 /** The ref of a message that failed validation, or -1 when there is none. */
@@ -138,27 +182,41 @@ function send(socket: WebSocket, message: ServerMessage): void {
 }
 
 /**
- * Sends a world's state after its ticks, at most once per interval: a tick
- * right after a send waits for the interval, and the send carries the latest
- * state then.
+ * Sends each team's view delta after the world's ticks, at most once per
+ * interval: a tick right after a send waits for the interval, and the send
+ * carries the latest state then. Every team's stream advances, with sockets
+ * or not (plan R7).
  */
 class Broadcaster {
-  private readonly sockets = new Set<WebSocket>();
+  /** Each open socket and its team. */
+  private readonly sockets = new Map<WebSocket, number>();
+  private readonly streams: TeamStream[];
   private readonly host: WorldHost;
   private readonly timers: Timers;
   private readonly intervalMs: number;
   private lastSent = -Infinity;
   private pending: unknown = null;
 
-  constructor(host: WorldHost, timers: Timers, intervalMs: number) {
+  constructor(host: WorldHost, context: WsContext) {
     this.host = host;
-    this.timers = timers;
-    this.intervalMs = intervalMs;
+    this.timers = context.timers;
+    this.intervalMs = context.broadcastIntervalMs;
+    const options = {
+      hashEveryTicks: context.viewHashEveryTicks,
+      bufferMs: context.deltaBufferMs,
+    };
+    this.streams = host.state.teams.map(
+      (team) => new TeamStream(host.state, team.id, host.status, options),
+    );
     host.onTick(() => this.ticked());
   }
 
-  add(socket: WebSocket): void {
-    this.sockets.add(socket);
+  stream(team: number): TeamStream {
+    return this.streams[team]!;
+  }
+
+  add(socket: WebSocket, team: number): void {
+    this.sockets.set(socket, team);
   }
 
   remove(socket: WebSocket): void {
@@ -184,15 +242,12 @@ class Broadcaster {
   }
 
   private flush(): void {
-    this.lastSent = this.timers.now();
-    if (this.sockets.size === 0) return;
-    const message = JSON.stringify({
-      type: "state",
-      state: toDynamicState(this.host.state),
-      status: this.host.status,
-    } satisfies ServerMessage);
-    for (const socket of this.sockets) {
-      if (socket.readyState === WebSocket.OPEN) socket.send(message);
+    const now = this.timers.now();
+    this.lastSent = now;
+    const { state, status } = this.host;
+    const messages = this.streams.map((s) => s.advance(state, status, now));
+    for (const [socket, team] of this.sockets) {
+      if (socket.readyState === WebSocket.OPEN) socket.send(messages[team]!);
     }
   }
 }

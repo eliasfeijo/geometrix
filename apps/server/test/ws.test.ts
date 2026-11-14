@@ -1,4 +1,11 @@
-import type { ServerMessage, WelcomeMessage } from "@geometrix/protocol";
+import {
+  applyDelta,
+  PROTOCOL_VERSION,
+  viewJson,
+  type ServerMessage,
+  type WelcomeMessage,
+} from "@geometrix/protocol";
+import { view, type TeamView } from "@geometrix/sim";
 import { afterEach, describe, expect, test } from "vitest";
 import { WebSocket } from "ws";
 import { CLOSE } from "../src/ws.ts";
@@ -11,9 +18,9 @@ afterEach(async () => {
 });
 
 /** A client that keeps every message it gets. */
-async function connect(base: string, token: string) {
+async function connect(base: string, token: string, query = "") {
   const socket = new WebSocket(
-    `${base.replace("http", "ws")}/ws?token=${token}`,
+    `${base.replace("http", "ws")}/ws?token=${token}${query}`,
   );
   const messages: ServerMessage[] = [];
   const waiters: (() => void)[] = [];
@@ -32,12 +39,20 @@ async function connect(base: string, token: string) {
       await new Promise<void>((done) => waiters.push(done));
     }
   };
+  /** The delta with this seq, once it arrives. */
+  const delta = async (seq: number) => {
+    for (;;) {
+      const found = messages.find((m) => m.type === "delta" && m.seq === seq);
+      if (found) return found as Extract<ServerMessage, { type: "delta" }>;
+      await new Promise<void>((done) => waiters.push(done));
+    }
+  };
   const send = (body: unknown) => socket.send(JSON.stringify(body));
-  return { socket, messages, next, send, closed };
+  return { socket, messages, next, delta, send, closed };
 }
 
-async function setup() {
-  const t = await testApp();
+async function setup(config: Parameters<typeof testApp>[0] = {}) {
+  const t = await testApp(config);
   close = t.app.close;
   await t.post("/api/worlds", { seed: 3 });
   const joined = await t.post("/api/worlds/1/join", { name: "Ana", team: 0 });
@@ -51,26 +66,35 @@ async function setup() {
 }
 
 describe("WebSocket", () => {
-  test("welcomes with the static map once, then the dynamic state", async () => {
+  test("welcomes with the static map and the team's view, then deltas", async () => {
     const { base, token, playerId, host } = await setup();
     const client = await connect(base, token);
     const welcome: WelcomeMessage = await client.next("welcome");
     expect(welcome).toMatchObject({
+      protocol: PROTOCOL_VERSION,
       worldId: 1,
       playerId,
       team: 0,
       status: "running",
       multiplier: 1,
+      seq: 0,
     });
+    expect(welcome.stream).toMatch(/^[0-9a-f-]{36}$/);
     expect(welcome.map.terrain).toHaveLength(64 * 64);
     expect(welcome.cores).toEqual(host.state.teams.map((t) => t.core));
-    expect(welcome.state.tick).toBe(1);
-    expect(welcome.state.creeps[0]).not.toHaveProperty("path");
+    expect(welcome.view.tick).toBe(1);
+    expect(welcome.view.team).toBe(0);
+    expect(welcome.view.creeps[0]).not.toHaveProperty("path");
+    expect(viewJson(welcome.view)).toBe(viewJson(view(host.state, 0)));
     host.tick();
-    const state = await client.next("state");
-    expect(state.state.tick).toBe(2);
-    // The plan expects ~3-5 KB per message.
-    expect(JSON.stringify(state).length).toBeLessThan(8_000);
+    const delta = await client.next("delta");
+    expect(delta.seq).toBe(1);
+    expect(delta.delta.tick).toBe(2);
+    expect(delta).not.toHaveProperty("status");
+    expect(viewJson(applyDelta(welcome.view, delta.delta))).toBe(
+      viewJson(view(host.state, 0)),
+    );
+    expect(JSON.stringify(delta).length).toBeLessThan(2_000);
     client.socket.close();
   });
 
@@ -114,13 +138,13 @@ describe("WebSocket", () => {
     client.socket.close();
   });
 
-  test("sends at most one state per interval, with the latest tick", async () => {
+  test("sends at most one delta per interval, up to the latest tick", async () => {
     const { base, token, host, timers } = await setup();
     const client = await connect(base, token);
-    await client.next("welcome");
+    const welcome = await client.next("welcome");
     host.tick();
-    await client.next("state");
-    const sent = () => client.messages.filter((m) => m.type === "state").length;
+    const first = await client.next("delta");
+    const sent = () => client.messages.filter((m) => m.type === "delta").length;
     host.tick();
     host.tick();
     host.tick();
@@ -128,9 +152,130 @@ describe("WebSocket", () => {
     expect(sent()).toBe(1);
     timers.advance(200);
     const from = client.messages.length;
-    const latest = await client.next("state", from);
-    expect(latest.state.tick).toBe(5);
+    const latest = await client.next("delta", from);
+    expect(latest).toMatchObject({ seq: 2, delta: { tick: 5 } });
     expect(sent()).toBe(2);
+    const seen = applyDelta(
+      applyDelta(welcome.view, first.delta),
+      latest.delta,
+    );
+    expect(viewJson(seen)).toBe(viewJson(view(host.state, 0)));
+    client.socket.close();
+  });
+
+  test("a welcome carries the last view sent, not the state now", async () => {
+    const { base, token, host, timers, post } = await setup();
+    const ana = await connect(base, token);
+    await ana.next("welcome");
+    host.tick();
+    await ana.delta(1);
+    host.tick();
+    // Tick 3 waits for the interval; a player joining now starts at tick 2.
+    const joined = await post("/api/worlds/1/join", { name: "Caio", team: 0 });
+    const caio = await connect(base, (joined.body as { token: string }).token);
+    const welcome = await caio.next("welcome");
+    expect(welcome).toMatchObject({ seq: 1, view: { tick: 2 } });
+    timers.advance(200);
+    const next = await caio.delta(2);
+    expect(next.delta.tick).toBe(3);
+    expect(viewJson(applyDelta(welcome.view, next.delta))).toBe(
+      viewJson(view(host.state, 0)),
+    );
+    ana.socket.close();
+    caio.socket.close();
+  });
+
+  test("each team has its own stream, advancing even with no socket", async () => {
+    const { base, token, host, timers, post } = await setup();
+    const ana = await connect(base, token);
+    await ana.next("welcome");
+    for (let seq = 1; seq <= 3; seq++) {
+      host.tick();
+      timers.advance(200);
+      await ana.delta(seq);
+    }
+    const joined = await post("/api/worlds/1/join", { name: "Bia", team: 1 });
+    const bia = await connect(base, (joined.body as { token: string }).token);
+    const welcome = await bia.next("welcome");
+    // Team 1's stream sent its 3 deltas to nobody: its base is seq 3.
+    expect(welcome).toMatchObject({ team: 1, seq: 3, view: { team: 1 } });
+    expect(welcome.stream).not.toBe((ana.messages[0] as WelcomeMessage).stream);
+    let seen: TeamView = welcome.view;
+    host.tick();
+    timers.advance(200);
+    const delta = await bia.next("delta");
+    expect(delta.seq).toBe(4);
+    seen = applyDelta(seen, delta.delta);
+    expect(viewJson(seen)).toBe(viewJson(view(host.state, 1)));
+    await ana.delta(4);
+    const anaDeltas = ana.messages.filter((m) => m.type === "delta");
+    expect(anaDeltas.map((m) => m.seq)).toEqual([1, 2, 3, 4]);
+    ana.socket.close();
+    bia.socket.close();
+  });
+
+  test("a client back within the buffer gets the missed deltas, no welcome", async () => {
+    const { base, token, host, timers } = await setup();
+    const first = await connect(base, token);
+    const welcome = await first.next("welcome");
+    host.tick();
+    await first.delta(1);
+    first.socket.close();
+    await first.closed;
+    for (let i = 0; i < 3; i++) {
+      host.tick();
+      timers.advance(200);
+    }
+    const query = `&stream=${welcome.stream}&seq=1`;
+    const back = await connect(base, token, query);
+    const missed = [
+      await back.delta(2),
+      await back.delta(3),
+      await back.delta(4),
+    ];
+    expect(back.messages.some((m) => m.type === "welcome")).toBe(false);
+    let seen = applyDelta(welcome.view, (await first.delta(1)).delta);
+    for (const m of missed) seen = applyDelta(seen, m.delta);
+    expect(viewJson(seen)).toBe(viewJson(view(host.state, 0)));
+    back.socket.close();
+  });
+
+  test.each([
+    ["a seq out of the buffer", (stream: string) => `&stream=${stream}&seq=0`],
+    ["another stream (a restart)", () => "&stream=old&seq=1"],
+    ["a seq not sent yet", (stream: string) => `&stream=${stream}&seq=99`],
+    ["a malformed seq", (stream: string) => `&stream=${stream}&seq=x`],
+  ])("a client back with %s gets a welcome", async (_, query) => {
+    const { base, token, host, timers } = await setup({ deltaBufferMs: 1000 });
+    const first = await connect(base, token);
+    const welcome = await first.next("welcome");
+    for (let i = 0; i < 10; i++) {
+      host.tick();
+      timers.advance(200);
+    }
+    await first.delta(10);
+    first.socket.close();
+    const back = await connect(base, token, query(welcome.stream));
+    expect(await back.next("welcome")).toMatchObject({ seq: 10 });
+    back.socket.close();
+  });
+
+  test("a resync gets a welcome with the last view sent, and is logged", async () => {
+    const { base, token, playerId, host, timers, logs } = await setup();
+    const client = await connect(base, token);
+    await client.next("welcome");
+    for (let i = 0; i < 3; i++) {
+      host.tick();
+      timers.advance(200);
+    }
+    await client.delta(3);
+    const from = client.messages.length;
+    client.send({ type: "resync", reason: "hashMismatch", seq: 2 });
+    const again = await client.next("welcome", from);
+    expect(again).toMatchObject({ seq: 3, view: { tick: host.state.tick } });
+    expect(logs).toContain(
+      `resync world=1 team=0 player=${playerId} tick=${host.state.tick} seq=2 reason=hashMismatch`,
+    );
     client.socket.close();
   });
 

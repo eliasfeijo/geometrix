@@ -44,7 +44,7 @@ export function StackList() {
       <ul>
         {creeps.map((creep) => {
           const team = state.teams[creep.team]!;
-          const max = capacity({ ...creep, path: null }, team, params);
+          const max = capacity(creep, team, params);
           const status = creepStatus(creep, state.deposits);
           return (
             <li key={creep.id}>

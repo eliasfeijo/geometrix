@@ -55,7 +55,20 @@ describe("parseClientMessage", () => {
       "a missing ref",
       JSON.stringify({ type: "command", command: { type: "release" } }),
     ],
+    [
+      "a resync for an unknown reason",
+      JSON.stringify({ type: "resync", reason: "bored", seq: 3 }),
+    ],
+    [
+      "a resync without a seq",
+      JSON.stringify({ type: "resync", reason: "seqGap" }),
+    ],
   ])("rejects %s", (_, raw) => {
     expect(parseClientMessage(raw)).toBeNull();
+  });
+
+  test("accepts a resync request", () => {
+    const resync = { type: "resync", reason: "seqGap", seq: 12 };
+    expect(parseClientMessage(JSON.stringify(resync))).toEqual(resync);
   });
 });

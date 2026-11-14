@@ -1,19 +1,20 @@
 // Client state for one connected world, as signals: what the server sent (the
-// static part from the welcome, the two latest dynamic states for
-// interpolation) plus what is local to this client (selection, notices).
+// static part from the welcome, the two latest views of the team for
+// interpolation, rebuilt from the deltas) plus what is local to this client
+// (selection, notices).
 
 import { computed, signal } from "@preact/signals";
-import type {
-  DynamicState,
-  WelcomeMessage,
-  WorldStatus,
+import {
+  applyDelta,
+  type WelcomeMessage,
+  type WorldStatus,
 } from "@geometrix/protocol";
 import type {
   ConnectionStatus,
   FatalReason,
   WorldMessage,
 } from "./connection.ts";
-import type { Cell } from "@geometrix/sim";
+import type { Cell, TeamView } from "@geometrix/sim";
 import type { Selection } from "./map/pick.ts";
 import type { Point, Size, View } from "./map/view.ts";
 
@@ -26,11 +27,14 @@ export type Mode =
   | { type: "pickCell"; prompt: string; pick(cell: Cell): void }
   | { type: "road" };
 
-/** A dynamic state and when it arrived (performance.now(), ms). */
-export type Snapshot = { state: DynamicState; at: number };
+/** A view of the team and when it arrived (performance.now(), ms). */
+export type Snapshot = { state: TeamView; at: number };
 
 /** What the welcome tells once: it does not change while connected. */
-export type WorldInfo = Omit<WelcomeMessage, "type" | "state" | "status">;
+export type WorldInfo = Omit<
+  WelcomeMessage,
+  "type" | "protocol" | "stream" | "seq" | "view" | "status"
+>;
 
 export type Notice = { id: number; text: string; at: number };
 
@@ -80,21 +84,27 @@ export class GameStore {
 
   receive(message: WorldMessage, now: number): void {
     if (message.type === "welcome") {
-      const { state, status, ...rest } = message;
-      const info: WorldInfo & { type?: string } = { ...rest };
-      delete info.type;
+      const { type, protocol, stream, seq, view, status, ...info } = message;
+      void [type, protocol, stream, seq];
       this.info.value = info;
       this.status.value = status;
       this.previous.value = null;
-      this.current.value = { state, at: now };
+      this.current.value = { state: view, at: now };
       return;
     }
     const current = this.current.value;
-    // A state older than the one shown (e.g. sent before a reconnect) is late.
-    if (current !== null && message.state.tick < current.state.tick) return;
-    this.previous.value = current;
-    this.current.value = { state: message.state, at: now };
-    this.status.value = message.status;
+    if (current === null) return;
+    this.show(applyDelta(current.state, message.delta), now);
+    if (message.status !== undefined) this.status.value = message.status;
+  }
+
+  /**
+   * Shows the next view, keeping the current one for the interpolation. The
+   * deltas come through here; the replay hands its views directly.
+   */
+  show(view: TeamView, now: number): void {
+    this.previous.value = this.current.value;
+    this.current.value = { state: view, at: now };
   }
 
   notify(text: string, now: number): void {
