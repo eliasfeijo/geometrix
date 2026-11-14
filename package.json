@@ -21,6 +21,7 @@
     "geo": "node apps/cli/src/main.ts",
     "server": "node apps/server/src/main.ts",
     "dev:multi": "node apps/server/src/dev-multi-main.ts",
+    "soak": "node apps/server/src/soak-main.ts",
     "client": "npm run dev -w @geometrix/client",
     "build": "npm run build -w @geometrix/client"
   },

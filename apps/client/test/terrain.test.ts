@@ -1,6 +1,12 @@
 import { Terrain } from "@geometrix/sim";
 import { describe, expect, it } from "vitest";
-import { roadRuns, terrainRuns } from "../src/map/terrain.ts";
+import {
+  roadJoinsDown,
+  roadRuns,
+  ROCK_EDGE,
+  rockEdges,
+  terrainRuns,
+} from "../src/map/terrain.ts";
 import { testWorld } from "./helpers.ts";
 
 const { jungle: J, river: W, crossing: C, rock: R } = Terrain;
@@ -35,6 +41,33 @@ describe("terrain runs", () => {
       { x: 0, y: 1, length: 1 },
       { x: 4, y: 1, length: 1 },
       { x: 0, y: 2, length: 2 },
+    ]);
+  });
+});
+
+describe("rock relief", () => {
+  // 3x3 map, rocks at (1,1) and (2,1): one block touching the right border.
+  const map = { width: 3, height: 3, terrain: [J, J, J, J, R, R, J, J, J] };
+
+  it("lights the sides facing up and left, shades those facing down and right", () => {
+    const { lit, shade } = rockEdges(map);
+    const half = ROCK_EDGE / 2;
+    expect(lit).toBe(`M1 ${1 + half}h1M${1 + half} 1v1M2 ${1 + half}h1`);
+    expect(shade).toBe(`M1 ${2 - half}h1M2 ${2 - half}h1`);
+  });
+
+  it("draws nothing where rocks touch each other or the map's edge", () => {
+    const full = { width: 2, height: 1, terrain: [R, R] };
+    expect(rockEdges(full)).toEqual({ lit: "", shade: "" });
+  });
+});
+
+describe("road joins", () => {
+  it("joins a road cell to the one right below it", () => {
+    // width 4: a vertical road (1,0)-(1,1)-(1,2) and a lone cell (3,0).
+    expect(roadJoinsDown([9, 1, 5, 3], 4)).toEqual([
+      { x: 1, y: 0 },
+      { x: 1, y: 1 },
     ]);
   });
 });

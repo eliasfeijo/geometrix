@@ -1,7 +1,19 @@
 /* Dark theme (owner decision, F7): graphite background, team blue × orange,
    materia and cristal with their own colors. Map colors live in map/colors.ts. */
 
+/* In-game text on the map (owner decision, F9): Chakra Petch SemiBold, latin
+   subset, OFL (src/fonts/OFL.txt). The rest of the interface uses the system
+   font. */
+@font-face {
+  font-family: "Chakra Petch";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("./fonts/chakra-petch-latin-600-normal.woff2") format("woff2");
+}
+
 :root {
+  --font-game: "Chakra Petch", ui-sans-serif, system-ui, sans-serif;
   --bg: #111317;
   --panel: #1a1d23;
   --panel-2: #22262e;
@@ -412,6 +424,74 @@ h3 {
 
 .halo-mine {
   animation: halo-pulse 1.4s ease-in-out infinite;
+}
+
+/* A cargo ring that just filled up flashes once (F9). */
+.cargo-flash {
+  animation: cargo-flash 0.8s ease-out forwards;
+  transform-box: fill-box;
+  transform-origin: center;
+  pointer-events: none;
+}
+
+@keyframes cargo-flash {
+  from {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  to {
+    transform: scale(1.9);
+    opacity: 0;
+  }
+}
+
+/* "+N" / "−N" rising from a core (F9). --rise is in map units. */
+.stock-float {
+  animation: stock-rise 1.4s ease-out forwards;
+}
+
+@keyframes stock-rise {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(var(--rise));
+    opacity: 0;
+  }
+}
+
+/* A stock number that just changed in the core panel. */
+.stock-up {
+  animation: stock-up 0.9s ease-out;
+}
+
+.stock-down {
+  animation: stock-down 0.9s ease-out;
+}
+
+@keyframes stock-up {
+  from {
+    color: var(--ok);
+    text-shadow: 0 0 8px var(--ok);
+  }
+}
+
+@keyframes stock-down {
+  from {
+    color: var(--danger);
+  }
+}
+
+.cargo-full {
+  color: var(--ok);
+  font-weight: 600;
 }
 
 @keyframes halo-pulse {
@@ -833,4 +913,15 @@ h3 {
   display: block;
   font-size: 12px;
   font-weight: 400;
+}
+
+/* In-game text: a dark outline keeps it legible over any terrain. */
+.map-text {
+  font-family: var(--font-game);
+  font-weight: 600;
+  paint-order: stroke;
+  stroke: var(--bg);
+  stroke-linejoin: round;
+  pointer-events: none;
+  user-select: none;
 }

@@ -202,6 +202,23 @@ metrics   (world_id, tick, team_id, sample_json)
   navegador padrão (no WSL, `cmd.exe /c start`; sem navegador, imprime as URLs). Cada aba recebe
   `?world=…&slot=N#token=…`; o cliente grava o token no `localStorage` e limpa a URL. Só para desenvolvimento.
 
+### Detalhes da F9 decididos pelo dono (2026-11-14)
+
+- **Teste de resistência (`npm run soak`)** no lugar do mundo de 24 h (spec §8 item 3): mundo bot × bot inteiro
+  pelo loop real do servidor (padrão ×360), `kill -9` em momentos sorteados (padrão 5) com restart, um SIGTERM
+  limpo, e no fim o replay exportado refeito no Node e no navegador com o hash do servidor. Registra memória do
+  processo, tamanho do SQLite e atraso do loop.
+- **Estrada × pedra:** a estrada vira terra clara e quente (areia `#b8a07a`, borda `#8a7552`); a pedra fica mais
+  escura (`#2f3238`) com aresta clara em cima e à esquerda (`#5c616c`), lendo como bloco elevado.
+- **Nome do creep no mapa:** embaixo da forma, em tom claro do time, em todos os creeps que estão abertos (fora de
+  pilha) e ocupam ~22 px ou mais na tela; afastado, some.
+- **Fonte in-game** (nomes, `+N`, custo da estrada): Chakra Petch (OFL), um peso em woff2 dentro do repo, sem CDN.
+  O resto da interface continua na fonte do sistema.
+- **Feedback com animações curtas:** no modo estrada, a célula sob o mouse mostra o custo (vermelho se faltar
+  estoque); ao pagar, `−N` sobe do Núcleo; a obra mostra o tempo restante. Carga cheia: o anel fica completo e
+  grosso, com um brilho curto ao encher. Entrega: `+N` na cor do recurso sobe do Núcleo e o estoque pisca no
+  painel.
+
 ## 9. CLI (`apps/cli`)
 
 | Comando | Saída |
@@ -288,4 +305,5 @@ interface**. Detalhes em [tasks.md](tasks.md).
 | F6 | Servidor: HTTP, WebSocket, loop de tick, persistência, recuperação | |
 | F7 | Cliente: mapa, painéis, controle direto, interpolação | **Sessão do dono** (interface e legibilidade) |
 | F8 | Replay no navegador; comando de multi-cliente local | |
-| ~~F9~~ | Deploy e playtest comprimido: **saem do M1** (dono, 2026-11-14) e viram a primeira etapa antes do playtest do M2. O §11 continua valendo | |
+| F9 | Legibilidade e playtest: teste de resistência comprimido (`npm run soak`), ajustes de legibilidade do mapa e feedback visual, roteiro de playtest local (dono, 2026-11-14) | **Playtest humano de legibilidade e mecânica** |
+| — | Deploy e playtest de diversão: **saem do M1** (dono, 2026-11-14) e viram a primeira etapa antes do playtest do M2. O §11 continua valendo | |

@@ -1,6 +1,6 @@
 # Status atual
 
-**Atualizado:** 2026-11-14 · **Marco:** M1 — O ciclo da riqueza · **Fase:** F8 (replay e multi-cliente) concluída; falta o mundo de 24 h para fechar o M1
+**Atualizado:** 2026-11-14 · **Marco:** M1 — O ciclo da riqueza ✅ concluído · **Próximo:** publicar o repo e abrir o M2
 
 Resumo de bolso. A fonte de verdade continua nos docs linkados. Atualize este arquivo ao fechar uma fase, ao passar
 por um portão de aprovação ou quando surgir um bloqueio.
@@ -22,25 +22,64 @@ por um portão de aprovação ou quando surgir um bloqueio.
 | M1 — F6 Servidor | ✅ Concluída, merge em `main`. SQLite (log de comandos, snapshots, métricas), loop de tick com multiplicador, HTTP (criar, listar, entrar), WebSocket com ack/reject e broadcast ≤5/s, `release` automático, bots e limite de humanos, recuperação após restart. Detalhes decididos pelo dono na [spec §5](../specs/m1-ciclo-da-riqueza/spec.md) | [tasks.md §F6](../specs/m1-ciclo-da-riqueza/tasks.md) · `apps/server/src/` · `packages/protocol/src/` |
 | M1 — F7 Cliente | ✅ Concluída, merge em `main`. Checkpoint aprovado pelo dono (2026-11-14). Lobby, mapa SVG com pan/zoom, creeps interpolados com nomes gerados, pilhas de creeps com lista para escolher, inspetor, dominar/liberar, painel do Núcleo, editor de regras e presets, controle direto pelo botão direito. Detalhes decididos pelo dono na [spec §5](../specs/m1-ciclo-da-riqueza/spec.md) | [tasks.md §F7](../specs/m1-ciclo-da-riqueza/tasks.md) · `apps/client/src/` |
 | M1 — F8 Replay e multi-cliente | ✅ Concluída, merge em `main`. Replay no navegador (arquivo do `geo sim` ou `GET /api/worlds/:id/replay`) com velocidades, linha do tempo e hash ✓/✗; hash confere no WebKit/JSC; `npm run dev:multi`. Detalhes decididos pelo dono no [plan §8](../specs/m1-ciclo-da-riqueza/plan.md) | [tasks.md §F8](../specs/m1-ciclo-da-riqueza/tasks.md) · `apps/client/src/replay/` · `apps/server/src/dev-multi*.ts` |
-| ~~M1 — F9~~ | Deploy e playtest comprimido saíram do M1 (dono, 2026-11-14): abrem o M2 | [ROADMAP](../ROADMAP.md) |
+| M1 — F9 Legibilidade e playtest | ✅ Concluída, merge em `main`. Fecha o M1. Feito: `npm run soak` (teste de resistência comprimido, no lugar do mundo de 24 h), estrada × pedra, nomes no mapa (Chakra Petch), carga cheia, `+N`/`−N` no Núcleo, custo da estrada sob o cursor e tempo da obra, [PLAYTEST.md](../PLAYTEST.md). **Checkpoint** (dono, 2026-11-14): playtest parcial e replay validados, sem achados | [tasks.md §F9](../specs/m1-ciclo-da-riqueza/tasks.md) · [spec §8](../specs/m1-ciclo-da-riqueza/spec.md) |
+| Deploy e playtest de diversão | Saíram do M1 (dono, 2026-11-14): abrem o M2 | [ROADMAP](../ROADMAP.md) |
 | M2–M4 | ⬜ Não iniciados | [ROADMAP](../ROADMAP.md) |
 
 ## Próximos passos imediatos
 
-1. **Publicar o repo no GitHub** (dono). Ainda não há remote, então o CI ([ci.yml](../../.github/workflows/ci.yml))
-   nunca rodou fora da máquina local.
-2. **Mundo de 24 h** (spec §8, último critério do M1, dono): um mundo em tempo real com multiplicador baixo na
-   máquina de dev, para persistência, recuperação e estabilidade. Ex.: `npm run server` e criar no lobby um mundo
-   ×1 com bot nos dois times. Ao fim, o "Assistir replay" do lobby refaz o mundo no navegador e confere o hash. Com ele verde, o M1 fecha e o M2 começa
-   pelo deploy e o playtest comprimido (ex-F9, [ROADMAP](../ROADMAP.md)).
-3. **Experimentar o F8** (dono): `npm run dev:multi -- --clients 3` abre 3 abas no navegador padrão (pelo
-   `cmd.exe /c start` no WSL; o escape da URL foi conferido com `echo`, mas a abertura das abas não foi vista);
-   `npm run geo -- sim --hours 6` e "Assistir replay" no lobby com o `runs/<id>/replay.json`.
-4. **Rodar o cliente:** `npm run build && npm run server` e abrir `http://localhost:8080`, ou `npm run server` +
-   `npm run client` e abrir `http://localhost:5173` (recarga automática). Outra aba com `?slot=2` é outro jogador
-   no mesmo navegador.
+**M1 concluído (2026-11-14):** F9 em `main` com o OK do dono. Os critérios da spec §8 para avançar ao M2 estão
+cumpridos: bot × bot de 3 dias sem travar, `geo verify` e recuperação verdes, soak com o mesmo hash no servidor, no
+Node e no navegador, legibilidade aprovada pelo dono.
+
+1. **Publicar o repo no GitHub** (dono) antes de abrir o M2. Ainda não há remote, então o CI
+   ([ci.yml](../../.github/workflows/ci.yml)) nunca rodou fora da máquina local. É o primeiro teste real do CI
+   (Node 26, `better-sqlite3` nativo, `geo verify` com 3 seeds, orçamento de 6 h em 60 s).
+2. **Abrir o M2 (A emboscada) pela skill `spec-slice`:** spec → plan → tasks em `docs/specs/m2-…/`. Pelo
+   [ROADMAP](../ROADMAP.md), a primeira etapa é o deploy e o playtest de diversão que saíram do M1 (lista em
+   "Fora do M1" no tasks.md). Antes da spec, revisar as **perguntas abertas** e propostas do GDD que o M2 toca
+   (ex.: batalha, emboscada, auto-resolve, nome do creep no estado) e levar ao dono numa rodada
+   agrupada.
+3. **Olhos novos na legibilidade:** o playtest da F9 foi do próprio dono, que já conhece o jogo. O roteiro e o
+   questionário do [PLAYTEST.md](../PLAYTEST.md) servem de base para o primeiro playtest do M2, com pessoas que
+   nunca viram o jogo.
+
+## Achados do playtest
+
+Um item por problema: o que a pessoa não entendeu ou não conseguiu, a tarefa ou pergunta do
+[PLAYTEST.md](../PLAYTEST.md) que mostrou, e quantas pessoas tropeçaram nele.
+
+- **Sessão 1 (dono, 2026-11-14):** `npm run dev:multi -- --clients 3 --mult 36` (padrão de 3 dias de mundo), sem
+  ir até o fim do mundo (o fim já é coberto pelo `npm run soak`). Replay testado pelo dono: ok, o pendente do F8
+  está resolvido. **Nenhum problema reportado.** Ainda sem uma pessoa que nunca viu o jogo (ver próximos passos,
+  item 3).
 
 ## Pendências e pontos a esclarecer
+
+- **Interpretações da F9** (o plan fixa o quê, não estes detalhes):
+  - o `+N`/`−N` sobe do Núcleo com a **variação líquida** do estoque entre dois estados (5 por segundo): uma
+    entrega e um pagamento no mesmo intervalo se somam (ex.: `−140`). O `−N` também aparece ao pagar produção e
+    upgrade, não só estrada. Variações do mesmo time, recurso e sinal em até 700 ms viram um número só; o `+N`
+    sobe acima do Núcleo (matéria à esquerda, cristal à direita), o `−N` ao lado. O estoque no painel pisca
+    verde ao subir e vermelho ao descer;
+  - nomes no mapa só em creeps fora de pilha, com 10 a 13 px na tela, numa camada acima de todos os creeps
+    (nenhum vizinho cobre um nome);
+  - carga cheia = matéria + cristal ≥ capacidade do creep; o brilho toca quando o anel cheio aparece: ao encher,
+    mas também ao abrir a página ou quando o creep sai de uma pilha já cheio;
+  - custo da estrada no modo estrada: segue o `sim` (caminho mais barato do Núcleo do time até a célula; cada
+    célula sem estrada é um segmento; obra já paga não paga de novo; a estrada para na primeira célula que não
+    aceita estrada, marcada com ✕). O texto mostra as células a construir e o custo total; fica **vermelho
+    quando o estoque não cobre o total** (o `sim` constrói segmento a segmento enquanto houver estoque). "sem
+    caminho", "sem estrada aqui" (bloqueada já na primeira célula) e "já tem estrada" quando não há o que pagar;
+  - tempo da obra: acima da célula, numa camada sobre os creeps (o construtor fica em cima da obra), só com a
+    célula ≥ 22 px na tela, em tempo de mundo (`2:00` com o `default.json`, 1 s real a ×120);
+  - `npm run soak`: o tick de cada queda é sorteado por um LCG da seed, entre 5% e 95% do mundo; o SIGTERM limpo
+    fica no meio da lista; a amostragem é a cada 2 s reais.
+- **Medições da F9:** `npm run soak` completo (×360, seed 42, 5 `kill -9` + 1 SIGTERM): OK, mesmo hash no servidor
+  e no Node, 12,4 min reais; velocidade do loop mediana 100% do multiplicador, mais lenta 93%; SQLite final
+  55,1 MB; memória de cada processo estabiliza em ~200 MB (heap do V8 se acomodando, sem vazamento entre os
+  restarts). O replay do banco do soak também dá ✓ no Chromium. Bundle principal 106 KB (+ a fonte, 10 KB woff2),
+  chunk do replay 102,5 KB. 2033 testes.
 
 - **Interpretações do F8** (o plan não fixa):
   - o `dev:multi` passa a sessão inteira no fragmento (`#token=…&player=…&team=…&name=…`, não só o token): o

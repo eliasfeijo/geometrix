@@ -3,8 +3,8 @@
 Jogo multiplayer de navegador: **mundo persistente de estratégia/economia (RTS + sandbox + construção)** com
 **batalhas em tempo real estilo MOBA** como tempero. Visual 100% geométrico (SVG/Canvas, formas como linguagem).
 
-**Fase atual: M1 em implementação.** Spec, plan e tasks aprovados em `docs/specs/m1-ciclo-da-riqueza/`. O progresso
-fica no `tasks.md`; a estrutura do repositório, no `plan.md` §1.
+**Fase atual: M1 concluído; M2 a especificar.** O M1 está em `docs/specs/m1-ciclo-da-riqueza/` (o histórico fica no
+`tasks.md`; a estrutura do repositório, no `plan.md` §1).
 
 ## Fontes de verdade
 
@@ -37,6 +37,7 @@ Node 26 (`.nvmrc`). O Node roda `.ts` direto; só o cliente tem build (Vite).
 | `npm run build` | Build do cliente (Vite) em `apps/client/dist`, que o servidor serve |
 | `npm run client` | Dev server do Vite (porta 5173) com proxy de `/api` e `/ws` para o servidor no `GEO_PORT` |
 | `npm run dev:multi -- --clients 3` | Build + servidor + um mundo com K jogadores (Azul/Laranja alternados), uma aba por jogador (`--seed`, `--mult`, `--no-build`, `--no-open`) |
+| `npm run soak` | Teste de resistência: mundo bot × bot inteiro (×360, ~12 min) com `kill -9` e restart; o replay exportado tem de dar o hash do servidor. Relatório em `runs/soak-<id>/` |
 
 ## Convenções do `sim`
 

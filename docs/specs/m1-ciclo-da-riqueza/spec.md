@@ -174,8 +174,8 @@ Formato: *Quando [gatilho], o sistema deve [resposta].*
   inatividade é do humano, não do mundo; o valor sai dos parâmetros do `sim` e vira configuração do servidor.
 - **Desconexão (D-4) com carência:** se o jogador reconecta com o mesmo token em até 15 s reais, mantém o domínio.
   O `release` só entra no log quando a carência vence.
-- **Bots no servidor:** ao criar um mundo, cada time pode ter um bot `balanced` opcional, para o mundo de 24 h e
-  para a sessão do dono. Ele entra como jogador e emite comandos normais, que vão para o log (ADR-0002).
+- **Bots no servidor:** ao criar um mundo, cada time pode ter um bot `balanced` opcional, para o teste de
+  resistência (antes, o mundo de 24 h) e para a sessão do dono. Ele entra como jogador e emite comandos normais, que vão para o log (ADR-0002).
 - **Limite de humanos por time (D6):** 3, imposto pelo `sim` com o parâmetro `teams.maxHumans`; o 4º `join`
   humano no time é recusado. Bots não contam.
 
@@ -242,18 +242,32 @@ Todos ficam num arquivo de parâmetros versionado, nunca no código.
    dias de mundo. Primeira passada: [balance.md](balance.md).
 2. **Sessão do dono** (checkpoint do F7): interface, legibilidade do mapa, editor de regras, domínio e
    multi-cliente local. Não é um playtest de diversão.
-3. **Mundo de 24 h** rodando em tempo real, com multiplicador baixo, na máquina de dev: persistência,
-   recuperação e estabilidade.
+3. **Teste de resistência comprimido** (`npm run soak`, no lugar do mundo de 24 h): um mundo bot × bot inteiro (3
+   dias de mundo) pelo loop real do servidor, com multiplicador alto, quedas forçadas (`kill -9`) e restarts no
+   meio, um desligamento limpo, e no fim o replay exportado refeito no Node e no navegador com o mesmo hash do
+   servidor. Registra memória do processo, tamanho do SQLite e atraso do loop: persistência, recuperação e
+   estabilidade.
+4. **Playtest humano de legibilidade e mecânica** (F9): pessoas jogando o servidor local, para refinar o que o
+   jogador vê e entende (estradas × obstáculos, custos, carga, entregas, nomes) e levantar as melhorias seguintes.
+   Não é um playtest de diversão.
 
-**Revisto pelo dono em 2026-11-14.** O playtest humano (2 a 4 pessoas, ×36, 2 h, questionário) e o deploy saíram
-do M1: sem combate não há o que vencer, e os DNAs se equivalem de propósito, então um playtest agora mediria o que
-o jogo não pretende ser. Eles viram a primeira etapa antes do playtest do M2 ([ROADMAP](../../ROADMAP.md)).
+**Revisto pelo dono em 2026-11-14.** O playtest de diversão (2 a 4 pessoas, ×36, 2 h, questionário) e o deploy
+saíram do M1: sem combate não há o que vencer, e os DNAs se equivalem de propósito, então um playtest de diversão
+agora mediria o que o jogo não pretende ser. Eles viram a primeira etapa antes do playtest do M2
+([ROADMAP](../../ROADMAP.md)).
+
+**Revisto de novo pelo dono em 2026-11-14 (fim do F8):** 24 h reais de economia sem combate não testam nada que o
+relógio acrescente: persistência, recuperação e estabilidade dependem de ticks, quedas e horas de processo. O
+mundo de 24 h vira o teste de resistência comprimido (item 3). E o M1 ganha uma rodada de **legibilidade e
+playtest humano** (item 4, F9) antes do M2, sem deploy: ela também dá uma primeira resposta humana à pergunta do
+M1 no ROADMAP.
 
 ### Critério para avançar ao M2
 - Bot × bot sem estado degenerado em 3 dias de mundo (sem travar nem explodir; ver [balance.md](balance.md)).
 - Determinismo (`geo verify`) e recuperação após restart verdes.
-- O mundo de 24 h roda sem cair.
-- A sessão do dono aprova a legibilidade.
+- O teste de resistência comprimido termina sem cair e com o mesmo hash no servidor, no Node e no navegador.
+- A sessão do dono aprova a legibilidade, e o playtest de legibilidade da F9 foi feito, com as melhorias seguintes
+  registradas.
 
 Os sinais da versão anterior (humanos editando regras por escolha, mistura de DNA, tráfego nos depósitos
 disputados, motivos para dominar) passam para o playtest do M2, menos a mistura de DNA.
