@@ -1,4 +1,4 @@
-// Wires the server together: the hosted worlds and the HTTP endpoints.
+// Wires the server together: the hosted worlds, HTTP and WebSocket.
 
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
@@ -8,6 +8,7 @@ import { createHttpHandler } from "./http.ts";
 import type { Timers } from "./loop.ts";
 import type { Store } from "./persistence.ts";
 import { Worlds } from "./worlds.ts";
+import { attachWebSocket } from "./ws.ts";
 
 export type AppOptions = {
   store: Store;
@@ -34,6 +35,12 @@ export async function startApp(options: AppOptions): Promise<App> {
   const server = createServer(
     createHttpHandler({ store, worlds, staticDir: config.staticDir, clock }),
   );
+  const ws = attachWebSocket(server, {
+    store,
+    worlds,
+    timers,
+    broadcastIntervalMs: config.broadcastIntervalMs,
+  });
   await new Promise<void>((done) => server.listen(config.port, done));
   return {
     worlds,
@@ -41,6 +48,7 @@ export async function startApp(options: AppOptions): Promise<App> {
     port: (server.address() as AddressInfo).port,
     close: async () => {
       worlds.stopAll();
+      ws.close();
       server.closeAllConnections();
       await new Promise<void>((done) => server.close(() => done()));
     },
