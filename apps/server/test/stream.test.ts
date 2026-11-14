@@ -34,7 +34,13 @@ const sha256 = (text: string) =>
   createHash("sha256").update(text).digest("hex");
 
 function stream(state: WorldState, team = 0, hashEveryTicks = 60) {
-  return new TeamStream(state, team, "running", { hashEveryTicks }, "s");
+  return new TeamStream(
+    state,
+    team,
+    "running",
+    { hashEveryTicks, bufferMs: 30_000 },
+    "s",
+  );
 }
 
 describe("TeamStream", () => {
@@ -47,7 +53,9 @@ describe("TeamStream", () => {
     let seen: TeamView = JSON.parse(JSON.stringify(base.view)) as TeamView;
     for (let seq = 1; seq <= 5; seq++) {
       run(state, 7);
-      const message = JSON.parse(s.advance(state, "running")) as DeltaMessage;
+      const message = JSON.parse(
+        s.advance(state, "running", 0),
+      ) as DeltaMessage;
       expect(message.seq).toBe(seq);
       seen = applyDelta(seen, message.delta);
       expect(viewJson(seen)).toBe(viewJson(view(state, 1)));
@@ -60,11 +68,11 @@ describe("TeamStream", () => {
     const state = world();
     const s = stream(state);
     run(state, 61);
-    s.advance(state, "running");
+    s.advance(state, "running", 0);
     const handed = s.lastView().view;
     const json = viewJson(handed);
     run(state, 120);
-    s.advance(state, "running");
+    s.advance(state, "running", 0);
     expect(viewJson(handed)).toBe(json);
   });
 
@@ -78,7 +86,7 @@ describe("TeamStream", () => {
     while (state.tick < 200) {
       run(state, 1);
       const message = JSON.parse(
-        every.advance(state, "running"),
+        every.advance(state, "running", 0),
       ) as DeltaMessage;
       seen = applyDelta(seen, message.delta);
       if (message.hash !== undefined) {
@@ -86,7 +94,9 @@ describe("TeamStream", () => {
         expect(message.hash).toBe(sha256(viewJson(seen)));
       }
       if (state.tick % 50 === 0) {
-        const m = JSON.parse(coarse.advance(state, "running")) as DeltaMessage;
+        const m = JSON.parse(
+          coarse.advance(state, "running", 0),
+        ) as DeltaMessage;
         if (m.hash !== undefined) coarseAt.push(state.tick);
       }
     }
@@ -98,14 +108,33 @@ describe("TeamStream", () => {
     const state = world();
     const s = stream(state);
     run(state, 1);
-    expect(JSON.parse(s.advance(state, "running"))).not.toHaveProperty(
+    expect(JSON.parse(s.advance(state, "running", 0))).not.toHaveProperty(
       "status",
     );
     run(state, 1);
-    expect(JSON.parse(s.advance(state, "ended"))).toMatchObject({
+    expect(JSON.parse(s.advance(state, "ended", 0))).toMatchObject({
       status: "ended",
     });
     expect(s.lastView().status).toBe("ended");
-    expect(JSON.parse(s.advance(state, "ended"))).not.toHaveProperty("status");
+    expect(JSON.parse(s.advance(state, "ended", 0))).not.toHaveProperty(
+      "status",
+    );
+  });
+
+  test("hands the missed deltas to a client resuming within the buffer", () => {
+    const state = world();
+    const s = stream(state);
+    const sent: string[] = [];
+    for (let i = 1; i <= 10; i++) {
+      run(state, 1);
+      sent.push(s.advance(state, "running", i * 10_000));
+    }
+    // At 100 s, the buffer keeps the deltas of 70 s on: seqs 7 to 10.
+    expect(s.since("s", 6)).toEqual(sent.slice(6));
+    expect(s.since("s", 9)).toEqual([sent[9]]);
+    expect(s.since("s", 10)).toEqual([]);
+    expect(s.since("s", 5)).toBeNull();
+    expect(s.since("s", 11)).toBeNull();
+    expect(s.since("other", 9)).toBeNull();
   });
 });
