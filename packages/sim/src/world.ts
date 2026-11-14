@@ -24,7 +24,16 @@ export type Team = {
   stock: Stock;
   /** Upgrades bought (spec I-3). */
   upgrades: Record<UpgradeId, boolean>;
+  /** The creep the core is producing; one at a time, no queue. */
+  production: Production | null;
+  /**
+   * DNA to produce again whenever the core is free ("repeat", plan P5). It
+   * waits, armed, while the stock or the population cap does not allow it.
+   */
+  repeat: Dna | null;
 };
+
+export type Production = { dna: Dna; remainingSeconds: number };
 
 export type Creep = {
   id: number;
@@ -81,22 +90,15 @@ export function createWorld(seed: number, params: Params): WorldState {
       cristal: params.teams.initialStock.cristal,
     },
     upgrades: { capacity: false },
+    production: null,
+    repeat: null,
   }));
 
   const creeps: Creep[] = [];
   for (const team of teams) {
     for (const dna of DNAS) {
       for (let i = 0; i < params.population.initial[dna]; i++) {
-        creeps.push({
-          id: nextId++,
-          team: team.id,
-          dna,
-          ...team.core,
-          cargo: { materia: 0, cristal: 0 },
-          order: { type: "stop" },
-          movePoints: 0,
-          path: null,
-        });
+        creeps.push(newCreep(nextId++, team, dna));
       }
     }
   }
@@ -114,5 +116,19 @@ export function createWorld(seed: number, params: Params): WorldState {
     creeps,
     deposits,
     nextId,
+  };
+}
+
+/** A creep standing stopped and empty on its team's core. */
+export function newCreep(id: number, team: Team, dna: Dna): Creep {
+  return {
+    id,
+    team: team.id,
+    dna,
+    ...team.core,
+    cargo: { materia: 0, cristal: 0 },
+    order: { type: "stop" },
+    movePoints: 0,
+    path: null,
   };
 }
