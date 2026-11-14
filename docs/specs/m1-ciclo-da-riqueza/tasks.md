@@ -61,7 +61,7 @@ Marque `[x]` ao concluir. Cada task deve terminar com os testes verdes. Referên
 ## F7 — Cliente
 - [x] Vite + Preact; conexão, `welcome`, reconexão
 - [x] Mapa SVG com camadas estática e dinâmica; pan e zoom
-- [ ] Creeps por DNA e time, anel de carga, halo de domínio, interpolação
+- [x] Creeps por DNA e time, anel de carga, halo de domínio, interpolação
 - [ ] Inspetor do creep; dominar e liberar
 - [ ] Painel do Núcleo
 - [ ] Editor de regras e presets

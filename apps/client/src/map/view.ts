@@ -104,3 +104,16 @@ export function centerOn(view: View, cell: Point, map: MapSize, size: Size) {
 
 const clamp = (v: number, lo: number, hi: number) =>
   Math.min(Math.max(v, lo), hi);
+
+/** Smallest on-screen size of a marker (creep, deposit), in pixels. */
+export const MIN_MARKER_PX = 22;
+/** Most a marker grows past its cell size when zoomed out. */
+export const MAX_MARKER_SCALE = 2;
+
+/**
+ * How much to enlarge markers about a cell wide so they stay legible zoomed
+ * out: 1 when zoomed in, up to MAX_MARKER_SCALE.
+ */
+export function markerScale(scale: number): number {
+  return clamp(MIN_MARKER_PX / scale, 1, MAX_MARKER_SCALE);
+}
