@@ -38,8 +38,10 @@ na sua branch (plan §12, skill `commit`), com merge `--no-ff` em `main`.
 - [x] Estrategista só com a visão (mapa a partir de `known`), sem lógica de batedor (spec B-1, N8)
 - [x] Métricas: 1ª entrega por recurso e time, células exploradas, Núcleo inimigo visto, creeps explorando; no
       `report.md` do `geo sim` e do `geo sweep` (plan §11)
-- [ ] **Checkpoint:** `geo sweep` nas seeds 1–20 (6 h), `geo sim --days 3` do seed 42 (economia lado a lado com o
-      hash anterior), custo do tick antes × depois (spec §7)
+- [x] **Checkpoint:** `geo sweep` nas seeds 1–20 (6 h), `geo sim --days 3` do seed 42 (economia lado a lado com o
+      hash anterior), custo do tick antes × depois (spec §7). Dono, 2026-11-14: início de partida ✅; economia
+      aceita; custo do tick 2,2× aceito; regra do estrategista mantida; divergência entre os times aceita, a rever no
+      rebalanceamento (plan §10, "Checkpoint da F2")
 
 ## F3 — Rede e servidor (`m1.5/fog-f3-network`)
 

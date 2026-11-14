@@ -68,3 +68,7 @@ consumo de cristal em evoluções.
   depósitos disputados quase não são disputados, então o sinal do M2 não aparece. Depósitos disputados mais ricos,
   mais perto das travessias, ou aceitar até o M2 dar mais usos ao cristal? **Fica para o M2 (dono,
   2026-11-14)**, onde o cristal vira o alvo da emboscada.
+- **Desempate em depósito disputado.** Quando creeps dos dois times coletam no mesmo depósito quase vazio, o de id
+  menor leva a unidade (regra do M1, ordem do tick). Com o fog, os creeps passam a disputar depósitos e, no seed 42,
+  o time 0 fica à frente depois de ~15 h (151 mil × 140 mil de matéria em 3 dias). **Aceito por ora; rever numa
+  rodada de rebalanceamento futura (dono, 2026-11-14).**

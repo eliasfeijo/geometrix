@@ -1,6 +1,6 @@
 # Status atual
 
-**Atualizado:** 2026-11-14 · **Marco:** M1.5 — A névoa · **Fatia de rede:** ✅ concluída (viabilidade aprovada) · **Design do fog:** ✅ decidido (GDD 01, 02, 07) · **Spec e plan do fog:** ✅ aprovados · **Fog F1:** ✅ · **Fog F2:** 🟡 tasks prontas, checkpoint aguardando o dono · **Próximo:** fog F3 (rede e servidor), depois do OK
+**Atualizado:** 2026-11-14 · **Marco:** M1.5 — A névoa · **Fatia de rede:** ✅ concluída (viabilidade aprovada) · **Design do fog:** ✅ decidido (GDD 01, 02, 07) · **Spec e plan do fog:** ✅ aprovados · **Fog F1:** ✅ · **Fog F2:** ✅ · **Próximo:** fog F3 (rede e servidor)
 
 Resumo de bolso. A fonte de verdade continua nos docs linkados. Atualize este arquivo ao fechar uma fase, ao passar
 por um portão de aprovação ou quando surgir um bloqueio.
@@ -24,7 +24,7 @@ por um portão de aprovação ou quando surgir um bloqueio.
 | M1 — F8 Replay e multi-cliente | ✅ Concluída, merge em `main`. Replay no navegador (arquivo do `geo sim` ou `GET /api/worlds/:id/replay`) com velocidades, linha do tempo e hash ✓/✗; hash confere no WebKit/JSC; `npm run dev:multi`. Detalhes decididos pelo dono no [plan §8](../specs/m1-ciclo-da-riqueza/plan.md) | [tasks.md §F8](../specs/m1-ciclo-da-riqueza/tasks.md) · `apps/client/src/replay/` · `apps/server/src/dev-multi*.ts` |
 | M1 — F9 Legibilidade e playtest | ✅ Concluída, merge em `main`. Fecha o M1. Feito: `npm run soak` (teste de resistência comprimido, no lugar do mundo de 24 h), estrada × pedra, nomes no mapa (Chakra Petch), carga cheia, `+N`/`−N` no Núcleo, custo da estrada sob o cursor e tempo da obra, [PLAYTEST.md](../PLAYTEST.md). **Checkpoint** (dono, 2026-11-14): playtest parcial e replay validados, sem achados | [tasks.md §F9](../specs/m1-ciclo-da-riqueza/tasks.md) · [spec §8](../specs/m1-ciclo-da-riqueza/spec.md) |
 | Deploy e playtest de diversão | Saíram do M1 (dono, 2026-11-14): abrem o M2 | [ROADMAP](../ROADMAP.md) |
-| M1.5 — A névoa | 🟡 Em andamento (dono, 2026-11-14). Duas fatias: rede (deltas da visão de cada time, [ADR-0006](../adr/0006-sync-do-mundo.md), aceito) ✅ concluída, e depois fog of war 🟡 (rodada de design, spec e plan ✅ 2026-11-14; F1 ✅; F2 🟡 checkpoint com o dono) | [ROADMAP](../ROADMAP.md) |
+| M1.5 — A névoa | 🟡 Em andamento (dono, 2026-11-14). Duas fatias: rede (deltas da visão de cada time, [ADR-0006](../adr/0006-sync-do-mundo.md), aceito) ✅ concluída, e depois fog of war 🟡 (rodada de design, spec e plan ✅ 2026-11-14; F1 ✅; F2 ✅; F3 ⬜) | [ROADMAP](../ROADMAP.md) |
 | M1.5 rede — spec | ✅ Aprovada (2026-11-14). Decisões D1–D8; critérios de viabilidade na §7 | [spec.md](../specs/m1.5-rede/spec.md) |
 | M1.5 rede — plan | ✅ Aprovado (2026-11-14), com R1–R7 decididas | [plan.md](../specs/m1.5-rede/plan.md) |
 | M1.5 fog — spec | ✅ Aprovada (2026-11-14). Decisões D1–D12 (D1: pedras bloqueiam a visão, escolha do dono; D3/D4: como e para onde se explora, no GDD 07); critérios na §7 | [spec.md](../specs/m1.5-fog/spec.md) |
@@ -36,7 +36,7 @@ por um portão de aprovação ou quando surgir um bloqueio.
 | M1.5 rede — F4 Cliente | ✅ Concluída, merge em `main`. Retomada com `&stream=…&seq=…`, `resync` por `seqGap` e por hash divergente (Web Crypto), recarga com outra versão do protocolo, painel `?net=1`. Conferido no Chromium com `kill -9` + restart do servidor | [tasks.md](../specs/m1.5-rede/tasks.md) · `apps/client/src/{connection,store,net-panel}.ts*` |
 | M1.5 rede — F5 Soak e viabilidade | ✅ Tasks concluídas, merge em `main`. `npm run soak` com 2 clientes sem interface por time: 0 hashes divergentes, visões finais iguais à do servidor, retomadas pelo buffer e `welcome` depois de cada restart. **Todos os critérios da spec §7 verdes.** **Checkpoint** (dono, 2026-11-14): sessão com `dev:multi --net` e reconexão ok; segue para o fog; id do stream na URL aprovado | [viability.md](../specs/m1.5-rede/viability.md) · `apps/server/src/soak-client.ts` |
 | M1.5 fog — F1 Visão e memória | ✅ Concluída, merge em `main`. Params de visão, linha de visão (Bresenham inteiro no referencial do time), `TeamMemory` com `updateVision` incremental (estágio 6), `view` filtrada e `fullView`, delta com `known`/`visible` (1ª task da F3, adiantada), `SIM_VERSION` 3 | [tasks.md](../specs/m1.5-fog/tasks.md) · `packages/sim/src/{vision,view}.ts` |
-| M1.5 fog — F2 Pelo que o time sabe | 🟡 Tasks concluídas na branch `m1.5/fog-f2-knowledge`, **sem merge: checkpoint com o dono**. Mapa conhecido (`known.ts`), A* e estradas pelo que o time sabe, piloto pela memória, ordem/ação `explore` e condição `resourceUnknown`, presets coletor e `scout`, recusas sem vazamento, estrategista só com a visão, métricas novas. Início de partida ✅; custo do tick 2,2× (alvo ≤ 2×) ❌; economia para o dono julgar | [tasks.md](../specs/m1.5-fog/tasks.md) · `packages/sim/src/known.ts` · `runs/m1.5-fog-f2-checkpoint/` |
+| M1.5 fog — F2 Pelo que o time sabe | ✅ Concluída, merge em `main`. Mapa conhecido (`known.ts`), A* e estradas pelo que o time sabe, piloto pela memória, ordem/ação `explore` e condição `resourceUnknown`, presets coletor e `scout`, recusas sem vazamento, estrategista só com a visão, métricas novas. **Checkpoint** (dono, 2026-11-14): início de partida ✅ (1ª matéria em 2–7 min, seeds 1–20); economia aceita (matéria −13% a −20% em 3 dias); custo do tick 2,2× aceito; divergência entre os times a rever no rebalanceamento ([plan §10](../specs/m1.5-fog/plan.md)) | [tasks.md](../specs/m1.5-fog/tasks.md) · `packages/sim/src/known.ts` · `runs/m1.5-fog-f2-checkpoint/` |
 | M2–M4 | ⬜ Não iniciados | [ROADMAP](../ROADMAP.md) |
 
 ## Próximos passos imediatos
@@ -54,9 +54,8 @@ por um portão de aprovação ou quando surgir um bloqueio.
    Ficaram em aberto, para a spec: como os creeps começam explorando (regra no preset coletor, preset "batedor" ou
    os dois; GDD 07). Terreno e Núcleo inimigo vistos ficam conhecidos, e a tela tem três estados (nunca visto,
    lembrado, visível): confirmados pelo dono na mesma rodada.
-2. **Implementar o fog** ([tasks](../specs/m1.5-fog/tasks.md), skill `implement-phase`). F1 ✅. **F2: checkpoint
-   com o dono** (números em "Medições da F2 do fog", abaixo). Com o OK, a F2 entra em `main` e segue a **F3**
-   (`m1.5/fog-f3-network`): propriedade de 6 h com o fog, `welcome` sem terreno e sem `cores` (`PROTOCOL_VERSION`
+2. **Implementar o fog** ([tasks](../specs/m1.5-fog/tasks.md), skill `implement-phase`). F1 ✅, F2 ✅. Próxima:
+   **F3** (`m1.5/fog-f3-network`, a criar a partir de `main`): propriedade de 6 h com o fog, `welcome` sem terreno e sem `cores` (`PROTOCOL_VERSION`
    3), seed `null` em mundo vivo, replay de mundo vivo → 409, `geo net`. O que a F3 precisa saber da F2:
    - o delta com `known`/`visible` já existe (F1) e a propriedade de 6 h × seeds 1, 42 e 649 já roda com o fog e
      com os bots produzindo (`delta-property.test.ts`, `removes > 0`: creep inimigo saindo da visão);
@@ -89,13 +88,10 @@ Um item por problema: o que a pessoa não entendeu ou não conseguiu, a tarefa o
 
 ## Pendências e pontos a esclarecer
 
-- **Checkpoint da F2 do fog** (o dono julga antes do merge; plan N8):
-  1. **custo do tick reprovado:** 2,2× o do mundo sem fog (alvo ≤ 2×). Aceitar, ou pedir otimização antes da F3?
-  2. **economia** (3 dias, seed 42): matéria −13% / −20% por time, cristal igual (todo entregue), teto de população
-     em 43 h (era 39,8 h). Aceitável, ou mudar algo (ex.: depósito garantido à vista, GDD 01)?
-  3. **regra do estrategista sob o fog** (interpretação abaixo): manter?
-  4. **os times divergem depois de ~15 h** (seed 42): aceitar a regra do M1 (o id menor coleta primeiro num
-     depósito disputado)?
+- **Decisões do checkpoint da F2 do fog** (dono, 2026-11-14; registro no [plan §10](../specs/m1.5-fog/plan.md)):
+  economia aceita; regra de cristal do estrategista mantida; custo do tick 2,2× aceito (o dono deixou com o agente:
+  a F3 e a F5 medem de novo); **divergência entre os times aceita, a rever numa rodada de rebalanceamento** (pergunta
+  aberta no [GDD 03](../gdd/03-economia-e-logistica.md)).
 - **Interpretações da F2 do fog** (o plan não fixa):
   - **o estrategista mantém a fatia de cristal enquanto o time conhece cristal com sobra _ou_ ainda alcança célula
     nunca vista** (busca em largura no mapa conhecido, a partir do Núcleo). Ao pé da letra ("enquanto há cristal",
