@@ -52,5 +52,6 @@ export function findRoadJob(
 export function completeRoadJob(state: WorldState, job: RoadJob): void {
   state.map.road[job.y * state.map.width + job.x] = 1;
   state.roadRevision += 1;
+  state.stats.teams[job.team]!.roadSegments += 1;
   state.roadJobs.splice(state.roadJobs.indexOf(job), 1);
 }

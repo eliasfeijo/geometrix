@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
-import { createWorld, parseParams, step } from "@geometrix/sim";
+import { parseParams } from "@geometrix/sim";
+import { botsFor, runBots } from "../src/harness.ts";
 import { describe, expect, test } from "vitest";
 import { stateHash } from "../src/hash.ts";
 import { run, type Output } from "../src/main.ts";
@@ -26,17 +27,31 @@ function capture(): Output & { lines: string[]; errors: string[] } {
 }
 
 describe("verify", () => {
-  test("all three runs reach the hash of a plain run", () => {
-    const world = createWorld(7, params);
-    for (let i = 0; i < 11; i++) step(world, []);
-    const result = verify(7, 11, params);
+  test("all four runs reach the hash of a bot run", () => {
+    const ticks = 2 * 3600 + 1;
+    const { state, log } = runBots(
+      7,
+      params,
+      ticks,
+      botsFor(["balanced", "balanced"]),
+    );
+    const result = verify(7, ticks, params);
     expect(result.ok).toBe(true);
     expect(result.runs.map((r) => r.name)).toEqual([
       "run 1",
       "run 2",
-      "snapshot at tick 5 -> restore",
+      "snapshot at tick 3600 -> restore",
+      `replay of the log (${log.length} commands)`,
     ]);
-    for (const r of result.runs) expect(r.hash).toBe(stateHash(world));
+    for (const r of result.runs) expect(r.hash).toBe(stateHash(state));
+  });
+
+  test("the bots change the world, so the replay run is not vacuous", () => {
+    const ticks = 3 * 60;
+    const withBots = verify(7, ticks, params).runs[0]!.hash;
+    const withoutBots = verify(7, ticks, params, ["none", "none"]).runs[0]!
+      .hash;
+    expect(withoutBots).not.toBe(withBots);
   });
 
   test("different seeds reach different hashes", () => {

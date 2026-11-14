@@ -6,6 +6,7 @@ import {
   type Params,
   type Resource,
 } from "../src/params.ts";
+import { createStats } from "../src/stats.ts";
 import { step } from "../src/step.ts";
 import {
   createWorld,
@@ -93,6 +94,7 @@ export function textWorld(
     }
   });
   world.deposits = deposits;
+  world.stats = createStats(world.teams, deposits);
   ["A", "B"].forEach((symbol, team) => {
     const i = cells.indexOf(symbol);
     if (i < 0) throw new Error(`textWorld: no core ${symbol} drawn`);

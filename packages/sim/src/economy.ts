@@ -2,6 +2,7 @@
 // carrying capacity, gathering from deposits and delivery to the core.
 
 import type { Cost, Params } from "./params.ts";
+import { recordDepositAmount } from "./stats.ts";
 import type { Creep, Deposit, Stock, Team, WorldState } from "./world.ts";
 
 const PERMILLE = 1000;
@@ -52,6 +53,8 @@ export function gatherFrom(
   const taken = Math.max(0, Math.min(rate, free, deposit.amount));
   deposit.amount -= taken;
   creep.cargo[deposit.kind] += taken;
+  creep.activity = "gathering";
+  recordDepositAmount(state, deposit);
   return free - taken > 0 && deposit.amount > 0;
 }
 

@@ -14,11 +14,11 @@ describe("step", () => {
     expect(world.tick).toBe(2);
   });
 
-  test("without rules or orders and with full deposits, nothing but the tick changes", () => {
+  test("without rules or orders and with full deposits, nothing but the tick and the stats changes", () => {
     const world = createWorld(42, params);
     for (const creep of world.creeps) creep.rules = [];
     const before = restore(serialize(world));
     for (let i = 0; i < 1000; i++) step(world, []);
-    expect({ ...world, tick: 0 }).toEqual(before);
+    expect({ ...world, tick: 0, stats: before.stats }).toEqual(before);
   });
 });
