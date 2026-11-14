@@ -351,13 +351,15 @@ durável.
 consciente ("deltas só se a medição mostrar necessidade", plan P3), e para o M1 local ela é ótima: simples, sem bug
 de dessincronização, e o cliente fica sem estado de rede. **Para produção a ×1, no pico de população, ela custa
 ~13–26× mais banda do que o previsto no ADR-0005 (1–2 KB/s por cliente).** A troca está proposta no
-[ADR-0006](adr/0006-sync-do-mundo-por-comandos.md): mandar só os comandos de cada tick e rodar a simulação no
-cliente, que já faz isso no replay.
+[ADR-0006](adr/0006-sync-do-mundo.md): mandar só o que mudou na **visão de cada time**, campo a campo e numerado, o
+que também prepara o terreno para fog of war.
 
 > **Correção (2026-11-14).** A primeira versão desta seção recomendava ligar a compressão do WebSocket como o
 > conserto "quase grátis" e dizia que deltas economizariam pouco. Um dev de fora do projeto contestou as duas
 > coisas depois de ler este doc, e uma medição melhor deu razão a ele: a compressão custa CPU e memória por socket
-> no servidor, e o delta por campo é 24× menor que o estado completo. A análise está no ADR-0006.
+> no servidor, e o delta por campo é 24× menor que o estado completo. A primeira versão do ADR-0006 recomendou
+> então mandar só os comandos e simular no cliente; como o fog of war é provável e nenhum cliente (nem bot) deve
+> ver o estado completo, a recomendação passou para o delta por campo.
 
 ### Como funciona hoje
 
@@ -390,14 +392,14 @@ Para onde vão os bytes, com 60 creeps:
 
 Entre dois ticks, em média **28 dos 60 creeps mudam**, e quase sempre só nos pontos de movimento, que o cliente
 nem usa; sem eles, são 7. O resto da mensagem se repete. As formas de não reenviar o que se repete, medidas no
-[ADR-0006](adr/0006-sync-do-mundo-por-comandos.md):
+[ADR-0006](adr/0006-sync-do-mundo.md):
 
 | Modelo | Por mensagem, 60 creeps | Custo |
 |---|---|---|
 | Estado completo (hoje) | 26,5 KB | |
 | Estado completo + `permessage-deflate` | ~0,5 KB | CPU e memória de compressão por socket no servidor; o próprio `ws` alerta para fragmentação de memória no Node |
-| Delta por campo | 1,1 KB (0,45 KB sem os pontos de movimento) | Diff no servidor, patch no cliente, detecção de divergência |
-| **Fluxo de comandos** (proposto) | ~45 B por tick sem comando | O cliente roda o `sim`; desync vira falha ao vivo; não combina com fog of war |
+| **Delta por campo da visão do time** (proposto) | 1,1 KB (≤ 0,45 KB sem os campos que o cliente não usa) | Diff no servidor, patch no cliente; sequência, retomada e hash contra o patch na base errada. Único que funciona com fog |
+| Fluxo de comandos | ~45 B por tick sem comando | O cliente roda o `sim` e precisa do estado completo: descartado pelo fog of war |
 
 ### Quanto custa cada mensagem
 
@@ -410,14 +412,14 @@ nem usa; sem eles, são 7. O resto da mensagem se repete. As formas de não reen
 
 ### Projeção a ×1 (o jogo de verdade): 60 creeps, 6 jogadores por mundo
 
-| Cenário | Clientes | Banda hoje (JSON cru) | Delta por campo (~1,1 KB/s) | Fluxo de comandos (~45 B/s) | CPU de `step` + `stringify` |
-|---|---|---|---|---|---|
-| 1 mundo | 6 | ~160 KB/s | ~7 KB/s | ~0,3 KB/s | ~0,01% de um núcleo |
-| 100 mundos | 600 | ~16 MB/s (~128 Mbit/s) | ~0,7 MB/s | ~27 KB/s | ~1–2% de um núcleo |
-| 1 000 mundos | 6 000 | ~160 MB/s (~1,3 Gbit/s) | ~7 MB/s | ~270 KB/s | ~12–15% de um núcleo |
+| Cenário | Clientes | Banda hoje (JSON cru) | Delta por campo (0,45–1,1 KB/s) | CPU de `step` + `stringify` |
+|---|---|---|---|---|
+| 1 mundo | 6 | ~160 KB/s | ~3–7 KB/s | ~0,01% de um núcleo |
+| 100 mundos | 600 | ~16 MB/s (~128 Mbit/s) | ~0,3–0,7 MB/s | ~1–2% de um núcleo |
+| 1 000 mundos | 6 000 | ~160 MB/s (~1,3 Gbit/s) | ~3–7 MB/s | ~12–15% de um núcleo (+ o diff, não medido) |
 
 Por cliente, o JSON cru dá ~2,3 GB por dia de mundo (~41 GB de saída para um mundo de 3 dias com 6 jogadores). Com
-o fluxo de comandos, ~12 MB pelo mundo inteiro, mais o estado inicial a cada conexão (~50 KB).
+o delta por campo, ~120–290 MB pelo mundo inteiro, sem fog; com fog, menos.
 
 ### Então, é viável em escala?
 
@@ -425,9 +427,9 @@ o fluxo de comandos, ~12 MB pelo mundo inteiro, mais o estado inicial a cada con
 CPU; a CPU não é o gargalo em nenhum cenário razoável. Os gargalos reais, em ordem:
 
 1. **Banda.** JSON cru a 1 Hz por cliente é o que mais pesa. A proposta do
-   [ADR-0006](adr/0006-sync-do-mundo-por-comandos.md) (só os comandos, com o `sim` no cliente) tira a banda da
-   lista; o delta por campo fica como plano B, obrigatório para o que estiver escondido se o mundo ganhar fog of
-   war.
+   [ADR-0006](adr/0006-sync-do-mundo.md) (delta por campo da visão de cada time) a traz para dentro da estimativa
+   do ADR-0005, sem compressão. Em troca, o servidor passa a calcular dois diffs por mundo por envio (um por time),
+   ainda não medidos.
 2. **Disco: os snapshots nunca são podados.** O soak terminou com **55 MB de SQLite para um mundo de 3 dias**, a maior
    parte em snapshots (864 × ~40 KB ≈ 35 MB; o resto são métricas). Para recuperar só é preciso o último; o replay
    usa seed + log, não os snapshots. Podar é o próximo passo óbvio.
@@ -447,9 +449,9 @@ rodar no navegador). WebTransport/WebRTC só se o head-of-line blocking do TCP a
 
 ```mermaid
 flowchart LR
-    A["Hoje (M1)<br/>estado completo em JSON<br/>~27 KB por tick"] --> B["Deploy do M2 (ADR-0006, proposto)<br/>só os comandos do tick<br/>~45 B; o cliente roda o sim"]
+    A["Hoje (M1)<br/>estado completo em JSON<br/>~27 KB por tick"] --> B["Deploy do M2 (ADR-0006, proposto)<br/>delta por campo da visão do time<br/>~0,5–1 KB, numerado"]
+    B --> D["Fog of war<br/>a visão do time encolhe;<br/>o protocolo não muda"]
     B --> C["M2 · batalha<br/>a decidir no plan do M2<br/>20–30 Hz + previsão do creep dominado"]
-    B -.->|"se o mundo ganhar fog of war"| D["Delta por campo<br/>para o que é escondido"]
 ```
 
 ## 8. Por que não Unity, Unreal ou Godot?
@@ -482,6 +484,10 @@ Segundo, honestidade sobre o histórico: **as engines prontas não aparecem como
   câmera, profiler. Vamos escrever à mão coisas que a Unity ou a Godot dão prontas, e o *game feel* de uma luta é
   difícil de acertar em SVG puro. Talvez o SVG nem aguente: um combate com centenas de entidades e efeitos
   provavelmente pede **Canvas/WebGL** (o pilar 6 já prevê "SVG/Canvas"), e isso ainda não foi medido.
+- **Netcode.** Delta por propriedade, relevância por cliente (o que cada um pode ver), sequência, retomada e
+  confiabilidade sobre UDP vêm prontos na replicação da Unreal, por exemplo. Aqui, cada peça é escrita e testada por
+  nós, e algumas só aparecem quando alguém de fora pergunta (foi o que levou ao
+  [ADR-0006](adr/0006-sync-do-mundo.md)).
 - **Ferramentas.** Não temos editor visual, inspector em tempo real, pipeline de assets nem profiler de cena. Cada
   ferramenta de depuração é código nosso (o replay com linha do tempo foi uma delas).
 - **Plataformas.** Mobile e console nativos ficam bem mais longe.
@@ -538,7 +544,7 @@ onde trocar o renderizador por Canvas/WebGL (sem mudar a arquitetura) é a prime
 **Técnicas:**
 
 - **Estado completo em JSON cru a cada broadcast** (seção 7). Ótimo local, caro em produção; a troca está proposta
-  no [ADR-0006](adr/0006-sync-do-mundo-por-comandos.md).
+  no [ADR-0006](adr/0006-sync-do-mundo.md).
 - **Snapshots nunca podados** (~55 MB por mundo de 3 dias).
 - **Um processo para todos os mundos**, num event loop só, e uma transação por tick.
 - **Mudar o comportamento do `sim` invalida mundos em andamento:** cada mundo guarda o `SIM_VERSION` (hoje 2), e um
