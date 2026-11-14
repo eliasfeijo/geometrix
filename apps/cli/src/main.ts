@@ -9,6 +9,7 @@ import { parseParams, type Params } from "@geometrix/sim";
 import { renderReport } from "./report.ts";
 import { readRun, RUN_FILES, runId, simulate, writeRun } from "./sim.ts";
 import { STRATEGISTS, type StrategistId } from "./strategist.ts";
+import { parseSeeds, parseSet, runSweep, SweepError } from "./sweep.ts";
 import { verify } from "./verify.ts";
 
 const DEFAULT_PARAMS = new URL("../../../params/default.json", import.meta.url);
@@ -26,6 +27,12 @@ commands:
                                  (default balanced; one name = both teams)
            --out <dir>           runs directory (default runs)
            --id <id>             run id (default <utc time>-s<seed>)
+  sweep    runs the world for each value of one parameter and each seed,
+           and compares them in runs/<id>/report.md and sweep.csv
+           --set <path=v1,v2,...>  e.g. creep.cost.materia=30,40,50
+           --seeds <list>        e.g. 1-5 or 1,4,9 (default 1-5)
+           --days, --hours, --params, --strategist, --out, --id as in sim
+           --keep-runs           also write every run's full directory
   report   rewrites report.md of a run from its files
            geo report <run dir>
   verify   determinism check: two runs and a snapshot -> restore run must
@@ -135,6 +142,55 @@ function runSim(args: string[], out: Output): number {
   return 0;
 }
 
+function runSweepCommand(args: string[], out: Output): number {
+  const { values } = parseArgs({
+    args,
+    options: {
+      set: { type: "string" },
+      seeds: { type: "string", default: "1-5" },
+      params: { type: "string" },
+      days: { type: "string" },
+      hours: { type: "string" },
+      strategist: { type: "string", default: "balanced" },
+      out: { type: "string", default: "runs" },
+      id: { type: "string" },
+      "keep-runs": { type: "boolean", default: false },
+    },
+    strict: true,
+  });
+  if (values.set === undefined) throw new UsageError("geo sweep needs --set");
+  const { path, values: settings } = parseSet(values.set);
+  const seeds = parseSeeds(values.seeds);
+  const params = loadParams(values.params ?? DEFAULT_PARAMS);
+  const ticks = parseTicks(values, params);
+  const strategists = parseStrategists(values.strategist, TEAMS);
+  const id =
+    values.id ?? `${runId(seeds[0]!).replace(/-s\d+$/, "")}-sweep-${path}`;
+  const dir = join(values.out, id);
+  if (existsSync(dir)) throw new UsageError(`run already exists: ${dir}`);
+
+  out.log(
+    `geo sweep ${path}=${settings.join(",")} seeds ${seeds.join(",")}: ${settings.length * seeds.length} runs of ${ticks} ticks`,
+  );
+  runSweep(
+    dir,
+    {
+      id,
+      params,
+      paramsSource: paramsSource(values.params),
+      path,
+      values: settings,
+      seeds,
+      ticks,
+      strategists,
+    },
+    values["keep-runs"],
+    (line) => out.log(line),
+  );
+  out.log(`  ${join(dir, RUN_FILES.report)}`);
+  return 0;
+}
+
 function runReport(args: string[], out: Output): number {
   const { positionals } = parseArgs({ args, allowPositionals: true });
   if (positionals.length !== 1) {
@@ -174,6 +230,8 @@ export function run(argv: string[], out: Output = console): number {
     switch (command) {
       case "sim":
         return runSim(args, out);
+      case "sweep":
+        return runSweepCommand(args, out);
       case "report":
         return runReport(args, out);
       case "verify":
@@ -189,6 +247,7 @@ export function run(argv: string[], out: Output = console): number {
   } catch (error) {
     if (
       error instanceof UsageError ||
+      error instanceof SweepError ||
       (error as { code?: string }).code?.startsWith("ERR_PARSE_ARGS")
     ) {
       out.error(`${(error as Error).message}\n\n${USAGE}`);

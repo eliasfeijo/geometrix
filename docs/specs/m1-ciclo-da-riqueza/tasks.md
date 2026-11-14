@@ -44,7 +44,7 @@ Marque `[x]` ao concluir. Cada task deve terminar com os testes verdes. Referên
 - [x] Acumuladores de stats + `sampleMetrics` puro
 - [x] Estrategista bot `balanced`
 - [x] `geo sim` → `runs/<id>/` (métricas, replay, `report.md`)
-- [ ] `geo sweep`
+- [x] `geo sweep`
 - [ ] `geo verify` completo (incluindo o replay a partir do log)
 - [ ] Orçamento de performance: 6 h de mundo no CI; 3 dias em menos de 10 min medido manualmente
 - [ ] **Checkpoint:** primeiro relatório de 3 dias bot×bot revisado com o dono

@@ -5,7 +5,7 @@
 import { ACTIVITIES, type Activity, type MetricsSample } from "@geometrix/sim";
 import type { RunData } from "./sim.ts";
 
-const HOUR = 3600;
+export const HOUR = 3600;
 const ACTIVITY_LABELS: Record<Activity, string> = {
   gathering: "coletando",
   carrying: "carregando",
@@ -15,16 +15,16 @@ const ACTIVITY_LABELS: Record<Activity, string> = {
 };
 const DNA_ORDER = ["square", "triangle", "circle"] as const;
 
-const number = (value: number, digits = 0) =>
+export const number = (value: number, digits = 0) =>
   value.toLocaleString("pt-BR", {
     minimumFractionDigits: digits,
     maximumFractionDigits: digits,
   });
-const percent = (part: number, whole: number) =>
+export const percent = (part: number, whole: number) =>
   whole === 0 ? "—" : `${number((100 * part) / whole)}%`;
-const hours = (seconds: number) => `${number(seconds / HOUR, 1)} h`;
+export const hours = (seconds: number) => `${number(seconds / HOUR, 1)} h`;
 
-function table(header: string[], rows: string[][]): string {
+export function table(header: string[], rows: string[][]): string {
   const line = (cells: string[]) => `| ${cells.join(" | ")} |`;
   return [line(header), line(header.map(() => "---")), ...rows.map(line)].join(
     "\n",
