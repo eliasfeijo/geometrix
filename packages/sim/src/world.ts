@@ -16,7 +16,13 @@ export type Stock = Record<Resource, number>;
 
 export type Team = { id: number; core: Cell; stock: Stock };
 
-export type Creep = { id: number; team: number; dna: Dna } & Cell;
+export type Creep = {
+  id: number;
+  team: number;
+  dna: Dna;
+  /** What the creep carries. Any amount above 0 counts as loaded. */
+  cargo: Stock;
+} & Cell;
 
 export type Deposit = { id: number; kind: Resource; amount: number } & Cell;
 
@@ -62,7 +68,13 @@ export function createWorld(seed: number, params: Params): WorldState {
   for (const team of teams) {
     for (const dna of DNAS) {
       for (let i = 0; i < params.population.initial[dna]; i++) {
-        creeps.push({ id: nextId++, team: team.id, dna, ...team.core });
+        creeps.push({
+          id: nextId++,
+          team: team.id,
+          dna,
+          ...team.core,
+          cargo: { materia: 0, cristal: 0 },
+        });
       }
     }
   }
