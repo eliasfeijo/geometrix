@@ -47,7 +47,7 @@ Marque `[x]` ao concluir. Cada task deve terminar com os testes verdes. Referên
 - [x] `geo sweep`
 - [x] `geo verify` completo (incluindo o replay a partir do log)
 - [x] Orçamento de performance: 6 h de mundo no CI; 3 dias em menos de 10 min medido manualmente
-- [ ] **Checkpoint:** primeiro relatório de 3 dias bot×bot revisado com o dono
+- [x] **Checkpoint:** primeiro relatório de 3 dias bot×bot revisado com o dono
 
 ## F6 — Servidor
 - [ ] Esquema SQLite + módulo de persistência

@@ -1,7 +1,6 @@
 # Status atual
 
-**Atualizado:** 2026-11-13 · **Marco:** M1 — O ciclo da riqueza · **Fase:** F5 implementada, checkpoint aguardando
-revisão do dono
+**Atualizado:** 2026-11-13 · **Marco:** M1 — O ciclo da riqueza · **Fase:** F5 concluída; balanceamento ou F6 a seguir
 
 Resumo de bolso. A fonte de verdade continua nos docs linkados. Atualize este arquivo ao fechar uma fase, ao passar
 por um portão de aprovação ou quando surgir um bloqueio.
@@ -18,7 +17,7 @@ por um portão de aprovação ou quando surgir um bloqueio.
 | M1 — F2 Movimento | ✅ Concluída, merge em `main`. Pontos de movimento em ‰, A* com cache, ordens `moveTo`/`stop` no pipeline | [tasks.md §F2](../specs/m1-ciclo-da-riqueza/tasks.md) · `packages/sim/src/{movement,pathfinding,orders}.ts` |
 | M1 — F3 Economia | ✅ Concluída, merge em `main`. Ordens `gather`/`deliver`/`buildRoad`, regeneração, produção com "repetir", upgrade de capacidade. Detalhes decididos pelo dono na [spec §5](../specs/m1-ciclo-da-riqueza/spec.md) | [tasks.md §F3](../specs/m1-ciclo-da-riqueza/tasks.md) · `packages/sim/src/{economy,production,roads,orders}.ts` |
 | M1 — F4 Piloto automático e domínio | ✅ Concluída, merge em `main`. Vocabulário de comandos + `validate`, jogadores, domínio D-1..D-4, interpretador de regras, presets, `setRules`/`applyPreset`. Detalhes decididos pelo dono na [spec §5](../specs/m1-ciclo-da-riqueza/spec.md) | [tasks.md §F4](../specs/m1-ciclo-da-riqueza/tasks.md) · `packages/sim/src/{commands,domination,autopilot,presets,rules}.ts` |
-| M1 — F5 Harness | 🟡 Tasks concluídas na branch `m1/f5-harness`; falta o **checkpoint** (revisão do relatório de 3 dias pelo dono) e o merge. Stats + `sampleMetrics`, estrategista `balanced`, `geo sim`/`report`/`sweep`, `geo verify` com bots e replay do log, orçamento de 6 h no CI. Detalhes decididos pelo dono no [plan §9](../specs/m1-ciclo-da-riqueza/plan.md) | [tasks.md §F5](../specs/m1-ciclo-da-riqueza/tasks.md) · `apps/cli/src/` · `packages/sim/src/stats.ts` |
+| M1 — F5 Harness | ✅ Concluída, merge em `main`. Checkpoint revisado pelo dono (2026-11-13): a economia precisa de balanceamento. Stats + `sampleMetrics`, estrategista `balanced`, `geo sim`/`report`/`sweep`, `geo verify` com bots e replay do log, orçamento de 6 h no CI. Detalhes decididos pelo dono no [plan §9](../specs/m1-ciclo-da-riqueza/plan.md) | [tasks.md §F5](../specs/m1-ciclo-da-riqueza/tasks.md) · `apps/cli/src/` · `packages/sim/src/stats.ts` |
 | M1 — F6…F9 | ⬜ Pendentes. Checkpoints: F7 playtest local; F9 playtest comprimido | [plan.md §13](../specs/m1-ciclo-da-riqueza/plan.md) |
 | M2–M4 | ⬜ Não iniciados | [ROADMAP](../ROADMAP.md) |
 
@@ -26,10 +25,13 @@ por um portão de aprovação ou quando surgir um bloqueio.
 
 1. **Publicar o repo no GitHub** (dono). Ainda não há remote, então o CI ([ci.yml](../../.github/workflows/ci.yml))
    nunca rodou fora da máquina local.
-2. **Checkpoint do F5:** o dono revisa o relatório de 3 dias bot×bot (`runs/m1-f5-checkpoint-s42/report.md`,
-   gerado por `npm run geo -- sim --seed 42 --days 3 --id m1-f5-checkpoint-s42`; `runs/` não vai para o git). Com o
-   OK, marcar o checkpoint no `tasks.md` e fazer o merge de `m1/f5-harness` em `main`.
-3. **F6 (servidor):** branch `m1/f6-server` a partir de `main` depois do merge. O que ele precisa saber do código atual:
+2. **Balancear a economia** (o dono revisou o relatório de 3 dias em 2026-11-13: "precisamos balancear, como era
+   previsto"). Decidir no início da próxima sessão se a calibração vem antes do F6 ou em paralelo. Os sinais estão
+   em "Pendências" abaixo; a ferramenta é o `geo sweep` (spec §8, protocolo 1: a economia não pode travar nem
+   explodir em 3 dias). Qualquer valor novo é proposto ao dono antes de entrar em `params/default.json`. O relatório
+   do checkpoint é reproduzível (determinístico): `npm run geo -- sim --seed 42 --days 3 --id m1-f5-checkpoint-s42`
+   dá o hash `ff18fa4b…`.
+3. **F6 (servidor):** branch `m1/f6-server` a partir de `main`. O que ele precisa saber do código atual:
    - `apps/cli/src/harness.ts` já faz o caminho de entrada do servidor: `validate` no recebimento (ack/reject), o
      aceito ganha `tick` e `seq` e vai para o log (`LoggedCommand` = `{tick, seq, playerId, command}`, o formato da
      tabela `commands`), e o `step` revalida. Um comando aceito no recebimento ainda pode ser recusado no `step`
@@ -58,7 +60,7 @@ por um portão de aprovação ou quando surgir um bloqueio.
     "humanos" do time (no harness não há humanos);
   - o `geo sweep` guarda só o `run.json` de cada run (o `samples.jsonl` de 3 dias tem ~11 MB); `--keep-runs` guarda
     tudo.
-- **Sinais do relatório de 3 dias (para o checkpoint):** com os parâmetros atuais e o `balanced`, a economia trava
+- **Sinais do relatório de 3 dias (checkpoint do F5; base do balanceamento):** com os parâmetros atuais e o `balanced`, a economia trava
   em ~4 h: teto de população em 4,2 h, todo o cristal esgotado em 2,5 h, estradas param em 113 células; depois os
   30 creeps disputam 6 depósitos de matéria que regeneram 1/min (andam vazios 58–76% do tempo), o Núcleo fica 94%
   ocioso e 91% da matéria entregue sobra no estoque. O time 1 viaja quase o dobro do time 0 (37,7 × 19,6 min),
