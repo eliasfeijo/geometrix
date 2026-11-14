@@ -9,6 +9,8 @@ import { GameContext, type Game } from "./context.ts";
 import { handleKey, order, select } from "./interaction.ts";
 import { CreepLayer } from "./map/creep-layer.tsx";
 import { MapView } from "./map/map-view.tsx";
+import { RoadJobTimeLayer } from "./map/road-job-time-layer.tsx";
+import { RoadPreviewLayer } from "./map/road-preview-layer.tsx";
 import { StockFloatLayer } from "./map/stock-float-layer.tsx";
 import { ModeBanner } from "./mode-banner.tsx";
 import { CoreDock } from "./panels/core-panel.tsx";
@@ -60,7 +62,9 @@ export function GameLayout({ game, header, orders }: Props) {
             }
           >
             <CreepLayer />
+            <RoadJobTimeLayer />
             <StockFloatLayer />
+            <RoadPreviewLayer />
           </MapView>
           <CoreDock />
           <Inspector />
