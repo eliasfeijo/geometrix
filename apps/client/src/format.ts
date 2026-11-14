@@ -53,8 +53,7 @@ export const REJECT_TEXTS: Record<RejectReason | "disconnected", string> = {
   unknownTeam: "Esse time não existe.",
   teamFull: "Esse time já tem o máximo de humanos.",
   unknownPlayer: "Sua entrada no mundo ainda não foi processada.",
-  unknownCreep: "Esse creep não existe mais.",
-  notYourTeam: "Esse creep é do outro time.",
+  unknownCreep: "Seu time não tem esse creep.",
   alreadyDominating: "Você já domina esse creep.",
   dominatedByOther: "Outro jogador já domina esse creep.",
   cooldown: "Espere o tempo de recarga para dominar de novo.",
@@ -95,6 +94,8 @@ export function conditionText(c: Condition): string {
       return `${RESOURCE_NAMES[c.resource]} a até ${c.radius} células`;
     case "stockBelow":
       return `estoque de ${RESOURCE_NAMES[c.resource]} < ${c.amount}`;
+    case "resourceUnknown":
+      return `não conhece depósito de ${RESOURCE_NAMES[c.resource]}`;
   }
 }
 
@@ -110,6 +111,8 @@ export function actionText(a: Action): string {
       return `ir até (${a.x}, ${a.y})`;
     case "stop":
       return "ficar parado";
+    case "explore":
+      return "explorar";
   }
 }
 
@@ -123,6 +126,8 @@ export function orderText(order: Order, deposits: readonly Deposit[]): string {
       return "nenhuma";
     case "moveTo":
       return `ir até (${order.x}, ${order.y})`;
+    case "explore":
+      return `explorar (${order.x}, ${order.y})`;
     case "gather": {
       const deposit = deposits.find((d) => d.id === order.depositId);
       return deposit === undefined

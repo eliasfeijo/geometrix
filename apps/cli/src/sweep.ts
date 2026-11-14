@@ -92,6 +92,21 @@ export type RunSummary = {
   roadCells: number;
   /** Hours until the last cristal deposit ran dry, or null. */
   cristalGoneHours: number | null;
+  /**
+   * Minutes until the first delivery of each resource for the slowest team
+   * (fog spec §7, match start), or null if some team never delivered it.
+   */
+  firstMateriaMinutes: number | null;
+  firstCristalMinutes: number | null;
+  /** Between the teams: the largest gap in first materia and in materia delivered. */
+  firstMateriaGapMinutes: number | null;
+  deliveredMateriaGap: number;
+  /** Hours until a team first saw an enemy core, mean of the teams. */
+  enemyCoreSeenHours: number | null;
+  exploredPercent: number;
+  /** Per team, in team order. */
+  firstMateriaMinutesByTeam: (number | null)[];
+  deliveredMateriaByTeam: number[];
 };
 
 const mean = (values: number[]) =>
@@ -125,6 +140,21 @@ export function summarize(result: SimResult, value: number): RunSummary {
   const cristalGone = cristal.every((d) => d.amount === 0)
     ? Math.max(...cristal.map((d) => d.emptiedAtTick ?? 0)) * meta.tickSeconds
     : null;
+  const tickMinutes = (tick: number | null) =>
+    tick === null ? null : (tick * meta.tickSeconds) / 60;
+  const firstMateria = last.teams.map((t) =>
+    tickMinutes(t.firstDeliveryTick.materia),
+  );
+  const firstCristal = last.teams.map((t) =>
+    tickMinutes(t.firstDeliveryTick.cristal),
+  );
+  /** The largest value, or null if any is null. */
+  const slowest = (values: (number | null)[]) =>
+    values.some((v) => v === null) ? null : Math.max(...(values as number[]));
+  const spread = (values: number[]) =>
+    Math.max(...values) - Math.min(...values);
+  const coreSeen = last.teams.map((t) => t.enemyCoreSeenTick);
+  const delivered = last.teams.map((t) => t.delivered.materia);
   return {
     value,
     seed: meta.seed,
@@ -148,10 +178,27 @@ export function summarize(result: SimResult, value: number): RunSummary {
     tripMinutes: trips === 0 ? null : tripSeconds / trips / 60,
     roadCells: last.roadCells,
     cristalGoneHours: cristalGone === null ? null : cristalGone / HOUR,
+    firstMateriaMinutes: slowest(firstMateria),
+    firstCristalMinutes: slowest(firstCristal),
+    firstMateriaGapMinutes:
+      slowest(firstMateria) === null ? null : spread(firstMateria as number[]),
+    deliveredMateriaGap: spread(delivered),
+    enemyCoreSeenHours: coreSeen.some((t) => t === null)
+      ? null
+      : mean(coreSeen.map((t) => (t! * meta.tickSeconds) / HOUR)),
+    exploredPercent: perTeam((t) =>
+      share(t.exploredCells, params.map.width * params.map.height),
+    ),
+    firstMateriaMinutesByTeam: firstMateria,
+    deliveredMateriaByTeam: delivered,
   };
 }
 
-const COLUMNS: { key: keyof RunSummary; label: string; digits: number }[] = [
+type ScalarKey = {
+  [K in keyof RunSummary]: RunSummary[K] extends number | null ? K : never;
+}[keyof RunSummary];
+
+const COLUMNS: { key: ScalarKey; label: string; digits: number }[] = [
   { key: "creeps", label: "Creeps no fim", digits: 1 },
   { key: "capHours", label: "Teto de população atingido (h)", digits: 1 },
   { key: "upgradeHours", label: "Upgrade comprado (h)", digits: 1 },
@@ -165,6 +212,28 @@ const COLUMNS: { key: keyof RunSummary; label: string; digits: number }[] = [
   { key: "tripMinutes", label: "Tempo médio por viagem (min)", digits: 1 },
   { key: "roadCells", label: "Estradas no mapa (células)", digits: 0 },
   { key: "cristalGoneHours", label: "Cristal esgotado (h)", digits: 1 },
+  {
+    key: "firstMateriaMinutes",
+    label: "1ª entrega de matéria, time mais lento (min)",
+    digits: 0,
+  },
+  {
+    key: "firstCristalMinutes",
+    label: "1ª entrega de cristal, time mais lento (min)",
+    digits: 0,
+  },
+  {
+    key: "firstMateriaGapMinutes",
+    label: "Diferença entre os times na 1ª matéria (min)",
+    digits: 0,
+  },
+  {
+    key: "deliveredMateriaGap",
+    label: "Diferença entre os times na matéria entregue",
+    digits: 0,
+  },
+  { key: "enemyCoreSeenHours", label: "Núcleo inimigo visto (h)", digits: 1 },
+  { key: "exploredPercent", label: "Mapa explorado no fim (%)", digits: 0 },
 ];
 
 /** "mean (min–max)" over the runs that have the value; "—" for none. */
@@ -259,9 +328,7 @@ export function renderSweepReport({ options, runs }: SweepResult): string {
         label,
         ...values.map((value) =>
           cell(
-            runs
-              .filter((r) => r.value === value)
-              .map((r) => r[key] as number | null),
+            runs.filter((r) => r.value === value).map((r) => r[key]),
             digits,
           ),
         ),
@@ -270,11 +337,24 @@ export function renderSweepReport({ options, runs }: SweepResult): string {
     "",
     "## Runs",
     "",
+    "Por time, na ordem dos times: minuto da 1ª entrega de matéria e matéria entregue.",
+    "",
     table(
-      ["Valor", "Seed", "Tempo (s)", "Hash final"],
+      [
+        "Valor",
+        "Seed",
+        "1ª matéria (min)",
+        "Matéria entregue",
+        "Tempo (s)",
+        "Hash final",
+      ],
       runs.map((r) => [
         String(r.value),
         String(r.seed),
+        r.firstMateriaMinutesByTeam
+          .map((m) => (m === null ? "nunca" : number(m)))
+          .join(" / "),
+        r.deliveredMateriaByTeam.map((m) => number(m)).join(" / "),
         number(r.wallSeconds, 1),
         `\`${r.finalHash.slice(0, 16)}\``,
       ]),
@@ -284,12 +364,17 @@ export function renderSweepReport({ options, runs }: SweepResult): string {
   return `${lines.join("\n")}\n`;
 }
 
-const csvValue = (value: string | number | null) =>
-  value === null
-    ? ""
-    : typeof value === "number" && !Number.isInteger(value)
-      ? value.toFixed(3)
-      : String(value);
+type CsvValue = string | number | null;
+
+/** A cell of sweep.csv; a per-team list is joined with ";". */
+const csvValue = (value: CsvValue | CsvValue[]): string =>
+  Array.isArray(value)
+    ? value.map(csvValue).join(";")
+    : value === null
+      ? ""
+      : typeof value === "number" && !Number.isInteger(value)
+        ? value.toFixed(3)
+        : String(value);
 
 export function sweepCsv(runs: readonly RunSummary[]): string {
   const columns = Object.keys(runs[0] ?? {}) as (keyof RunSummary)[];

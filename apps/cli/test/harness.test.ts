@@ -79,13 +79,12 @@ describe("a bot × bot world", () => {
   const ticks = 6 * 3600;
   const { state, log } = runBots(42, params, ticks, bots);
 
-  // Until the autopilot explores (fog F2), the bots know only the deposits
-  // near their core, no cristal, so they neither grow nor buy the upgrade.
-  test("delivers materia and builds roads on both sides", () => {
+  test("grows, buys the upgrade and builds roads on both sides", () => {
     for (const team of state.teams) {
-      expect(teamCreeps(state, team.id).length).toBe(6);
+      expect(teamCreeps(state, team.id).length).toBeGreaterThan(6);
+      expect(team.upgrades.capacity).toBe(true);
       expect(state.stats.teams[team.id]!.roadSegments).toBeGreaterThan(0);
-      expect(state.stats.teams[team.id]!.delivered.materia).toBeGreaterThan(0);
+      expect(state.stats.teams[team.id]!.delivered.cristal).toBeGreaterThan(0);
     }
   });
 

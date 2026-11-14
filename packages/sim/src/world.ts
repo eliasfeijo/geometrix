@@ -84,8 +84,6 @@ export type WorldState = {
   tick: number;
   rng: RngState;
   map: GameMap;
-  /** Incremented when a road is completed: invalidates cached paths. */
-  roadRevision: number;
   teams: Team[];
   /** Players who joined, by id (system command join). */
   players: Player[];
@@ -141,7 +139,6 @@ export function createWorld(seed: number, params: Params): WorldState {
     tick: 0,
     rng,
     map: layout.map,
-    roadRevision: 0,
     teams,
     players: [],
     creeps,

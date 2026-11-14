@@ -126,6 +126,21 @@ describe("geo sweep", () => {
       "| Métrica | creep.cost.materia=30 | creep.cost.materia=60 |",
     );
     expect(report).toContain("| Estoque de matéria no fim |");
+    // Fog (fog spec §7): match start and fairness between the teams.
+    for (const label of [
+      "| 1ª entrega de matéria, time mais lento (min) |",
+      "| Diferença entre os times na 1ª matéria (min) |",
+      "| Diferença entre os times na matéria entregue |",
+      "| Núcleo inimigo visto (h) |",
+      "| Mapa explorado no fim (%) |",
+      "| Valor | Seed | 1ª matéria (min) | Matéria entregue |",
+    ]) {
+      expect(report).toContain(label);
+    }
+    const header = csv[0]!.split(",");
+    const perTeam =
+      csv[1]!.split(",")[header.indexOf("deliveredMateriaByTeam")];
+    expect(perTeam).toMatch(/^\d+;\d+$/);
   });
 
   test("--keep-runs writes each run in full", () => {

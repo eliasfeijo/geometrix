@@ -85,6 +85,27 @@ describe("trips and deliveries", () => {
     expect(creep.trip).toBeNull();
   });
 
+  test("records the tick of the first delivery of each resource", () => {
+    const { world, creep, deposit, stats } = lane();
+    expect(stats.firstDeliveryTick).toEqual({ materia: null, cristal: null });
+    creep.order = { type: "gather", depositId: deposit.id };
+    run(world, 58);
+    creep.order = { type: "deliver" };
+    let tick = world.tick;
+    while (stats.delivered.materia === 0) {
+      tick = world.tick;
+      step(world, []);
+    }
+    expect(stats.firstDeliveryTick).toEqual({ materia: tick, cristal: null });
+    // A later delivery leaves it alone.
+    creep.order = { type: "gather", depositId: deposit.id };
+    run(world, 58);
+    creep.order = { type: "deliver" };
+    run(world, 60);
+    expect(stats.delivered.materia).toBe(20);
+    expect(stats.firstDeliveryTick.materia).toBe(tick);
+  });
+
   test("arriving at the core empty drops the trip without counting it", () => {
     const { world, creep, stats } = lane();
     creep.order = { type: "moveTo", x: 2, y: 1 };
@@ -164,6 +185,7 @@ describe("players", () => {
       materiaCollector: 0,
       cristalCollector: 1,
       roadBuilder: 0,
+      scout: 0,
     });
     expect(a!.dominatedSeconds).toBe(10);
     expect(b!.commands).toMatchObject({ join: 1, dominate: 0 });
@@ -198,6 +220,35 @@ describe("sampleMetrics", () => {
         contestedSeconds: 0,
       },
     ]);
+  });
+
+  test("records when the team first saw an enemy core", () => {
+    const { world, creep, stats } = lane();
+    run(world, 3);
+    expect(stats.enemyCoreSeenTick).toBeNull();
+    // A circle sees 6 cells: from (5, 0) it sees core B at (10, 0).
+    Object.assign(creep, { x: 5, y: 0 });
+    creep.order = { type: "stop" };
+    run(world, 1);
+    expect(stats.enemyCoreSeenTick).toBe(3);
+    run(world, 5);
+    expect(stats.enemyCoreSeenTick).toBe(3);
+  });
+
+  test("counts the cells the team has seen and its creeps exploring", () => {
+    const world = textWorld(LANE, params);
+    const memory = world.memory[0]!;
+    const seen = memory.explored.filter((e) => e === 1).length;
+    expect(seen).toBeGreaterThan(0);
+    creepOf(world, 0, "square").order = { type: "explore", x: 9, y: 2 };
+    creepOf(world, 0, "circle").order = { type: "explore", x: 9, y: 1 };
+    creepOf(world, 1, "circle").order = { type: "explore", x: 0, y: 0 };
+    const sample = sampleMetrics(world);
+    expect(sample.teams[0]).toMatchObject({
+      exploredCells: seen,
+      exploring: 2,
+    });
+    expect(sample.teams[1]!.exploring).toBe(1);
   });
 
   test("is pure and does not alias the state", () => {
