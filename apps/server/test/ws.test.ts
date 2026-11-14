@@ -260,6 +260,25 @@ describe("WebSocket", () => {
     back.socket.close();
   });
 
+  test("a resync gets a welcome with the last view sent, and is logged", async () => {
+    const { base, token, playerId, host, timers, logs } = await setup();
+    const client = await connect(base, token);
+    await client.next("welcome");
+    for (let i = 0; i < 3; i++) {
+      host.tick();
+      timers.advance(200);
+    }
+    await client.delta(3);
+    const from = client.messages.length;
+    client.send({ type: "resync", reason: "hashMismatch", seq: 2 });
+    const again = await client.next("welcome", from);
+    expect(again).toMatchObject({ seq: 3, view: { tick: host.state.tick } });
+    expect(logs).toContain(
+      `resync world=1 team=0 player=${playerId} tick=${host.state.tick} seq=2 reason=hashMismatch`,
+    );
+    client.socket.close();
+  });
+
   test("a socket closed for 15 s releases the domination", async () => {
     const { base, token, host, timers } = await setup();
     const client = await connect(base, token);

@@ -38,6 +38,8 @@ export type WsContext = {
   deltaBufferMs: number;
   /** Told about connections and inputs (domination release, F6). */
   presence?: Presence;
+  /** Server log, for incidents such as a resync (default console.log). */
+  log?: (line: string) => void;
 };
 
 export function attachWebSocket(server: Server, context: WsContext) {
@@ -93,7 +95,14 @@ export function attachWebSocket(server: Server, context: WsContext) {
         });
         return;
       }
-      if (message.type === "resync") return;
+      if (message.type === "resync") {
+        // Spec S-6: the full view again, and the incident in the log.
+        (context.log ?? console.log)(
+          `resync world=${host.id} team=${player.team} player=${player.id} tick=${host.state.tick} seq=${message.seq} reason=${message.reason}`,
+        );
+        send(socket, welcome(host, player, stream));
+        return;
+      }
       const tick = host.state.tick;
       const reason = host.submit(player.id, message.command);
       send(

@@ -38,7 +38,7 @@ na sua branch `m1.5/f<n>-<slug>` (skill `commit`), com merge `--no-ff` em `main`
       (R7)
 - [x] Hash da visão a cada `viewHashEveryTicks`; `welcome` com `lastView`
 - [x] Retomada por `&seq=` com o buffer de `deltaBufferMs`; fora do buffer ou depois de restart, `welcome`
-- [ ] `resync`: responde com `welcome` e registra a linha de incidente no log
+- [x] `resync`: responde com `welcome` e registra a linha de incidente no log
 
 ## F4 — Cliente (`m1.5/f4-client`)
 
