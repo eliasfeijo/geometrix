@@ -37,7 +37,7 @@ Marque `[x]` ao concluir. Cada task deve terminar com os testes verdes. Referên
 - [ ] `validate(state, cmd, playerId)` para todos os comandos externos (plan §4)
 - [ ] `dominate`/`release` com as regras D-1..D-4
 - [x] Interpretador de regras com o vocabulário P-2
-- [ ] Presets: coletor de matéria, coletor de cristal, construtor de estrada
+- [x] Presets: coletor de matéria, coletor de cristal, construtor de estrada
 - [ ] `setRules` e `applyPreset`
 
 ## F5 — Harness

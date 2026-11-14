@@ -65,7 +65,8 @@ export function run(world: WorldState, ticks: number): void {
  * The seed-42 world moved onto a map drawn in text: parseMap symbols plus
  * `A` / `B` the core of team 0 / 1, `m` a materia deposit and `c` a cristal
  * deposit, all on jungle. Deposits are full and get fresh ids in reading
- * order; every creep starts stopped on its team's core.
+ * order; every creep starts stopped on its team's core, with no rules, so
+ * tests drive orders and rules explicitly.
  */
 export function textWorld(
   rows: string[],
@@ -99,6 +100,7 @@ export function textWorld(
   });
   for (const creep of world.creeps) {
     Object.assign(creep, world.teams[creep.team]!.core);
+    creep.rules = [];
   }
   return world;
 }
