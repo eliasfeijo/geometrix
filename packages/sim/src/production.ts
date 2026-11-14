@@ -4,13 +4,22 @@
 // core is free, waiting while the stock or the population cap does not allow.
 
 import { canAfford, debit } from "./economy.ts";
-import type { Dna } from "./params.ts";
+import type { Dna, Params } from "./params.ts";
 import { newCreep, type Team, type WorldState } from "./world.ts";
 
 export type ProductionRefusal = "busy" | "populationCap" | "stock";
 
+/**
+ * The part of the state that production checks read. The client passes the
+ * state it gets over the wire, whose creeps have no cached path.
+ */
+export type ProductionView = {
+  params: Params;
+  creeps: readonly { team: number }[];
+};
+
 /** Living creeps of the team plus the one in production. */
-export function population(state: WorldState, team: Team): number {
+export function population(state: ProductionView, team: Team): number {
   let count = team.production === null ? 0 : 1;
   for (const creep of state.creeps) if (creep.team === team.id) count++;
   return count;
@@ -35,7 +44,7 @@ export function startProduction(
 
 /** Why the team cannot start producing now, or null. Changes nothing. */
 export function productionRefusal(
-  state: WorldState,
+  state: ProductionView,
   team: Team,
 ): ProductionRefusal | null {
   const { params } = state;
