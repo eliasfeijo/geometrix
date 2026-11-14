@@ -1,5 +1,7 @@
 import { describe, expect, test } from "vitest";
-import type { Cell } from "../src/map.ts";
+import { knownMap, knownRoadContext } from "../src/known.ts";
+import { Terrain, type Cell } from "../src/map.ts";
+import { findPath } from "../src/pathfinding.ts";
 import { buildRoadOrder, canBuildRoad, nextSegment } from "../src/roads.ts";
 import { step } from "../src/step.ts";
 import { createWorld, type WorldState } from "../src/world.ts";
@@ -203,6 +205,49 @@ describe("buildRoad", () => {
     run(world, 10);
     expect(roads(world)).toEqual([".r........"]);
     expect(world.teams[0]!.stock).toEqual({ materia: 8, cristal: 9 });
+  });
+});
+
+describe("in the dark (fog spec D5)", () => {
+  // Core A sees 8 cells: the rock at x = 11 starts unknown.
+  const DARK = [
+    "....................",
+    "A..........#.......B",
+    "....................",
+  ];
+  const target = { x: 14, y: 1 };
+
+  test("traces through cells never seen, and around a rock found on the way", () => {
+    const world = funded(DARK, 200);
+    const rock = 20 + 11;
+    expect(world.memory[0]!.explored[rock]).toBe(0);
+    const team = world.teams[0]!;
+    const blind = findPath(knownMap(world, 0), team.core, target, params);
+    expect(blind).toContain(rock);
+
+    const creep = creepOf(world, 0, "square");
+    creep.order = buildRoadOrder(target);
+    run(world, 6000);
+    expect(world.memory[0]!.terrain[rock]).toBe(Terrain.rock);
+    expect(creep.order).toEqual({ type: "stop" });
+    expect(roads(world)[1]![14]).toBe("r");
+    expect(world.map.road[rock]).toBe(0);
+    expect(world.map.road[11] + world.map.road[40 + 11]).toBe(1);
+    // Every segment paid for is a road: nothing spent on a dead end.
+    const built = world.map.road.filter((r) => r === 1).length;
+    expect(world.teams[0]!.stock.materia).toBe(200 - 5 * built);
+    expect(world.roadJobs).toEqual([]);
+  });
+
+  test("checks the target against what the team knows", () => {
+    const world = funded(DARK, 200);
+    const unseen = { x: 11, y: 1 };
+    // The rock is not known: the order is taken and the creep sets out.
+    expect(canBuildRoad(knownRoadContext(world, 0), 20 + 11)).toBe(true);
+    const creep = creepOf(world, 0, "square");
+    creep.order = buildRoadOrder(unseen);
+    run(world, 1);
+    expect(creep.order).toMatchObject({ type: "buildRoad", segment: 21 });
   });
 });
 

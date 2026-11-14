@@ -14,6 +14,7 @@ import {
   teamOf,
   unload,
 } from "./economy.ts";
+import { knownRoadContext } from "./known.ts";
 import type { Cell } from "./map.ts";
 import { CELL_COST, movePointsPerTick } from "./movement.ts";
 import { pathTo } from "./pathfinding.ts";
@@ -166,12 +167,14 @@ function buildRoad(
 ): void {
   const { map, params } = state;
   const team = teamOf(state, creep);
-  if (!canBuildRoad(state, order.y * map.width + order.x)) {
+  // The trace follows what the team knows (fog spec D5, P-3).
+  const known = knownRoadContext(state, team.id);
+  if (!canBuildRoad(known, order.y * map.width + order.x)) {
     halt(creep);
     return;
   }
-  if (order.segment < 0 || map.road[order.segment] === 1) {
-    const next = nextSegment(state, team, order);
+  if (order.segment < 0 || !canBuildRoad(known, order.segment)) {
+    const next = nextSegment(known, team, order);
     if (next === null) {
       halt(creep);
       return;
@@ -188,6 +191,14 @@ function buildRoad(
   }
   let job = findRoadJob(state, cell);
   if (job === undefined) {
+    // Before paying, the trace again: what the team saw on the way may
+    // have moved it (a rock or river discovered).
+    const next = nextSegment(known, team, order);
+    if (next !== order.segment) {
+      if (next === null) halt(creep);
+      else order.segment = next;
+      return;
+    }
     if (!canAfford(team.stock, params.road.cost)) {
       halt(creep);
       return;
