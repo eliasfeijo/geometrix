@@ -8,6 +8,7 @@ import { browserDeps, Connection, socketUrl } from "./connection.ts";
 import { GameContext, type Game as GameValue } from "./context.ts";
 import { FATAL_TEXTS, REJECT_TEXTS } from "./format.ts";
 import { handleKey, select } from "./interaction.ts";
+import { CoreDock } from "./panels/core-panel.tsx";
 import { Inspector } from "./panels/inspector.tsx";
 import type { Session } from "./session.ts";
 import { CreepLayer } from "./map/creep-layer.tsx";
@@ -75,6 +76,7 @@ export function Game({ session, onLeave, onInvalid }: Props) {
           >
             <CreepLayer />
           </MapView>
+          <CoreDock />
           <Inspector />
         </div>
         <Notices />

@@ -63,7 +63,7 @@ Marque `[x]` ao concluir. Cada task deve terminar com os testes verdes. Referên
 - [x] Mapa SVG com camadas estática e dinâmica; pan e zoom
 - [x] Creeps por DNA e time, anel de carga, halo de domínio, interpolação
 - [x] Inspetor do creep; dominar e liberar
-- [ ] Painel do Núcleo
+- [x] Painel do Núcleo
 - [ ] Editor de regras e presets
 - [ ] Controle direto (moveTo, gather, deliver, modo estrada)
 - [ ] **Checkpoint:** sessão do dono: interface, legibilidade, editor de regras, domínio, multi-cliente local

@@ -466,3 +466,111 @@ h3 {
     transform: rotate(360deg);
   }
 }
+
+.core-dock {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 300px;
+  max-height: calc(100% - 20px);
+  overflow-y: auto;
+  box-shadow: 0 6px 24px rgb(0 0 0 / 0.45);
+  z-index: 2;
+}
+
+.core-dock.collapsed {
+  width: auto;
+  padding: 8px 40px 8px 12px;
+}
+
+.core-dock.selected {
+  border-color: #ffd166;
+}
+
+.core-panel .title {
+  color: var(--team);
+}
+
+.core-panel h3 {
+  margin-top: 12px;
+  margin-bottom: 4px;
+}
+
+.stock {
+  display: flex;
+  gap: 16px;
+}
+
+.amount {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-variant-numeric: tabular-nums;
+}
+
+.population {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+}
+
+.dna-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.production,
+.repeat,
+.upgrade {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.repeat {
+  margin-top: 6px;
+}
+
+.produce {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.produce-buttons {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.produce-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 4px;
+}
+
+.small {
+  font-size: 11px;
+}
+
+.cost {
+  margin: 0;
+  font-size: 12px;
+}
+
+.owned {
+  color: var(--ok);
+}
+
+@media (max-width: 760px) {
+  .core-dock {
+    width: calc(100% - 20px);
+    max-height: 45%;
+  }
+}

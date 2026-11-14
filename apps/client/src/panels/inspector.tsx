@@ -3,7 +3,7 @@
 
 import { capacity, type Deposit } from "@geometrix/sim";
 import { useGame } from "../context.ts";
-import { creepStatus, STATUS_TEXTS, type Creep } from "../creep-status.ts";
+import { creepStatus, STATUS_TEXTS } from "../creep-status.ts";
 import {
   DNA_NAMES,
   durationWords,
@@ -12,14 +12,20 @@ import {
   ruleText,
   teamName,
 } from "../format.ts";
-import { DnaShape } from "../map/creep-shape.tsx";
-import { COLORS, teamColor } from "../map/colors.ts";
+import { COLORS } from "../map/colors.ts";
 import { CorePanel } from "./core-panel.tsx";
+import { DnaIcon } from "./dna-icon.tsx";
 
 export function Inspector() {
-  const { store } = useGame();
+  const { store, session } = useGame();
   const selection = store.selection.value;
-  if (selection === null) return null;
+  // The own core has its panel docked on the left.
+  if (
+    selection === null ||
+    (selection.kind === "core" && selection.team === session.team)
+  ) {
+    return null;
+  }
   const close = () => (store.selection.value = null);
   return (
     <aside class="side-panel panel" aria-label="Seleção">
@@ -30,14 +36,6 @@ export function Inspector() {
       {selection.kind === "deposit" && <DepositInspector id={selection.id} />}
       {selection.kind === "core" && <CorePanel team={selection.team} />}
     </aside>
-  );
-}
-
-export function DnaIcon({ dna, team }: { dna: Creep["dna"]; team: number }) {
-  return (
-    <svg class="icon" viewBox="0 0 1 1" width="18" height="18">
-      <DnaShape dna={dna} cx={0.5} cy={0.5} r={0.42} fill={teamColor(team)} />
-    </svg>
   );
 }
 
