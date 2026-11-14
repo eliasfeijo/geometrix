@@ -218,6 +218,7 @@ export function CargoBar(props: {
             ({materia} m · {cristal} c)
           </span>
         )}
+        {materia + cristal >= max && <span class="cargo-full"> cheia</span>}
       </span>
     </span>
   );

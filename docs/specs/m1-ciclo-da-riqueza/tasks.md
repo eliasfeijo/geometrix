@@ -82,7 +82,7 @@ Decidida pelo dono em 2026-11-14, no fim do F8 (spec §8, itens 3 e 4).
   navegador; memória, SQLite e atraso do loop)
 - [x] Estrada e pedra distinguíveis no mapa
 - [ ] Feedback do custo da estrada (modo estrada, pagamento, obra em andamento)
-- [ ] Sinal de carga cheia no creep
+- [x] Sinal de carga cheia no creep
 - [ ] Feedback de entrega no Núcleo
 - [x] Nome do creep no mapa
 - [ ] `docs/PLAYTEST.md`: acesso ao servidor local, roteiro e questionário de legibilidade

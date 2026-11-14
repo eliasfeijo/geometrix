@@ -426,6 +426,30 @@ h3 {
   animation: halo-pulse 1.4s ease-in-out infinite;
 }
 
+/* A cargo ring that just filled up flashes once (F9). */
+.cargo-flash {
+  animation: cargo-flash 0.8s ease-out forwards;
+  transform-box: fill-box;
+  transform-origin: center;
+  pointer-events: none;
+}
+
+@keyframes cargo-flash {
+  from {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  to {
+    transform: scale(1.9);
+    opacity: 0;
+  }
+}
+
+.cargo-full {
+  color: var(--ok);
+  font-weight: 600;
+}
+
 @keyframes halo-pulse {
   50% {
     stroke-opacity: 0.35;
