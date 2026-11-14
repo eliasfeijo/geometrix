@@ -7,6 +7,7 @@
 //   5. materia regeneration                                    (F3)
 //   6. stats accumulators; tick++                              (F5 / now)
 
+import { regenerate } from "./economy.ts";
 import { resolveOrders } from "./orders.ts";
 import type { WorldState } from "./world.ts";
 
@@ -24,5 +25,6 @@ export type Command = never;
 export function step(state: WorldState, commands: readonly Command[]): void {
   void commands;
   resolveOrders(state);
+  regenerate(state);
   state.tick += 1;
 }

@@ -14,7 +14,7 @@ describe("step", () => {
     expect(world.tick).toBe(2);
   });
 
-  test("with the empty pipeline, nothing but the tick changes", () => {
+  test("with stopped creeps and full deposits, nothing but the tick changes", () => {
     const world = createWorld(42, params);
     const before = restore(serialize(world));
     for (let i = 0; i < 1000; i++) step(world, []);
