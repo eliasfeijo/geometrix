@@ -5,7 +5,7 @@
 // their player changes their order.
 
 import { canAfford, capacity, cargoTotal, teamOf } from "./economy.ts";
-import type { Cell } from "./map.ts";
+import { isInMap, manhattan, type Cell } from "./map.ts";
 import { cellModifier } from "./movement.ts";
 import type { Order } from "./orders.ts";
 import type { Resource } from "./params.ts";
@@ -43,9 +43,6 @@ export function runAutopilot(state: WorldState): void {
     }
   }
 }
-
-const manhattan = (a: Cell, b: Cell) =>
-  Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
 
 function isFull(state: WorldState, creep: Creep): boolean {
   return (
@@ -89,12 +86,6 @@ function holds(state: WorldState, creep: Creep, condition: Condition): boolean {
   }
 }
 
-const inMap = (state: WorldState, cell: Cell) =>
-  cell.x >= 0 &&
-  cell.y >= 0 &&
-  cell.x < state.map.width &&
-  cell.y < state.map.height;
-
 /** The order that carries out `action` now, or null if it is impossible. */
 function orderFor(
   state: WorldState,
@@ -113,7 +104,7 @@ function orderFor(
     case "stop":
       return { type: action.type };
     case "moveTo": {
-      if (!inMap(state, action)) return null;
+      if (!isInMap(state.map, action)) return null;
       const index = action.y * state.map.width + action.x;
       if (cellModifier(state.map, index, state.params) === 0) return null;
       return { type: "moveTo", x: action.x, y: action.y };
@@ -135,7 +126,7 @@ function buildRoadFor(
   target: Cell,
 ): Order | null {
   const { map, params } = state;
-  if (!inMap(state, target)) return null;
+  if (!isInMap(state.map, target)) return null;
   if (!canBuildRoad(state, target.y * map.width + target.x)) return null;
   const team = teamOf(state, creep);
   const affordable = canAfford(team.stock, params.road.cost);
