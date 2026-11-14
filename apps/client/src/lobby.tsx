@@ -1,5 +1,6 @@
-// Lobby: the worlds on the server, creating one (seed, multiplier, bots) and
-// joining a team with a guest name (spec section 4: no real login in M1).
+// Lobby: the worlds on the server, creating one (seed, multiplier, bots),
+// joining a team with a guest name (spec section 4: no real login in M1) and
+// watching replays: of a server world, or of a replay.json from geo sim.
 
 import type { WorldSummary } from "@geometrix/protocol";
 import { useEffect, useState } from "preact/hooks";
@@ -15,9 +16,12 @@ type Props = {
   highlight: number | null;
   message: string | null;
   onEnter(worldId: number): void;
+  onWatch(worldId: number): void;
+  onReplayFile(file: File): void;
 };
 
-export function Lobby({ slot, highlight, message, onEnter }: Props) {
+export function Lobby(props: Props) {
+  const { slot, highlight, message, onEnter } = props;
   const storage = window.localStorage;
   const [worlds, setWorlds] = useState<WorldSummary[] | null>(null);
   const [error, setError] = useState<string | null>(message);
@@ -101,6 +105,8 @@ export function Lobby({ slot, highlight, message, onEnter }: Props) {
         onError={setError}
       />
 
+      <ReplayFile onOpen={props.onReplayFile} />
+
       <section class="worlds">
         <h2>Mundos</h2>
         {worlds === null && <p class="muted">Carregando…</p>}
@@ -144,11 +150,19 @@ export function Lobby({ slot, highlight, message, onEnter }: Props) {
                   </div>
                 ))}
               </div>
-              {session !== null && (
-                <button class="primary" onClick={() => onEnter(world.id)}>
-                  Continuar como {session.name} ({teamName(session.team)})
+              <div class="world-actions">
+                {session !== null && (
+                  <button class="primary" onClick={() => onEnter(world.id)}>
+                    Continuar como {session.name} ({teamName(session.team)})
+                  </button>
+                )}
+                <button
+                  onClick={() => props.onWatch(world.id)}
+                  title="Rodar o mundo desde o início, no navegador"
+                >
+                  Assistir replay
                 </button>
-              )}
+              </div>
             </article>
           );
         })}
@@ -226,6 +240,25 @@ function CreateWorld(props: {
         </button>
       </div>
     </form>
+  );
+}
+
+function ReplayFile(props: { onOpen(file: File): void }) {
+  return (
+    <section class="panel replay-file">
+      <label class="field">
+        <span>Assistir replay (o replay.json de um geo sim)</span>
+        <input
+          type="file"
+          accept=".json,application/json"
+          onChange={(e) => {
+            const file = e.currentTarget.files?.[0];
+            e.currentTarget.value = "";
+            if (file !== undefined) props.onOpen(file);
+          }}
+        />
+      </label>
+    </section>
   );
 }
 

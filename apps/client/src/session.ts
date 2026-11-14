@@ -120,3 +120,10 @@ export function locationFor(worldId: number | null, slot: string): string {
   const search = params.toString();
   return search === "" ? "" : `?${search}`;
 }
+
+/** The server world whose replay the URL asks for: ?replay=3. */
+export function replayWorldOf(search: string): number | null {
+  const value = new URLSearchParams(search).get("replay");
+  const id = Number(value);
+  return value !== null && Number.isSafeInteger(id) && id > 0 ? id : null;
+}
