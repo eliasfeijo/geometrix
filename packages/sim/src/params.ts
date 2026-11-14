@@ -92,11 +92,12 @@ const schema = {
   },
   /**
    * Sight radii (M1.5 fog spec V-1), Manhattan, in cells: the core's and each
-   * creep's by DNA. Rocks block the line of sight.
+   * creep's by DNA. Rocks block the line of sight. A creep sees at least its
+   * neighbors, so the next cell of its path is always known (fog plan §5).
    */
   vision: {
     core: nonNegative,
-    dna: { square: nonNegative, triangle: nonNegative, circle: nonNegative },
+    dna: { square: positive, triangle: positive, circle: positive },
   },
 } as const satisfies Schema;
 

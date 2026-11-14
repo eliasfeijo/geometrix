@@ -14,6 +14,7 @@ import {
   teamOf,
   unload,
 } from "./economy.ts";
+import { knownRoadContext, memoryOf } from "./known.ts";
 import type { Cell } from "./map.ts";
 import { CELL_COST, movePointsPerTick } from "./movement.ts";
 import { pathTo } from "./pathfinding.ts";
@@ -29,6 +30,8 @@ import type { Creep, Deposit, WorldState } from "./world.ts";
 export type Order =
   | { type: "stop" }
   | ({ type: "moveTo" } & Cell)
+  /** Walk toward a cell never seen until the team has seen it (fog N5). */
+  | ({ type: "explore" } & Cell)
   | { type: "gather"; depositId: number }
   | { type: "deliver" }
   | BuildRoadOrder;
@@ -51,6 +54,16 @@ export function resolveOrders(state: WorldState): void {
         break;
       case "moveTo":
         if (walk(state, creep, order) !== "moving") halt(creep);
+        break;
+      case "explore":
+        if (
+          memoryOf(state, creep.team).explored[
+            order.y * state.map.width + order.x
+          ] === 1 ||
+          walk(state, creep, order) !== "moving"
+        ) {
+          halt(creep);
+        }
         break;
       case "gather":
         gather(state, creep, order.depositId);
@@ -107,20 +120,21 @@ function walk(state: WorldState, creep: Creep, target: Cell): WalkResult {
 /**
  * Walks to the deposit, then gathers until full. At an empty deposit that
  * regenerates the creep waits (idle) for it; one that never does ends the
- * order (owner decision, 2026-11-14).
+ * order (owner decision, 2026-11-14). The creep finds out how much is left
+ * only there: on the way it goes by what its team remembers (fog spec A-2).
  */
 function gather(state: WorldState, creep: Creep, depositId: number): void {
   const deposit = findDeposit(state, depositId);
-  if (
-    deposit === undefined ||
-    isFull(state, creep) ||
-    exhausted(state, deposit)
-  ) {
+  if (deposit === undefined || isFull(state, creep)) {
     halt(creep);
     return;
   }
   if (!isAt(creep, deposit)) {
     if (walk(state, creep, deposit) === "unreachable") halt(creep);
+    return;
+  }
+  if (exhausted(state, deposit)) {
+    halt(creep);
     return;
   }
   if (deposit.amount === 0) return;
@@ -166,12 +180,14 @@ function buildRoad(
 ): void {
   const { map, params } = state;
   const team = teamOf(state, creep);
-  if (!canBuildRoad(state, order.y * map.width + order.x)) {
+  // The trace follows what the team knows (fog spec D5, P-3).
+  const known = knownRoadContext(state, team.id);
+  if (!canBuildRoad(known, order.y * map.width + order.x)) {
     halt(creep);
     return;
   }
-  if (order.segment < 0 || map.road[order.segment] === 1) {
-    const next = nextSegment(state, team, order);
+  if (order.segment < 0 || !canBuildRoad(known, order.segment)) {
+    const next = nextSegment(known, team, order);
     if (next === null) {
       halt(creep);
       return;
@@ -188,6 +204,14 @@ function buildRoad(
   }
   let job = findRoadJob(state, cell);
   if (job === undefined) {
+    // Before paying, the trace again: what the team saw on the way may
+    // have moved it (a rock or river discovered).
+    const next = nextSegment(known, team, order);
+    if (next !== order.segment) {
+      if (next === null) halt(creep);
+      else order.segment = next;
+      return;
+    }
     if (!canAfford(team.stock, params.road.cost)) {
       halt(creep);
       return;

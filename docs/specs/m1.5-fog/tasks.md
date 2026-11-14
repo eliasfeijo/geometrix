@@ -26,20 +26,22 @@ na sua branch (plan §12, skill `commit`), com merge `--no-ff` em `main`.
 
 ## F2 — Pelo que o time sabe (`m1.5/fog-f2-knowledge`)
 
-- [ ] `known.ts`: o mapa conhecido do time como `GameMap`; `pathTo` nele, com o cache por `roadRevision` e
+- [x] `known.ts`: o mapa conhecido do time como `GameMap`; `pathTo` nele, com o cache por `roadRevision` e
       `blockRevision` da memória; sai o `state.roadRevision` (plan §5, N3)
-- [ ] `nextSegment`, `canBuildRoad` e `buildRoad` no mapa conhecido, com teste de estrada no escuro (spec D5)
-- [ ] Piloto pela memória: `nearestDeposit`, `committedDeposit`, `resourceInRange`, validação de `moveTo` (spec A-1,
+- [x] `nextSegment`, `canBuildRoad` e `buildRoad` no mapa conhecido, com teste de estrada no escuro (spec D5)
+- [x] Piloto pela memória: `nearestDeposit`, `committedDeposit`, `resourceInRange`, validação de `moveTo` (spec A-1,
       A-2)
-- [ ] Ordem `explore`, ação `explore` (BFS no mapa conhecido, sem repetir alvo), condição `resourceUnknown`; presets
+- [x] Ordem `explore`, ação `explore` (BFS no mapa conhecido, sem repetir alvo), condição `resourceUnknown`; presets
       coletor e `scout`; vocabulário com `BREAKING CHANGE` (plan §6, N4, N5)
-- [ ] Recusas sem vazamento: `unknownCreep` no lugar de `notYourTeam`; depósito fora da memória como inexistente
+- [x] Recusas sem vazamento: `unknownCreep` no lugar de `notYourTeam`; depósito fora da memória como inexistente
       (plan §7)
-- [ ] Estrategista só com a visão (mapa a partir de `known`), sem lógica de batedor (spec B-1, N8)
-- [ ] Métricas: 1ª entrega por recurso e time, células exploradas, Núcleo inimigo visto, creeps explorando; no
+- [x] Estrategista só com a visão (mapa a partir de `known`), sem lógica de batedor (spec B-1, N8)
+- [x] Métricas: 1ª entrega por recurso e time, células exploradas, Núcleo inimigo visto, creeps explorando; no
       `report.md` do `geo sim` e do `geo sweep` (plan §11)
-- [ ] **Checkpoint:** `geo sweep` nas seeds 1–20 (6 h), `geo sim --days 3` do seed 42 (economia lado a lado com o
-      hash anterior), custo do tick antes × depois (spec §7)
+- [x] **Checkpoint:** `geo sweep` nas seeds 1–20 (6 h), `geo sim --days 3` do seed 42 (economia lado a lado com o
+      hash anterior), custo do tick antes × depois (spec §7). Dono, 2026-11-14: início de partida ✅; economia
+      aceita; custo do tick 2,2× aceito; regra do estrategista mantida; divergência entre os times aceita, a rever no
+      rebalanceamento (plan §10, "Checkpoint da F2")
 
 ## F3 — Rede e servidor (`m1.5/fog-f3-network`)
 

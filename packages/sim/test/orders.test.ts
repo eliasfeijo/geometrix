@@ -93,12 +93,28 @@ describe("moveTo", () => {
     });
   });
 
-  test("an unreachable target turns into stop without moving", () => {
+  test("a target known to be unreachable turns into stop without moving", () => {
     const { world, creep } = strip();
     world.map.terrain[12 + 5] = Terrain.rock;
+    world.memory[creep.team]!.terrain[12 + 5] = Terrain.rock;
     creep.order = { type: "moveTo", x: 5, y: 1 };
     run(world, 1);
     expect(at(creep)).toEqual({ x: 0, y: 1 });
+    expect(creep.order).toEqual({ type: "stop" });
+  });
+
+  test("a rock never seen is walked toward and stops the creep once seen", () => {
+    const { world, creep } = strip();
+    // The other creeps at the far end, 7 cells or more from the rock.
+    for (const other of world.creeps.slice(1)) Object.assign(other, { x: 11 });
+    world.map.terrain[12 + 5] = Terrain.rock;
+    creep.order = { type: "moveTo", x: 5, y: 1 };
+    // A square sees 3 cells: the rock at x = 5 shows up from x = 2.
+    run(world, 60);
+    expect(at(creep)).toEqual({ x: 2, y: 1 });
+    expect(creep.order).toEqual({ type: "moveTo", x: 5, y: 1 });
+    run(world, 1);
+    expect(at(creep)).toEqual({ x: 2, y: 1 });
     expect(creep.order).toEqual({ type: "stop" });
   });
 

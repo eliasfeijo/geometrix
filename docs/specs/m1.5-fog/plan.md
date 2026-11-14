@@ -241,6 +241,20 @@ descartado. N4 ajustou a D4 da spec (distância em passos, não Manhattan).
 | N9 | Seed na criação do mundo | O lobby mantém o campo; a lista e o `welcome` escondem a seed de mundo vivo (§8) | Tirar o campo: a seed sempre aleatória e escondida, inclusive de quem cria |
 | N10 | Estágio da visão | Estágio 6 do tick, e no `createWorld` (§3) | Calcular a visão na hora de montar a `view`: a memória precisa ser atualizada todo tick de qualquer jeito |
 
+**Checkpoint da F2 (dono, 2026-11-14).** Números em `docs/dashboard/current-status.md` ("Medições da F2 do fog").
+
+- **N8 bastou**, com uma adaptação: o estrategista mantém a fatia de cristal enquanto o time conhece cristal com
+  sobra **ou** ainda alcança célula nunca vista (os coletores de cristal exploram pelo preset). Ao pé da letra,
+  ninguém explorava e os bots nunca produziam. O dono manteve a regra.
+- **Início de partida** ✅ (1ª matéria em 2–7 min nas seeds 1–20). **Economia** (3 dias, seed 42: matéria −13% a
+  −20%) aceita.
+- **Custo do tick** 2,2× (alvo ≤ 2×): o dono deixou a decisão com o agente, que aceitou. O orçamento absoluto (3
+  dias em menos de 10 min) está longe (~9,5 s) e o excesso vem quase todo de caminhos mais longos (jogo, não
+  overhead). A F3 (`geo net`) e a F5 (soak) medem de novo; candidatos se apertar: a busca de célula nunca vista do
+  estrategista e o `canonicalJson` do `roleOf`.
+- **Os times divergem depois de ~15 h** no seed 42 (depósito disputado: o creep de id menor coleta primeiro, regra
+  do M1). Aceito; a rever numa rodada de rebalanceamento (pergunta aberta no [GDD 03](../../gdd/03-economia-e-logistica.md)).
+
 ## 11. Harness e testes
 
 | Tipo | O quê |

@@ -106,10 +106,10 @@ describe("dominate", () => {
     ["an unknown player", 9, () => 0, "unknownPlayer"],
     ["an unknown creep", 1, () => 9999, "unknownCreep"],
     [
-      "a creep of the other team",
+      "a creep of the other team, as unknown (fog spec D6)",
       1,
       (w: WorldState) => teamCreep(w, 1).id,
-      "notYourTeam",
+      "unknownCreep",
     ],
   ] as const)("refuses %s", (_, player, creepId, reason) => {
     const w = world();
@@ -190,6 +190,26 @@ describe("orders from the dominating player", () => {
     const creep = teamCreep(w, 0);
     dominate(w, 1, creep.id);
     expect(orderRefusal(w, 1, creep.id, order)).toBe("invalidOrder");
+  });
+
+  test("refuses another team's creep as unknown (fog spec D6)", () => {
+    const w = world();
+    const enemy = teamCreep(w, 1);
+    expect(orderRefusal(w, 1, enemy.id, { type: "stop" })).toBe("unknownCreep");
+    expect(orderRefusal(w, 1, 9999, { type: "stop" })).toBe("unknownCreep");
+  });
+
+  test("gather at a deposit the team does not remember is refused as unknown", () => {
+    const w = textWorld(["A..........c......m....B"]);
+    join(w, 1, 0, false);
+    const creep = teamCreep(w, 0);
+    dominate(w, 1, creep.id);
+    // The core sees 8 cells: the cristal at x = 11 exists but was never seen.
+    const cristal = w.deposits.find((d) => d.kind === "cristal")!;
+    const gather = { type: "gather", depositId: cristal.id } as const;
+    expect(orderRefusal(w, 1, creep.id, gather)).toBe("invalidOrder");
+    w.memory[0]!.deposits.push({ ...cristal });
+    expect(orderRefusal(w, 1, creep.id, gather)).toBeNull();
   });
 
   test("buildRoad becomes a road order with its segment still to choose", () => {

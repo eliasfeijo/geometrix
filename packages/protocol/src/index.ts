@@ -35,6 +35,7 @@ const condition = z.discriminatedUnion("type", [
     resource,
     amount: z.number().int().nonnegative(),
   }),
+  z.object({ type: z.literal("resourceUnknown"), resource }),
 ]);
 
 const action = z.discriminatedUnion("type", [
@@ -43,6 +44,7 @@ const action = z.discriminatedUnion("type", [
   cell.extend({ type: z.literal("buildRoad") }),
   cell.extend({ type: z.literal("moveTo") }),
   z.object({ type: z.literal("stop") }),
+  z.object({ type: z.literal("explore") }),
 ]);
 
 const rule = z.object({ when: condition, then: action });
@@ -52,6 +54,7 @@ const orderInput = z.discriminatedUnion("type", [
   z.object({ type: z.literal("deliver") }),
   z.object({ type: z.literal("gather"), depositId: id }),
   cell.extend({ type: z.literal("moveTo") }),
+  cell.extend({ type: z.literal("explore") }),
   cell.extend({ type: z.literal("buildRoad") }),
 ]);
 
@@ -72,7 +75,12 @@ export const clientCommand = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("applyPreset"),
     creepId: id,
-    preset: z.enum(["materiaCollector", "cristalCollector", "roadBuilder"]),
+    preset: z.enum([
+      "materiaCollector",
+      "cristalCollector",
+      "roadBuilder",
+      "scout",
+    ]),
     target: cell.optional(),
   }),
   z.object({

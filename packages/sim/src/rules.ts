@@ -41,6 +41,10 @@ function copyCondition(c: Condition): Condition | null {
       return isResource(c.resource) && isCount(c.amount)
         ? { type: c.type, resource: c.resource, amount: c.amount }
         : null;
+    case "resourceUnknown":
+      return isResource(c.resource)
+        ? { type: c.type, resource: c.resource }
+        : null;
     default:
       return null;
   }
@@ -50,6 +54,7 @@ function copyAction(a: Action, map: GameMap): Action | null {
   switch (a.type) {
     case "deliver":
     case "stop":
+    case "explore":
       return { type: a.type };
     case "gather":
       return isResource(a.resource)

@@ -1,12 +1,13 @@
 // Stats accumulators and metric samples (spec section 7, plan section 9).
 // Events are counted where they happen (a delivery, a finished trip, a road
 // segment, a deposit running dry, an accepted command); per-tick totals
-// (creep activity, idle core, domination, contested deposits) are added at
-// stage 6. sampleMetrics reads them, with no side effects. Everything is a
-// cumulative integer: rates and averages are left to the reader (the CLI).
+// (creep activity, idle core, domination, contested deposits, the first sight
+// of an enemy core) are added at stage 6. sampleMetrics reads them, with no side
+// effects. Everything is a cumulative integer or the tick something first
+// happened: rates and averages are left to the reader (the CLI).
 
 import { COMMAND_TYPES, type CommandType } from "./commands.ts";
-import { DNAS, type Dna } from "./params.ts";
+import { DNAS, type Dna, type Resource } from "./params.ts";
 import { PRESETS, type PresetId } from "./presets.ts";
 import type { Creep, Deposit, Stock, Team, WorldState } from "./world.ts";
 
@@ -33,6 +34,10 @@ export type TeamStats = {
   team: number;
   /** Units delivered at the core since tick 0. */
   delivered: Stock;
+  /** Tick of the first delivery of each resource, or null (fog spec §7). */
+  firstDeliveryTick: Record<Resource, number | null>;
+  /** First tick the team had seen another team's core, or null. */
+  enemyCoreSeenTick: number | null;
   /** Creep-seconds per activity. */
   activitySeconds: Record<Activity, number>;
   /** Seconds the core spent with nothing in production. */
@@ -69,6 +74,8 @@ export function createStats(teams: Team[], deposits: Deposit[]): Stats {
     teams: teams.map((team) => ({
       team: team.id,
       delivered: { materia: 0, cristal: 0 },
+      firstDeliveryTick: { materia: null, cristal: null },
+      enemyCoreSeenTick: null,
       activitySeconds: countBy(ACTIVITIES),
       coreIdleSeconds: 0,
       trips: 0,
@@ -95,6 +102,9 @@ export function recordDelivery(state: WorldState, creep: Creep): void {
   if (cargo.materia + cargo.cristal === 0) return;
   stats.delivered.materia += cargo.materia;
   stats.delivered.cristal += cargo.cristal;
+  const first = stats.firstDeliveryTick;
+  if (cargo.materia > 0 && first.materia === null) first.materia = state.tick;
+  if (cargo.cristal > 0 && first.cristal === null) first.cristal = state.tick;
   if (trip === null) return;
   stats.trips += 1;
   stats.tripSeconds +=
@@ -127,7 +137,14 @@ export function accumulateStats(state: WorldState): void {
   const seconds = state.params.world.tickSeconds;
   const { teams, deposits } = state.stats;
   for (const team of state.teams) {
-    if (team.production === null) teams[team.id]!.coreIdleSeconds += seconds;
+    const stats = teams[team.id]!;
+    if (team.production === null) stats.coreIdleSeconds += seconds;
+    // Vision runs before (stage 6): a core seen this tick is remembered.
+    if (stats.enemyCoreSeenTick === null) {
+      if (state.memory[team.id]!.cores.length > 0) {
+        stats.enemyCoreSeenTick = state.tick;
+      }
+    }
   }
   // Bit per team with a gather order on each deposit (deposits by id).
   const gatherers = deposits.map(() => 0);
@@ -169,6 +186,10 @@ export type TeamSample = Omit<TeamStats, "team"> & {
   /** DNA in production, or null. */
   producing: Dna | null;
   capacityUpgrade: boolean;
+  /** Cells the team has ever seen. */
+  exploredCells: number;
+  /** The team's creeps with an explore order. */
+  exploring: number;
 };
 
 export type DepositSample = DepositStats & {
@@ -192,12 +213,16 @@ export function sampleMetrics(state: WorldState): MetricsSample {
     const stats = state.stats.teams[team.id]!;
     const inTransit = { materia: 0, cristal: 0 };
     const creeps = countBy(DNAS);
+    let exploring = 0;
     for (const creep of state.creeps) {
       if (creep.team !== team.id) continue;
       inTransit.materia += creep.cargo.materia;
       inTransit.cristal += creep.cargo.cristal;
       creeps[creep.dna] += 1;
+      if (creep.order.type === "explore") exploring += 1;
     }
+    let exploredCells = 0;
+    for (const cell of state.memory[team.id]!.explored) exploredCells += cell;
     return {
       ...structuredCopy(stats),
       stock: { ...team.stock },
@@ -205,6 +230,8 @@ export function sampleMetrics(state: WorldState): MetricsSample {
       creeps,
       producing: team.production?.dna ?? null,
       capacityUpgrade: team.upgrades.capacity,
+      exploredCells,
+      exploring,
     };
   });
   const deposits = state.deposits.map((deposit, i): DepositSample => ({
