@@ -3,6 +3,7 @@
 
 import { generateMap, type Cell, type GameMap } from "./map.ts";
 import { DNAS, type Dna, type Params, type Resource } from "./params.ts";
+import type { Order } from "./orders.ts";
 import type { PathCache } from "./pathfinding.ts";
 import type { RngState } from "./rng.ts";
 
@@ -23,6 +24,10 @@ export type Creep = {
   dna: Dna;
   /** What the creep carries. Any amount above 0 counts as loaded. */
   cargo: Stock;
+  /** What the creep is doing now. */
+  order: Order;
+  /** Points gathered toward the next cell (CELL_COST enters it). */
+  movePoints: number;
   /** Cached route; see pathTo. */
   path: PathCache | null;
 } & Cell;
@@ -79,6 +84,8 @@ export function createWorld(seed: number, params: Params): WorldState {
           dna,
           ...team.core,
           cargo: { materia: 0, cristal: 0 },
+          order: { type: "stop" },
+          movePoints: 0,
           path: null,
         });
       }
