@@ -4,11 +4,8 @@
 // (selection, notices).
 
 import { computed, signal } from "@preact/signals";
-import {
-  applyDelta,
-  type WelcomeMessage,
-  type WorldStatus,
-} from "@geometrix/protocol";
+import type { WelcomeMessage, WorldStatus } from "@geometrix/protocol";
+import { applyDelta } from "@geometrix/protocol/stream";
 import type {
   ConnectionStatus,
   FatalReason,

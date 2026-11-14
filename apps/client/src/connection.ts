@@ -6,14 +6,14 @@
 // is final.
 
 import { NetStats, type WelcomeCause } from "./net-stats.ts";
-import {
-  PROTOCOL_VERSION,
-  type ClientCommand,
-  type ClientMessage,
-  type RejectReason,
-  type ResyncReason,
-  type ServerMessage,
+import type {
+  ClientCommand,
+  ClientMessage,
+  RejectReason,
+  ResyncReason,
+  ServerMessage,
 } from "@geometrix/protocol";
+import { PROTOCOL_VERSION } from "@geometrix/protocol/stream";
 
 export type ConnectionStatus =
   "connecting" | "open" | "reconnecting" | "closed";
