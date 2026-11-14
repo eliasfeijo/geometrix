@@ -1,6 +1,6 @@
 # Status atual
 
-**Atualizado:** 2026-11-14 · **Marco:** M1 — O ciclo da riqueza ✅ concluído · **Próximo:** decidir o ADR-0006 e abrir o M2
+**Atualizado:** 2026-11-14 · **Marco:** M1 — O ciclo da riqueza ✅ concluído · **Próximo:** fatia de rede (ADR-0006) e fog of war, antes do M2
 
 Resumo de bolso. A fonte de verdade continua nos docs linkados. Atualize este arquivo ao fechar uma fase, ao passar
 por um portão de aprovação ou quando surgir um bloqueio.
@@ -35,12 +35,12 @@ Node e no navegador, legibilidade aprovada pelo dono.
 1. **Repo publicado no GitHub** (dono, 2026-11-14). Conferir o primeiro run do CI
    ([ci.yml](../../.github/workflows/ci.yml)) fora da máquina local: Node 26, `better-sqlite3` nativo, `geo verify`
    com 3 seeds, orçamento de 6 h em 60 s. A visão geral para quem chega está no [OVERVIEW](../OVERVIEW.md).
-2. **Decidir o [ADR-0006](../adr/0006-sync-do-mundo.md) (`Proposed`)** antes da spec do M2: trocar o estado
-   completo a cada tick por deltas por campo da visão de cada time, numerados, com retomada e hash. Veio de uma
-   revisão de fora do OVERVIEW (deflate tem custo no servidor; mandar só o que muda; numerar os pacotes). A primeira
-   versão recomendava mandar só os comandos e simular no cliente; mudou para o delta porque o fog of war é provável
-   ([GDD 01](../gdd/01-mundo.md), inclinação do dono) e nenhum cliente nem bot deve ver o estado completo. Se
-   aceito, é implementado na etapa de deploy do M2.
+2. **[ADR-0006](../adr/0006-sync-do-mundo.md) aceito (dono, 2026-11-14):** deltas por campo da visão de cada time,
+   no lugar do estado completo a cada tick. Entra **antes do M2**, numa fatia própria, validada localmente antes de
+   qualquer deploy (critérios na spec da fatia; se reprovar, o ADR volta à mesa). Medição ingênua: ~0,4 KB por
+   delta, mas ~0,8 ms de CPU por mundo por envio (~6× o de hoje). Depois vem o fog of war (inclinação do dono, GDD
+   01), que precisa de uma rodada de design antes da spec. **Falta decidir onde as duas fatias entram no
+   [ROADMAP](../ROADMAP.md)** (guarda de escopo do CLAUDE.md).
 3. **Abrir o M2 (A emboscada) pela skill `spec-slice`:** spec → plan → tasks em `docs/specs/m2-…/`. Pelo
    [ROADMAP](../ROADMAP.md), a primeira etapa é o deploy e o playtest de diversão que saíram do M1 (lista em
    "Fora do M1" no tasks.md). Antes da spec, revisar as **perguntas abertas** e propostas do GDD que o M2 toca

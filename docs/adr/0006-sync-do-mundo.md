@@ -1,6 +1,6 @@
 # ADR-0006: Sincronização do mundo: deltas por campo da visão de cada time
 
-**Status:** Proposed · **Data:** 2026-11-14 (revisto no mesmo dia: a recomendação passou de C para B)
+**Status:** Accepted (2026-11-14) · **Data:** 2026-11-14 (revisto no mesmo dia: a recomendação passou de C para B)
 **Relaciona:** ADR-0002 (tudo é comando), ADR-0003 (o mesmo `sim` no navegador), ADR-0004 (o que o banco guarda),
 ADR-0005 (transporte por WebSocket, que não muda), plan M1 P3 (estado completo, que este ADR revisita),
 [OVERVIEW §7](../OVERVIEW.md#7-sync-via-websocket-quanto-custa-e-escala), GDD [01](../gdd/01-mundo.md) (fog of
@@ -50,6 +50,11 @@ encolhe.
 
 Uma verificação de hash custa ~0,7 ms (`serialize` + SHA-256 de 26 KB).
 
+CPU de B, numa versão ingênua (cópia profunda do estado para montar a visão, diff campo a campo por id), 60 creeps,
+média de 2 000 ticks: **~0,34 ms para montar a visão e ~0,07 ms para o diff, por time**, ~396 bytes por delta.
+São ~0,8 ms por mundo por envio, ~6× o `JSON.stringify` de hoje (~0,12 ms). A cópia profunda domina; uma versão que
+não copie o estado inteiro a cada tick é parte da validação (regra 10).
+
 ## Alternativas
 
 - **A. Manter o estado completo e ligar `permessage-deflate`.**
@@ -57,7 +62,7 @@ Uma verificação de hash custa ~0,7 ms (`serialize` + SHA-256 de 26 KB).
   - Contras: CPU e memória de compressão **por socket** no servidor, com o aviso de fragmentação de memória do
     próprio `ws`. Resolve a banda criando outro gargalo. Com fog, continuaria mandando o estado completo, o que
     não pode.
-- **B. Delta por campo da visão de cada time, calculado no servidor** (recomendada). O servidor projeta o estado na
+- **B. Delta por campo da visão de cada time, calculado no servidor** (escolhida). O servidor projeta o estado na
   **visão** de cada time (o que o time enxerga, só com os campos que o cliente usa), guarda a última visão enviada
   e manda só as diferenças, numeradas. O cliente aplica o patch.
   - Prós:
@@ -72,8 +77,8 @@ Uma verificação de hash custa ~0,7 ms (`serialize` + SHA-256 de 26 KB).
       da visão, com fog);
     - **uma classe nova de bug: o patch aplicado sobre a base errada.** A Decisão trata dela com número de
       sequência, base bem definida, retomada e verificação por hash (regras 4–7);
-    - CPU no servidor: projetar e comparar a visão de cada time a cada envio. Não medido; a medição desta
-      proposta compara via JSON, de forma ingênua.
+    - CPU no servidor: montar e comparar a visão de cada time a cada envio. Na versão ingênua, ~0,8 ms por mundo
+      por envio (Contexto), ~6× o custo de hoje; a 1× isso daria ~80% de um núcleo com 1 000 mundos.
 - **C. Fluxo de comandos, com o `sim` rodando no cliente.** O servidor manda só os comandos de cada tick; o cliente
   restaura o estado e roda o mesmo `step`, como o replay já faz. Era a recomendação da primeira versão deste ADR.
   - Prós: banda praticamente zero (~45 B por tick); nenhum código de diff; reaproveita o replay.
@@ -91,11 +96,12 @@ Uma verificação de hash custa ~0,7 ms (`serialize` + SHA-256 de 26 KB).
   - Prós: código testado em produção para a parte mais sujeita a bug; formato binário.
   - Contras: o estado do `sim` é JSON puro, sem classes (ADR-0003, `serialize`), então seria preciso espelhá-lo nas
     classes da biblioteca a cada tick, e esse espelho já é um diff; binário é mais difícil de depurar; uma
-    dependência no centro do protocolo. **A avaliar num spike no plan do M2**, antes de escrever o diff à mão.
+    dependência no centro do protocolo. **A avaliar num spike no plan da fatia de rede** (regra 10), antes de
+    escrever o diff à mão.
 
 ## Decisão
 
-Proposta: **B para o mundo**, com estas regras.
+**B para o mundo**, com estas regras.
 
 1. **Visão do time** (`view(state, team)`): uma função pura no `sim`, porque o que um time enxerga é regra de jogo.
    Sem fog (M1), é o estado dinâmico sem os campos que o cliente não usa (`path`, `movePoints`, `trip`). Com fog,
@@ -127,8 +133,13 @@ Proposta: **B para o mundo**, com estas regras.
 8. **O que não muda:** o transporte (WebSocket, ADR-0005), a autoridade do servidor, os comandos (subida, `ack`,
    `reject`), o teto de 5 mensagens por segundo, o log e os snapshots (ADR-0004).
 9. **Escopo:** só o mundo. A batalha do M2 (20–30 Hz, previsão do creep dominado) se decide no plan do M2.
-10. **Quando:** na etapa de deploy do M2, antes do primeiro playtest com o servidor exposto. Formato das mensagens,
-    N, o tamanho do buffer e o spike da alternativa E ficam para o plan do M2.
+10. **Quando e como validar** (dono, 2026-11-14): **antes do M2**, numa fatia própria, não na etapa de deploy. A
+    viabilidade é **validada localmente** antes de qualquer deploy, com critérios definidos na spec da fatia (no
+    mínimo: banda por cliente, CPU de visão + diff por mundo, o teste de propriedade da regra 7 num mundo de 3 dias,
+    e o `npm run soak` com clientes conectados terminando com o hash da visão igual ao do servidor). **Se a
+    validação reprovar, este ADR volta a ser discutido.** Formato das mensagens, N, o tamanho do buffer e o spike da
+    alternativa E ficam para o plan da fatia. O fog of war, que é gameplay, segue o GDD 01 e vem depois desta
+    fatia.
 
 ```mermaid
 sequenceDiagram
