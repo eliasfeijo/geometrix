@@ -72,7 +72,7 @@ function CreepInspector({ id }: { id: number }) {
       <h2 class="title creep-title">
         <DnaIcon dna={creep.dna} team={creep.team} />
         <span>
-          {creepName(state.creeps, creep.id)}
+          {creepName(creep.id)}
           <span class="subtitle muted">
             {DNA_NAMES[creep.dna]} · #{creep.id}
           </span>
@@ -195,7 +195,7 @@ function ForeignCreepInspector({ creep }: { creep: ForeignCreepView }) {
       <h2 class="title creep-title">
         <DnaIcon dna={creep.dna} team={creep.team} />
         <span>
-          {creepName(state.creeps, creep.id)}
+          {creepName(creep.id)}
           <span class="subtitle muted">
             {DNA_NAMES[creep.dna]} · #{creep.id}
           </span>
