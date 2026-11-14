@@ -128,7 +128,10 @@ uma vez → manda aos sockets do time → guarda no buffer e em `lastView`. Time
 e o `seq`, para a próxima conexão partir de uma base certa. A cada `viewHashEveryTicks` (60), o delta leva o
 hash.
 
-- **Conexão** (R5): `/ws?token=…&seq=…`. Sem `seq`, ou com um `seq` que não está no buffer, o servidor manda o
+- **Conexão** (R5): `/ws?token=…&stream=…&seq=…`. O `stream` é o id que o `welcome` levou, novo a cada processo
+  do servidor (dono, 2026-11-14, no checkpoint da F5): sem ele, depois de um restart um `seq` antigo poderia cair no
+  buffer novo e o cliente aplicaria deltas sobre a base errada. Sem `seq`, de outro `stream`, ou com um `seq` que
+  não está no buffer, o servidor manda o
   `welcome` com `lastView` e o `seq` dela. Com um `seq` no buffer, manda os deltas seguintes, em ordem, sem
   `welcome`. A retomada só vale numa reconexão da mesma página, que já tem o mapa estático e os parâmetros; ao
   abrir a página, o cliente não manda `seq` (§6).
@@ -193,7 +196,7 @@ descartado.
 | R2 | Onde fica o diff | **`protocol`** (servidor, cliente, CLI e soak usam); a `view` fica no `sim` | Diff no `sim`: misturaria rede com regra de jogo |
 | R3 | O que o estrategista recebe | **A visão do time + o mapa** (terreno estático e camada de estradas montada a partir de `view.roads`) + os parâmetros. As funções que ele usa (`nextSegment`, `roadTarget`, `productionRefusal`) passam a aceitar tipos estruturais, como o `ProductionView` do F7 | Passar o `WorldState` e confiar na disciplina: quebra a regra 2 do ADR-0006 quando o fog chegar |
 | R4 | Regras por referência | **Sim**, e vira convenção do `sim` no `CLAUDE.md`: "regras são substituídas inteiras, nunca mutadas". O teste de propriedade com cópias pega uma violação | Comparar regras por valor a cada tick: ~200 bytes de JSON por creep a cada envio, só para confirmar que não mudou |
-| R5 | Como o cliente informa o `seq` | **Na URL do WebSocket** (`&seq=…`), só ao reconectar na mesma página | Uma mensagem depois de conectar: o servidor teria de esperar antes de mandar o primeiro estado |
+| R5 | Como o cliente informa o `seq` | **Na URL do WebSocket** (`&stream=…&seq=…`; o id do stream entrou na F3, aprovado pelo dono em 2026-11-14), só ao reconectar na mesma página | Uma mensagem depois de conectar: o servidor teria de esperar antes de mandar o primeiro estado |
 | R6 | Medição e propriedade | **`geo net`** novo na CLI (3 dias, relatório) + propriedade de 6 h × 3 seeds no CI | Só testes, sem comando: a medição de banda e CPU ficaria fora do harness |
 | R7 | Times sem cliente conectado | **Calculam o delta mesmo assim** (41 µs por mundo nos 2 times), para a base estar sempre certa | Pular e mandar `welcome` a quem conectar: menos CPU, mais um caminho para testar |
 

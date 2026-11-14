@@ -117,7 +117,8 @@ não copie o estado inteiro a cada tick é parte da validação (regra 10).
    com o `seq` dela. Assim o próximo delta parte exatamente da base que o cliente tem.
 5. **Sequência e retomada.** Sobre WebSocket, as mensagens de uma conexão chegam todas e em ordem (TCP), então
    não existe "receber o 34 sem o 33" numa conexão viva. A perda acontece **entre conexões**. Por isso:
-   - ao reconectar, o cliente informa o último `seq` aplicado;
+   - ao reconectar, o cliente informa o último `seq` aplicado e o id do stream que o `welcome` lhe deu (novo a
+     cada processo do servidor: um `seq` de antes de um restart nunca cai no buffer novo; dono, 2026-11-14);
    - o servidor guarda um buffer circular dos últimos deltas de cada time (ex.: 30 s reais). Se o `seq` está no
      buffer, reenvia os que faltam; se não, manda a visão completa como um `welcome`;
    - um `seq` fora de ordem numa conexão viva é bug: o cliente pede a visão completa e registra o incidente.
