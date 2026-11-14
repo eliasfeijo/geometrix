@@ -55,8 +55,8 @@ const presetsOf = (commands: Command[]) =>
 describe("bots", () => {
   test("join their teams at tick 0, then act on tick 1 and every minute", () => {
     expect(botCommands(createWorld(42, params), bots)).toEqual([
-      { playerId: 1, command: { type: "join", team: 0 } },
-      { playerId: 2, command: { type: "join", team: 1 } },
+      { playerId: 1, command: { type: "join", team: 0, bot: true } },
+      { playerId: 2, command: { type: "join", team: 1, bot: true } },
     ]);
     expect(BALANCED.everyTicks).toBe(60);
     expect([0, 1, 2, 60, 61, 121].map(strategistActs)).toEqual([

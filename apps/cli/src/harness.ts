@@ -45,7 +45,7 @@ export function botCommands(
   if (state.tick === 0) {
     return bots.map((bot) => ({
       playerId: bot.playerId,
-      command: { type: "join", team: bot.team },
+      command: { type: "join", team: bot.team, bot: true },
     }));
   }
   if (!strategistActs(state.tick)) return [];
