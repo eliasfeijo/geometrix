@@ -35,11 +35,12 @@ Node e no navegador, legibilidade aprovada pelo dono.
 1. **Repo publicado no GitHub** (dono, 2026-11-14). Conferir o primeiro run do CI
    ([ci.yml](../../.github/workflows/ci.yml)) fora da máquina local: Node 26, `better-sqlite3` nativo, `geo verify`
    com 3 seeds, orçamento de 6 h em 60 s. A visão geral para quem chega está no [OVERVIEW](../OVERVIEW.md).
-2. **Decidir o [ADR-0006](../adr/0006-sync-do-mundo-por-comandos.md) (`Proposed`)** antes da spec do M2: trocar o
-   estado completo a cada tick por só os comandos, com o `sim` no cliente. Veio de uma revisão de fora do OVERVIEW
-   (deflate tem custo no servidor; mandar só o que muda) e das medições do ADR. Depende da pergunta de fog of war do
-   [GDD 01](../gdd/01-mundo.md), que entra na rodada de perguntas do item 3. Se aceito, é implementado na etapa de
-   deploy do M2.
+2. **Decidir o [ADR-0006](../adr/0006-sync-do-mundo.md) (`Proposed`)** antes da spec do M2: trocar o estado
+   completo a cada tick por deltas por campo da visão de cada time, numerados, com retomada e hash. Veio de uma
+   revisão de fora do OVERVIEW (deflate tem custo no servidor; mandar só o que muda; numerar os pacotes). A primeira
+   versão recomendava mandar só os comandos e simular no cliente; mudou para o delta porque o fog of war é provável
+   ([GDD 01](../gdd/01-mundo.md), inclinação do dono) e nenhum cliente nem bot deve ver o estado completo. Se
+   aceito, é implementado na etapa de deploy do M2.
 3. **Abrir o M2 (A emboscada) pela skill `spec-slice`:** spec → plan → tasks em `docs/specs/m2-…/`. Pelo
    [ROADMAP](../ROADMAP.md), a primeira etapa é o deploy e o playtest de diversão que saíram do M1 (lista em
    "Fora do M1" no tasks.md). Antes da spec, revisar as **perguntas abertas** e propostas do GDD que o M2 toca

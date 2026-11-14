@@ -35,11 +35,17 @@ do Núcleo conforme o time constrói.
   isso, um time perde a partida enquanto dorme.
 - A defesa offline vem de fortificações + piloto automático de defesa.
 
+### Fog of war
+- **Inclinação do dono (2026-11-14): o mundo deve ter fog of war**, e nenhum cliente, nem um bot, deve enxergar o
+  estado completo; só o que o próprio time vê. Ainda não decidido. A sincronização proposta no
+  [ADR-0006](../adr/0006-sync-do-mundo.md) (delta da visão de cada time, calculado no servidor) foi escolhida para
+  suportar isso.
+
 ## Perguntas abertas
 - O Núcleo pode ser movido ou reconstruído? Pode existir mais de uma base por time?
-- Existe fog of war no mundo? *(Consequência técnica, 2026-11-14: com fog, a sincronização proposta no
-  [ADR-0006](../adr/0006-sync-do-mundo-por-comandos.md), em que o cliente roda a simulação inteira, entregaria ao
-  cliente o que ele não deveria ver; a parte escondida precisaria de deltas por jogador, mais caros.)*
+- Existe fog of war no mundo? (ver a proposta acima). Se sim: o que dá visão e até onde? O que um time vê do
+  outro (Núcleo, estoque, regras de piloto automático)? As condições do piloto automático (ex.: "recurso visível
+  num raio R") respeitam o fog? Depósitos e estradas já vistos continuam visíveis?
 - Jogadores podem entrar num mundo já em andamento?
 - O que se pode construir e onde (só perto do Núcleo, em território controlado, em qualquer lugar)?
 - O rio é só obstáculo, ou também é rota de transporte (barcos levam carga pesada mais rápido, mas ficam expostos)?
