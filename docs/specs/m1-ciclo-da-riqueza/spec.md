@@ -165,6 +165,17 @@ Formato: *Quando [gatilho], o sistema deve [resposta].*
   a partir do último domínio aceito; a distância máxima é Manhattan, do Núcleo do time até o creep (0 = sem
   limite).
 
+#### Detalhes de servidor decididos pelo dono no F6 (2026-11-14)
+
+- **`timeout_dominio` em tempo real:** 5 min reais sem input liberam o creep, em qualquer multiplicador. A
+  inatividade é do humano, não do mundo; o valor sai dos parâmetros do `sim` e vira configuração do servidor.
+- **Desconexão (D-4) com carência:** se o jogador reconecta com o mesmo token em até 15 s reais, mantém o domínio.
+  O `release` só entra no log quando a carência vence.
+- **Bots no servidor:** ao criar um mundo, cada time pode ter um bot `balanced` opcional, para o mundo de 24 h e
+  para a sessão do dono. Ele entra como jogador e emite comandos normais, que vão para o log (ADR-0002).
+- **Limite de humanos por time (D6):** 3, imposto pelo `sim` com o parâmetro `teams.maxHumans`; o 4º `join`
+  humano no time é recusado. Bots não contam.
+
 ### Cliente
 - **C-1** Mapa estratégico em SVG com pan e zoom, mostrando terreno, rio, depósitos, estradas, Núcleos e creeps
   (forma = DNA, cor = time, indicador de carga).
@@ -193,7 +204,7 @@ Todos ficam num arquivo de parâmetros versionado, nunca no código.
 | Custo de um creep | 3 000 matéria + 10 cristal; 10 min para produzir (balanceamento 1; antes: 40 matéria) |
 | Custo de um segmento de estrada | 150 matéria; 2 min para construir (balanceamento 1; antes: 5) |
 | Upgrade de capacidade | 150 cristal; +50% de capacidade |
-| `timeout_dominio` | 5 min sem input |
+| `timeout_dominio` | 5 min sem input, em tempo real (dono, 2026-11-14) |
 
 ## 7. Harness exigido pelo M1
 

@@ -54,7 +54,8 @@ Marque `[x]` ao concluir. Cada task deve terminar com os testes verdes. Referên
 - [ ] `world-host`: loop de tick com multiplicador, fila de comandos, snapshots
 - [ ] HTTP: criar mundo, join, estáticos
 - [ ] WebSocket: autenticação, comandos com ack/reject, broadcast limitado a 5 por segundo
-- [ ] `release` automático por desconexão ou inatividade
+- [ ] `release` automático por desconexão (carência de 15 s) ou inatividade (5 min reais)
+- [ ] Bots opcionais por time no servidor; limite de 3 humanos por time no `join` (decisões do dono, 2026-11-14)
 - [ ] Recuperação após restart (teste de integração: o hash continua o mesmo)
 
 ## F7 — Cliente
