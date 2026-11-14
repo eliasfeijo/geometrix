@@ -36,8 +36,9 @@ export default defineConfig(
   js.configs.recommended,
   tseslint.configs.recommended,
   {
-    // Determinism guards for the simulation (plan section 2).
-    files: ["packages/sim/src/**/*.ts"],
+    // Determinism guards for the simulation (plan section 2), and for the bot
+    // strategists, whose decisions go into the command log.
+    files: ["packages/sim/src/**/*.ts", "apps/cli/src/strategist.ts"],
     rules: {
       "no-restricted-properties": [
         "error",
