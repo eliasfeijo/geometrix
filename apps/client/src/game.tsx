@@ -1,22 +1,16 @@
-// The game screen: one connection to the world, the map and the panels.
+// The live game screen: one connection to the world, the map and the panels.
 
 import type { ClientCommand } from "@geometrix/protocol";
 import { effect } from "@preact/signals";
 import { useEffect, useMemo } from "preact/hooks";
 import { listWorlds } from "./api.ts";
 import { browserDeps, Connection, socketUrl } from "./connection.ts";
-import { GameContext, type Game as GameValue } from "./context.ts";
+import type { Game as GameValue } from "./context.ts";
 import { FATAL_TEXTS, REJECT_TEXTS } from "./format.ts";
-import { handleKey, order, select } from "./interaction.ts";
-import { ModeBanner } from "./mode-banner.tsx";
-import { CoreDock } from "./panels/core-panel.tsx";
-import { Inspector } from "./panels/inspector.tsx";
-import { StackList } from "./panels/stack-list.tsx";
+import { GameLayout } from "./game-layout.tsx";
 import type { Session } from "./session.ts";
-import { CreepLayer } from "./map/creep-layer.tsx";
-import { MapView } from "./map/map-view.tsx";
 import { GameStore } from "./store.ts";
-import { Notices, TopBar } from "./top-bar.tsx";
+import { TopBar } from "./top-bar.tsx";
 
 /** Least time between two fetches of the player names. */
 const NAMES_RETRY_MS = 3000;
@@ -45,28 +39,11 @@ export function Game({ session, onLeave, onInvalid }: Props) {
   );
   useEffect(() => () => connection.close(), []);
   useEffect(() => fetchNamesWhenMissing(store, session.worldId), []);
-  // Road mode ends with the domination it needs.
-  useEffect(
-    () =>
-      effect(() => {
-        if (store.mode.value.type === "road" && store.myCreep.value === null) {
-          store.mode.value = { type: "select" };
-        }
-      }),
-    [],
-  );
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (handleKey(store, session.team, e)) e.preventDefault();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
 
   const game = useMemo<GameValue>(
     () => ({
       store,
-      session,
+      viewer: { playerId: session.playerId, team: session.team },
       send: async (command: ClientCommand) => {
         const result = await connection.send(command);
         if (!result.ok) {
@@ -79,33 +56,16 @@ export function Game({ session, onLeave, onInvalid }: Props) {
   );
 
   return (
-    <GameContext.Provider value={game}>
-      <div class="game">
-        <TopBar onLeave={onLeave} />
-        <div class="game-body">
-          <MapView
-            onSelect={(point, px) =>
-              select(store, point, px, performance.now())
-            }
-            onOrder={(point) =>
-              order(store, point, game.send, performance.now())
-            }
-          >
-            <CreepLayer />
-          </MapView>
-          <CoreDock />
-          <Inspector />
-          <ModeBanner />
-          <StackList />
-        </div>
-        <Notices />
-      </div>
-    </GameContext.Provider>
+    <GameLayout
+      game={game}
+      header={<TopBar session={session} onLeave={onLeave} />}
+      orders
+    />
   );
 }
 
 /** Player names are only in the HTTP list: fetch it when a new id shows up. */
-function fetchNamesWhenMissing(store: GameStore, worldId: number) {
+export function fetchNamesWhenMissing(store: GameStore, worldId: number) {
   let lastFetch = -Infinity;
   let inFlight = false;
   return effect(() => {

@@ -31,13 +31,13 @@ import {
 type Draft = { base: Rule[]; rules: Rule[] };
 
 export function RulesEditor({ creep }: { creep: Creep }) {
-  const { store, session, send } = useGame();
+  const { store, viewer, send } = useGame();
   const [draft, setDraft] = useState<Draft | null>(null);
   const params = store.info.value?.params;
   const core = store.current.value?.state.teams[creep.team]?.core;
   if (params === undefined || core === undefined) return null;
 
-  const editable = creep.team === session.team;
+  const editable = creep.team === viewer.team;
   const canAct = editable && store.canAct.value;
   const rules = draft?.rules ?? creep.rules;
   const dirty = draft !== null && !sameRules(draft.rules, draft.base);

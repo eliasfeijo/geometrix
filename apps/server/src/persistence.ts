@@ -6,15 +6,9 @@
 
 import Database from "better-sqlite3";
 import type { Command, MetricsSample, Params } from "@geometrix/sim";
-import type { WorldStatus } from "@geometrix/protocol";
+import type { LoggedCommand, WorldStatus } from "@geometrix/protocol";
 
-/** An accepted command, as the log keeps it (same shape as the harness log). */
-export type LoggedCommand = {
-  tick: number;
-  seq: number;
-  playerId: number;
-  command: Command;
-};
+export type { LoggedCommand };
 
 export type WorldRow = {
   id: number;
