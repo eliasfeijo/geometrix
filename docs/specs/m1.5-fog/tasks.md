@@ -59,8 +59,8 @@ na sua branch (plan §12, skill `commit`), com merge `--no-ff` em `main`.
 
 ## F4 — Cliente (`m1.5/fog-f4-client`)
 
-- [ ] Terreno a partir de `known` (feito na F3, com o `welcome` sem terreno); camada de névoa com os três estados; depósitos e obras lembrados sob o véu (spec
-      C-1)
+- [x] Terreno a partir de `known` (feito na F3, com o `welcome` sem terreno); camada de névoa com os três estados; depósitos e obras lembrados sob o véu (spec
+      C-1). O inspetor de depósito fora da visão diz "último valor visto"
 - [ ] Estrangeiros: creep e Núcleo inimigos só com o que a visão traz; painéis sem dados do time inimigo (spec C-2)
 - [ ] Cursor e traçado de estrada pelo mapa conhecido (spec C-3)
 - [ ] Editor de regras: ação explorar, condição "não conhece depósito de X", preset batedor (spec C-4)
