@@ -19,6 +19,7 @@ export const ACTION_TYPES = [
   "buildRoad",
   "moveTo",
   "explore",
+  "pickup",
   "stop",
 ] as const satisfies readonly Action["type"][];
 
@@ -38,6 +39,7 @@ export const ACTION_LABELS: Record<Action["type"], string> = {
   moveTo: "ir até",
   stop: "ficar parado",
   explore: "explorar",
+  pickup: "catar despojo",
 };
 
 /**
@@ -85,6 +87,7 @@ export function actionOf(
     case "deliver":
     case "stop":
     case "explore":
+    case "pickup":
       return { type };
     case "gather":
       return {

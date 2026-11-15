@@ -56,7 +56,12 @@ export type Action =
    * Go toward the nearest cell never seen that no teammate is exploring
    * (fog spec D4, A-3); impossible when none can be reached.
    */
-  | { type: "explore" };
+  | { type: "explore" }
+  /**
+   * Pick up the spoil the team knows that the creep reaches first (M2
+   * encontro spec D11, D13); impossible when full or none can be reached.
+   */
+  | { type: "pickup" };
 
 export type Rule = { when: Condition; then: Action };
 
@@ -129,18 +134,18 @@ function quickestDeposit(
 }
 
 /**
- * Which of `deposits` the creep reaches first within a path cost of
- * `maxCost`, ties to the lower id; null when none.
+ * Which of `deposits` (or spoils) the creep reaches first within a path cost
+ * of `maxCost`, ties to the lower id; null when none.
  */
-function reachFirst(
+function reachFirst<T extends { id: number } & Cell>(
   state: WorldState,
   creep: Creep,
-  deposits: readonly Deposit[],
+  deposits: readonly T[],
   maxCost: number,
-): Deposit | null {
+): T | null {
   if (deposits.length === 0) return null;
   const { width } = state.map;
-  const byCell = new Map<number, Deposit>();
+  const byCell = new Map<number, T>();
   for (const d of deposits) {
     const cell = d.y * width + d.x;
     const other = byCell.get(cell);
@@ -154,7 +159,7 @@ function reachFirst(
     maxCost,
   );
   if (reached === null) return null;
-  let best: Deposit | null = null;
+  let best: T | null = null;
   for (const cell of reached.cells) {
     const d = byCell.get(cell)!;
     if (best === null || d.id < best.id) best = d;
@@ -280,7 +285,25 @@ function orderFor(
       return buildRoadFor(state, creep, action);
     case "explore":
       return exploreFor(state, creep);
+    case "pickup":
+      return pickupFor(state, creep);
   }
+}
+
+/**
+ * Keeps going for the spoil of the current pickup order while the team still
+ * remembers it, else the one it reaches first, ties to the lower id.
+ */
+function pickupFor(state: WorldState, creep: Creep): Order | null {
+  if (isFull(state, creep)) return null;
+  const spoils = known(state, creep).spoils;
+  if (spoils.length === 0) return null;
+  const { order } = creep;
+  if (order.type === "pickup" && spoils.some((s) => s.id === order.spoilId)) {
+    return { type: "pickup", spoilId: order.spoilId };
+  }
+  const spoil = reachFirst(state, creep, spoils, Number.MAX_SAFE_INTEGER);
+  return spoil === null ? null : { type: "pickup", spoilId: spoil.id };
 }
 
 /**

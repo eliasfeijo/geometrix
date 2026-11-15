@@ -113,6 +113,8 @@ export function actionText(a: Action): string {
       return "ficar parado";
     case "explore":
       return "explorar";
+    case "pickup":
+      return "catar despojo";
   }
 }
 
