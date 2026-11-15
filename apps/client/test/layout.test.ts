@@ -4,6 +4,8 @@ import {
   layoutCreeps,
   markerAt,
   markerOf,
+  markersAt,
+  MIN_HIT_PX,
   MIN_SLOT_PX,
   slotGrid,
   slotSize,
@@ -60,7 +62,7 @@ describe("layoutCreeps", () => {
         }
       }
       // Each click on a slot picks that creep.
-      for (const m of crowd) expect(markerAt(m, markers)).toBe(m);
+      for (const m of crowd) expect(markerAt(m, markers, scale)).toBe(m);
     }
   });
 
@@ -92,7 +94,29 @@ describe("layoutCreeps", () => {
       { kind: "creep", id: 1, x: 1, y: 1, scale: 1 },
       { kind: "creep", id: 2, x: 1.6, y: 1, scale: 1 },
     ];
-    expect(markerAt({ x: 1.4, y: 1 }, markers)).toBe(markers[1]);
-    expect(markerAt({ x: 3, y: 3 }, markers)).toBeNull();
+    expect(markerAt({ x: 1.4, y: 1 }, markers, 100)).toBe(markers[1]);
+    expect(markerAt({ x: 3, y: 3 }, markers, 100)).toBeNull();
+  });
+
+  it("reaches a small marker within MIN_HIT_PX on screen", () => {
+    const markers: Marker[] = [{ kind: "creep", id: 1, x: 1, y: 1, scale: 1 }];
+    // 10 px per cell: 1.5 cells is 15 px, past the drawn radius of 0.5.
+    expect(markerAt({ x: 2.5, y: 1 }, markers, 10)).toBe(markers[0]);
+    expect(markerAt({ x: 2.5, y: 1 }, markers, 100)).toBeNull();
+    expect(MIN_HIT_PX).toBe(20);
+  });
+
+  it("hits every overlapping marker, and none clearly between them", () => {
+    const markers: Marker[] = [
+      { kind: "creep", id: 1, x: 1.5, y: 1.5, scale: 2 },
+      { kind: "creep", id: 2, x: 2.5, y: 1.5, scale: 2 },
+    ];
+    const between = { x: 2, y: 1.5 };
+    expect(markersAt(between, markers, 11).map((h) => h.marker)).toHaveLength(
+      2,
+    );
+    expect(markerAt(between, markers, 11)).toBeNull();
+    // Within half the drawn radius of one, that one.
+    expect(markerAt({ x: 2.9, y: 1.5 }, markers, 11)).toBe(markers[1]);
   });
 });

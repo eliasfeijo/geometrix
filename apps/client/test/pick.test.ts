@@ -27,37 +27,39 @@ describe("pickAt", () => {
 
   it("picks the creep under the pointer, before what is on the cell", () => {
     const markers = [creep(1, 3.5, 4.5), creep(2, 6.5, 6.5)];
-    expect(pickAt({ x: 3.6, y: 4.4 }, markers, deposits, cores)).toEqual({
+    expect(pickAt({ x: 3.6, y: 4.4 }, markers, deposits, cores, 100)).toEqual({
       kind: "creep",
       id: 1,
     });
-    expect(pickAt({ x: 3.1, y: 4.9 }, [], deposits, cores)).toEqual({
+    expect(pickAt({ x: 3.1, y: 4.9 }, [], deposits, cores, 100)).toEqual({
       kind: "deposit",
       id: 9,
     });
-    expect(pickAt({ x: 21.2, y: 19.9 }, markers, deposits, cores)).toEqual({
-      kind: "core",
-      team: 1,
-    });
-    expect(pickAt({ x: 30, y: 30 }, markers, deposits, cores)).toBeNull();
+    expect(pickAt({ x: 21.2, y: 19.9 }, markers, deposits, cores, 100)).toEqual(
+      {
+        kind: "core",
+        team: 1,
+      },
+    );
+    expect(pickAt({ x: 30, y: 30 }, markers, deposits, cores, 100)).toBeNull();
   });
 
   it("keeps the team of a core when the other core is unknown", () => {
     const fog = [null, { x: 20, y: 20 }];
-    expect(pickAt({ x: 20.5, y: 20.5 }, [], [], fog)).toEqual({
+    expect(pickAt({ x: 20.5, y: 20.5 }, [], [], fog, 100)).toEqual({
       kind: "core",
       team: 1,
     });
-    expect(pickAt({ x: 10.5, y: 10.5 }, [], [], fog)).toBeNull();
+    expect(pickAt({ x: 10.5, y: 10.5 }, [], [], fog, 100)).toBeNull();
   });
 
   it("tells side-by-side creeps apart by where the click lands", () => {
     const markers = [creep(3, 5.25, 5.5, 0.5), creep(7, 5.75, 5.5, 0.5)];
-    expect(pickAt({ x: 5.2, y: 5.5 }, markers, [], [])).toEqual({
+    expect(pickAt({ x: 5.2, y: 5.5 }, markers, [], [], 100)).toEqual({
       kind: "creep",
       id: 3,
     });
-    expect(pickAt({ x: 5.8, y: 5.6 }, markers, [], [])).toEqual({
+    expect(pickAt({ x: 5.8, y: 5.6 }, markers, [], [], 100)).toEqual({
       kind: "creep",
       id: 7,
     });
@@ -72,9 +74,44 @@ describe("pickAt", () => {
       y: 2.5,
       scale: 2,
     };
-    expect(pickAt({ x: 3, y: 3 }, [stack], [], [])).toEqual({
+    expect(pickAt({ x: 3, y: 3 }, [stack], [], [], 100)).toEqual({
       kind: "stack",
       ids: [4, 8],
+    });
+  });
+});
+
+describe("pickAt zoomed out (fog F6, E3)", () => {
+  // 10 px per cell: markers twice a cell wide, hits at least 2 cells.
+  it("lists the creeps of overlapping markers on different cells", () => {
+    const markers = [creep(5, 1.5, 1.5, 2), creep(3, 2.5, 1.5, 2)];
+    expect(pickAt({ x: 2, y: 1.6 }, markers, [], [], 10)).toEqual({
+      kind: "stack",
+      ids: [3, 5],
+    });
+  });
+
+  it("selects a lone creep near the click", () => {
+    const markers = [creep(5, 1.5, 1.5, 2)];
+    expect(pickAt({ x: 3, y: 1.5 }, markers, [], [], 10)).toEqual({
+      kind: "creep",
+      id: 5,
+    });
+  });
+
+  it("flattens a stack hit with another marker", () => {
+    const stack: Marker = {
+      kind: "stack",
+      ids: [4, 8],
+      lead: 4,
+      x: 1.5,
+      y: 1.5,
+      scale: 2,
+    };
+    const markers = [stack, creep(6, 2.5, 1.5, 2)];
+    expect(pickAt({ x: 2, y: 1.5 }, markers, [], [], 10)).toEqual({
+      kind: "stack",
+      ids: [4, 6, 8],
     });
   });
 });
