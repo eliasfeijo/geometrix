@@ -95,6 +95,12 @@ export function resolveOrders(state: WorldState): void {
       case "approach":
         approach(state, creep, order.targetId);
         break;
+      case "flee":
+        flee(state, creep, order.untilTick);
+        break;
+      case "pickup":
+        halt(creep);
+        break;
     }
   }
 }
@@ -122,6 +128,22 @@ function approach(state: WorldState, creep: Creep, targetId: number): void {
   if (walk(state, creep, target) === "unreachable") halt(creep);
 }
 
+/**
+ * Runs to the team's core with the flee bonus (spec D10, plan P4), until
+ * there or until the bonus is over.
+ */
+function flee(state: WorldState, creep: Creep, untilTick: number): void {
+  if (state.tick >= untilTick) {
+    halt(creep);
+    return;
+  }
+  if (walk(state, creep, teamOf(state, creep).core) === "moving") {
+    creep.activity = "fleeing";
+  } else {
+    halt(creep);
+  }
+}
+
 /** Stops in place, dropping accumulated points and the cached path. */
 export function halt(creep: Creep): void {
   creep.order = { type: "stop" };
@@ -146,7 +168,11 @@ function walk(state: WorldState, creep: Creep, target: Cell): WalkResult {
     const { map, params } = state;
     creep.activity = cargoTotal(creep) > 0 ? "carrying" : "walkingEmpty";
     creep.trip ??= { startTick: state.tick, cells: 0 };
-    creep.movePoints += movePointsPerTick(creep, map, path[0]!, params);
+    const gain = movePointsPerTick(creep, map, path[0]!, params);
+    creep.movePoints +=
+      creep.order.type === "flee"
+        ? Math.floor((gain * params.flee.speedPermille) / 1000)
+        : gain;
     while (path.length > 0 && creep.movePoints >= CELL_COST) {
       const next = path.shift()!;
       creep.x = next % map.width;

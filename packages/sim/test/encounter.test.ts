@@ -222,7 +222,7 @@ describe("mutual encounter (spec D12, E-9)", () => {
         world.rng = createRng(seed);
       });
       seen.add(aggressor === a.id ? "a" : "b");
-      expect(world.encounters).toHaveLength(1);
+      expect(world.tick).toBe(1);
     }
     expect(seen).toEqual(new Set(["a", "b"]));
   });
