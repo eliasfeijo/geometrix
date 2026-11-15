@@ -66,6 +66,9 @@ describe("parseParams", () => {
     expect(issuesOf(input)).toContain(
       "creep.productionSeconds: must be a multiple of world.tickSeconds",
     );
+    expect(issuesOf(input)).toContain(
+      "gather.cristal.everySeconds: must be a multiple of world.tickSeconds",
+    );
   });
 
   test.each([
