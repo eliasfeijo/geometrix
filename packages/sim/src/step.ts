@@ -3,14 +3,16 @@
 //   2. per creep, by id: dominated keeps its order, free ones
 //      evaluate their rules                                    (F4)
 //   3. resolve orders: movement, gathering, delivery, roads    (F2 / F3)
-//   4. core production queues, spawning                        (F3)
+//   4. core production queues, spawning (born event)           (F3)
 //   5. materia and HP regeneration                   (F3; M2 encontro P1)
-//   6. vision and team memory                       (M1.5 fog, N10)
+//   6. vision and team memory; the events' audience  (M1.5 fog, N10;
+//      ADR-0007 rule 3)
 //   7. stats accumulators; tick++                              (F5)
 
 import { runAutopilot } from "./autopilot.ts";
 import { applyCommand, type CommandInput } from "./commands.ts";
 import { findPlayer } from "./domination.ts";
+import { createEventLog, setAudience, type SimEvent } from "./events.ts";
 import { regenerate } from "./economy.ts";
 import { regenerateHp } from "./hp.ts";
 import { resolveOrders } from "./orders.ts";
@@ -25,11 +27,14 @@ import type { WorldState } from "./world.ts";
  * section 7). Callers that need the previous state keep a `serialize` copy.
  * `commands` are the tick's external commands in seq order; each is validated
  * again against the state as it is then, and a refused one is skipped.
+ * Returns the tick's events with their audience (ADR-0007, plan P9); they are
+ * not part of the state.
  */
 export function step(
   state: WorldState,
   commands: readonly CommandInput[],
-): void {
+): SimEvent[] {
+  const log = createEventLog(state.tick);
   for (const { playerId, command } of commands) {
     if (applyCommand(state, command, playerId) !== null) continue;
     const preset = command.type === "applyPreset" ? command.preset : null;
@@ -42,10 +47,12 @@ export function step(
   }
   runAutopilot(state);
   resolveOrders(state);
-  runProduction(state);
+  runProduction(state, log);
   regenerate(state);
   regenerateHp(state);
   updateVision(state);
+  setAudience(state, log.events);
   accumulateStats(state);
   state.tick += 1;
+  return log.events;
 }
