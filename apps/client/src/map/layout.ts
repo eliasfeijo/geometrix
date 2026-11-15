@@ -24,8 +24,13 @@ export type Marker = CreepMarker | StackMarker;
 
 /** Smallest on-screen slot (pixels) that still shows creeps side by side. */
 export const MIN_SLOT_PX = 18;
-/** Hit radius of a marker, in cells, before its scale. */
+/** Hit radius of a marker, in cells, before its scale: the drawn radius. */
 export const HIT_RADIUS = 0.5;
+/**
+ * Smallest hit radius on screen, in pixels (fog F6, E3): zoomed out, a click
+ * near a small marker still reaches it.
+ */
+export const MIN_HIT_PX = 20;
 
 /** Columns and rows of slots for `n` creeps in a cell: 2 → 2×1, 4 → 2×2. */
 export function slotGrid(n: number): { cols: number; rows: number } {
@@ -104,18 +109,46 @@ export function layoutCreeps(
   return markers;
 }
 
-/** The marker under a point (map coordinates), the nearest if several. */
-export function markerAt(point: Point, markers: readonly Marker[]) {
-  let best: Marker | null = null;
-  let bestDistance = Infinity;
+/**
+ * The markers a click at `point` (map coordinates) hits, nearest first: those
+ * within their drawn radius or MIN_HIT_PX on screen, whichever is larger.
+ * `viewScale` is pixels per cell.
+ */
+export function markersAt(
+  point: Point,
+  markers: readonly Marker[],
+  viewScale: number,
+): { marker: Marker; distance: number }[] {
+  const minRadius = MIN_HIT_PX / viewScale;
+  const hits: { marker: Marker; distance: number }[] = [];
   for (const marker of markers) {
-    const d = Math.hypot(marker.x - point.x, marker.y - point.y);
-    if (d <= HIT_RADIUS * marker.scale && d < bestDistance) {
-      best = marker;
-      bestDistance = d;
+    const distance = Math.hypot(marker.x - point.x, marker.y - point.y);
+    if (distance <= Math.max(HIT_RADIUS * marker.scale, minRadius)) {
+      hits.push({ marker, distance });
     }
   }
-  return best;
+  return hits.sort((a, b) => a.distance - b.distance);
+}
+
+/**
+ * The marker a click clearly lands on (fog F6, E3): the only one hit, or the
+ * nearest when the click is within half its drawn radius. null when it hits
+ * none, or several with none clearly.
+ */
+export function markerAt(
+  point: Point,
+  markers: readonly Marker[],
+  viewScale: number,
+): Marker | null {
+  const [nearest, second] = markersAt(point, markers, viewScale);
+  if (nearest === undefined) return null;
+  if (
+    second === undefined ||
+    nearest.distance < (HIT_RADIUS * nearest.marker.scale) / 2
+  ) {
+    return nearest.marker;
+  }
+  return null;
 }
 
 /** The marker that draws creep `id`. */

@@ -78,7 +78,8 @@
     }
   },
   "gather": {
-    "unitsPerSecond": 1
+    "materia": { "units": 1, "everySeconds": 1 },
+    "cristal": { "units": 1, "everySeconds": 1 }
   },
   "creep": {
     "cost": {

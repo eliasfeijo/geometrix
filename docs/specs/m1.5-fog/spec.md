@@ -190,3 +190,21 @@ por time ao longo do tempo; tempo até ver o Núcleo inimigo; creeps em "explora
 ## 10. Perguntas abertas
 
 Nenhuma no momento.
+
+## 11. F6 — Ajustes do playtest (dono, 2026-11-14)
+
+Achados da sessão 2 do dono ([dashboard](../../dashboard/current-status.md), "Achados do playtest"). O dono
+decidiu as regras (E1, E2) e o que o cursor sinaliza (E4), e pôs a fase no M1.5, antes de fechá-lo. O resto é
+interpretação do agente, a validar na sessão que fecha o M1.5. **Validadas no checkpoint da F6 (dono,
+2026-11-14)**, que fechou o M1.5 ([plan §10](plan.md)).
+
+| # | Achado | Decisão |
+|---|---|---|
+| E1 | Coletores de matéria disputam o depósito mais perto do Núcleo e esperam a regeneração 1 a 1 | **(gameplay, GDD 07)** O coletor escolhe o depósito não vazio a que chega mais rápido (tempo de viagem pelo mapa conhecido, com estradas). Com o depósito vazio, **só espera se compensar**: compara o tempo de esperar encher a carga com o tempo de andar até o depósito conhecido mais próximo com matéria suficiente, e vai se andar for mais rápido |
+| E2 | O cristal se esgota em 8,6 h de 72 | **(gameplay, GDD 03)** Ritmo de coleta por recurso; o cristal mais lento (chute: 1 unidade a cada 5 s). O valor é medido antes de ser fixado |
+| E3 | Com o zoom afastado, o clique numa "bola" sobreposta não seleciona o que se quer | Área de clique com um mínimo em pixels de tela; se o clique cai claramente num só creep, seleciona; se cai em vários, abre a lista deles (como a pilha de uma célula) |
+| E4 | Falta feedback de qual ação o clique vai gerar | Cursor com ícone para: as ordens do creep dominado (coletar, entregar, andar), o modo estrada (vermelho sem estoque), selecionar (sobre algo selecionável) e escolher no mapa (mira) |
+
+**Critérios:** os de §7 continuam; o checkpoint traz, lado a lado com a F5 (`runs/m1.5-fog-f5-explore/`): tempo
+dos creeps parados, vazão de matéria, quando o cristal se esgota, se os times ainda compram o upgrade e chegam ao
+teto de população, e o custo do tick. O dono fecha o M1.5 nesse checkpoint, com a sessão de legibilidade.

@@ -4,9 +4,9 @@
 > funciona por dentro, quanto custa e onde estão os limites. As fontes de verdade continuam sendo os docs linkados
 > em cada seção; este arquivo é o mapa.
 >
-> **Retrato de 2026-11-14, no meio do M1.5 (A névoa).** O M1 e a fatia de rede do M1.5 estão concluídos; do fog of
-> war, a simulação já esconde o que o time não vê (F1–F2), e faltam a rede, o cliente e o playtest de legibilidade
-> (F3–F5). Os números de rede da seção 7 foram medidos sem o fog; os com fog saem da F3.
+> **Retrato de 2026-11-14, no fim do M1.5 (A névoa).** O M1 e o M1.5 estão concluídos: o mundo sincroniza por
+> deltas da visão de cada time e tem fog of war de ponta a ponta (simulação, rede, tela e bots), com uma rodada de
+> ajustes do playtest do dono. O próximo marco é o M2 (A emboscada). Os números da seção 7 são medidos com o fog.
 
 ## Sumário
 
@@ -89,10 +89,10 @@ flowchart LR
     M3 --> M4["M4 · O mundo vivo<br/>tribos, diplomacia,<br/>piloto automático scriptável"]
     style M0 fill:#2e7d32,color:#fff
     style M1 fill:#2e7d32,color:#fff
-    style M15 fill:#f9a825,color:#000
+    style M15 fill:#2e7d32,color:#fff
 ```
 
-Verde: concluído. Amarelo: em andamento.
+Verde: concluído. O próximo é o M2.
 
 ## 3. O GDD em uma página
 
@@ -103,11 +103,11 @@ O [GDD](gdd/README.md) tem um arquivo por sistema, e cada um separa **Decidido**
 |---|---|---|---|
 | [01 Mundo e mapa](gdd/01-mundo.md) | Mundo persistente de dias (hipótese: 3); times de 3; vitória = destruir a base inimiga; início "fundação" (cada time começa com um Núcleo e cresce a partir dele); **fog of war**: névoa negra, pedras bloqueiam a visão, memória do time (depósitos com o último valor, estradas, terreno explorado), três estados na tela (nunca visto, lembrado, visível) | O começo sem depósito garantido à vista (medido nos bots: funciona), entrar no meio da partida, onde se pode construir, rio como rota | M1 · M1.5 |
 | [02 Creeps e domínio](gdd/02-creeps-e-dominio.md) | Herói = creep dominado; 1 domínio por jogador; DNA = forma inata; morte permanente; inventário; os 3 DNAs se equivalem na economia (a diferença vem do combate); **visão por DNA** (círculo 6, triângulo 4, quadrado 3; Núcleo 8) | Custo de dominar, limite de população, vários creeps na mesma célula, nome do creep no estado | M1 (domínio) · M1.5 (visão) · M3 (genética) |
-| [03 Economia](gdd/03-economia-e-logistica.md) | Transporte físico; dois recursos no M1: **matéria** (pesada, renovável, perto da base) e **cristal** (leve, valioso, esgotável, disputado); imposto votado | Moeda cunhada × recurso; sumidouros; papel do cristal depois de ~8 h | M1 · M3 |
+| [03 Economia](gdd/03-economia-e-logistica.md) | Transporte físico; dois recursos no M1: **matéria** (pesada, renovável, perto da base) e **cristal** (leve, valioso, esgotável, disputado); ritmo de coleta por recurso (cristal: 1 unidade a cada 5 s, matéria: 1 por segundo); imposto votado | Moeda cunhada × recurso; sumidouros; papel e esgotamento do cristal (~10 h de 72; fica para o M2) | M1 · M1.5 · M3 |
 | [04 Governança](gdd/04-governanca.md) | Votação com níveis de autoridade (bots podem decidir / só humanos / unanimidade); representantes em times grandes | Quais decisões existem, quórum, prazo, voto delegado | M3 |
 | [05 Tribos](gdd/05-tribos-e-diplomacia.md) | Jungle com monstros e tribos neutras que podem virar aliadas ou rivais | Quase tudo | M4 |
 | [06 Batalhas](gdd/06-batalhas.md) | Mundo e batalha são estados separados; a batalha é uma instância dedicada que devolve só eventos | O gatilho, a "bolha", reforços, duração, o tempo do mundo durante a batalha | M2 |
-| [07 Piloto automático](gdd/07-piloto-automatico.md) | Configurável por creep; persiste depois do domínio; no M1, regras declarativas `condição → ação`; no M1.5, decide só pelo que o time sabe, com a ação **explorar** e o preset batedor | Script em sandbox (fase 2), piloto por grupo, macros de cliente | M1 · M1.5 · M4 |
+| [07 Piloto automático](gdd/07-piloto-automatico.md) | Configurável por creep; persiste depois do domínio; no M1, regras declarativas `condição → ação`; no M1.5, decide só pelo que o time sabe, com a ação **explorar** (alvo desempatado pelo que se vê de novo) e o preset batedor; o coletor escolhe o depósito pelo tempo de viagem e só espera a matéria regenerar se compensar | Script em sandbox (fase 2), piloto por grupo, macros de cliente | M1 · M1.5 · M4 |
 
 ### O ciclo do M1 (o que já se joga)
 
@@ -128,39 +128,36 @@ Os números são provisórios (candidato B da [passada de balanceamento 1](specs
 
 ## 4. Onde estamos: feito × pendente × planejado
 
-### Feito (M0 e M1 concluídos; M1.5 em andamento, 2026-11-14)
+### Feito (M0, M1 e M1.5 concluídos, 2026-11-14)
 
 | Área | O que existe |
 |---|---|
 | **Design** | Pilares, GDD com 7 sistemas (o fog decidido nos GDD 01, 02 e 07), 6 ADRs `Accepted`, spec/plan/tasks do M1 e das duas fatias do M1.5 |
 | **Simulação** (`packages/sim`) | Mapa gerado por seed com simetria de ponto (rio, travessias, rochas); movimento em grid 4-direções com A* e cache; coleta, entrega, regeneração; produção com "repetir"; estradas célula a célula; upgrade; domínio; interpretador de regras + 3 presets; estrategista bot; métricas |
 | **Servidor** (`apps/server`) | HTTP (criar, listar, entrar), WebSocket com ack/reject, loop de tick com multiplicador, SQLite (log + snapshots + métricas), recuperação após crash, bots por time, liberação automática do domínio por inatividade/desconexão |
-| **Cliente** (`apps/client`) | Lobby; mapa SVG com pan/zoom; creeps interpolados com nomes; inspetor; painel do Núcleo; editor de regras; controle direto pelo botão direito; feedback visual (`+N`/`−N`, carga cheia, custo da estrada) |
-| **Harness** (`apps/cli`) | `geo sim` (mundo de 3 dias sem interface em ~9 s), `geo sweep` (varredura de parâmetros), `geo verify` (determinismo), `geo report` (relatório legível por humanos e por IA), `geo net` (banda e CPU dos deltas, com a correção do diff conferida em todo tick) |
+| **Cliente** (`apps/client`) | Lobby; mapa SVG com pan/zoom e névoa em três estados; creeps interpolados com nomes; seleção por área (com lista quando o clique cai em vários creeps); cursor com o ícone da ação do clique; inspetor; painel do Núcleo; editor de regras; controle direto pelo botão direito; feedback visual (`+N`/`−N`, carga cheia, custo da estrada) |
+| **Harness** (`apps/cli`) | `geo sim` (mundo de 3 dias sem interface em ~13 s), `geo sweep` (varredura de parâmetros), `geo verify` (determinismo), `geo report` (relatório legível por humanos e por IA), `geo net` (banda e CPU dos deltas, com a correção do diff conferida em todo tick) |
 | **Replay** | O navegador roda o mesmo `sim` a partir de seed + log, com linha do tempo e ✓/✗ do hash final, validado no Chromium (V8) e no WebKit (JavaScriptCore) |
 | **Testes de resistência** | `npm run soak`: um mundo inteiro bot × bot a ×360, com 5 `kill -9` + 1 SIGTERM no meio e 2 clientes WebSocket sem interface por time seguindo os deltas; termina com o mesmo hash no servidor, no Node e no navegador, e com a visão de cada cliente igual à do servidor |
 | **Rede por deltas** (M1.5, fatia 1) | Cada time recebe a própria visão como deltas numerados ([ADR-0006](adr/0006-sync-do-mundo.md)): `welcome` com a visão completa, depois só o que mudou; hash da visão a cada 60 ticks; retomada pelo buffer de 30 s; `resync` quando algo diverge; painel de rede no cliente (`?net=1`). Todos os critérios de viabilidade verdes ([viability.md](specs/m1.5-rede/viability.md)) |
-| **Fog no `sim`** (M1.5, fatia 2, F1–F2) | Visão por raio (Núcleo e DNA) com linha de visão inteira (pedras bloqueiam); memória do time; a visão do time só com o que ele vê ou lembra. Caminho, estradas, piloto automático e bots decidem pelo que o time sabe; ação `explore` e preset batedor; comando sobre o que o time não conhece é recusado como id inexistente |
+| **Fog of war** (M1.5, fatia 2, F0–F6) | **Simulação:** visão por raio (Núcleo e DNA) com linha de visão inteira (pedras bloqueiam); memória do time; a visão do time só com o que ele vê ou lembra. Caminho, estradas, piloto automático e bots decidem pelo que o time sabe; ação `explore` e preset batedor; comando sobre o que o time não conhece é recusado como id inexistente. **Rede:** o `welcome` só manda o tamanho do mapa, o terreno chega conforme o time explora, a seed de um mundo vivo não aparece e o replay só abre depois que o mundo acaba. **Tela:** nunca visto (negro), lembrado (véu) e visível; o inimigo só como a visão mostra. **Ajustes do playtest (F6):** coletor pelo tempo de viagem e que só espera a matéria se compensar, cristal mais lento, seleção por área, cursor com a ação |
 
-**Em números:** ~15 000 linhas de código de produção, ~9 400 de teste, **2 148 testes** em 62 arquivos, 214 commits.
+**Em números:** ~15 700 linhas de código de produção, ~10 000 de teste, **2 188 testes** em 64 arquivos, ~250 commits.
 
 | Pacote | Código | Testes |
 |---|---|---|
-| `packages/sim` | 3 724 | 4 581 |
-| `packages/protocol` | 712 | 545 |
-| `apps/server` | 2 771 | 1 663 |
-| `apps/client` | 5 894 | 1 864 |
+| `packages/sim` | 3 954 | 4 718 |
+| `packages/protocol` | 720 | 559 |
+| `apps/server` | 2 776 | 1 686 |
+| `apps/client` | 6 308 | 2 272 |
 | `apps/cli` | 1 922 | 793 |
 
 ### Pendente
 
-- **M1.5 · fog F3–F5** ([tasks](specs/m1.5-fog/tasks.md)): F3, rede e servidor (o `welcome` deixa de mandar o
-  terreno inteiro, a seed some da lista de mundos vivos, o replay só de mundo encerrado, `geo net` com o fog); F4,
-  cliente (os três estados na tela, o inimigo só como a visão mostra, o editor com explorar e batedor); F5, soak com
-  o fog e a sessão de legibilidade que fecha o M1.5.
 - **Deploy** (abre o M2): Dockerfile, `compose.yml` (app + Caddy + Litestream), workflow de deploy manual. Desenhado no
   [plan §11](specs/m1-ciclo-da-riqueza/plan.md), ainda não escrito (não existe `infra/`).
-- **Playtest de diversão** com pessoas que nunca viram o jogo (o roteiro está em [`PLAYTEST.md`](PLAYTEST.md)).
+- **Playtest de diversão** com pessoas que nunca viram o jogo (o roteiro está em [`PLAYTEST.md`](PLAYTEST.md)). Ele
+  também repete, com olhos novos, a pergunta do M1.5, que até aqui só o dono respondeu.
 - **Spec do M2** pela skill `spec-slice`, depois de uma rodada com o dono sobre as perguntas abertas de batalha.
 
 O repo foi publicado em 2026-11-14, e o CI passa no GitHub.
@@ -169,7 +166,7 @@ O repo foi publicado em 2026-11-14, e o CI passa no GitHub.
 
 | Marco | Escopo |
 |---|---|
-| **M1.5 · A névoa** | ✅ Deltas da visão de cada time (ADR-0006), validados localmente. 🟡 Fog of war: névoa negra, visão por DNA com linha de visão, memória do time, caminho e piloto pelo que o time sabe, ação explorar; clientes e bots vendo só o que o time enxerga |
+| **M1.5 · A névoa** | ✅ Concluído. Deltas da visão de cada time (ADR-0006), validados localmente; fog of war: névoa negra, visão por DNA com linha de visão, memória do time, caminho e piloto pelo que o time sabe, ação explorar; clientes e bots vendo só o que o time enxerga |
 | **M2 · A emboscada** | Uma emboscada numa carga em trânsito abre uma instância de batalha; um humano domina um creep e luta; o resultado volta ao mundo como eventos; sem humano presente, a mesma simulação roda acelerada (auto-resolve) |
 | **M3 · O time** | 3v3, impostos, votação com níveis de autoridade, genética e progressão dos creeps |
 | **M4 · O mundo vivo** | Jungle com tribos e diplomacia, piloto automático scriptável (JS em sandbox), construção ampla |
@@ -284,7 +281,7 @@ em qualquer máquina e em qualquer engine JS. O hash (SHA-256 do JSON canônico 
 
 | Determinismo dá… | …o que permite |
 |---|---|
-| Replay = seed + log | Um mundo **bot × bot inteiro de 3 dias tem 92 comandos no log.** O replay inteiro cabe em poucos KB |
+| Replay = seed + log | Um mundo **bot × bot inteiro de 3 dias tem ~90 comandos no log.** O replay inteiro cabe em poucos KB |
 | Recuperação = snapshot + log | Crash não perde o mundo (perde no máximo o tick em andamento) |
 | Anti-cheat estrutural | O servidor é a autoridade; o cliente só envia intenção |
 | Balanceamento com dados | 5 seeds × N variantes de parâmetro, cada mundo de 3 dias em segundos |
@@ -340,8 +337,9 @@ tira uma cópia com `serialize`.
 
 O mundo anda **1 tick por segundo de mundo**. O relógio real é `1 s ÷ multiplicador`: a ×1 é o jogo de verdade (3
 dias reais), a ×36 um playtest (3 dias em 2 h), a ×360 o soak (12 min). A CLI ignora o relógio e roda o mais rápido
-possível: **3 dias de mundo em ~9 s** (~35 µs por tick, ~30 000× o tempo real). Sem o fog eram ~4 s; a visão e
-os caminhos mais longos pelo terreno desconhecido custam 2,2× (aceito no checkpoint da F2 do fog).
+possível: **3 dias de mundo em ~13 s** (~50 µs por tick, ~20 000× o tempo real). Sem o fog eram ~4 s: a visão e
+os caminhos mais longos pelo terreno desconhecido custam ~2,3×, e a escolha do depósito pelo tempo de viagem (um A*
+por decisão) leva a ~3×. Aceito pelo dono nos checkpoints do fog; o orçamento é de 10 minutos.
 
 A batalha do M2 vai ter o próprio tick, de 20–30 Hz, numa instância separada
 ([ADR-0001](adr/0001-mundo-e-batalha-separados.md)). O mundo nunca precisa ser rápido; a batalha nunca precisa ser
@@ -355,10 +353,15 @@ durável.
   `requestAnimationFrame`, então 1 mensagem por segundo ainda parece movimento contínuo.
 - **HTML para os painéis:** o editor de regras, o inspetor e o painel do Núcleo são formulários. HTML/CSS é o melhor
   toolkit de UI que existe, e este jogo (e mais ainda o M3, com votação e governança) é pesado em UI.
-- **Bundle:** 111 KB (40 KB gzip) + 10 KB de CSS + uma fonte de 10 KB. O replay carrega sob demanda (102 KB, 31 KB
+- **Bundle:** 124 KB (45 KB gzip) + 10 KB de CSS + uma fonte de 10 KB. O replay carrega sob demanda (103 KB, 31 KB
   gzip).
-- **Ainda sem a névoa na tela:** o cliente desenha o mapa inteiro, como no M1. Os três estados (nunca visto,
-  lembrado, visível) entram na F4 do fog.
+- **A névoa** é uma camada SVG entre o mundo e os creeps: o nunca visto em negro e o lembrado sob um véu, cada um
+  num único `<path>` de faixas por linha, refeito só quando o que o time conhece ou vê muda. O terreno é desenhado
+  a partir do que o time conhece; o replay mostra o mundo inteiro, sem névoa.
+- **Clique por área e cursor:** com o zoom afastado, um creep é alcançado num raio mínimo de 20 px na tela; se o
+  clique cai em vários sem um claramente mais perto, abre a lista deles. O cursor mostra a ação do clique (coletar,
+  entregar, andar, estrada, selecionar, escolher no mapa), calculado num signal ligado ao `style` do mapa, sem
+  re-renderizar a tela a cada movimento do ponteiro.
 
 ## 7. Sync via WebSocket: quanto custa, e escala?
 
@@ -367,10 +370,10 @@ durável.
 **Não mandamos mais o estado inteiro.** No M1, o servidor mandava o estado dinâmico completo em JSON a cada
 broadcast (26,5 KB com 60 creeps), ~13–26× acima do previsto no ADR-0005 (1–2 KB/s por cliente). A fatia de rede do
 M1.5 trocou isso por **deltas da visão de cada time** ([ADR-0006](adr/0006-sync-do-mundo.md)): cada cliente recebe só
-o que mudou no que o próprio time vê, numerado e conferido por hash. Medido a ×1, com 60 creeps: **227 B/s por
-cliente** (alvo ≤ 2 KB/s) e **83 µs por mundo por envio** (alvo ≤ 250 µs), com 0 divergências. A banda caiu ~115×,
-e a CPU por envio caiu pela metade ([viability.md](specs/m1.5-rede/viability.md)). Os números são de antes do fog:
-com ele a visão encolhe, e a F3 do fog mede de novo.
+o que mudou no que o próprio time vê, numerado e conferido por hash. Medido a ×1, com 60 creeps e o fog: **206 B/s
+por cliente** (alvo ≤ 2 KB/s) e **126 µs por mundo por envio** (alvo ≤ 250 µs), com 0 divergências. A banda caiu
+~125× em relação ao estado completo ([viability.md](specs/m1.5-rede/viability.md) tem a medição de antes do fog: 227
+B/s e 83 µs).
 
 > **Histórico (2026-11-14).** A primeira versão desta seção recomendava ligar a compressão do WebSocket como o
 > conserto "quase grátis" e dizia que deltas economizariam pouco. Um dev de fora do projeto contestou as duas
@@ -381,9 +384,9 @@ com ele a visão encolhe, e a F3 do fog mede de novo.
 
 ### Como funciona hoje
 
-- No **`welcome`** (ao conectar, numa reconexão que o buffer não cobre ou num `resync`): o mapa estático (8,2 KB em
-  JSON) + a visão completa do time (~23 KB com 60 creeps). Na F3 do fog, o mapa sai do `welcome`: o terreno chega
-  conforme o time explora.
+- No **`welcome`** (ao conectar, numa reconexão que o buffer não cobre ou num `resync`): o tamanho do mapa + a visão
+  completa do time (~26 KB com 60 creeps no fim de um mundo de 3 dias). O terreno não vai à parte: ele chega na
+  visão, conforme o time explora.
 - Depois de cada envio, um **`delta`** com o número de sequência do stream do time: só os campos que mudaram
   (creeps, depósitos, estradas, obras, estoques) e, com o fog, as células exploradas novas e o que entrou ou saiu
   da visão.
@@ -397,15 +400,18 @@ com ele a visão encolhe, e a F3 do fog mede de novo.
   quando alguém as troca.
 - Comandos sobem como mensagens pequenas e voltam com `ack {tick}` ou `reject {motivo}`.
 
-### Medições (seed 42, 3 dias de mundo bot × bot, ×1, sem fog)
+### Medições (seed 42, 3 dias de mundo bot × bot, ×1)
 
-| | Estado completo (M1) | Delta da visão do time (M1.5) |
-|---|---|---|
-| Por mensagem, 60 creeps | 26,5 KB | ~250 B em média (mediana 111 B, p95 601 B) |
-| Banda por cliente | 6,5–26,6 KB/s | 227 B/s em média |
-| Pior mensagem | 26,6 KB | 4,6 KB (no tick em que os depósitos regeneram e ~50 creeps voltam a coletar juntos) |
-| CPU por envio, por mundo | ~120 µs de `JSON.stringify` | 83 µs (visão 11 µs, diff 58 µs, hash amortizado 13 µs) |
-| Correção | | 0 divergências em 518 400 verificações; 0 hashes divergentes no soak com quedas |
+| | Estado completo (M1) | Delta da visão, sem fog | Delta da visão, com fog (fim do M1.5) |
+|---|---|---|---|
+| Por mensagem, 60 creeps | 26,5 KB | ~250 B em média (mediana 111 B, p95 601 B) | 206 B em média (mediana 178 B, p95 475 B) |
+| Banda por cliente | 6,5–26,6 KB/s | 227 B/s em média | 206 B/s em média |
+| Pior mensagem | 26,6 KB | 4,6 KB (no tick em que os depósitos regeneram e ~50 creeps voltam a coletar juntos) | 1,9 KB |
+| CPU por envio, por mundo | ~120 µs de `JSON.stringify` | 83 µs (visão 11 µs, diff 58 µs, hash amortizado 13 µs) | 126 µs (visão 40 µs, diff 62 µs, hash amortizado 22 µs) |
+| Correção | | 0 divergências em 518 400 verificações | 0 divergências em 518 400 verificações; 0 hashes divergentes no soak com quedas |
+
+Com o fog, o inimigo fora da visão não vai mais, mas cada envio monta o que o time conhece (4 096 células) e o
+inclui no hash: a banda caiu um pouco e a CPU subiu ~50%, ainda na metade do alvo.
 
 O spike da fatia de rede comparou o diff à mão em JSON com o schema binário do Colyseus (4× menor). Ficou o JSON: o
 teto é 2 KB/s, e ele é mais fácil de depurar e não espelha o estado numa biblioteca.
@@ -414,43 +420,44 @@ teto é 2 KB/s, e ele é mais fácil de depurar e não espelha o estado numa bib
 
 | Recurso | Custo | Escala com |
 |---|---|---|
-| CPU de visão + diff | ~83 µs por mundo por envio (2 times) | nº de mundos (o delta é por time, não por socket) |
-| CPU do tick (`step`, com bots e fog) | ~35 µs em média | nº de mundos |
-| Banda | ~230 B/s por cliente a ×1 | nº de clientes × atividade no mundo |
+| CPU de visão + diff | ~126 µs por mundo por envio (2 times) | nº de mundos (o delta é por time, não por socket) |
+| CPU do tick (`step`, com bots e fog) | ~50 µs em média | nº de mundos |
+| Banda | ~210 B/s por cliente a ×1 | nº de clientes × atividade no mundo |
 | Disco | 1 transação por tick + um snapshot a cada 300 ticks | nº de mundos |
 
 ### Projeção a ×1 (o jogo de verdade): 60 creeps, 6 jogadores por mundo
 
 | Cenário | Clientes | Estado completo (M1) | Deltas (medidos) | CPU de `step` + visão + diff |
 |---|---|---|---|---|
-| 1 mundo | 6 | ~160 KB/s | ~1,4 KB/s | ~0,01% de um núcleo |
-| 100 mundos | 600 | ~16 MB/s (~128 Mbit/s) | ~140 KB/s | ~1–2% de um núcleo |
-| 1 000 mundos | 6 000 | ~160 MB/s (~1,3 Gbit/s) | ~1,4 MB/s (~11 Mbit/s) | ~12% de um núcleo |
+| 1 mundo | 6 | ~160 KB/s | ~1,2 KB/s | ~0,02% de um núcleo |
+| 100 mundos | 600 | ~16 MB/s (~128 Mbit/s) | ~124 KB/s | ~2% de um núcleo |
+| 1 000 mundos | 6 000 | ~160 MB/s (~1,3 Gbit/s) | ~1,2 MB/s (~10 Mbit/s) | ~18% de um núcleo |
 
-Por cliente, ~20 MB por dia de mundo: ~350 MB de saída para um mundo de 3 dias com 6 jogadores (eram ~41 GB com o
-JSON cru). Com o fog, a visão de cada time encolhe; a F3 mede quanto.
+Por cliente, ~18 MB por dia de mundo: ~320 MB de saída para um mundo de 3 dias com 6 jogadores (eram ~41 GB com o
+JSON cru).
 
 ### Então, é viável em escala?
 
 **A simulação e a rede, folgadamente, a ×1.** Os gargalos que sobram, em ordem:
 
-1. **Disco: os snapshots nunca são podados.** O soak terminou com **55 MB de SQLite para um mundo de 3 dias**, a
-   maior parte em snapshots (864 × ~40 KB ≈ 35 MB; o resto são métricas). Para recuperar só é preciso o último; o
-   replay usa seed + log, não os snapshots. Podar é o próximo passo óbvio. O tamanho do snapshot com a memória do
-   fog ainda não foi medido.
+1. **Disco: os snapshots nunca são podados, e o fog os dobrou.** O soak termina com **117 MB de SQLite para um mundo
+   de 3 dias** (55 MB antes do fog), quase tudo em snapshots (864, um a cada 300 ticks). A memória de cada time
+   (bitmaps de 4 096 células: explorado, visível, terreno e estradas lembrados) é ~71% de cada snapshot. Para
+   recuperar só é preciso o último; o replay usa seed + log. Podar e guardar a memória compactada ficam para o
+   deploy do M2.
 2. **Uma transação (e, no modo padrão, um fsync) por tick por mundo.** A ×1 são 1 000 commits/s com 1 000 mundos.
    Um NVMe aguenta, mas dá para agrupar ticks ou usar `synchronous = NORMAL` no WAL, coerente com a "perda máxima
    de alguns ticks" que o ADR-0004 já aceita. **Ainda não medido.**
 3. **Um processo, um event loop.** Todos os mundos de um servidor dividem uma thread; uma pausa de GC atrasa todos.
    No soak do M1, o loop rodou a 100% da velocidade pedida na mediana (93% no pior momento) a ×360, o que dá uma
-   ordem de grandeza de centenas de mundos a ×1 num processo. No soak da rede, com 4 clientes conectados, a pior
-   amostra (2 s) caiu a 10%, sem investigação. O caminho de escala do
+   ordem de grandeza de centenas de mundos a ×1 num processo. Nos soaks com 4 clientes conectados, a mediana segue
+   em 100%, mas a pior amostra (2 s) cai a 4–10% num instante, sem investigação. O caminho de escala do
    [ADR-0005](adr/0005-deploy-mvp-vps-websocket.md) é shard de mundos por processo/VPS e, mais à frente, uma fleet
    Agones.
 4. **Mundos acelerados.** O alvo é a ×1. A ×36 ou ×360, cada envio cobre vários ticks e quase todo envio leva o hash
-   da visão (~390 µs cada): ~2,9 KB/s por cliente a ×36, 12,9 KB/s a ×360. Importa para playtest, não para o jogo.
-5. **Memória:** o estado de um mundo tinha ~50 KB no M1 (o fog acrescenta a memória de cada time, ainda não
-   medida); o processo fica em ~125–200 MB, quase todo base do V8.
+   da visão (~650 µs cada, com o fog): ~11 KB/s por cliente a ×360 no soak. Importa para playtest, não para o jogo.
+5. **Memória:** o estado de um mundo tinha ~50 KB no M1; com o fog, um snapshot tem ~90 KB, dos quais ~66 KB são a
+   memória dos dois times. O processo fica em ~130–215 MB, quase todo base do V8.
 
 **A batalha do M2 é outra conversa.** A 20–30 Hz, com latência importando, o delta em JSON a 1 Hz não basta. Lá
 entram deltas mais frequentes, provavelmente binário, e **previsão no cliente** para o creep dominado (o motivo de
@@ -459,16 +466,16 @@ o `sim` rodar no navegador). WebTransport/WebRTC só se o head-of-line blocking 
 ```mermaid
 flowchart LR
     A["M1<br/>estado completo em JSON<br/>~27 KB por tick"] --> B["M1.5 rede ✅<br/>delta da visão do time<br/>~230 B/s, numerado"]
-    B --> D["M1.5 fog 🟡<br/>a visão do time encolhe;<br/>o terreno chega conforme se explora"]
+    B --> D["M1.5 fog ✅<br/>a visão do time encolhe;<br/>o terreno chega conforme se explora"]
     B --> C["M2 · batalha<br/>a decidir no plan do M2<br/>20–30 Hz + previsão do creep dominado"]
     style B fill:#2e7d32,color:#fff
-    style D fill:#f9a825,color:#000
+    style D fill:#2e7d32,color:#fff
 ```
 
 ## 8. Por que não Unity, Unreal ou Godot?
 
 Primeiro, um esclarecimento: **o geometrix não está construindo uma engine.** Não há renderizador, física, editor
-nem sistema de cenas. Há uma simulação específica do jogo (~2 800 linhas) e o navegador faz o papel de engine:
+nem sistema de cenas. Há uma simulação específica do jogo (~4 000 linhas) e o navegador faz o papel de engine:
 SVG desenha, o DOM faz a UI, o Web Crypto calcula o hash. "Não é uma engine genérica" é um não-objetivo explícito
 nos [pilares](PILLARS.md).
 
@@ -481,7 +488,7 @@ Segundo, honestidade sobre o histórico: **as engines prontas não aparecem como
 
 | Fator | Por que pesa |
 |---|---|
-| **A parte difícil do jogo não é gráfica** | É um servidor autoritativo que roda por dias, sobrevive a crash, é determinístico, roda sem interface ~30 000× mais rápido para balancear e reproduz qualquer partida a partir de um log. Nenhuma engine dá isso pronto: num RTS determinístico em Unity, você ainda escreve a simulação em ponto fixo à mão, porque a física de engine usa float |
+| **A parte difícil do jogo não é gráfica** | É um servidor autoritativo que roda por dias, sobrevive a crash, é determinístico, roda sem interface ~20 000× mais rápido para balancear e reproduz qualquer partida a partir de um log. Nenhuma engine dá isso pronto: num RTS determinístico em Unity, você ainda escreve a simulação em ponto fixo à mão, porque a física de engine usa float |
 | **A mesma simulação em servidor, CLI e navegador** | Com Unity, o servidor vira um processo da engine por mundo (headless), bem mais pesado que um `WorldHost` de ~50 KB. A CLI de balanceamento também |
 | **Navegador primeiro** | Abrir um link e jogar. Unity Web gera builds de vários MB e carrega devagar; Unreal não exporta mais para a web desde 2019. Aqui: ~40 KB gzip de JS |
 | **Visual 2D geométrico** | Formas e cores, sem sprites, animação esquelética ou partículas. O renderizador de uma engine acrescenta pouco |
@@ -546,30 +553,32 @@ onde trocar o renderizador por Canvas/WebGL (sem mudar a arquitetura) é a prime
   *diversão*, só de legibilidade.
 - Depois do teto de população (~38–50 h de mundo), não há onde gastar: o estoque cresce sem uso. Falta um
   sumidouro (adiado pelo dono).
-- O cristal perde o papel depois de ~8 h, e os depósitos "disputados" quase não são disputados. Fica para o M2,
-  quando o cristal vira o alvo da emboscada.
+- O cristal se esgota em ~10 h de 72, e os depósitos "disputados" quase não são disputados. A coleta mais lenta do
+  M1.5 (1 unidade a cada 5 s) quase não adia isso: os bots coletam todo o cristal do mapa e terminam com ~68% dele
+  parado no estoque. Fica para o M2, quando o cristal vira o alvo da emboscada.
 - Os três DNAs se equivalem na economia, de propósito; a diferença vem com o combate.
 - Creeps não colidem: "gêmeos" andam colados na mesma célula.
-- Os nomes dos creeps são gerados no cliente pela ordem de nascimento, contada na lista que o cliente recebe. Isso
-  dependia de ninguém morrer e de o cliente ver todos os creeps. Com o fog, os creeps inimigos entram e saem da
-  visão, e a contagem muda com eles. A decidir antes da F4 do fog (nome do creep no estado: pergunta aberta no
-  GDD 02).
-- **O fog existe no `sim`, ainda não na tela nem no protocolo:** o cliente recebe a visão filtrada, mas desenha o
-  mapa inteiro; o `welcome` ainda manda o terreno completo e a posição dos Núcleos, e a seed aparece na lista de
-  mundos. Com a seed, o cliente (que embute o `sim`) regera o mapa. Fecham na F3 e na F4.
-- Sob o fog, os dois times divergem depois de ~15 h no seed 42: num depósito disputado quase vazio, o creep de id
-  menor coleta primeiro (regra do M1). Aceito pelo dono; fica para uma rodada de rebalanceamento.
+- Os nomes dos creeps são gerados no cliente a partir do id (a ordem de nascimento), o mesmo em todos os clientes e
+  no replay, qualquer que seja a visão. Como os ids também contam depósitos e obras, os últimos ~30 creeps de um
+  mundo de 3 dias ganham sufixo ("Taro II"). Nome no estado é pergunta aberta no GDD 02, para quando creeps
+  morrerem (M2).
+- **Num mundo só de humanos, ninguém explora sem ordem:** todo creep nasce coletor de matéria, que só explora
+  quando o time não conhece depósito do recurso. É a regra (o jogador explora com o preset batedor); a observar no
+  playtest com pessoas novas.
+- Sob o fog, os dois times espelhados divergem depois de ~13–32 h (seeds 3 e 42): num depósito disputado quase
+  vazio, o creep de id menor coleta primeiro (regra do M1). Aceito pelo dono; fica para uma rodada de
+  rebalanceamento. Antes disso, um teste garante que os times continuam espelhos.
 
 **Técnicas:**
 
-- **Snapshots nunca podados** (~55 MB por mundo de 3 dias).
+- **Snapshots nunca podados** (~117 MB por mundo de 3 dias, com a memória do fog).
 - **Um processo para todos os mundos**, num event loop só, e uma transação por tick.
-- **Mudar o comportamento do `sim` invalida mundos em andamento:** cada mundo guarda o `SIM_VERSION` (hoje 3), e um
+- **Mudar o comportamento do `sim` invalida mundos em andamento:** cada mundo guarda o `SIM_VERSION` (hoje 5), e um
   mundo de outra versão não é recuperado. Não existe migração de estado ainda.
 - **Sem deploy:** o jogo só rodou na máquina local (WSL). O CI roda no GitHub.
 - **Mundos acelerados gastam mais banda** que o jogo a ×1 (seção 7): ~2,9 KB/s por cliente a ×36.
-- **O tick com fog custa 2,2× o sem fog** (~35 µs). Folgado no orçamento; candidatos se apertar: a busca de célula
-  nunca vista do estrategista dos bots.
+- **O tick com fog custa ~3× o sem fog** (~50 µs). Folgado no orçamento; candidatos se apertar: a busca de célula
+  nunca vista do estrategista dos bots e o A* da escolha de depósito.
 - **Login de convidado:** nome + token no `localStorage`, sem conta.
 - **Teto de render do SVG não medido** para a escala de uma batalha.
 - O piloto automático refaz o A* a cada tick num "construtor de estrada" travado. Coube no orçamento; fica anotado.
@@ -581,15 +590,15 @@ onde trocar o renderizador por Canvas/WebGL (sem mudar a arquitetura) é a prime
   detalhes que a spec não fixa e foram interpretados na implementação ficam registrados no
   [dashboard](dashboard/current-status.md) para revisão.
 - **Fases pequenas, uma branch por fase** (`m1/f6-server`, `m1.5/fog-f2-knowledge`…), Conventional Commits, merge
-  `--no-ff`. O M1 teve 10 fases (F0–F9); a fatia de rede do M1.5, 6 (F0–F5); a de fog tem 6, das quais 3 feitas
-  (F0–F2).
+  `--no-ff`. O M1 teve 10 fases (F0–F9); a fatia de rede do M1.5, 6 (F0–F5); a de fog, 7 (F0–F6, a última com os
+  ajustes do playtest do dono).
 - **Viabilidade antes de compromisso.** A troca do protocolo veio com critérios numéricos na spec (banda, CPU,
   correção, retomada), medidos por ferramenta (`geo net`, soak) e julgados pelo dono num relatório
   ([viability.md](specs/m1.5-rede/viability.md)) antes de o fog começar.
 - **Harness primeiro.** A F5 (CLI, bots, métricas) veio antes do servidor e do cliente. A primeira passada de
   balanceamento aconteceu sem nenhuma interface gráfica, com relatórios em Markdown legíveis por humanos e por IA.
-- **Desenvolvido com o Claude Code.** Os 214 commits do M0, do M1 e do M1.5 até aqui (dois dias de trabalho,
-  2026-11-13 e 14) são co-autorados com o Claude. O [`CLAUDE.md`](../CLAUDE.md) e as skills em `.claude/skills/` (commit, fase, ADR, GDD,
+- **Desenvolvido com o Claude Code.** Os ~250 commits do M0, do M1 e do M1.5 (dois dias de trabalho, 2026-11-13 e
+  14) são co-autorados com o Claude. O [`CLAUDE.md`](../CLAUDE.md) e as skills em `.claude/skills/` (commit, fase, ADR, GDD,
   fatia) codificam o fluxo; o dono decide o design e aprova cada portão. É um dos motivos de "tudo é texto" pesar
   tanto na seção 8.
 
@@ -605,7 +614,8 @@ O cliente só envia intenção (`order`, `produce`…). O servidor valida o form
 `sim`), e o `step` revalida na hora de aplicar. Um script ou bot passa pelo mesmo funil e não pode fazer nada que
 um humano não faria. Com o fog, cada cliente e cada bot recebem só a visão do próprio time, e um comando que cita
 algo que o time não conhece é recusado com a mesma resposta de um id inexistente: aceitar ou recusar não revela
-nada. Até a F3 do fog, o `welcome` ainda manda o terreno inteiro (seção 9).
+nada. O `welcome` não manda o terreno, e a seed de um mundo vivo não aparece (com ela, o cliente, que embute o
+`sim`, regeraria o mapa).
 
 **E se o servidor cair no meio de um mundo de 3 dias?**
 Volta do último snapshot + log. O soak derrubou o servidor com `kill -9` cinco vezes num mundo inteiro: cada volta
@@ -613,13 +623,13 @@ levou 1,3–9 s, o hash final bateu com o do replay e os clientes conectados ret
 
 **Por que tick de 1 segundo?**
 Porque o mundo é de logística, não de reflexo: creeps andam 2–5 células por minuto. O tick lento deixa a simulação
-barata o bastante para rodar ~30 000× mais rápido na CLI. O que precisa de reflexo vai para a batalha, com tick
+barata o bastante para rodar ~20 000× mais rápido na CLI. O que precisa de reflexo vai para a batalha, com tick
 próprio.
 
 **Por que Node e não Bun / Go / Rust?**
 Node pela maturidade em processos que rodam por dias; o servidor só usa Node no adaptador, então trocar por Bun é
 barato. Go duplicaria a simulação (ou viraria WASM pesado com GC) e mataria a previsão compartilhada do M2. Rust →
-WASM seria otimização prematura: o tick médio custa ~35 µs, com o fog. Se um trecho quente da batalha pedir, ele vira WASM
+WASM seria otimização prematura: o tick médio custa ~50 µs, com o fog. Se um trecho quente da batalha pedir, ele vira WASM
 isoladamente ([ADR-0003](adr/0003-stack-typescript-node.md)).
 
 **Por que Preact e não React?**
@@ -630,7 +640,7 @@ isoladamente ([ADR-0003](adr/0003-stack-typescript-node.md)).
 ```bash
 nvm use                                 # Node 26
 npm install
-npm run check                           # typecheck, lint, format, 2 148 testes
+npm run check                           # typecheck, lint, format, 2 188 testes
 npm run geo -- sim --seed 42 --days 3   # um mundo de 3 dias bot × bot, com report.md em runs/
 npm run geo -- verify --seed 42         # determinismo: 3 caminhos, o mesmo hash
 npm run geo -- net --seed 42 --days 3   # banda e CPU dos deltas da visão, com o diff conferido em todo tick

@@ -1,11 +1,10 @@
 // Road mode feedback (F9, owner decision): the road a right click on the cell
 // under the pointer would build, and its cost, red when the stock is short.
 
-import { isOwnTeam } from "@geometrix/sim";
 import { useMemo } from "preact/hooks";
 import { useGame } from "../context.ts";
 import { COLORS } from "./colors.ts";
-import { roadPlan, roadPlanLabel, type RoadPlan } from "./road-plan.ts";
+import { roadPreview } from "./road-plan.ts";
 
 /** On-screen size of the cost text, in pixels. */
 const TEXT_PX = 13;
@@ -17,22 +16,29 @@ export function RoadPreviewLayer() {
   const state = store.current.value?.state;
   const cell = store.pointerCell.value;
   const active = store.mode.value.type === "road" && cell !== null;
-  const plan = useMemo<RoadPlan | null>(
+  const preview = useMemo(
     () =>
       !active || info === null || map === null || state === undefined
         ? null
-        : roadPlan(map, state, info.params, viewer.team, cell),
-    [active, cell?.x, cell?.y, state?.roads, state?.roadJobs, map, viewer.team],
+        : roadPreview(map, state, info.params, viewer.team, cell),
+    [
+      active,
+      cell?.x,
+      cell?.y,
+      state?.roads,
+      state?.roadJobs,
+      state?.teams,
+      state?.known,
+      map,
+      viewer.team,
+    ],
   );
-  if (plan === null || cell === null || info === null || !state) return null;
+  if (preview === null || cell === null || info === null) return null;
 
+  const { plan, text, short } = preview;
   const width = info.map.width;
   const at = (i: number) => ({ x: i % width, y: Math.floor(i / width) });
-  const team = state.teams[viewer.team];
-  const stock = team !== undefined && isOwnTeam(team) ? team.stock : undefined;
   const fontSize = TEXT_PX / (store.view.value?.scale ?? 1);
-  const seen = state.known[cell.y * width + cell.x] !== -1;
-  const [text, short] = roadPlanLabel(plan, stock, seen);
   return (
     <g class="road-preview">
       {plan.kind === "plan" &&

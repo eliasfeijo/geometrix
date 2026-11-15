@@ -1,8 +1,10 @@
 // What a left click selects: the creep under the pointer, a stack of creeps
-// (to choose one from a list), else the deposit or core at that cell.
+// (to choose one from a list), else the deposit or core at that cell. A click
+// that hits several markers with none clearly lists all their creeps (fog
+// F6, E3).
 
 import type { Cell, Deposit, OrderInput } from "@geometrix/sim";
-import { markerAt, type Marker } from "./layout.ts";
+import { markerAt, markersAt, type Marker } from "./layout.ts";
 import { cellAt, type Point } from "./view.ts";
 
 export type Selection =
@@ -22,10 +24,19 @@ export function pickAt(
   deposits: readonly Deposit[],
   /** By team; null for a core the team has not seen. */
   cores: readonly (Cell | null)[],
+  /** Pixels per cell. */
+  viewScale: number,
 ): Pick | null {
-  const marker = markerAt(point, markers);
+  const marker = markerAt(point, markers, viewScale);
   if (marker?.kind === "creep") return { kind: "creep", id: marker.id };
   if (marker?.kind === "stack") return { kind: "stack", ids: marker.ids };
+  const hits = markersAt(point, markers, viewScale);
+  if (hits.length > 0) {
+    const ids = hits.flatMap(({ marker: m }) =>
+      m.kind === "creep" ? [m.id] : m.ids,
+    );
+    return { kind: "stack", ids: ids.sort((a, b) => a - b) };
+  }
   const cell = cellAt(point);
   const deposit = deposits.find((d) => d.x === cell.x && d.y === cell.y);
   if (deposit !== undefined) return { kind: "deposit", id: deposit.id };

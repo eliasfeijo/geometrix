@@ -2,7 +2,13 @@ import { describe, expect, test } from "vitest";
 import { buyUpgrade, capacity } from "../src/economy.ts";
 import { DNAS } from "../src/params.ts";
 import type { WorldState } from "../src/world.ts";
-import { creepOf, loadTestParams, run, textWorld } from "./helpers.ts";
+import {
+  creepOf,
+  loadTestParams,
+  paramsWith,
+  run,
+  textWorld,
+} from "./helpers.ts";
 
 const params = loadTestParams();
 
@@ -86,6 +92,28 @@ describe("gather", () => {
     creep.order = { type: "gather", depositId: depositAt(world, 1).id };
     run(world, 100);
     expect(creep.cargo).toEqual({ materia: 0, cristal: 10 });
+  });
+
+  test("takes the resource's units on the world seconds of its pace", () => {
+    const paced = paramsWith((p) => {
+      p.gather.cristal = { units: 2, everySeconds: 5 };
+    });
+    const world = textWorld(["Acm......B"], paced);
+    const creep = creepOf(world, 0, "square");
+    Object.assign(creep, { x: 1 });
+    creep.order = { type: "gather", depositId: depositAt(world, 1).id };
+    run(world, 4);
+    expect(creep.cargo.cristal).toBe(0);
+    expect(creep.activity).toBe("gathering");
+    run(world, 1);
+    expect(creep.cargo.cristal).toBe(2);
+    run(world, 10);
+    expect(creep.cargo.cristal).toBe(6);
+    // Materia keeps its own pace.
+    Object.assign(creep, { x: 2 });
+    creep.order = { type: "gather", depositId: depositAt(world, 2).id };
+    run(world, 3);
+    expect(creep.cargo.materia).toBe(3);
   });
 
   test("stops when a cristal deposit runs out", () => {

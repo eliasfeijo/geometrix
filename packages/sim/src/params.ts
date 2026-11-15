@@ -78,8 +78,15 @@ const schema = {
       contestedMaxRiverDistance: positive,
     },
   },
-  /** Units a creep takes from a deposit per second, for every DNA and resource. */
-  gather: { unitsPerSecond: positive },
+  /**
+   * The gather pace of each resource, the same for every DNA (fog F6, E2): a
+   * creep at the deposit takes `units` on each world second that is a multiple
+   * of `everySeconds`.
+   */
+  gather: {
+    materia: { units: positive, everySeconds: positive },
+    cristal: { units: positive, everySeconds: positive },
+  },
   creep: { cost, productionSeconds: positive },
   road: { cost, buildSeconds: positive },
   upgrade: { capacity: { cost, bonusPermille: nonNegative } },
@@ -164,6 +171,8 @@ function checkConsistency(p: Params, issues: string[]): void {
       "deposits.materia.regen.everySeconds",
       p.deposits.materia.regen.everySeconds,
     ],
+    ["gather.materia.everySeconds", p.gather.materia.everySeconds],
+    ["gather.cristal.everySeconds", p.gather.cristal.everySeconds],
     ["creep.productionSeconds", p.creep.productionSeconds],
     ["road.buildSeconds", p.road.buildSeconds],
     ["domination.cooldownSeconds", p.domination.cooldownSeconds],
