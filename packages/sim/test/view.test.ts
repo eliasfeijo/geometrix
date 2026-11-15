@@ -70,6 +70,8 @@ function leakyWorld() {
   enemy.rules = collectorRules("cristal");
   enemy.dominatedBy = 2;
   enemy.cargo.cristal = 4;
+  enemy.hp = 123_000;
+  enemy.engagement = 777;
   const hidden = creepOf(world, 1, "circle");
   Object.assign(hidden, { x: 25, y: 1 });
   const rival = world.teams[1]!;
@@ -171,12 +173,15 @@ describe("view", () => {
         team: 1,
         dna: "square",
         name: enemy.name,
+        hp: 123_000,
+        engagement: 777,
         x: 3,
         y: 1,
         cargo: { materia: 0, cristal: 4 },
       },
     ]);
     expect(seen.creeps.map((c) => c.id)).not.toContain(hidden.id);
+    expect(JSON.stringify(seen)).not.toContain(`"${hidden.name}"`);
     expect(seen.teams[1]).toEqual({ id: 1, core: null });
     expect(seen.players).toEqual([
       world.players[0],

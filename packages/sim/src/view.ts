@@ -2,7 +2,8 @@
 // the one source both the network stream and the team's bot read. With fog of
 // war (M1.5 fog plan section 4) it is filtered: the team's own entities whole,
 // other teams' creeps only while in sight and only with the fields of spec
-// D7, and everything else from the team's memory.
+// D7 (and, since M2, its name, HP and whether it is in an encounter: M2
+// encontro spec D18), and everything else from the team's memory.
 
 import type { Player } from "./domination.ts";
 import type { Cell } from "./map.ts";
@@ -11,10 +12,13 @@ import type { Creep, Deposit, RoadJob, Team, WorldState } from "./world.ts";
 /** A creep as its team sees it: no cached path, move points or trip stats. */
 export type CreepView = Omit<Creep, "path" | "movePoints" | "trip">;
 
-/** Another team's creep in sight (spec D7): no order, rules or domination. */
+/**
+ * Another team's creep in sight (spec D7, M2 encontro D18): no order, rules
+ * or domination; its name, HP and encounter, so a wounded one can be chosen.
+ */
 export type ForeignCreepView = Pick<
   Creep,
-  "id" | "team" | "dna" | "name" | "x" | "y" | "cargo"
+  "id" | "team" | "dna" | "name" | "hp" | "engagement" | "x" | "y" | "cargo"
 >;
 
 /** Another team: its id and, once seen, where its core is (spec D7). */
@@ -175,6 +179,8 @@ function foreignCreepView(creep: Creep): ForeignCreepView {
     team: creep.team,
     dna: creep.dna,
     name: creep.name,
+    hp: creep.hp,
+    engagement: creep.engagement,
     x: creep.x,
     y: creep.y,
     cargo: creep.cargo,

@@ -62,7 +62,17 @@ describe("an enemy creep in sight (spec C-2)", () => {
     expect(creep).toBeDefined();
     expect(isOwnCreep(creep)).toBe(false);
     expect(Object.keys(creep).sort()).toEqual(
-      ["cargo", "dna", "id", "name", "team", "x", "y"].sort(),
+      [
+        "cargo",
+        "dna",
+        "engagement",
+        "hp",
+        "id",
+        "name",
+        "team",
+        "x",
+        "y",
+      ].sort(),
     );
     expect(creepStatus(creep, state.deposits)).toBeNull();
   });
