@@ -199,19 +199,26 @@ function roleOf(creep: Pick<Creep, "rules">): Role {
 
 /**
  * The road target: the non-empty deposit nearest to the core (Manhattan, ties
- * to the lower id) without a road on its cell and with a segment that can be
- * built toward it. null when there is none.
+ * to the first cell in the team's frame, as explore: the deposit ids are not
+ * mirrored between the teams) without a road on its cell and with a segment
+ * that can be built toward it. null when there is none.
  */
 export function roadTarget(
   state: RoadContext & { deposits: readonly Deposit[] },
   team: Pick<Team, "id" | "core">,
 ): Cell | null {
   const { map } = state;
+  const { width, height } = map;
+  const frameIndex = (c: Cell) =>
+    isRotatedSide(team.id)
+      ? (height - 1 - c.y) * width + (width - 1 - c.x)
+      : c.y * width + c.x;
   const candidates = state.deposits
     .filter((d) => d.amount > 0 && map.road[d.y * map.width + d.x] === 0)
     .sort(
       (a, b) =>
-        manhattan(team.core, a) - manhattan(team.core, b) || a.id - b.id,
+        manhattan(team.core, a) - manhattan(team.core, b) ||
+        frameIndex(a) - frameIndex(b),
     );
   for (const deposit of candidates) {
     if (nextSegment(state, team, deposit) !== null) {
