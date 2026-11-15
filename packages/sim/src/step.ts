@@ -1,17 +1,21 @@
-// The tick pipeline (plan section 5). Its fixed order:
+// The tick pipeline (plan section 5; M2 encontro plan section 5). Its fixed
+// order:
 //   1. apply the tick's external commands, in seq order       (F4)
 //   2. per creep, by id: dominated keeps its order, free ones
-//      evaluate their rules                                    (F4)
-//   3. resolve orders: movement, gathering, delivery, roads    (F2 / F3)
-//   4. core production queues, spawning (born event)           (F3)
-//   5. materia and HP regeneration                   (F3; M2 encontro P1)
-//   6. vision and team memory; the events' audience  (M1.5 fog, N10;
+//      evaluate their rules; creeps in an encounter skip      (F4)
+//   3. resolve orders: movement, gathering, delivery, roads,
+//      approach                                    (F2 / F3; M2 encontro)
+//   4. encounters: open, dialogue, rounds, close     (M2 encontro §4)
+//   5. core production queues, spawning (born event)           (F3)
+//   6. materia and HP regeneration                   (F3; M2 encontro P1)
+//   7. vision and team memory; the events' audience  (M1.5 fog, N10;
 //      ADR-0007 rule 3)
-//   7. stats accumulators; tick++                              (F5)
+//   8. stats accumulators; tick++                              (F5)
 
 import { runAutopilot } from "./autopilot.ts";
 import { applyCommand, type CommandInput } from "./commands.ts";
 import { findPlayer } from "./domination.ts";
+import { runEncounters } from "./encounter.ts";
 import { createEventLog, setAudience, type SimEvent } from "./events.ts";
 import { regenerate } from "./economy.ts";
 import { regenerateHp } from "./hp.ts";
@@ -47,6 +51,7 @@ export function step(
   }
   runAutopilot(state);
   resolveOrders(state);
+  runEncounters(state, log);
   runProduction(state, log);
   regenerate(state);
   regenerateHp(state);

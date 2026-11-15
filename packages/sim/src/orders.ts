@@ -24,7 +24,8 @@ import {
   findRoadJob,
   nextSegment,
 } from "./roads.ts";
-import { recordDelivery } from "./stats.ts";
+import { findCreep } from "./domination.ts";
+import { recordDelivery, type Activity } from "./stats.ts";
 import type { Creep, Deposit, WorldState } from "./world.ts";
 
 export type Order =
@@ -34,7 +35,19 @@ export type Order =
   | ({ type: "explore" } & Cell)
   | { type: "gather"; depositId: number }
   | { type: "deliver" }
-  | BuildRoadOrder;
+  | BuildRoadOrder
+  /**
+   * Chase an enemy creep in sight to open an encounter with it (M2 encontro
+   * spec D5, E-2); ends when the target leaves the team's sight.
+   */
+  | { type: "approach"; targetId: number; intent: "attack" | "extort" }
+  /** Pick up a spoil the team knows (spec D11, S-1). */
+  | { type: "pickup"; spoilId: number }
+  /**
+   * Run to the team's core with the flee bonus until `untilTick` or there
+   * (spec D10, plan P4). The autopilot does not change it, nor can a player.
+   */
+  | { type: "flee"; untilTick: number };
 
 /**
  * Build road until cell (x, y) has one. `segment` is the cell index being
@@ -47,6 +60,11 @@ export function resolveOrders(state: WorldState): void {
   const built = new Set<number>();
   for (const creep of state.creeps) {
     creep.activity = "idle";
+    // In an encounter a creep neither moves nor works (spec L-3).
+    if (creep.engagement !== null) {
+      creep.activity = engagedActivity(state, creep.engagement);
+      continue;
+    }
     const { order } = creep;
     switch (order.type) {
       case "stop":
@@ -74,12 +92,38 @@ export function resolveOrders(state: WorldState): void {
       case "buildRoad":
         buildRoad(state, creep, order, built);
         break;
+      case "approach":
+        approach(state, creep, order.targetId);
+        break;
     }
   }
 }
 
+function engagedActivity(state: WorldState, id: number): Activity {
+  const encounter = state.encounters.find((e) => e.id === id);
+  return encounter?.stage === "fight" ? "fighting" : "talking";
+}
+
+/**
+ * Walks toward the target's cell, the path recomputed when the target moves
+ * (the path cache keys on the target cell). Ends when the target is gone
+ * from the team's sight at the end of the last tick (spec E-2), or dead.
+ */
+function approach(state: WorldState, creep: Creep, targetId: number): void {
+  const target = findCreep(state, targetId);
+  const visible = memoryOf(state, creep.team).visible;
+  if (
+    target === undefined ||
+    visible[target.y * state.map.width + target.x] !== 1
+  ) {
+    halt(creep);
+    return;
+  }
+  if (walk(state, creep, target) === "unreachable") halt(creep);
+}
+
 /** Stops in place, dropping accumulated points and the cached path. */
-function halt(creep: Creep): void {
+export function halt(creep: Creep): void {
   creep.order = { type: "stop" };
   creep.movePoints = 0;
   creep.path = null;

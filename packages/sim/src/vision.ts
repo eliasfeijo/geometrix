@@ -174,7 +174,7 @@ export function createMemory(
 }
 
 /**
- * Stage 6 of the tick (plan section 3, N10), also run at the end of
+ * Stage 7 of the tick (plan section 3, N10), also run at the end of
  * createWorld: for each team, what its core and creeps see now, and the
  * memory updated from it.
  */

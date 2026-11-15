@@ -138,6 +138,14 @@ export function orderText(order: Order, deposits: readonly Deposit[]): string {
       return "entregar no Núcleo";
     case "buildRoad":
       return `construir estrada até (${order.x}, ${order.y})`;
+    case "approach":
+      return order.intent === "attack"
+        ? `atacar o creep #${order.targetId}`
+        : `extorquir o creep #${order.targetId}`;
+    case "pickup":
+      return `catar o despojo #${order.spoilId}`;
+    case "flee":
+      return "fugir para o Núcleo";
   }
 }
 
