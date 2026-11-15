@@ -291,4 +291,26 @@ seed 42 antes (em `main`) e depois.
 | F2 | `m1.5/fog-f2-knowledge` | Mapa conhecido; caminho e estradas pelo que o time sabe; piloto pela memória; explorar e presets; recusas; estrategista só com a visão; métricas novas | **Início de partida e economia** (seeds 1–20, 3 dias do seed 42, custo do tick) |
 | F3 | `m1.5/fog-f3-network` | Delta com `known`/`visible` e estrangeiros; `welcome`; seed e replay no servidor; `PROTOCOL_VERSION` 3; propriedade; `geo net` | **`geo net`** contra os alvos da rede |
 | F4 | `m1.5/fog-f4-client` | Três estados; estrangeiros; cursor e traçado; regras novas; replay com `fullView` | |
-| F5 | `m1.5/fog-f5-playtest` | Soak; perguntas de névoa no `PLAYTEST.md`; sessão de legibilidade | **Fecha o M1.5** (spec §8) |
+| F5 | `m1.5/fog-f5-playtest` | Soak; perguntas de névoa no `PLAYTEST.md`; sessão de legibilidade | Sessão 2 do dono: achados viram a F6 |
+| F6 | `m1.5/fog-f6-tuning` | Ajustes do playtest (spec §11, §13 abaixo) | **Fecha o M1.5** (spec §8) |
+
+## 13. F6 — Ajustes do playtest
+
+- **E1, tempo de viagem** (`pathfinding.ts`): uma busca de Dijkstra a partir do creep no mapa conhecido do time, com
+  o `stepCost` do A*, que para no primeiro depósito candidato alcançado (ou num custo máximo). O custo vira segundos
+  pela velocidade do DNA sem carga: `Σ stepCost × 60 / (cellsPerMinute × 1000)`. Desempate entre depósitos à mesma
+  distância: o menor id, como hoje. O `resourceInRange` continua em Manhattan (o raio da condição é em células).
+- **E1, esperar ou ir** (`autopilot.ts`, no `committedDeposit`): só com o depósito de matéria vazio e o creep nele.
+  Espera = regenerações que faltam para a matéria cobrir a carga livre do creep **e a dos creeps do time de id menor
+  coletando ali** (eles coletam antes no tick), vezes `regen.everySeconds`. Candidatos: os outros depósitos de
+  matéria da memória com pelo menos a carga livre do creep. A busca para assim que o custo passa da espera, o que a
+  mantém pequena. `SIM_VERSION` 5.
+- **E2, ritmo por recurso** (`params.ts`, `economy.ts`): `gather` vira `{ materia: { units, everySeconds },
+  cristal: { units, everySeconds } }`; a coleta acontece nos segundos de mundo múltiplos de `everySeconds` (como a
+  regeneração), sem campo novo no estado. Consistência: `everySeconds` múltiplo de `tickSeconds`.
+- **E3, seleção** (`map/pick.ts`, `map/layout.ts`): raio de clique = o maior entre o do marcador e um mínimo em
+  pixels convertido pela escala da vista. Um creep só sob o clique, ou o clique a menos de metade do raio do mais
+  próximo: seleciona. Vários: abre a lista com todos eles.
+- **E4, cursor** (`map/cursor.ts` novo, `map-view.tsx`): o tipo de cursor sai de uma função pura sobre o modo, o
+  creep dominado e o que está sob o ponteiro (`orderAt`, `pickAt`); cada tipo é um SVG em data URI no `cursor` do
+  CSS. Com um creep dominado, a ordem do clique direito vence; sobre um creep, selecionar.

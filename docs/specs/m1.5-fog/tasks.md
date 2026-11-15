@@ -83,3 +83,15 @@ na sua branch (plan §12, skill `commit`), com merge `--no-ff` em `main`.
       2026-11-14 (sessão 2, em andamento): **o fog e a exploração cumprem o papel esperado**; o alvo de explorar
       passou a desempatar pelo ganho (task acima). Os achados de economia e legibilidade viram a **F6**, e o
       fechamento do M1.5 passa para o checkpoint dela
+
+## F6 — Ajustes do playtest (`m1.5/fog-f6-tuning`)
+
+Spec §11, plan §13. Achados e decisões da sessão 2 do dono (2026-11-14).
+
+- [x] Decisões no GDD 07 (E1) e 03 (E2); spec, plan e tasks da F6
+- [ ] E1: depósito escolhido por tempo de viagem; com a matéria vazia, espera só se compensar; `SIM_VERSION` 5
+- [ ] E2: ritmo de coleta por recurso; cristal com o chute de 1 a cada 5 s
+- [ ] E3: seleção de creep com área de clique mínima em pixels e lista quando o clique cai em vários
+- [ ] E4: cursor com o ícone da ação do clique
+- [ ] **Checkpoint:** economia lado a lado com a F5 (parados, vazão, esgotamento do cristal, upgrade, teto, custo
+      do tick), valor do cristal, sessão de legibilidade do dono; fecha o M1.5
