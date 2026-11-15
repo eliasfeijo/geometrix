@@ -12,4 +12,4 @@ vira `Superseded by NNNN`.
 | [0005](0005-deploy-mvp-vps-websocket.md) | Deploy do MVP: VPS única + Docker Compose + Caddy; transporte por WebSocket | Accepted | 2026-11-13 |
 | [0006](0006-sync-do-mundo.md) | Sincronização do mundo: deltas por campo da visão de cada time | Accepted | 2026-11-14 |
 | [0007](0007-eventos-do-sim.md) | Eventos do `sim`: saída derivada do `step`, fora do estado | Accepted | 2026-11-15 |
-| [0008](0008-pacote-de-batalha.md) | Pacote de batalha: simulação determinística própria e o contrato interno v0 | Proposed | 2026-11-15 |
+| [0008](0008-pacote-de-batalha.md) | Pacote de batalha: simulação determinística própria e o contrato interno v0 | Accepted | 2026-11-15 |

@@ -1,6 +1,6 @@
 # ADR-0008: Pacote de batalha: simulação determinística própria e o contrato interno v0
 
-**Status:** Proposed · **Data:** 2026-11-15
+**Status:** Accepted (2026-11-15) · **Data:** 2026-11-15
 **Relaciona:** ADR-0001 (mundo e batalha separados; o contrato é a interface mais importante), ADR-0002 (tudo é
 comando), ADR-0003 (simulação pura e inteira), ADR-0007 (eventos fora do estado),
 [spec M2 do laboratório](../specs/m2-laboratorio/spec.md), GDD [06](../gdd/06-batalhas.md) (combate experimental e
@@ -30,7 +30,7 @@ As forças em jogo:
 
 ## Alternativas
 
-- **A. Um pacote próprio, `packages/battle` (`@geometrix/battle`)** (recomendada).
+- **A. Um pacote próprio, `packages/battle` (`@geometrix/battle`)** (escolhida).
   - Prós: versão, params, testes e hashes próprios; a fatia B não toca nos arquivos da A; o tick da batalha não se
     mistura com o do mundo; o pacote roda igual no servidor, na CLI, no navegador e num *worker*.
   - Contras: as guardas de determinismo do lint e do tsconfig precisam valer também para ele; utilidades puras que
