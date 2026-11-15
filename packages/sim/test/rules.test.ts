@@ -54,6 +54,48 @@ describe("setRules", () => {
     expect(setRulesRefusal(w, 1, ownCreep(w).id, [])).toBeNull();
   });
 
+  test("copies the encounter vocabulary, the DNA filter only when given", () => {
+    const w = world();
+    const creep = ownCreep(w);
+    const rules = [
+      {
+        when: { type: "enemyInSight", radius: 6, minCargo: 2, extra: 1 },
+        then: {
+          type: "approach",
+          intent: "extort",
+          radius: 6,
+          dna: ["square"],
+          minCargo: 2,
+        },
+      },
+      { when: { type: "hpBelow", permille: 400 }, then: { type: "flee" } },
+      { when: { type: "demandAtMost", permille: 0 }, then: { type: "pay" } },
+      { when: always, then: { type: "fight" } },
+      { when: always, then: { type: "pickup" } },
+    ] as unknown as Rule[];
+    expect(setRulesRefusal(w, 1, creep.id, rules)).toBeNull();
+    setRules(w, creep.id, rules);
+    expect(creep.rules).toEqual([
+      {
+        when: { type: "enemyInSight", radius: 6, minCargo: 2 },
+        then: {
+          type: "approach",
+          intent: "extort",
+          radius: 6,
+          dna: ["square"],
+          minCargo: 2,
+        },
+      },
+      { when: { type: "hpBelow", permille: 400 }, then: { type: "flee" } },
+      { when: { type: "demandAtMost", permille: 0 }, then: { type: "pay" } },
+      { when: always, then: { type: "fight" } },
+      { when: always, then: { type: "pickup" } },
+    ]);
+    const filter = creep.rules[0]!.then;
+    if (filter.type !== "approach") throw new Error("unreachable");
+    expect(filter.dna).not.toBe((rules[0]!.then as typeof filter).dna);
+  });
+
   test("copies only vocabulary fields", () => {
     const w = world();
     const creep = ownCreep(w);
@@ -121,6 +163,41 @@ describe("setRules", () => {
         when: { type: "resourceUnknown", resource: "ouro" },
         then: { type: "explore" },
       },
+    ],
+    [
+      "an unknown DNA in enemyInSight",
+      {
+        when: { type: "enemyInSight", radius: 5, dna: ["star"], minCargo: 0 },
+        then: { type: "stop" },
+      },
+    ],
+    [
+      "a repeated DNA in approach",
+      {
+        when: always,
+        then: {
+          type: "approach",
+          intent: "attack",
+          radius: 5,
+          dna: ["circle", "circle"],
+          minCargo: 0,
+        },
+      },
+    ],
+    [
+      "an unknown intent",
+      {
+        when: always,
+        then: { type: "approach", intent: "hug", radius: 5, minCargo: 0 },
+      },
+    ],
+    [
+      "a per mille above 1000",
+      { when: { type: "hpBelow", permille: 1001 }, then: { type: "flee" } },
+    ],
+    [
+      "a missing minCargo",
+      { when: { type: "enemyInSight", radius: 5 }, then: { type: "stop" } },
     ],
   ])("refuses %s", (_, rule) => {
     const w = world();

@@ -1,3 +1,4 @@
+export * from "./approach.ts";
 export * from "./autopilot.ts";
 export * from "./commands.ts";
 export * from "./domination.ts";
@@ -16,6 +17,7 @@ export * from "./presets.ts";
 export * from "./production.ts";
 export * from "./rng.ts";
 export * from "./roads.ts";
+export * from "./spoils.ts";
 export * from "./rules.ts";
 export * from "./serialize.ts";
 export * from "./stats.ts";

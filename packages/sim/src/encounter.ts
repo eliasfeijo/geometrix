@@ -5,6 +5,14 @@
 // fixed order. A creep is in one encounter at most; while in it, it neither
 // moves nor follows orders (L-3).
 
+import {
+  demandFor,
+  freeCapacity,
+  opening,
+  stockTotal,
+  ticks,
+} from "./approach.ts";
+import { ruleReaction } from "./autopilot.ts";
 import { capacity, cargoTotal, teamOf } from "./economy.ts";
 import { findCreep } from "./domination.ts";
 import { creepRef, emit, type EventLog } from "./events.ts";
@@ -22,61 +30,6 @@ import {
   type Stock,
   type WorldState,
 } from "./world.ts";
-
-/**
- * What an extortion demands (spec D8): the victim's cargo up to the
- * aggressor's free capacity, cristal first. Works on views too (the client
- * shows it before confirming, C-6).
- */
-export function demandFor(free: number, cargo: Stock): Stock {
-  const cristal = Math.max(0, Math.min(cargo.cristal, free));
-  const materia = Math.max(0, Math.min(cargo.materia, free - cristal));
-  return { materia, cristal };
-}
-
-export const stockTotal = (stock: Stock) => stock.materia + stock.cristal;
-
-/** Units the creep can still carry. */
-export function freeCapacity(state: WorldState, creep: Creep): number {
-  return (
-    capacity(creep, teamOf(state, creep), state.params) - cargoTotal(creep)
-  );
-}
-
-/** Whether the aggressor `aggressorId` may not extort `victim` again yet (D9). */
-export function extortBlocked(
-  victim: Creep,
-  aggressorId: number,
-  tick: number,
-): boolean {
-  return victim.extortBlocks.some(
-    (b) => b.aggressor === aggressorId && b.untilTick > tick,
-  );
-}
-
-const ticks = (state: WorldState, seconds: number) =>
-  seconds / state.params.world.tickSeconds;
-
-/**
- * Whether `aggressor` can open an encounter with `victim` now: "open"; "wait"
- * while the victim is busy, protected against the aggressor's team, or (for
- * an extortion) fleeing; "end" for an extortion with nothing to demand or a
- * blocked pair (spec E-5, D9): the approach is over.
- */
-export function opening(
-  state: WorldState,
-  aggressor: Creep,
-  victim: Creep,
-  intent: Encounter["intent"],
-): "open" | "wait" | "end" {
-  if (victim.engagement !== null) return "wait";
-  if (victim.safeConduct?.team === aggressor.team) return "wait";
-  if (intent === "attack") return "open";
-  if (victim.order.type === "flee") return "wait";
-  if (extortBlocked(victim, aggressor.id, state.tick)) return "end";
-  const demand = demandFor(freeCapacity(state, aggressor), victim.cargo);
-  return stockTotal(demand) === 0 ? "end" : "open";
-}
 
 /** Stage 4 of the tick (plan section 5). */
 export function runEncounters(state: WorldState, log: EventLog): void {
@@ -267,8 +220,19 @@ type Decision = { choice: Reply; by: "rule" | "player" | "default" };
 /**
  * The creep's reaction by its rules, or the defaults when none applies
  * (spec D13): pay an extortion, try to flee an attack, keep fighting a round.
+ * Fighting an extortion is refusing it.
  */
-function decide(context: ReactionContext): Decision {
+function decide(
+  state: WorldState,
+  creep: Creep,
+  context: ReactionContext,
+  encounter: Encounter,
+): Decision {
+  const rule = ruleReaction(state, creep, context, encounter);
+  if (rule !== null) {
+    const choice = rule === "fight" && context === "extorted" ? "refuse" : rule;
+    return { choice, by: "rule" };
+  }
   const choice =
     context === "extorted" ? "pay" : context === "attacked" ? "flee" : "fight";
   return { choice, by: "default" };
@@ -300,7 +264,7 @@ function decideDialogue(
     encounter.deadlineTick === null ||
     state.tick >= encounter.deadlineTick
   ) {
-    decision = decide(context);
+    decision = decide(state, victim, context, encounter);
   } else {
     return;
   }
@@ -405,7 +369,7 @@ function fightRound(
     const decision: Decision =
       fugitive.dominatedBy !== null && reply === "flee"
         ? { choice: "flee", by: "player" }
-        : decide("round");
+        : decide(state, fugitive, "round", encounter);
     if (decision.choice !== "flee") continue;
     emit(log, {
       type: "reaction",

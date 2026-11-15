@@ -40,7 +40,7 @@ na sua branch (plan §12, skill `commit`), com merge `--no-ff` em `main`.
 - [x] Fuga: chance pela velocidade (`speedHere`), fração largada, ordem `flee` travada com o bônus; fuga na
       reação e no meio da luta; em fuga, não extorquível (spec F-1..F-4, D10, plan P4, P11)
 - [x] Despojo: ordem `pickup`, ação `pickup`, despojos somados na célula (spec S-1, D11)
-- [ ] Vocabulário: condições `enemyInSight`, `hpBelow`, `demandAtMost`; ações `approach`, `pickup`, `pay`, `fight`,
+- [x] Vocabulário: condições `enemyInSight`, `hpBelow`, `demandAtMost`; ações `approach`, `pickup`, `pay`, `fight`,
       `flee`; regras de reação com os padrões; `rules.ts` copia e valida; preset `raider` (spec D13, D14, A-1..A-3,
       plan §6)
 - [ ] Comando `react` e as ordens novas no `orderRefusal`, com as recusas sem vazamento (spec D19); vocabulário

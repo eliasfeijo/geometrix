@@ -96,8 +96,22 @@ export function conditionText(c: Condition): string {
       return `estoque de ${RESOURCE_NAMES[c.resource]} < ${c.amount}`;
     case "resourceUnknown":
       return `não conhece depósito de ${RESOURCE_NAMES[c.resource]}`;
+    case "enemyInSight":
+      return `inimigo à vista a até ${c.radius} células${dnaFilter(c.dna)}${cargoFilter(c.minCargo)}`;
+    case "hpBelow":
+      return `HP abaixo de ${c.permille / 10}%`;
+    case "demandAtMost":
+      return `exigência até ${c.permille / 10}% da carga`;
   }
 }
+
+const dnaFilter = (dna: readonly Dna[] | undefined) =>
+  dna === undefined
+    ? ""
+    : ` (${dna.map((d) => DNA_NAMES[d].toLowerCase()).join(", ")})`;
+
+const cargoFilter = (minCargo: number) =>
+  minCargo > 0 ? `, com carga ≥ ${minCargo}` : "";
 
 export function actionText(a: Action): string {
   switch (a.type) {
@@ -115,6 +129,14 @@ export function actionText(a: Action): string {
       return "explorar";
     case "pickup":
       return "catar despojo";
+    case "approach":
+      return `${a.intent === "attack" ? "atacar" : "extorquir"} o inimigo mais perto a até ${a.radius} células${dnaFilter(a.dna)}${cargoFilter(a.minCargo)}`;
+    case "pay":
+      return "pagar a extorsão";
+    case "fight":
+      return "lutar";
+    case "flee":
+      return "fugir";
   }
 }
 

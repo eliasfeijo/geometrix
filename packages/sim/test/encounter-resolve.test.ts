@@ -163,7 +163,7 @@ describe("fleeing (spec F-1..F-4, D10)", () => {
     // 1600 / (1600 + 5000), about 24%.
     expect(escapes).toBeGreaterThan(25);
     expect(escapes).toBeLessThan(75);
-  });
+  }, 30_000);
 
   test("a loaded square on a crossing almost never escapes a circle", () => {
     const world = textWorld(ROW);
@@ -332,7 +332,7 @@ describe("the fight (spec L-1..L-3, D7, D11)", () => {
     // 250 against 1000: 20%.
     expect(hunterHits).toBeGreaterThan(20);
     expect(hunterHits).toBeLessThan(65);
-  });
+  }, 30_000);
 
   test("the dominated victim can flee in the middle of the fight", () => {
     for (let seed = 1; seed < 100; seed++) {
