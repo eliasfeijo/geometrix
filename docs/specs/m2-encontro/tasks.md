@@ -49,7 +49,7 @@ na sua branch (plan §12, skill `commit`), com merge `--no-ff` em `main`.
 
 ## F3 — Bots e harness (`m2/encontro-f3-harness`)
 
-- [ ] Papel de salteador no estrategista, `floor(creeps ÷ 6)` (spec D15, B-1, plan P8)
+- [x] Papel de salteador no estrategista, `floor(creeps ÷ 6)` (spec D15, B-1, plan P8)
 - [ ] Métricas dos eventos no harness; `report.md` do `geo sim` e do `geo sweep` com as métricas da spec §7, lado a
       lado com a F6 do fog (plan §10, P6)
 - [ ] `geo verify` com o hash da lista de eventos

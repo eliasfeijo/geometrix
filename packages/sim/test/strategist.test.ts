@@ -1,8 +1,12 @@
 import { describe, expect, test } from "vitest";
 import type { Command } from "../src/commands.ts";
-import { collectorRules, roadBuilderRules } from "../src/presets.ts";
+import {
+  collectorRules,
+  raiderRules,
+  roadBuilderRules,
+} from "../src/presets.ts";
 import { mirrorCell, Terrain } from "../src/map.ts";
-import { serialize } from "../src/serialize.ts";
+import { canonicalJson, serialize } from "../src/serialize.ts";
 import { step } from "../src/step.ts";
 import { roadTarget, strategistCommands } from "../src/strategist.ts";
 import { view } from "../src/view.ts";
@@ -44,14 +48,15 @@ const presetsOf = (commands: Command[]) =>
   );
 
 describe("balanced", () => {
-  test("splits 6 creeps into 2 cristal, 1 road builder and 3 materia, lowest ids first", () => {
+  test("splits 6 creeps into 2 cristal, 1 road builder, 1 raider and 2 materia, lowest ids first", () => {
     const world = joined();
-    const [a, b, c] = teamCreeps(world, 0);
+    const [a, b, c, d] = teamCreeps(world, 0);
     const commands = decide(world, 0);
     expect(presetsOf(commands)).toEqual([
       [a!.id, "cristalCollector"],
       [b!.id, "cristalCollector"],
       [c!.id, "roadBuilder"],
+      [d!.id, "raider"],
     ]);
     const builder = commands.find(
       (cmd) => cmd.type === "applyPreset" && cmd.preset === "roadBuilder",
@@ -68,6 +73,40 @@ describe("balanced", () => {
       world.tick -= 1;
     }
     expect(presetsOf(decide(world, 0))).toEqual([]);
+  });
+
+  test("keeps one raider for every 6 creeps, rounded down (spec D15, plan P8)", () => {
+    const world = joined();
+    const raiders = () =>
+      teamCreeps(world, 0).filter(
+        (c) => canonicalJson(c.rules) === canonicalJson(raiderRules()),
+      );
+    const settle = () => {
+      for (const input of botInputs(world)) {
+        step(world, [input]);
+        world.tick -= 1;
+      }
+    };
+    settle();
+    expect(raiders()).toHaveLength(1);
+    // 12 creeps: a second raider, taken from the lowest-id materia creeps.
+    const extra = teamCreeps(world, 0).map((c) => ({
+      ...structuredClone(c),
+      id: c.id + 1000,
+      rules: collectorRules("materia"),
+    }));
+    world.creeps.push(...extra);
+    settle();
+    expect(raiders()).toHaveLength(2);
+    // 5 creeps: none.
+    const keep = new Set(
+      teamCreeps(world, 0)
+        .slice(0, 5)
+        .map((c) => c.id),
+    );
+    world.creeps = world.creeps.filter((c) => c.team !== 0 || keep.has(c.id));
+    settle();
+    expect(raiders()).toEqual([]);
   });
 
   test("produces the DNA the team has fewest of, ties in ■ ▲ ● order", () => {
@@ -108,10 +147,11 @@ describe("balanced", () => {
     b!.rules = collectorRules("cristal");
     for (const d of world.deposits) if (d.kind === "cristal") d.amount = 0;
     revealWorld(world);
-    // Freed first, a is then the lowest-id materia creep: it fills the builder.
+    // Freed first, a and b are then the lowest-id materia creeps: they fill
+    // the builder and the raider.
     expect(presetsOf(decide(world, 0))).toEqual([
       [a!.id, "roadBuilder"],
-      [b!.id, "materiaCollector"],
+      [b!.id, "raider"],
     ]);
   });
 
