@@ -4,7 +4,7 @@
 //      evaluate their rules                                    (F4)
 //   3. resolve orders: movement, gathering, delivery, roads    (F2 / F3)
 //   4. core production queues, spawning                        (F3)
-//   5. materia regeneration                                    (F3)
+//   5. materia and HP regeneration                   (F3; M2 encontro P1)
 //   6. vision and team memory                       (M1.5 fog, N10)
 //   7. stats accumulators; tick++                              (F5)
 
@@ -12,6 +12,7 @@ import { runAutopilot } from "./autopilot.ts";
 import { applyCommand, type CommandInput } from "./commands.ts";
 import { findPlayer } from "./domination.ts";
 import { regenerate } from "./economy.ts";
+import { regenerateHp } from "./hp.ts";
 import { resolveOrders } from "./orders.ts";
 import { runProduction } from "./production.ts";
 import { accumulateStats, recordCommand } from "./stats.ts";
@@ -43,6 +44,7 @@ export function step(
   resolveOrders(state);
   runProduction(state);
   regenerate(state);
+  regenerateHp(state);
   updateVision(state);
   accumulateStats(state);
   state.tick += 1;
