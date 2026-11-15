@@ -85,7 +85,8 @@ flowchart LR
     M0["M0 · Design<br/>O que estamos construindo?"] --> M1["M1 · O ciclo da riqueza<br/>Coletar, transportar e investir<br/>já é interessante sozinho?"]
     M1 --> M15["M1.5 · A névoa<br/>Esconder informação cria decisões<br/>sem tornar o mapa ilegível?"]
     M15 --> M2["M2 · A emboscada<br/>A batalha muda o rumo do mundo<br/>sem dominar o jogo?"]
-    M2 --> M3["M3 · O time<br/>A governança gera decisões,<br/>ou só burocracia?"]
+    M2 --> M25["M2.5 · A jungle hostil<br/>chefões, progressão,<br/>temperamentos, árvores"]
+    M25 --> M3["M3 · O time<br/>A governança gera decisões,<br/>ou só burocracia?"]
     M3 --> M4["M4 · O mundo vivo<br/>tribos, diplomacia,<br/>piloto automático scriptável"]
     style M0 fill:#2e7d32,color:#fff
     style M1 fill:#2e7d32,color:#fff
@@ -171,7 +172,8 @@ O repo foi publicado em 2026-11-14, e o CI passa no GitHub.
 |---|---|
 | **M1.5 · A névoa** | ✅ Concluído. Deltas da visão de cada time (ADR-0006), validados localmente; fog of war: névoa negra, visão por DNA com linha de visão, memória do time, caminho e piloto pelo que o time sabe, ação explorar; clientes e bots vendo só o que o time enxerga |
 | **M2 · A emboscada** | Uma emboscada numa carga em trânsito abre uma instância de batalha; um humano domina um creep e luta; o resultado volta ao mundo como eventos; sem humano presente, a mesma simulação roda acelerada (auto-resolve) |
-| **M3 · O time** | 3v3, impostos, votação com níveis de autoridade, genética e progressão dos creeps |
+| **M2.5 · A jungle hostil** | Marco novo (dono, 2026-11-15): chefões com buffs e artefato; level, XP, evolução e skills; temperamentos; 3ª ação do encontro por DNA; árvores destrutíveis |
+| **M3 · O time** | 3v3, impostos, votação com níveis de autoridade, genética (a progressão foi para o M2.5) |
 | **M4 · O mundo vivo** | Jungle com tribos e diplomacia, piloto automático scriptável (JS em sandbox), construção ampla |
 
 ## 5. Arquitetura

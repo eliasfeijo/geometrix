@@ -27,6 +27,9 @@
     células nunca vistas no raio de visão do creep** (dono, 2026-11-14, depois de ver o batedor varrer a borda do
     escuro uma linha por vez); o desempate que sobra fica no referencial do time, para os dois lados ficarem
     equivalentes no mapa espelhado.
+- **Linha de comando e macros no chat, no M2** (dono, 2026-11-15): o campo do chat também invoca comandos por
+  texto, no estilo do BYOND, e aceita macros de cliente. Detalhes no [08](08-cronica-chat-e-console.md). Os scripts
+  no servidor continuam para depois (M4).
 
 ## Proposta
 - Humanos, macros, piloto automático e bots emitem os **mesmos comandos** ([ADR-0002](../adr/0002-tudo-e-comando.md)).
