@@ -85,7 +85,9 @@ funções transcendentais, `Date`, `for…in` e literais de ponto flutuante. Al�
   uma ideia aumentar o escopo do marco atual em vez de só aceitá-la.
 - **ADRs:** ao detectar uma decisão arquitetural, rascunhe o ADR com status `Proposed`. Ele só vira `Accepted`
   com a aprovação do dono. Atualize `docs/adr/README.md`.
-- **Idioma:** documentação em PT-BR; identificadores de código e mensagens de commit em inglês.
+- **Idioma:** documentação em PT-BR; identificadores de código e mensagens de commit em inglês. **Exceção:** o
+  `README.md` é em inglês (a porta de entrada do repo público), com o espelho `README.pt-BR.md`; ao mudar um, mude o
+  outro.
 - **Diagramas** em Mermaid, nunca ASCII art (árvore de pastas pode ser bloco de texto).
 
 ## Referência externa
