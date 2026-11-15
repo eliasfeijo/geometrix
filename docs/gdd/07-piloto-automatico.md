@@ -36,6 +36,10 @@
 - **Fase 2, script:** JS rodando em sandbox no servidor (QuickJS/WASM ou isolated-vm), com limite de CPU e
   memória. Referências: Screeps, Gladiabots.
 - A mesma interface serve aos **bots de teste**: partidas inteiras rodando sem interface, para balanceamento.
+- **Posturas de encontro** (agente, brainstorm de 2026-11-15, não aprovado;
+  [brainstorm M2–M3](../brainstorm/2026-11-15-m2-m3.md) §2): como quase todo encontro acontece sem humano, a
+  resposta vem do piloto automático. Condição nova "inimigo à vista" (filtrável por DNA e carga), ação nova
+  "abordar", e regras de reação (ex.: "pago até 20% da carga; acima disso, luto; se eu for mais rápido, fujo").
 
 ## Perguntas abertas
 - Onde fica o piloto automático: por creep, por grupo de creeps, ou por jogador?

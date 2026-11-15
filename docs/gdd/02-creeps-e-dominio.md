@@ -37,6 +37,17 @@
   com morte (M2), a ordem muda e os nomes trocariam. Renomear é um comando novo no vocabulário versionado
   ([ADR-0002](../adr/0002-tudo-e-comando.md)).
 
+- **Brainstorm de 2026-11-15** (não aprovado; [brainstorm M2–M3](../brainstorm/2026-11-15-m2-m3.md) §2 e §5):
+  - o dono quer o level, os stats individuais e as skills pelo DNA a tempo do combate. O agente propõe só stats
+    base por DNA no M2 (vida, dano, alcance, velocidade na batalha) e level e XP depois, para ver o combate sem a
+    progressão por cima;
+  - **evolução pelo uso** (agente, inspirada no treino dos jogos de ação do BYOND): o creep melhora no que faz pelo
+    piloto automático. Precisa de teto, ou de ficar fora da economia, para não quebrar a equivalência econômica dos
+    DNAs;
+  - **temperamento ao nascer** (agente): um traço sorteado (ex.: ganancioso, bravo, cauteloso) que dá a postura
+    padrão nos encontros e a voz do creep na crônica;
+  - o nome no estado passa a ser necessário para a crônica dos encontros.
+
 ## Ideias em incubação (não entram antes do M3)
 - **Reprodução e gerações:** creeps M/F, idade, morte natural, herança de DNA. Seria um limitador de população
   elegante e daria planejamento de longo prazo num mundo de dias. O custo é a carga de gerenciamento. Reavaliar

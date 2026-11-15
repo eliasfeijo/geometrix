@@ -55,6 +55,17 @@ Candidato para depois do M1:
 Uma partida de dias precisa de sumidouros para a economia não inflacionar: manutenção, desgaste de estruturas,
 consumo de cristal em evoluções.
 
+### Brainstorm de 2026-11-15 (não aprovado)
+Detalhes no [brainstorm M2–M3](../brainstorm/2026-11-15-m2-m3.md) §2, §4 e §5.
+- **Saque** (ideia do dono): se ninguém fugir, o vencedor fica com os recursos dos perdedores que morreram.
+- **Extorsão física** (agente): o que a vítima paga passa da carga dela para a do agressor, até a capacidade livre
+  dele.
+- **Despojo** (agente): uma pilha no chão que qualquer creep pode catar. Guarda o saque que não coube, a bolsa
+  largada na fuga e o artefato que cai quando o portador morre.
+- **Escambo entre times** (agente): uma ação do encontro. Os bots terminam a partida com ~68% do cristal parado.
+- **Sumidouros candidatos** (agente): a pressão crescente dos errantes no fim da partida e a durabilidade das armas
+  (camada de forja).
+
 ## Ideias em incubação (sem marco definido)
 - **Pontes e construções no rio:** um conceito próprio de travessia construída, que deixaria a estrada cruzar o rio.
   O dono quer considerar mais à frente; não entra no M1.
