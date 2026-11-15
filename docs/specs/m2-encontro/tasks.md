@@ -43,7 +43,7 @@ na sua branch (plan §12, skill `commit`), com merge `--no-ff` em `main`.
 - [x] Vocabulário: condições `enemyInSight`, `hpBelow`, `demandAtMost`; ações `approach`, `pickup`, `pay`, `fight`,
       `flee`; regras de reação com os padrões; `rules.ts` copia e valida; preset `raider` (spec D13, D14, A-1..A-3,
       plan §6)
-- [ ] Comando `react` e as ordens novas no `orderRefusal`, com as recusas sem vazamento (spec D19); vocabulário
+- [x] Comando `react` e as ordens novas no `orderRefusal`, com as recusas sem vazamento (spec D19); vocabulário
       com `BREAKING CHANGE`
 - [ ] Todos os eventos do encontro (spec K-1, plan §7), com testes de ordem e de público (K-2)
 
