@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import type { Command } from "../src/commands.ts";
 import { collectorRules, roadBuilderRules } from "../src/presets.ts";
-import { Terrain } from "../src/map.ts";
+import { mirrorCell, Terrain } from "../src/map.ts";
 import { serialize } from "../src/serialize.ts";
 import { step } from "../src/step.ts";
 import { roadTarget, strategistCommands } from "../src/strategist.ts";
@@ -154,6 +154,22 @@ describe("balanced", () => {
       preset: "roadBuilder",
       target: second,
     });
+  });
+
+  test("breaks a road target tie by the cell in the team's frame, so the teams mirror", () => {
+    // Two materia deposits 3 cells from each core; the ids are in map order,
+    // so they are not mirrored between the teams.
+    const world = textWorld([
+      "m.....",
+      "..A..m",
+      "......",
+      "......",
+      "m..B..",
+      ".....m",
+    ]);
+    const targets = [0, 1].map((t) => roadTarget(world, world.teams[t]!));
+    expect(targets[0]).toEqual({ x: 0, y: 0 });
+    expect(targets[1]).toEqual(mirrorCell({ x: 0, y: 0 }, world.map));
   });
 
   test("decides from the view alone, without changing the state", () => {
