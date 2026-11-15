@@ -23,9 +23,10 @@ import { nameAt } from "./names.ts";
  * picks the deposit by travel time and waits at a dry one only when quicker
  * (fog F6, E1), and each resource has its own gather pace (E2). 6: creeps
  * have a name from the birth counter, HP that regenerates, and can die; step
- * returns events (M2 encontro F1).
+ * returns events (M2 encontro F1). 7: encounters, fights, flight, spoils
+ * and the encounter vocabulary (M2 encontro F2).
  */
-export const SIM_VERSION = 6;
+export const SIM_VERSION = 7;
 
 export type Stock = Record<Resource, number>;
 
