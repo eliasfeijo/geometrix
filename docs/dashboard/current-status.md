@@ -1,6 +1,6 @@
 # Status atual
 
-**Atualizado:** 2026-11-14 · **Marco:** M1.5 — A névoa · **Fatia de rede:** ✅ concluída (viabilidade aprovada) · **Design do fog:** ✅ decidido (GDD 01, 02, 07) · **Spec e plan do fog:** ✅ aprovados · **Fog F1:** ✅ · **Fog F2:** ✅ · **Fog F3:** ✅ · **Fog F4:** ✅ · **Fog F5:** 🟡 soak ✅, aguarda a sessão de legibilidade do dono (fecha o M1.5)
+**Atualizado:** 2026-11-14 · **Marco:** M1.5 — A névoa · **Fatia de rede:** ✅ concluída (viabilidade aprovada) · **Design do fog:** ✅ decidido (GDD 01, 02, 07) · **Spec e plan do fog:** ✅ aprovados · **Fog F1:** ✅ · **Fog F2:** ✅ · **Fog F3:** ✅ · **Fog F4:** ✅ · **Fog F5:** ✅ · **Próximo:** fog F6 (ajustes do playtest), que fecha o M1.5
 
 Resumo de bolso. A fonte de verdade continua nos docs linkados. Atualize este arquivo ao fechar uma fase, ao passar
 por um portão de aprovação ou quando surgir um bloqueio.
@@ -24,7 +24,7 @@ por um portão de aprovação ou quando surgir um bloqueio.
 | M1 — F8 Replay e multi-cliente | ✅ Concluída, merge em `main`. Replay no navegador (arquivo do `geo sim` ou `GET /api/worlds/:id/replay`) com velocidades, linha do tempo e hash ✓/✗; hash confere no WebKit/JSC; `npm run dev:multi`. Detalhes decididos pelo dono no [plan §8](../specs/m1-ciclo-da-riqueza/plan.md) | [tasks.md §F8](../specs/m1-ciclo-da-riqueza/tasks.md) · `apps/client/src/replay/` · `apps/server/src/dev-multi*.ts` |
 | M1 — F9 Legibilidade e playtest | ✅ Concluída, merge em `main`. Fecha o M1. Feito: `npm run soak` (teste de resistência comprimido, no lugar do mundo de 24 h), estrada × pedra, nomes no mapa (Chakra Petch), carga cheia, `+N`/`−N` no Núcleo, custo da estrada sob o cursor e tempo da obra, [PLAYTEST.md](../PLAYTEST.md). **Checkpoint** (dono, 2026-11-14): playtest parcial e replay validados, sem achados | [tasks.md §F9](../specs/m1-ciclo-da-riqueza/tasks.md) · [spec §8](../specs/m1-ciclo-da-riqueza/spec.md) |
 | Deploy e playtest de diversão | Saíram do M1 (dono, 2026-11-14): abrem o M2 | [ROADMAP](../ROADMAP.md) |
-| M1.5 — A névoa | 🟡 Em andamento (dono, 2026-11-14). Duas fatias: rede (deltas da visão de cada time, [ADR-0006](../adr/0006-sync-do-mundo.md), aceito) ✅ concluída, e depois fog of war 🟡 (rodada de design, spec e plan ✅ 2026-11-14; F1 ✅; F2 ✅; F3 ✅; F4 ✅; F5 🟡 checkpoint) | [ROADMAP](../ROADMAP.md) |
+| M1.5 — A névoa | 🟡 Em andamento (dono, 2026-11-14). Duas fatias: rede (deltas da visão de cada time, [ADR-0006](../adr/0006-sync-do-mundo.md), aceito) ✅ concluída, e depois fog of war 🟡 (rodada de design, spec e plan ✅ 2026-11-14; F1 ✅; F2 ✅; F3 ✅; F4 ✅; F5 ✅; F6 ⬜) | [ROADMAP](../ROADMAP.md) |
 | M1.5 rede — spec | ✅ Aprovada (2026-11-14). Decisões D1–D8; critérios de viabilidade na §7 | [spec.md](../specs/m1.5-rede/spec.md) |
 | M1.5 rede — plan | ✅ Aprovado (2026-11-14), com R1–R7 decididas | [plan.md](../specs/m1.5-rede/plan.md) |
 | M1.5 fog — spec | ✅ Aprovada (2026-11-14). Decisões D1–D12 (D1: pedras bloqueiam a visão, escolha do dono; D3/D4: como e para onde se explora, no GDD 07); critérios na §7 | [spec.md](../specs/m1.5-fog/spec.md) |
@@ -39,6 +39,7 @@ por um portão de aprovação ou quando surgir um bloqueio.
 | M1.5 fog — F2 Pelo que o time sabe | ✅ Concluída, merge em `main`. Mapa conhecido (`known.ts`), A* e estradas pelo que o time sabe, piloto pela memória, ordem/ação `explore` e condição `resourceUnknown`, presets coletor e `scout`, recusas sem vazamento, estrategista só com a visão, métricas novas. **Checkpoint** (dono, 2026-11-14): início de partida ✅ (1ª matéria em 2–7 min, seeds 1–20); economia aceita (matéria −13% a −20% em 3 dias); custo do tick 2,2× aceito; divergência entre os times a rever no rebalanceamento ([plan §10](../specs/m1.5-fog/plan.md)) | [tasks.md](../specs/m1.5-fog/tasks.md) · `packages/sim/src/known.ts` · `runs/m1.5-fog-f2-checkpoint/` |
 | M1.5 fog — F3 Rede e servidor | ✅ Concluída, merge em `main`. `welcome` só com o tamanho do mapa (sem terreno, sem `cores`), `PROTOCOL_VERSION` 3; seed `null` e replay → 409 em mundo vivo; propriedade de 6 h com creep inimigo e Núcleo inimigo. **Checkpoint `geo net`** ✅: 195 B/s, 121 µs por envio, 0 divergências | [tasks.md](../specs/m1.5-fog/tasks.md) · `apps/server/src/{http,ws}.ts` · `runs/m1.5-fog-f3-checkpoint-net/` |
 | M1.5 fog — F4 Cliente | ✅ Concluída, merge em `main`. Névoa com os três estados (negro, véu, visível), lembrados sob o véu; creep inimigo que sai da visão; sem custo de estrada sobre célula nunca vista; ação explorar, condição "não conhece depósito de" e preset Batedor no editor; replay sem névoa. Nomes de creep pelo id | [tasks.md](../specs/m1.5-fog/tasks.md) · `apps/client/src/map/{fog,fog-layer}.ts*` |
+| M1.5 fog — F5 Soak e legibilidade | ✅ Concluída, merge em `main`. Soak com o fog (`SIM_VERSION` 3 e 4) sem divergência; perguntas de névoa no PLAYTEST; alvo de explorar desempatado pelo ganho (decisão do dono depois de um vídeo do batedor). Sessão 2 do dono: o fog e a exploração cumprem o papel; os achados viram a F6 | [tasks.md](../specs/m1.5-fog/tasks.md) · `runs/m1.5-fog-f5-explore/` |
 | M2–M4 | ⬜ Não iniciados | [ROADMAP](../ROADMAP.md) |
 
 ## Próximos passos imediatos
@@ -56,10 +57,11 @@ por um portão de aprovação ou quando surgir um bloqueio.
    Ficaram em aberto, para a spec: como os creeps começam explorando (regra no preset coletor, preset "batedor" ou
    os dois; GDD 07). Terreno e Núcleo inimigo vistos ficam conhecidos, e a tela tem três estados (nunca visto,
    lembrado, visível): confirmados pelo dono na mesma rodada.
-2. **Implementar o fog** ([tasks](../specs/m1.5-fog/tasks.md), skill `implement-phase`). F1–F4 ✅. **F5**
-   (`m1.5/fog-f5-playtest`, sem merge): soak ✅ e perguntas de névoa no [PLAYTEST.md](../PLAYTEST.md) ✅;
-   **aguarda o checkpoint**: a sessão de legibilidade do dono (seção "Névoa (M1.5)" do PLAYTEST) e as respostas em
-   "Checkpoint da F5 do fog", abaixo. Com elas, o merge da F5 fecha o M1.5. O que a F5 sabe da F4:
+2. **Implementar o fog** ([tasks](../specs/m1.5-fog/tasks.md), skill `implement-phase`). F1–F5 ✅. Próxima: **F6
+   — Ajustes do playtest** (`m1.5/fog-f6-tuning`), decidida pelo dono na sessão 2 (2026-11-14): coletor de matéria
+   que só espera o depósito vazio se compensar, coleta de cristal mais lenta (valor medido antes de fixar), seleção
+   de creep com área de clique maior e lista quando vários se sobrepõem, cursor com o ícone da ação do clique. O
+   checkpoint da F6 fecha o M1.5 (com as perguntas abertas abaixo). O que vale saber da F4 e da F5:
    - **num mundo só de humanos, ninguém explora sem ordem:** todo creep nasce coletor de matéria, que só explora
      quando o time não conhece depósito do recurso (spec D3), e no seed 42 há matéria à vista do Núcleo. Em 4 h de
      mundo (×360) o time Azul ficou no losango inicial, com 0 cristal. É a regra da spec; o jogador explora com o
@@ -92,9 +94,22 @@ Um item por problema: o que a pessoa não entendeu ou não conseguiu, a tarefa o
   está resolvido. **Nenhum problema reportado.** Ainda sem uma pessoa que nunca viu o jogo (ver próximos passos,
   item 3).
 
+- **Sessão 2 (dono, 2026-11-14), em andamento:** `dev:multi` com o fog, na branch da F5. **O fog e a exploração
+  cumprem o papel esperado.** Achados, todos levados à F6 ([tasks](../specs/m1.5-fog/tasks.md)):
+  - **o batedor varria a borda do escuro uma linha de visão por vez** (vídeo do dono): resolvido na F5, com o alvo
+    de explorar desempatado pelo ganho;
+  - **coletores de matéria disputam o depósito mais perto do Núcleo e esperam a regeneração, 1 a 1,** em vez de
+    pegar a estrada pronta até um depósito cheio um pouco mais longe (nos 3 dias do seed 42, os creeps passam
+    29–51% do tempo parados a partir da 12ª hora);
+  - **o cristal se esgota rápido demais** (o mapa inteiro em 8,6 h de 72);
+  - **com o zoom afastado, o clique numa "bola" sobreposta a outros creeps não seleciona o que se quer:** a área
+    de clique é de meia célula pelo centro mais próximo;
+  - **falta feedback de qual ação o clique vai gerar:** pedido de cursor com o ícone da ação.
+
 ## Pendências e pontos a esclarecer
 
-- **Checkpoint da F5 do fog: fecha o M1.5** (spec §8, "Critério para fechar o M1.5"). Critérios da spec §7:
+- **Fechamento do M1.5** (spec §8, "Critério para fechar o M1.5"; passou do checkpoint da F5 para o da F6).
+  Critérios da spec §7:
 
   | Critério | Resultado | Onde |
   |---|---|---|
@@ -138,10 +153,10 @@ Um item por problema: o que a pessoa não entendeu ou não conseguiu, a tarefa o
   - `geo verify` OK; 2 161 testes. A propriedade do diff baixou o piso de creeps inimigos à vista em 6 h de 100 para
     20 (no seed 42 os times se cruzam menos: 68).
 
-  **Perguntas ao dono:**
-  1. **Sessão de legibilidade:** rodar a seção "Névoa (M1.5)" do [PLAYTEST.md](../PLAYTEST.md) (de preferência
-     com alguém que nunca viu o jogo) e responder à hipótese: *esconder informação cria decisões interessantes
-     (explorar, proteger rotas) sem tornar o mapa ilegível?* Os achados entram em "Achados do playtest".
+  **Perguntas ao dono** (para o checkpoint da F6):
+  1. **Sessão de legibilidade:** sessão 2 em andamento; o fog e a exploração cumprem o papel. Falta a resposta à
+     hipótese depois da F6: *esconder informação cria decisões interessantes (explorar, proteger rotas) sem tornar
+     o mapa ilegível?* De preferência também com alguém que nunca viu o jogo.
   2. **Interpretações da F4** (abaixo): nomes de creep pelo id, com sufixo nos últimos ~30 creeps de um mundo
      longo; véu com opacidade 0,55. Ok, ou algo a mudar depois da sessão?
   3. **Num mundo só de humanos, ninguém explora sem ordem** (regra D3: o coletor só explora sem depósito

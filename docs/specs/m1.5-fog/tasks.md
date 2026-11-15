@@ -79,4 +79,7 @@ na sua branch (plan §12, skill `commit`), com merge `--no-ff` em `main`.
 - [x] Perguntas de névoa no `PLAYTEST.md` (spec §8): roteiro N1–N9 e questionário N1–N6
 - [x] Alvo de explorar desempatado pelo ganho: entre as células nunca vistas igualmente próximas, a com mais células
       nunca vistas no raio de visão do creep (dono, 2026-11-14, no checkpoint; plan §10); `SIM_VERSION` 4
-- [ ] **Checkpoint:** sessão de legibilidade do dono com `dev:multi`; resposta à hipótese; fecha o M1.5
+- [x] **Checkpoint:** sessão de legibilidade do dono com `dev:multi`; resposta à hipótese; fecha o M1.5. Dono,
+      2026-11-14 (sessão 2, em andamento): **o fog e a exploração cumprem o papel esperado**; o alvo de explorar
+      passou a desempatar pelo ganho (task acima). Os achados de economia e legibilidade viram a **F6**, e o
+      fechamento do M1.5 passa para o checkpoint dela
