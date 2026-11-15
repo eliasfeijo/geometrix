@@ -14,7 +14,7 @@ na sua branch (plan §12, skill `commit`), com merge `--no-ff` em `main`.
 
 ## F1 — Identidade, HP e eventos no `sim` (`m2/encontro-f1-identity`)
 
-- [ ] Params `hp` (máximo e peso de luta por DNA, regeneração no mapa e na zona do Núcleo, raio da zona), `fight`,
+- [x] Params `hp` (máximo e peso de luta por DNA, regeneração no mapa e na zona do Núcleo, raio da zona), `fight`,
       `flee`, `encounter`, `safeConduct` no `schema`, no `default.json`, no `test/params.json` e no
       `checkConsistency` (spec §6, plan §3)
 - [ ] `names.ts` no `sim` (lista e `nameAt`, com os testes da lista), `state.births`, `name` e `hp` no nascimento

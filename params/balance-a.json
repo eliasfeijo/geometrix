@@ -78,8 +78,14 @@
     }
   },
   "gather": {
-    "materia": { "units": 1, "everySeconds": 1 },
-    "cristal": { "units": 1, "everySeconds": 1 }
+    "materia": {
+      "units": 1,
+      "everySeconds": 1
+    },
+    "cristal": {
+      "units": 1,
+      "everySeconds": 1
+    }
   },
   "creep": {
     "cost": {
@@ -122,5 +128,43 @@
       "triangle": 4,
       "circle": 6
     }
+  },
+  "hp": {
+    "dna": {
+      "square": {
+        "max": 300,
+        "fightWeightPermille": 1000
+      },
+      "triangle": {
+        "max": 200,
+        "fightWeightPermille": 1000
+      },
+      "circle": {
+        "max": 120,
+        "fightWeightPermille": 1000
+      }
+    },
+    "regenPermillePerMinute": {
+      "map": 10,
+      "coreZone": 100
+    },
+    "coreZoneRadius": 8
+  },
+  "fight": {
+    "roundSeconds": 10,
+    "hitPermille": 250
+  },
+  "flee": {
+    "dropMinPermille": 500,
+    "speedPermille": 1500,
+    "seconds": 60
+  },
+  "encounter": {
+    "radius": 1,
+    "reactionSeconds": 60
+  },
+  "safeConduct": {
+    "seconds": 600,
+    "blockSeconds": 1800
   }
 }

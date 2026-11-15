@@ -16,6 +16,7 @@ const positive: Leaf = { min: 1 };
 
 const cost = { materia: nonNegative, cristal: nonNegative } as const;
 const dna = { capacity: positive, cellsPerMinute: positive } as const;
+const hpDna = { max: positive, fightWeightPermille: positive } as const;
 
 const schema = {
   world: { durationSeconds: positive, tickSeconds: positive },
@@ -106,6 +107,40 @@ const schema = {
     core: nonNegative,
     dna: { square: positive, triangle: positive, circle: positive },
   },
+  /**
+   * Hit points (M2 encontro spec D2, D3; plan P1). The state keeps HP in
+   * thousandths, so the per-mille rates below give integers. `fightWeight`
+   * scales a creep's chance in each round of the throwaway fight (D7).
+   * Regeneration is per mille of the maximum per world minute, faster within
+   * `coreZoneRadius` (Manhattan) of the team's own core; the same radius ends
+   * a safe conduct (D9).
+   */
+  hp: {
+    dna: { square: hpDna, triangle: hpDna, circle: hpDna },
+    regenPermillePerMinute: { map: nonNegative, coreZone: nonNegative },
+    coreZoneRadius: nonNegative,
+  },
+  /** The throwaway fight (D7): a round every `roundSeconds`, a hit takes `hitPermille` of the maximum HP. */
+  fight: { roundSeconds: positive, hitPermille: positive },
+  /**
+   * Fleeing (D10): who escapes drops between `dropMinPermille` and 1000‰ of
+   * each resource and runs to its core at `speedPermille` for `seconds`.
+   */
+  flee: {
+    dropMinPermille: nonNegative,
+    speedPermille: positive,
+    seconds: positive,
+  },
+  /**
+   * The encounter (D5, D6): it opens within `radius` (Manhattan); a dominated
+   * victim's player has `reactionSeconds` to answer.
+   */
+  encounter: { radius: nonNegative, reactionSeconds: nonNegative },
+  /**
+   * After paying (D9): immune to the extorting team for `seconds`; the same
+   * aggressor cannot extort the same creep again for `blockSeconds`.
+   */
+  safeConduct: { seconds: nonNegative, blockSeconds: nonNegative },
 } as const satisfies Schema;
 
 type FromSchema<S> = {
@@ -176,11 +211,28 @@ function checkConsistency(p: Params, issues: string[]): void {
     ["creep.productionSeconds", p.creep.productionSeconds],
     ["road.buildSeconds", p.road.buildSeconds],
     ["domination.cooldownSeconds", p.domination.cooldownSeconds],
+    ["fight.roundSeconds", p.fight.roundSeconds],
+    ["flee.seconds", p.flee.seconds],
+    ["encounter.reactionSeconds", p.encounter.reactionSeconds],
+    ["safeConduct.seconds", p.safeConduct.seconds],
+    ["safeConduct.blockSeconds", p.safeConduct.blockSeconds],
   ];
   for (const [path, seconds] of durations) {
     if (seconds % tickSeconds !== 0) {
       issues.push(`${path}: must be a multiple of world.tickSeconds`);
     }
+  }
+  // HP regenerates once per world minute (M2 encontro plan P1).
+  if (60 % tickSeconds !== 0) {
+    issues.push(
+      "world.tickSeconds: must divide 60 (HP regenerates per minute)",
+    );
+  }
+  if (p.flee.dropMinPermille > 1000) {
+    issues.push("flee.dropMinPermille: must be <= 1000");
+  }
+  if (p.fight.hitPermille > 1000) {
+    issues.push("fight.hitPermille: must be <= 1000");
   }
   // Point symmetry (plan section 6) needs even sides and a centered river.
   if (p.map.width % 2 !== 0) issues.push("map.width: must be even");
