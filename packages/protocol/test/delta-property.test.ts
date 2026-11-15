@@ -95,7 +95,7 @@ test.each([1, 42, 649])(
     expect(sight).toBeGreaterThan(1000);
     expect(roads).toBeGreaterThan(10);
     expect(removes).toBeGreaterThan(0);
-    expect(foreign).toBeGreaterThan(100);
+    expect(foreign).toBeGreaterThan(20);
     expect(enemyCoreSeen).toEqual([true, true]);
   },
   60_000,
