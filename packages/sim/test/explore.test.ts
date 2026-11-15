@@ -22,12 +22,36 @@ function knownAs(world: WorldState, rows: string[]): void {
 }
 
 describe("exploreTarget", () => {
-  test("is the cell never seen fewest steps away, ties to the lower index", () => {
+  test("is the cell never seen fewest steps away, equal ties to the lower index", () => {
     const world = textWorld(["A........B", "..........", ".........."]);
     knownAs(world, ["..?.......", "..........", "?........."]);
     const creep = creepOf(world, 0, "circle");
     // (2, 0) and (0, 2) are both 2 steps from the core at (0, 0).
     expect(exploreTarget(world, creep)).toEqual({ x: 2, y: 0 });
+  });
+
+  test("among cells equally near, goes where it would see the most never seen", () => {
+    const world = textWorld([
+      "A..........B",
+      "............",
+      "............",
+      "............",
+      "............",
+    ]);
+    knownAs(world, [
+      "..?.........",
+      "............",
+      "???.........",
+      "???.........",
+      "???.........",
+    ]);
+    // (2, 0) and (0, 2) are both 2 steps from the core. Within the square's
+    // sight (3), (2, 0) has 4 cells never seen, (0, 2) has 8: it wins over
+    // the lower index.
+    expect(exploreTarget(world, creepOf(world, 0, "square"))).toEqual({
+      x: 0,
+      y: 2,
+    });
   });
 
   test("counts steps on the known map, not Manhattan", () => {

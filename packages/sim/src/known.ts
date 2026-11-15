@@ -57,8 +57,9 @@ export function knownRoadJob(
 /**
  * Where the creep explores next (fog spec D4, plan N4): the cell never seen
  * that is fewest steps away on the team's known map, and that no other creep
- * of the team is exploring toward. null when no cell never seen can be
- * reached.
+ * of the team is exploring toward; among those equally near, the one with the
+ * most cells never seen within the creep's sight radius (owner, F5
+ * checkpoint). null when no cell never seen can be reached.
  */
 export function exploreTarget(state: WorldState, creep: Creep): Cell | null {
   const memory = memoryOf(state, creep.team);
@@ -75,13 +76,47 @@ export function exploreTarget(state: WorldState, creep: Creep): Cell | null {
     creep,
     isRotatedSide(creep.team),
     taken,
+    state.params.vision.dna[creep.dna],
   );
+}
+
+/**
+ * How many cells never seen lie within Manhattan `radius` of cell `i`: what
+ * standing there would reveal, if nothing blocked the sight (an estimate).
+ */
+export function unseenAround(
+  map: Pick<GameMap, "width" | "height">,
+  explored: readonly number[],
+  i: number,
+  radius: number,
+): number {
+  const { width, height } = map;
+  const cx = i % width;
+  const cy = Math.floor(i / width);
+  let count = 0;
+  for (
+    let y = Math.max(0, cy - radius);
+    y <= Math.min(height - 1, cy + radius);
+    y++
+  ) {
+    const span = radius - Math.abs(y - cy);
+    const row = y * width;
+    for (
+      let x = Math.max(0, cx - span);
+      x <= Math.min(width - 1, cx + span);
+      x++
+    ) {
+      if (explored[row + x] === 0) count++;
+    }
+  }
+  return count;
 }
 
 /**
  * The cell never seen (explored 0) fewest steps away from `from` on the
  * known terrain, where cells never seen count as passable, leaving out
- * `taken`. Ties go to the lower index in the team's frame, as in paths. null
+ * `taken`. Ties go to the most cells never seen within `radius` (unseenAround;
+ * 0 skips it), then to the lower index in the team's frame, as in paths. null
  * when none can be reached. Breadth-first, in the team frame's neighbor order.
  */
 export function nearestUnseen(
@@ -90,6 +125,7 @@ export function nearestUnseen(
   from: Cell,
   rotated: boolean,
   taken: ReadonlySet<number> = new Set(),
+  radius = 0,
 ): Cell | null {
   // Once the team has seen every cell, as it does late in a world, skip the
   // search.
@@ -105,15 +141,20 @@ export function nearestUnseen(
   // Neighbors up, left, right, down; reversed in the rotated frame.
   const offsets = rotated ? [width, 1, -1, -width] : [-width, -1, 1, width];
   let best = -1;
+  let bestGain = -1;
   // The queue is in step order: once a target is found, only cells at the
   // same number of steps can still beat it, on the tie-break.
   for (let head = 0; head < tail; head++) {
     const i = queue[head]!;
     if (best >= 0 && steps[i]! > steps[best]!) break;
     if (explored[i] === 0 && !taken.has(i)) {
+      const gain = radius > 0 ? unseenAround(map, explored, i, radius) : 0;
       const key = rotated ? size - 1 - i : i;
       const bestKey = rotated ? size - 1 - best : best;
-      if (best < 0 || key < bestKey) best = i;
+      if (best < 0 || gain > bestGain || (gain === bestGain && key < bestKey)) {
+        best = i;
+        bestGain = gain;
+      }
     }
     const x = i % width;
     for (const offset of offsets) {

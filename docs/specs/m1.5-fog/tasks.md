@@ -76,4 +76,6 @@ na sua branch (plan §12, skill `commit`), com merge `--no-ff` em `main`.
       `runs/soak-20261114-230613-s42/`): 14 364 hashes conferidos, 0 divergentes; as 4 visões finais iguais; replay
       com o hash do servidor; 6 interrupções retomadas
 - [x] Perguntas de névoa no `PLAYTEST.md` (spec §8): roteiro N1–N9 e questionário N1–N6
+- [x] Alvo de explorar desempatado pelo ganho: entre as células nunca vistas igualmente próximas, a com mais células
+      nunca vistas no raio de visão do creep (dono, 2026-11-14, no checkpoint; plan §10); `SIM_VERSION` 4
 - [ ] **Checkpoint:** sessão de legibilidade do dono com `dev:multi`; resposta à hipótese; fecha o M1.5
