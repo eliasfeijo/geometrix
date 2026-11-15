@@ -252,6 +252,18 @@ describe("sampleMetrics", () => {
     expect(sample.teams[1]!.exploring).toBe(1);
   });
 
+  test("sums the team's HP and maximum HP, in thousandths", () => {
+    const world = textWorld(LANE, params);
+    const full = world.creeps
+      .filter((c) => c.team === 0)
+      .reduce((sum, c) => sum + params.hp.dna[c.dna].max * 1000, 0);
+    creepOf(world, 0, "square").hp -= 5000;
+    expect(sampleMetrics(world).teams[0]).toMatchObject({
+      hp: full - 5000,
+      hpMax: full,
+    });
+  });
+
   test("is pure and does not alias the state", () => {
     const world = createWorld(7, params);
     run(world, 600);
