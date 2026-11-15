@@ -4,7 +4,9 @@
 
 import { markersNow } from "./map/creep-layer.tsx";
 import type { ClientCommand } from "@geometrix/protocol";
+import { CURSORS, cursorKind, type CursorKind } from "./map/cursor.ts";
 import { orderAt, pickAt } from "./map/pick.ts";
+import { roadPreview } from "./map/road-plan.ts";
 import { cellAt, centerOn, type Point } from "./map/view.ts";
 import type { GameStore } from "./store.ts";
 
@@ -37,6 +39,62 @@ export function select(
   store.hovered.value = null;
   store.selection.value = pick;
 }
+
+/**
+ * In road mode, whether the stock is short for the road to the cell under the
+ * pointer. Reads the cell, not the point: the path search runs once per cell.
+ */
+export function roadShortAt(store: GameStore, team: number): boolean {
+  const cell = store.pointerCell.value;
+  const state = store.current.value?.state;
+  const info = store.info.value;
+  const map = store.map.value;
+  if (store.mode.value.type !== "road" || cell === null) return false;
+  if (state === undefined || info === null || map === null) return false;
+  return roadPreview(map, state, info.params, team, cell).short;
+}
+
+/**
+ * What the cursor over the map shows (fog F6, E4): the main action of a
+ * click at the pointer. `orders` is false in a replay; `team` is the viewer's.
+ */
+export function cursorAt(
+  store: GameStore,
+  orders: boolean,
+  team: number,
+  roadShort: boolean,
+  now: number,
+): CursorKind {
+  const point = store.pointer.value;
+  const state = store.current.value?.state;
+  if (point === null || state === undefined) return "default";
+  const pick = pickAt(
+    point,
+    markersNow(store, now),
+    state.deposits,
+    store.cores.value,
+    store.view.value?.scale ?? 1,
+  );
+  const core = state.teams[team]?.core;
+  const dominated = orders && store.myCreep.value !== null;
+  return cursorKind({
+    mode: store.mode.value.type,
+    pick:
+      pick === null
+        ? null
+        : pick.kind === "creep" || pick.kind === "stack"
+          ? "creep"
+          : "other",
+    order:
+      dominated && core !== undefined && core !== null
+        ? orderAt(point, state.deposits, core, false).type
+        : null,
+    roadShort,
+  });
+}
+
+/** The inline style that puts the cursor of `kind` on the map. */
+export const cursorStyle = (kind: CursorKind) => `cursor: ${CURSORS[kind]}`;
 
 let pings = 0;
 

@@ -2,11 +2,18 @@
 // Where the states come from (the server or the sim in the browser) and what
 // goes on top is up to the screen that renders it.
 
-import { effect } from "@preact/signals";
+import { effect, useComputed } from "@preact/signals";
 import type { ComponentChildren } from "preact";
 import { useEffect } from "preact/hooks";
 import { GameContext, type Game } from "./context.ts";
-import { handleKey, order, select } from "./interaction.ts";
+import {
+  cursorAt,
+  cursorStyle,
+  handleKey,
+  order,
+  roadShortAt,
+  select,
+} from "./interaction.ts";
 import { CreepLayer } from "./map/creep-layer.tsx";
 import { MapView } from "./map/map-view.tsx";
 import { RoadJobTimeLayer } from "./map/road-job-time-layer.tsx";
@@ -46,12 +53,23 @@ export function GameLayout({ game, header, orders }: Props) {
     return () => window.removeEventListener("keydown", onKey);
   }, [game]);
 
+  // A signal bound to the map's style: the pointer moving does not render
+  // the layout again.
+  const { team } = game.viewer;
+  const roadShort = useComputed(() => roadShortAt(store, team));
+  const cursor = useComputed(() =>
+    cursorStyle(
+      cursorAt(store, orders, team, roadShort.value, performance.now()),
+    ),
+  );
+
   return (
     <GameContext.Provider value={game}>
       <div class="game">
         {header}
         <div class="game-body">
           <MapView
+            cursor={cursor}
             onSelect={(point, px) =>
               select(store, point, px, performance.now())
             }
