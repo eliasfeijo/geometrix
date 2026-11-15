@@ -10,7 +10,7 @@ import {
   type TeamCreepRefusal,
 } from "./domination.ts";
 import { isInMap, type Cell, type GameMap } from "./map.ts";
-import { RESOURCES, type Resource } from "./params.ts";
+import { DNAS, RESOURCES, type Dna, type Resource } from "./params.ts";
 import { PRESETS, presetRules, type PresetId } from "./presets.ts";
 import type { WorldState } from "./world.ts";
 
@@ -26,6 +26,37 @@ const isResource = (value: unknown): value is Resource =>
 
 const isCount = (value: unknown): value is number =>
   Number.isSafeInteger(value) && (value as number) >= 0;
+
+const isPermille = (value: unknown): value is number =>
+  isCount(value) && value <= 1000;
+
+/**
+ * An optional DNA filter: absent, or a list of DNAs without repeats. Copied
+ * as a new array; `invalid` when it is anything else.
+ */
+function copyDnas(value: unknown): Dna[] | undefined | "invalid" {
+  if (value === undefined) return undefined;
+  if (!Array.isArray(value)) return "invalid";
+  const dnas = value as unknown[];
+  if (!dnas.every((d) => DNAS.includes(d as Dna))) return "invalid";
+  if (new Set(dnas).size !== dnas.length) return "invalid";
+  return [...(dnas as Dna[])];
+}
+
+/** The filter fields of enemyInSight and approach, or null if invalid. */
+function copyFilter(c: {
+  radius: unknown;
+  minCargo: unknown;
+  dna?: unknown;
+}): { radius: number; minCargo: number; dna?: Dna[] } | null {
+  const dna = copyDnas(c.dna);
+  if (dna === "invalid" || !isCount(c.radius) || !isCount(c.minCargo)) {
+    return null;
+  }
+  return dna === undefined
+    ? { radius: c.radius, minCargo: c.minCargo }
+    : { radius: c.radius, dna, minCargo: c.minCargo };
+}
 
 function copyCondition(c: Condition): Condition | null {
   switch (c.type) {
@@ -45,6 +76,15 @@ function copyCondition(c: Condition): Condition | null {
       return isResource(c.resource)
         ? { type: c.type, resource: c.resource }
         : null;
+    case "enemyInSight": {
+      const filter = copyFilter(c);
+      return filter === null ? null : { type: c.type, ...filter };
+    }
+    case "hpBelow":
+    case "demandAtMost":
+      return isPermille(c.permille)
+        ? { type: c.type, permille: c.permille }
+        : null;
     default:
       return null;
   }
@@ -55,7 +95,17 @@ function copyAction(a: Action, map: GameMap): Action | null {
     case "deliver":
     case "stop":
     case "explore":
+    case "pickup":
+    case "pay":
+    case "fight":
+    case "flee":
       return { type: a.type };
+    case "approach": {
+      const filter = copyFilter(a);
+      if (filter === null) return null;
+      if (a.intent !== "attack" && a.intent !== "extort") return null;
+      return { type: a.type, intent: a.intent, ...filter };
+    }
     case "gather":
       return isResource(a.resource)
         ? { type: a.type, resource: a.resource }

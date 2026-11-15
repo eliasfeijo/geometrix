@@ -69,7 +69,7 @@ function tryStart(
 }
 
 /**
- * Stage 4: advances each core's production, spawns finished creeps (a born
+ * Stage 5: advances each core's production, spawns finished creeps (a born
  * event each), and restarts armed repeats. Teams in id order.
  */
 export function runProduction(state: WorldState, log: EventLog): void {

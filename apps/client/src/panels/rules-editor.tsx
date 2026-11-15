@@ -11,7 +11,7 @@ import {
 } from "@geometrix/sim";
 import { useState } from "preact/hooks";
 import { useGame } from "../context.ts";
-import type { CreepView } from "@geometrix/sim";
+import type { CreepView, PresetId } from "@geometrix/sim";
 import { RESOURCE_NAMES, ruleText } from "../format.ts";
 import {
   ACTION_LABELS,
@@ -67,10 +67,7 @@ export function RulesEditor({ creep }: { creep: CreepView }) {
     if (ok) setDraft(null);
   };
 
-  const preset = (
-    name: "materiaCollector" | "cristalCollector" | "roadBuilder" | "scout",
-    target?: Cell,
-  ) => {
+  const preset = (name: PresetId, target?: Cell) => {
     setDraft(null);
     void send({
       type: "applyPreset",
@@ -118,6 +115,13 @@ export function RulesEditor({ creep }: { creep: CreepView }) {
           onClick={() => preset("scout")}
         >
           Batedor
+        </button>
+        <button
+          disabled={!canAct}
+          title="Extorque inimigos carregados à vista, cata despojos e entrega; luta quando abordado e foge com o HP baixo"
+          onClick={() => preset("raider")}
+        >
+          Salteador
         </button>
       </div>
 

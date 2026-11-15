@@ -15,7 +15,7 @@ import {
   type Cell,
   type GameMap,
 } from "./map.ts";
-import type { Deposit, RoadJob, WorldState } from "./world.ts";
+import type { Deposit, RoadJob, Spoil, WorldState } from "./world.ts";
 
 /**
  * Whether no rock lies strictly between (x0, y0) and (x1, y1), both given in
@@ -145,6 +145,11 @@ export type TeamMemory = {
   roadJobs: RoadJob[];
   /** Other teams' cores seen (V-6), by team id. */
   cores: ({ team: number } & Cell)[];
+  /**
+   * Copies of the spoils seen, by id, with the last cargo seen; forgotten
+   * when their cell is in sight without them (M2 encontro plan section 3).
+   */
+  spoils: Spoil[];
 };
 
 /** Nothing seen yet, for each team; updateVision fills it in. */
@@ -164,11 +169,12 @@ export function createMemory(
     deposits: [],
     roadJobs: [],
     cores: [],
+    spoils: [],
   }));
 }
 
 /**
- * Stage 6 of the tick (plan section 3, N10), also run at the end of
+ * Stage 7 of the tick (plan section 3, N10), also run at the end of
  * createWorld: for each team, what its core and creeps see now, and the
  * memory updated from it.
  */
@@ -250,6 +256,14 @@ function see(state: WorldState, memory: TeamMemory): void {
     memory.roadJobs = [
       ...memory.roadJobs.filter((j) => !at(j)),
       ...foreignJobs.filter(at).map((j) => ({ ...j })),
+    ].sort((a, b) => a.id - b.id);
+  }
+
+  if (state.spoils.length > 0 || memory.spoils.length > 0) {
+    // Spoils in sight replace what was remembered on visible cells.
+    memory.spoils = [
+      ...memory.spoils.filter((s) => !at(s)),
+      ...state.spoils.filter(at).map((s) => ({ ...s, cargo: { ...s.cargo } })),
     ].sort((a, b) => a.id - b.id);
   }
 

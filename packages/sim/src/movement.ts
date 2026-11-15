@@ -47,3 +47,12 @@ export function movePointsPerTick(
   const modifier = cellModifier(map, index, params);
   return Math.floor((base * modifier * load) / (PERMILLE * PERMILLE));
 }
+
+/**
+ * The creep's speed where it stands, in points per tick: its DNA, its cargo
+ * and its own cell, without the flee bonus (M2 encontro spec D10, plan P11).
+ * The chance to escape weighs it against the opponent's.
+ */
+export function speedHere(creep: Creep, map: GameMap, params: Params): number {
+  return movePointsPerTick(creep, map, creep.y * map.width + creep.x, params);
+}

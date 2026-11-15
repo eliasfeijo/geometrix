@@ -24,7 +24,10 @@ import {
   findRoadJob,
   nextSegment,
 } from "./roads.ts";
-import { recordDelivery } from "./stats.ts";
+import { findCreep } from "./domination.ts";
+import { creepRef, emit, type EventLog } from "./events.ts";
+import { findSpoil, takeSpoil } from "./spoils.ts";
+import { recordDelivery, type Activity } from "./stats.ts";
 import type { Creep, Deposit, WorldState } from "./world.ts";
 
 export type Order =
@@ -34,7 +37,19 @@ export type Order =
   | ({ type: "explore" } & Cell)
   | { type: "gather"; depositId: number }
   | { type: "deliver" }
-  | BuildRoadOrder;
+  | BuildRoadOrder
+  /**
+   * Chase an enemy creep in sight to open an encounter with it (M2 encontro
+   * spec D5, E-2); ends when the target leaves the team's sight.
+   */
+  | { type: "approach"; targetId: number; intent: "attack" | "extort" }
+  /** Pick up a spoil the team knows (spec D11, S-1). */
+  | { type: "pickup"; spoilId: number }
+  /**
+   * Run to the team's core with the flee bonus until `untilTick` or there
+   * (spec D10, plan P4). The autopilot does not change it, nor can a player.
+   */
+  | { type: "flee"; untilTick: number };
 
 /**
  * Build road until cell (x, y) has one. `segment` is the cell index being
@@ -42,11 +57,16 @@ export type Order =
  */
 export type BuildRoadOrder = { type: "buildRoad"; segment: number } & Cell;
 
-export function resolveOrders(state: WorldState): void {
+export function resolveOrders(state: WorldState, log: EventLog): void {
   // Road jobs already advanced this tick: one builder per job.
   const built = new Set<number>();
   for (const creep of state.creeps) {
     creep.activity = "idle";
+    // In an encounter a creep neither moves nor works (spec L-3).
+    if (creep.engagement !== null) {
+      creep.activity = engagedActivity(state, creep.engagement);
+      continue;
+    }
     const { order } = creep;
     switch (order.type) {
       case "stop":
@@ -74,12 +94,100 @@ export function resolveOrders(state: WorldState): void {
       case "buildRoad":
         buildRoad(state, creep, order, built);
         break;
+      case "approach":
+        approach(state, creep, order.targetId);
+        break;
+      case "flee":
+        flee(state, creep, order.untilTick);
+        break;
+      case "pickup":
+        pickup(state, log, creep, order.spoilId);
+        break;
     }
   }
 }
 
+function engagedActivity(state: WorldState, id: number): Activity {
+  const encounter = state.encounters.find((e) => e.id === id);
+  return encounter?.stage === "fight" ? "fighting" : "talking";
+}
+
+/**
+ * Walks toward the target's cell, the path recomputed when the target moves
+ * (the path cache keys on the target cell). Ends when the target is gone
+ * from the team's sight at the end of the last tick (spec E-2), or dead.
+ */
+function approach(state: WorldState, creep: Creep, targetId: number): void {
+  const target = findCreep(state, targetId);
+  const visible = memoryOf(state, creep.team).visible;
+  if (
+    target === undefined ||
+    visible[target.y * state.map.width + target.x] !== 1
+  ) {
+    halt(creep);
+    return;
+  }
+  if (walk(state, creep, target) === "unreachable") halt(creep);
+}
+
+/**
+ * Walks to a spoil the team remembers and takes what fits on arrival, cristal
+ * first (spec S-1). It goes by the memory: a pile already gone is found out
+ * there, like a deposit's amount.
+ */
+function pickup(
+  state: WorldState,
+  log: EventLog,
+  creep: Creep,
+  spoilId: number,
+): void {
+  const known = memoryOf(state, creep.team).spoils.find(
+    (s) => s.id === spoilId,
+  );
+  if (known === undefined || isFull(state, creep)) {
+    halt(creep);
+    return;
+  }
+  if (!isAt(creep, known)) {
+    const result = walk(state, creep, known);
+    if (result === "unreachable") halt(creep);
+    if (result !== "arrived") return;
+  }
+  const spoil = findSpoil(state, spoilId);
+  if (spoil !== undefined && isAt(creep, spoil)) {
+    const free =
+      capacity(creep, teamOf(state, creep), state.params) - cargoTotal(creep);
+    const taken = takeSpoil(state, creep, spoil, free);
+    emit(log, {
+      type: "pickedUp",
+      creep: creepRef(creep),
+      spoil: spoilId,
+      taken,
+      x: spoil.x,
+      y: spoil.y,
+    });
+  }
+  halt(creep);
+}
+
+/**
+ * Runs to the team's core with the flee bonus (spec D10, plan P4), until
+ * there or until the bonus is over.
+ */
+function flee(state: WorldState, creep: Creep, untilTick: number): void {
+  if (state.tick >= untilTick) {
+    halt(creep);
+    return;
+  }
+  if (walk(state, creep, teamOf(state, creep).core) === "moving") {
+    creep.activity = "fleeing";
+  } else {
+    halt(creep);
+  }
+}
+
 /** Stops in place, dropping accumulated points and the cached path. */
-function halt(creep: Creep): void {
+export function halt(creep: Creep): void {
   creep.order = { type: "stop" };
   creep.movePoints = 0;
   creep.path = null;
@@ -102,7 +210,11 @@ function walk(state: WorldState, creep: Creep, target: Cell): WalkResult {
     const { map, params } = state;
     creep.activity = cargoTotal(creep) > 0 ? "carrying" : "walkingEmpty";
     creep.trip ??= { startTick: state.tick, cells: 0 };
-    creep.movePoints += movePointsPerTick(creep, map, path[0]!, params);
+    const gain = movePointsPerTick(creep, map, path[0]!, params);
+    creep.movePoints +=
+      creep.order.type === "flee"
+        ? Math.floor((gain * params.flee.speedPermille) / 1000)
+        : gain;
     while (path.length > 0 && creep.movePoints >= CELL_COST) {
       const next = path.shift()!;
       creep.x = next % map.width;

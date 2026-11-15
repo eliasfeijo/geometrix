@@ -2,7 +2,7 @@
 // Events are counted where they happen (a delivery, a finished trip, a road
 // segment, a deposit running dry, an accepted command); per-tick totals
 // (creep activity, idle core, domination, contested deposits, the first sight
-// of an enemy core) are added at stage 6. sampleMetrics reads them, with no side
+// of an enemy core) are added at stage 8. sampleMetrics reads them, with no side
 // effects. Everything is a cumulative integer or the tick something first
 // happened: rates and averages are left to the reader (the CLI).
 
@@ -13,13 +13,17 @@ import type { Creep, Deposit, Stock, Team, WorldState } from "./world.ts";
 
 /**
  * What a creep did in a tick (set at stage 3): gathering, moving with cargo,
- * moving empty, advancing a road job, or nothing.
+ * moving empty, advancing a road job, in an encounter's dialogue or fight
+ * (M2 encontro), running from one, or nothing.
  */
 export const ACTIVITIES = [
   "gathering",
   "carrying",
   "walkingEmpty",
   "building",
+  "talking",
+  "fighting",
+  "fleeing",
   "idle",
 ] as const;
 export type Activity = (typeof ACTIVITIES)[number];
@@ -132,14 +136,14 @@ export function recordCommand(
   if (preset !== null) stats.presets[preset] += 1;
 }
 
-/** Stage 6: per-tick accumulators. */
+/** Stage 8: per-tick accumulators. */
 export function accumulateStats(state: WorldState): void {
   const seconds = state.params.world.tickSeconds;
   const { teams, deposits } = state.stats;
   for (const team of state.teams) {
     const stats = teams[team.id]!;
     if (team.production === null) stats.coreIdleSeconds += seconds;
-    // Vision runs before (stage 6): a core seen this tick is remembered.
+    // Vision runs before (stage 7): a core seen this tick is remembered.
     if (stats.enemyCoreSeenTick === null) {
       if (state.memory[team.id]!.cores.length > 0) {
         stats.enemyCoreSeenTick = state.tick;

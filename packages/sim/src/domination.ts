@@ -10,7 +10,7 @@ import { memoryOf } from "./known.ts";
 import { isInMap, manhattan, type Cell } from "./map.ts";
 import type { Order } from "./orders.ts";
 import { buildRoadOrder } from "./roads.ts";
-import type { Creep, WorldState } from "./world.ts";
+import type { Creep, Reply, WorldState } from "./world.ts";
 
 /** Player ids come from the server; players are kept ordered by id. */
 export type Player = {
@@ -29,7 +29,11 @@ export type OrderInput =
   | { type: "gather"; depositId: number }
   | ({ type: "moveTo" } & Cell)
   | ({ type: "explore" } & Cell)
-  | ({ type: "buildRoad" } & Cell);
+  | ({ type: "buildRoad" } & Cell)
+  /** An enemy creep the team sees now (M2 encontro spec E-1, D19). */
+  | { type: "approach"; targetId: number; intent: "attack" | "extort" }
+  /** A spoil the team remembers. */
+  | { type: "pickup"; spoilId: number };
 
 export type DominationRefusal =
   | "unknownPlayer"
@@ -40,7 +44,15 @@ export type DominationRefusal =
   | "tooFar"
   | "stock"
   | "notDominating"
-  | "invalidOrder";
+  | "invalidOrder"
+  /** In an encounter, a creep takes no order (spec L-3). */
+  | "engaged"
+  /** A fleeing creep's order is locked (plan P4). */
+  | "fleeing";
+
+/** Why a reply to an encounter is refused (command react). */
+export type ReactRefusal =
+  TeamCreepRefusal | "notDominating" | "notEngaged" | "invalidReaction";
 
 export function findPlayer(state: WorldState, id: number): Player | undefined {
   return state.players.find((p) => p.id === id);
@@ -169,8 +181,9 @@ export function release(state: WorldState, playerId: number): void {
 }
 
 /**
- * Only the dominating player orders a creep (D-1). A deposit the team does
- * not remember is refused as one that does not exist (fog spec D6).
+ * Only the dominating player orders a creep (D-1). A deposit or spoil the
+ * team does not remember, or a creep it does not see, is refused as one that
+ * does not exist (fog spec D6, M2 encontro D19).
  */
 export function orderRefusal(
   state: WorldState,
@@ -183,10 +196,33 @@ export function orderRefusal(
   const player = findPlayer(state, playerId)!;
   const creep = findCreep(state, creepId)!;
   if (creep.dominatedBy !== playerId) return "notDominating";
+  if (creep.engagement !== null) return "engaged";
+  if (creep.order.type === "flee") return "fleeing";
   switch (order.type) {
     case "stop":
     case "deliver":
       return null;
+    case "approach": {
+      if (order.intent !== "attack" && order.intent !== "extort") {
+        return "invalidOrder";
+      }
+      const target = findCreep(state, order.targetId);
+      const visible = memoryOf(state, player.team).visible;
+      if (
+        target === undefined ||
+        target.team === player.team ||
+        visible[target.y * state.map.width + target.x] !== 1
+      ) {
+        return "unknownCreep";
+      }
+      return null;
+    }
+    case "pickup":
+      return memoryOf(state, player.team).spoils.some(
+        (s) => s.id === order.spoilId,
+      )
+        ? null
+        : "invalidOrder";
     case "gather":
       return memoryOf(state, player.team).deposits.some(
         (d) => d.id === order.depositId,
@@ -220,5 +256,52 @@ function toOrder(input: OrderInput): Order {
       return { type: input.type, x: input.x, y: input.y };
     case "buildRoad":
       return buildRoadOrder(input);
+    case "approach":
+      return {
+        type: "approach",
+        targetId: input.targetId,
+        intent: input.intent,
+      };
+    case "pickup":
+      return { type: "pickup", spoilId: input.spoilId };
+  }
+}
+
+/**
+ * The dominating player answers its creep's encounter (spec C-5, D6): in the
+ * dialogue, the victim pays, refuses or flees an extortion, and fights or
+ * flees an attack; in the fight, either side may only try to flee.
+ */
+export function reactRefusal(
+  state: WorldState,
+  playerId: number,
+  creepId: number,
+  choice: Reply,
+): ReactRefusal | null {
+  const refusal = teamCreepRefusal(state, playerId, creepId);
+  if (refusal !== null) return refusal;
+  const creep = findCreep(state, creepId)!;
+  if (creep.dominatedBy !== playerId) return "notDominating";
+  const encounter = state.encounters.find((e) => e.id === creep.engagement);
+  if (encounter === undefined) return "notEngaged";
+  if (encounter.stage === "fight") {
+    return choice === "flee" ? null : "invalidReaction";
+  }
+  if (encounter.victim !== creep.id) return "invalidReaction";
+  const allowed: readonly Reply[] =
+    encounter.intent === "extort"
+      ? ["pay", "refuse", "flee"]
+      : ["fight", "flee"];
+  return allowed.includes(choice) ? null : "invalidReaction";
+}
+
+/** Records the reply; the encounters stage applies it (plan section 6). */
+export function react(state: WorldState, creepId: number, choice: Reply): void {
+  const creep = findCreep(state, creepId)!;
+  const encounter = state.encounters.find((e) => e.id === creep.engagement)!;
+  if (encounter.stage === "fight" && encounter.aggressor === creep.id) {
+    encounter.aggressorReply = "flee";
+  } else {
+    encounter.reply = choice;
   }
 }
