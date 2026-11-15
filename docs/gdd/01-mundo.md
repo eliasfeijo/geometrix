@@ -40,6 +40,26 @@
   neutras (ideias em incubação, abaixo).
 - **Árvores destrutíveis no M2.5** (ideia do dono, 2026-11-15): vegetação que bloqueia a visão e pode ser derrubada,
   para aprofundar a jungle além das pedras de hoje. Entra com a jungle hostil.
+- **O fim do mundo** (ideia do dono e rodada interativa, 2026-11-15; registro no
+  [brainstorm do fim do mundo](../brainstorm/2026-11-15-fim-do-mundo.md) §0):
+  - **A duração vira um arco:** o mundo termina numa série de eventos apocalípticos que se desenvolvem durante a
+    partida, com uma crônica por trás e um final explosivo ([08](08-cronica-chat-e-console.md)). Entra no **M2.5**
+    ("A jungle hostil e o fim do mundo").
+  - **Um apocalipse só: a corrupção dos depósitos de cristal esgotados**, que envenena quem está perto e cresce até
+    cobrir o mapa ([03](03-economia-e-logistica.md)). As ondas de errantes e os chefões despertos entram como
+    camadas por cima ([05](05-tribos-e-diplomacia.md)). Variedade por seed só se o playtest pedir.
+  - **Ponto sem volta:** dependendo de quantos depósitos de cristal se esgotaram, o fim já é inevitável.
+  - **A corrupção não pode ser limpa** pelos jogadores. Só o final feliz das tribos a detém, e ele **salva o mundo
+    inteiro**, inclusive o inimigo ([05](05-tribos-e-diplomacia.md), M4).
+  - **A corrupção é vista de longe:** ela brilha, e o time vê a borda mesmo fora da própria visão. É uma exceção ao
+    fog, para avisar o fim (pilar 4).
+  - **Vitória pírrica, com humor:** derrubar o Núcleo inimigo vence a guerra, mas não salva o mundo. Se o fim já é
+    inevitável, nenhum creep sobrevive para virar lenda ([02](02-creeps-e-dominio.md)).
+  - **Invasores:** as lendas de outros mundos podem invadir um mundo no fim, com uma crônica que explique quem chega
+    e por quê. Marco novo **M5 — As lendas**, depois do M4.
+  - **O fim mínimo no M2, fatia E:** a vitória pelo Núcleo encerra o mundo, e o fim ganha uma tela com o resultado e
+    o resumo da crônica, e o replay, marcadores dos eventos principais. **Quando o relógio acaba sem Núcleo
+    derrubado, é empate**, regra provisória até o apocalipse do M2.5 substituí-la.
 
 ## Proposta
 
@@ -66,6 +86,21 @@ do Núcleo conforme o time constrói.
 - **Destruir a base é um processo, não um instante.** Um cerco ao Núcleo leva horas e avisa o time atacado. Sem
   isso, um time perde a partida enquanto dorme.
 - A defesa offline vem de fortificações + piloto automático de defesa.
+
+### O fim do mundo: como fazer (agente, 2026-11-15, não aprovado)
+A direção está em Decidido; o detalhe, no [brainstorm do fim do mundo](../brainstorm/2026-11-15-fim-do-mundo.md) §4.
+- **Três atos:** a fundação, os sinais e o fim, com as fronteiras em ‰ da duração, nos params, e cada virada
+  anunciada na crônica para todos.
+- **Refúgios abaixo do limiar:** o ponto sem volta é um limiar em ‰ dos depósitos de cristal esgotados (params).
+  Abaixo dele, a corrupção do ato 3 para antes de cobrir tudo, sobram refúgios e há sobreviventes; acima, o fim é
+  total e só o final feliz salva. A crônica avisa a aproximação ("a terra geme") sem dar o número.
+- **Epílogo acelerado:** a queda do Núcleo dispara a fase final mais cedo, para o fim chegar enquanto os jogadores
+  ainda estão olhando. A tela de fim separa **a guerra** (quem venceu) e **o mundo** (sobreviveu? quantas lendas
+  saíram dele?).
+- **Eventos do fim mínimo** (fatia E): `coreDestroyed` e `worldEnded` (com o motivo), com o público "todos os
+  times"; o `step` não roda depois do `worldEnded`; os marcadores do replay saem da lista de eventos.
+- **Invasores só no ato 3, um por time, equilibrados:** responde em parte a "jogadores podem entrar num mundo em
+  andamento?" (só como invasor, só no fim).
 
 ## Ideias em incubação (marco a decidir)
 - **Acampamento e estruturas neutras** (ideia do dono, 2026-11-15, ao discutir a zona segura; a decidir "no momento
@@ -94,6 +129,6 @@ do Núcleo conforme o time constrói.
 - O Núcleo pode ser movido ou reconstruído? Pode existir mais de uma base por time?
 - **Sem depósito garantido à vista no início** (névoa negra, 2026-11-14), o começo de partida fica lento ou
   desigual demais em alguma seed? Medir com os bots antes do playtest.
-- Jogadores podem entrar num mundo já em andamento?
+- Jogadores podem entrar num mundo já em andamento? (Proposta do agente para os invasores: só como invasor, no ato 3.)
 - O que se pode construir e onde (só perto do Núcleo, em território controlado, em qualquer lugar)?
 - O rio é só obstáculo, ou também é rota de transporte (barcos levam carga pesada mais rápido, mas ficam expostos)?

@@ -22,11 +22,26 @@
   - Entram na crônica da fatia A: os encontros (com a declaração do agressor), as fugas, as lutas, as mortes, os
     saques e os nascimentos. Um time vê o evento em que um creep dele participa ou que acontece na visão dele.
   - **O agente escreve o banco inicial de frases e o dono revisa o tom.**
+- **Fim do mundo** (dono, 2026-11-15; registro no
+  [brainstorm do fim do mundo](../brainstorm/2026-11-15-fim-do-mundo.md) §0): a crônica conta o apocalipse durante
+  a partida e o final ([01](01-mundo.md)), com **humor** na vitória pírrica; e **a invasão tem crônica**, para que
+  o mundo invadido saiba quem chegou e por quê.
 
 ## Proposta
 - **Um verbo, um comando** (agente): cada verbo do console vira um comando do mesmo vocabulário versionado, com as
   mesmas validações e recusas de quem clica. Nenhum verbo tem mais poder do que a interface.
 - **LLM na autoria** (agente): gerar e revisar o banco de modelos offline, fora do jogo.
+- **A crônica do fim do mundo: como fazer** (agente;
+  [brainstorm do fim do mundo](../brainstorm/2026-11-15-fim-do-mundo.md) §4.4, §4.5 e §4.7): uma voz de
+  **narrador do mundo**, diferente da voz dos creeps, que conta as viradas de ato, os focos novos de corrupção, o
+  ponto sem volta se aproximando (sem dar o número), a vitória e o epílogo (ex.: "O Azul venceu a guerra.
+  Sobreviventes para contar a história: nenhum."). Cabe no ADR-0007 sem mudança: eventos com o público "todos os
+  times" e modelos no cliente. O agente escreve as frases; o dono revisa o tom.
+- **A crônica da invasão: o enredo** (agente): quando um mundo está morrendo, a fronteira com os outros afina e as
+  fendas se abrem no ato 3. O invasor chega apresentado pela ficha da lenda (nome, DNA, mundo de origem, feitos),
+  com o alvo declarado; a morte dele fica na crônica dos dois mundos.
+- **O replay para mostrar aos amigos** (agente): marcadores dos eventos principais na linha do tempo (M2, fatia E),
+  e depois uma velocidade que acelera nos trechos parados e desacelera nos eventos; tudo sai da lista de eventos.
 
 ## Perguntas abertas
 - Que canais existem: time, global (o `OOC` do BYOND), sussurro? O que um bot "lê" no chat?

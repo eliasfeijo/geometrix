@@ -41,6 +41,10 @@
     mais rápido a até um raio do próprio Núcleo; não regenera durante um encontro ou uma luta. Chutes provisórios:
     de 0 a cheio em 100 min no mapa e em 10 min perto do Núcleo (raio 8).
   - **Morte de um creep dominado** (D4): o domínio termina, como um `release`, sem cooldown.
+- **As lendas** (dono, 2026-11-15; registro no
+  [brainstorm do fim do mundo](../brainstorm/2026-11-15-fim-do-mundo.md) §0): **qualquer creep vivo no fim do
+  mundo vira lenda**, inclusive do time derrotado. Se o apocalipse não deixa ninguém vivo, ninguém leva lenda,
+  nem os vencedores. Uma lenda pode invadir outro mundo (M5, As lendas; [01](01-mundo.md)).
 
 ## Proposta
 - Dominar só troca **quem emite os comandos** do creep. Ver [ADR-0002](../adr/0002-tudo-e-comando.md).
@@ -58,6 +62,13 @@
     DNAs;
   - **temperamento ao nascer** (agente): um traço sorteado (ex.: ganancioso, bravo, cauteloso) que dá a postura
     padrão nos encontros e a voz do creep na crônica.
+
+- **As lendas: como fazer** (agente, 2026-11-15, não aprovado;
+  [brainstorm do fim do mundo](../brainstorm/2026-11-15-fim-do-mundo.md) §4.7): a lenda guarda nome, DNA, level,
+  stats e uma **ficha** dos feitos tirada da crônica. A morte permanente vale para ela: invadir arrisca perdê-la. O
+  poder escala para o mundo invadido, para evitar *power creep* entre partidas. Em camadas: registrar as lendas no
+  fim do mundo (M2.5), a invasão por bots e a invasão por jogadores com contas entre mundos (M5, com o control
+  plane).
 
 ## Ideias em incubação (não entram antes do M3)
 - **Reprodução e gerações:** creeps M/F, idade, morte natural, herança de DNA. Seria um limitador de população
