@@ -33,6 +33,11 @@
   andamento** têm HP e podem ser destruídos. O HP persiste e só se recupera com reparo pago
   ([03](03-economia-e-logistica.md)). As estradas são neutras, então qualquer lado pode derrubá-las, inclusive a que
   o inimigo usa.
+- **O inimigo à vista no M2** (dono, 2026-11-15; [spec M2 do encontro](../specs/m2-encontro/spec.md) D18): além da posição, do DNA e da carga,
+  o creep inimigo à vista mostra o **nome**, o **HP** e se está num encontro ou numa luta. Ferido, ele vira alvo.
+- **Sem zona segura no M2, fatia A** (dono, 2026-11-15; spec D21): ninguém está a salvo perto do Núcleo; o harness
+  mede se os creeps acampam na saída do Núcleo inimigo. Fica a previsão para os acampamentos e as estruturas
+  neutras (ideias em incubação, abaixo).
 - **Árvores destrutíveis no M2.5** (ideia do dono, 2026-11-15): vegetação que bloqueia a visão e pode ser derrubada,
   para aprofundar a jungle além das pedras de hoje. Entra com a jungle hostil.
 
@@ -61,6 +66,26 @@ do Núcleo conforme o time constrói.
 - **Destruir a base é um processo, não um instante.** Um cerco ao Núcleo leva horas e avisa o time atacado. Sem
   isso, um time perde a partida enquanto dorme.
 - A defesa offline vem de fortificações + piloto automático de defesa.
+
+## Ideias em incubação (marco a decidir)
+- **Acampamento e estruturas neutras** (ideia do dono, 2026-11-15, ao discutir a zona segura; a decidir "no momento
+  adequado"; aumenta o escopo do M2, candidata à fatia E, cerco e reparo, ou a um marco depois):
+  - o **Núcleo** é a primeira estrutura, e a única gratuita desde o começo, e serve de **acampamento** para os
+    creeps do time;
+  - outras estruturas, como **torres**, viram defesa: o creep acampado nelas ganha um **ataque a distância** (um
+    projétil que viaja `n` células, com `n` e a velocidade do projétil relativos ao DNA e aos stats);
+  - quem está acampado costuma ter vantagem de terreno e estratégica numa batalha, mas não foge mais fácil. Um
+    creep pode começar uma batalha contra um adversário acampado, mas **quem está acampado não pode atacar nem
+    abordar antes de sair da estrutura**;
+  - **as torres são acampáveis pelos dois times**, não importa quem construiu; a exceção é o Núcleo do time
+    adversário, que só pode ser atacado;
+  - a flecha da torre seria, por enquanto, **a única mecânica de combate fora da instância de batalha**, direto no
+    loop do mundo: cada flecha que acerta tira bastante HP do adversário perto da torre (rng com peso pelo DNA,
+    stats etc.), sem abrir batalha;
+  - pode dar um destino ao cristal (o papel do cristal é pergunta aberta no [03](03-economia-e-logistica.md));
+  - **terreno de batalha pelo entorno:** batalhas que começam perto do rio, de árvores, pedras, estradas e
+    estruturas (torre, Núcleo) podem ter cada uma o seu terreno, com objetos auxiliares, obstáculos, paredes e
+    torres ([06](06-batalhas.md)).
 
 ## Perguntas abertas
 - **Árvores (M2.5):** como bloqueiam a visão "de forma inteligente" (a árvore é vista e esconde o que está atrás,

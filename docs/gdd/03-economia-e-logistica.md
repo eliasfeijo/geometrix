@@ -25,6 +25,16 @@
   ninguém fugir, o lado vencedor fica com os recursos dos perdedores que morreram na batalha. O **despojo** é uma
   pilha no chão que qualquer creep pode catar: guarda o saque que não coube na carga de quem venceu, a bolsa largada
   na fuga ([06](06-batalhas.md)) e o artefato que cai quando o portador morre.
+- **Spec do M2, fatia A, o encontro** (dono, 2026-11-15; [spec M2 do encontro](../specs/m2-encontro/spec.md)):
+  - **Extorsão física** (D8): a exigência é a carga da vítima até a capacidade livre do agressor, cristal primeiro;
+    pagar passa a exigência da carga da vítima para a do agressor. Não dá para extorquir quem está vazio, nem
+    estando cheio. O DNA pesa sem número novo: o quadrado extorque muito e é lento; o círculo extorque pouco e
+    alcança.
+  - **Saque e despojo** (D11): o vencedor recolhe a carga do morto até a capacidade livre, cristal primeiro, e o
+    resto vira despojo; despojos na mesma célula se somam; o despojo **não expira** no M2 (fatia A) e fica na
+    memória do time como um depósito.
+  - **O que cai na fuga** (D10): quem escapa larga de 50% a 100% de cada recurso (sorteado), provisório. Nem toda
+    fuga perde a bolsa inteira, mas fugir sempre dói.
 - **Construções só se recuperam com reparo pago** (dono, 2026-11-15): o Núcleo, as estradas prontas e as obras têm
   HP no M2 ([01](01-mundo.md)).
 
@@ -63,8 +73,6 @@ consumo de cristal em evoluções.
 
 ### Brainstorm de 2026-11-15 (não aprovado)
 Detalhes no [brainstorm M2–M3](../brainstorm/2026-11-15-m2-m3.md) §2, §4 e §5.
-- **Extorsão física** (agente): o que a vítima paga passa da carga dela para a do agressor, até a capacidade livre
-  dele.
 - **Escambo entre times** (agente): uma ação do encontro. Os bots terminam a partida com ~68% do cristal parado.
 - **Sumidouros candidatos** (agente): a pressão crescente dos errantes no fim da partida e a durabilidade das armas
   (camada de forja).

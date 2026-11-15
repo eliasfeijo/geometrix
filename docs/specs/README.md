@@ -15,4 +15,4 @@ Regra: a spec é a fonte de verdade. Diante de uma ambiguidade não coberta, par
 | [M1 — O ciclo da riqueza](m1-ciclo-da-riqueza/spec.md) | Concluída (2026-11-14) |
 | [M1.5 — Rede: deltas da visão de cada time](m1.5-rede/spec.md) | Concluída (2026-11-14): viabilidade aprovada pelo dono |
 | [M1.5 — Fog of war](m1.5-fog/spec.md) | Concluída (2026-11-14) |
-| [M2 — O encontro](m2-encontro/spec.md) (fatia A de 5) | Rascunho (2026-11-15): decisões D1–D20 a aceitar pelo dono |
+| [M2 — O encontro](m2-encontro/spec.md) (fatia A de 5) | Rascunho (2026-11-15): D1–D21 aceitas, menos D2, D19 e D20 |
