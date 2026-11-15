@@ -35,6 +35,8 @@ const creep = (dna: Dna, materia = 0, cristal = 0): Creep => ({
   name: "Abo",
   hp: 1000,
   engagement: null,
+  safeConduct: null,
+  extortBlocks: [],
   x: 0,
   y: 0,
   cargo: { materia, cristal },
