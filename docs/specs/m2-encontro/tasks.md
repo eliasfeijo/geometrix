@@ -45,7 +45,7 @@ na sua branch (plan §12, skill `commit`), com merge `--no-ff` em `main`.
       plan §6)
 - [x] Comando `react` e as ordens novas no `orderRefusal`, com as recusas sem vazamento (spec D19); vocabulário
       com `BREAKING CHANGE`
-- [ ] Todos os eventos do encontro (spec K-1, plan §7), com testes de ordem e de público (K-2)
+- [x] Todos os eventos do encontro (spec K-1, plan §7), com testes de ordem e de público (K-2)
 
 ## F3 — Bots e harness (`m2/encontro-f3-harness`)
 
