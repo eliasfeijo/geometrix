@@ -1,11 +1,100 @@
 # Status atual
 
-**Atualizado:** 2026-11-15 · **Marco:** M1.5 — A névoa ✅ concluído · **Próximo:** M2 — A emboscada (🟡 fatia A, o encontro: spec, ADR-0007 e plan ✅; F1 a seguir, [plan](../specs/m2-encontro/plan.md)) · **Fatia de rede:** ✅ concluída (viabilidade aprovada) · **Design do fog:** ✅ decidido (GDD 01, 02, 07) · **Spec e plan do fog:** ✅ aprovados · **Fog F1:** ✅ · **Fog F2:** ✅ · **Fog F3:** ✅ · **Fog F4:** ✅ · **Fog F5:** ✅ · **Fog F6:** ✅
+> **Como usar.** O topo é o retrato de agora. A seção **Agora** é **reescrita** ao fechar uma fase, ao passar por um
+> portão de aprovação ou quando surge um bloqueio: ela nunca acumula. O que uma fase mediu, interpretou ou decidiu
+> vai para o **Histórico**, no fim do arquivo, com a entrada mais recente no topo de "Registro das fases". A fonte
+> de verdade continua nos docs linkados.
 
-Resumo de bolso. A fonte de verdade continua nos docs linkados. Atualize este arquivo ao fechar uma fase, ao passar
-por um portão de aprovação ou quando surgir um bloqueio.
+## Agora
 
-## Onde estamos
+**Atualizado:** 2026-11-15
+
+| | |
+|---|---|
+| **Marco** | **M2 — A emboscada** ([ROADMAP](../ROADMAP.md)). M0, M1 e M1.5 ✅ |
+| **Fatia** | **A — O encontro** ([spec](../specs/m2-encontro/spec.md) · [plan](../specs/m2-encontro/plan.md) · [tasks](../specs/m2-encontro/tasks.md)): F0 ✅ (spec, ADR-0007 e plan aprovados) |
+| **Em execução** | Nada |
+| **Próxima fase** | **A F1 — Identidade, HP e eventos no `sim`**, branch `m2/encontro-f1-identity` (skill `implement-phase`) |
+| **Pode andar em paralelo** | A **spec da fatia B** (laboratório de batalha), que não depende da A (skill `spec-slice`) |
+| **Aguardando o dono** | Nada |
+| **Bloqueios** | Nenhum |
+
+### Próximos passos
+
+As fatias do M2 seguem o grafo de dependências do [ROADMAP](../ROADMAP.md), não uma fila.
+
+1. **A F1 a F6**, em sequência (a F1 é a raiz de quase tudo: nome, HP e eventos).
+2. **Spec da B** já, e a implementação da B em paralelo à A, no pacote de batalha.
+3. **Depois do checkpoint da A F3:** as rodadas de design do **papel do cristal** e da **fatia E** (se o cerco
+   passa pela instância de batalha, a E depende da D; senão, pode vir antes dela).
+4. **Depois da A:** a D (com a B pronta) ou a E, e a C em paralelo à D.
+
+### O que a próxima fase precisa saber
+
+- **visão e memória** (`sim/vision.ts`, `view.ts`): o que o time vê e lembra, e a `view` filtrada é a única
+  entrada do estrategista e do cliente; `fullView` (time −1) para o replay;
+- **pelo que o time sabe** (`sim/known.ts`): mapa conhecido, A* e estradas no escuro, `explore`, preset batedor;
+- **coleta** (`autopilot.ts`): `quickestDeposit` escolhe o depósito pelo custo do A* no mapa conhecido
+  (`nearestTargets` em `pathfinding.ts`); o `committedDeposit` pesa esperar × andar uma vez por intervalo de
+  regeneração, **no segundo do meio, o mesmo para todos** (uma fase pelo id quebrava o espelho entre os times:
+  teste em `bot-world.test.ts`); `params.gather.{materia,cristal}.{units,everySeconds}` (`economy.ts`);
+- **rede:** `PROTOCOL_VERSION` 3, `welcome` só com o tamanho do mapa; o terreno chega pelo `known` do delta;
+- **cliente:** a névoa é a `FogLayer` (`map/fog-layer.tsx`; véu 0,55, nunca visto `#050608`); seleção por área
+  (`map/layout.ts`, `MIN_HIT_PX` = 20) com lista quando o clique cai em vários; cursor da ação
+  (`map/cursor.ts`, `cursorAt` num signal ligado ao `style` do mapa); `roadPreview` compartilhado pela prévia
+  de estrada e pelo cursor;
+- o replay de um mundo só abre depois que ele acaba: para uma sessão, `--mult` alto ou o mundo do soak;
+- screenshot sem navegador: o Chromium headless do cache do Playwright
+  (`~/.cache/ms-playwright/chromium_headless_shell-*/*/chrome-headless-shell --screenshot … --virtual-time-budget=10000 <URL do dev:multi>`).
+  O cursor não aparece no screenshot: os ícones se conferem renderizando os SVG numa página.
+
+**Push:** o Git do WSL não tem credencial do GitHub; o dono faz o push pelo PowerShell (`git push origin main`).
+
+### Pendências vivas
+
+Só o que ainda está aberto. Ao resolver, tire daqui e registre no Histórico.
+
+- **Perguntas abertas do GDD 06 e 08 que a fatia A não cobre** (duração da batalha, tempo do mundo durante a luta,
+  canais e sintaxe do chat, macros, reparo): ficam para as fatias B a E.
+- **Deploy** (quando acontecer): quem cria o mundo escolhe a seed no lobby (N9) e criar mundo deixa de ser público;
+  o snapshot com a memória do fog (117 MB de SQLite num mundo de 3 dias) passa a ser guardado compactado, com o
+  `SIM_VERSION` seguinte; os snapshots antigos são podados; o cliente ganha um link para o código-fonte (a licença
+  é a AGPL-3.0, cuja seção 13 pede oferecer o código a quem usa pela rede).
+- **Olhos novos** (quando o dono achar o jogo divertido): o playtest com pessoas que nunca viram o jogo responde de
+  novo à hipótese do M1.5 (o roteiro e as perguntas de névoa estão no [PLAYTEST.md](../PLAYTEST.md)); observar se
+  travam num mundo só de humanos, em que ninguém explora sem ordem (regra D3).
+- **`SIM_VERSION` (hoje 5; a F1 do encontro sobe para 6):** mundos persistidos guardam a versão. Mudou o comportamento do `sim`?
+  Suba a versão; um mundo de outra versão não é recuperado (o servidor loga e o pula).
+- **Servidor no `/mnt/c`:** subir o `npm run server` às vezes leva mais de 5 s (WSL). Scripts que sobem o
+  servidor devem esperar a porta responder, não um `sleep` fixo.
+- **`npm audit`:** aviso moderado (ReDoS no `minimatch`, dentro do typescript-eslint, só em dev). Sem correção
+  que não quebre; reavaliar quando o typescript-eslint atualizar.
+- **TypeScript fixado em `~6.0`:** o typescript-eslint ainda não suporta o TS 7.
+
+## Marcos
+
+| Marco | Status |
+|---|---|
+| M0 — Design | ✅ |
+| M1 — O ciclo da riqueza | ✅ 2026-11-14 |
+| M1.5 — A névoa | ✅ 2026-11-14 (rede e fog of war) |
+| M2 — A emboscada | 🟡 Fatia A: F0 ✅, F1–F6 ⬜ · Fatias B, C, D, E ⬜ |
+| M2.5 — A jungle hostil e o fim do mundo | ⬜ (fim do mundo decidido no GDD, 2026-11-15) |
+| M3 — O time · M4 — O mundo vivo · M5 — As lendas | ⬜ |
+
+## Workflow
+
+- Branch por fase (`m<marco>/f<fase>-<slug>`), Conventional Commits por unidade lógica, merge `--no-ff` em `main`:
+  skill [`commit`](../../.claude/skills/commit/SKILL.md).
+- Implementar uma fase: skill `implement-phase`. Convenções de código: "Convenções do `sim`" no CLAUDE.md.
+- Outras skills: `adr`, `gdd-decision`, `spec-slice`. Skills novas só quando uma necessidade aparecer na prática.
+- Comandos: seção "Comandos" do [CLAUDE.md](../../CLAUDE.md). `npm run check` = o que o CI roda.
+
+---
+
+# Histórico
+
+## Etapas, em ordem cronológica
 
 | Etapa | Status | Onde ver |
 |---|---|---|
@@ -45,52 +134,8 @@ por um portão de aprovação ou quando surgir um bloqueio.
 | M2 — fatias | ✅ Decididas pelo dono (2026-11-15): A o encontro → B o laboratório de batalha → C chat, console e macros → D a junção (com os errantes) → E cerco e reparo | [ROADMAP](../ROADMAP.md) |
 | M2 A (encontro) — spec | ✅ Aprovada (2026-11-15), com D1–D21 decididas na rodada interativa; as de gameplay no GDD 01, 02, 03, 06, 07, 08; a ideia do dono de acampamento e torres em incubação no GDD 01. ADR-0007 (eventos do `sim`) ✅ `Accepted` (2026-11-15) |
 | M2 A (encontro) — plan | ✅ Aprovado (2026-11-15), com P1–P11 pela proposta; fases F1–F6 no tasks.md. F0 ✅ | [plan.md](../specs/m2-encontro/plan.md) · [tasks.md](../specs/m2-encontro/tasks.md) | [spec.md](../specs/m2-encontro/spec.md) |
-| M2.5, M3, M4 | ⬜ Não iniciados | [ROADMAP](../ROADMAP.md) |
-
-## Próximos passos imediatos
-
-**M1 e M1.5 concluídos (2026-11-14).** O M1.5 entregou as duas fatias: rede por deltas da visão de cada time
-([spec](../specs/m1.5-rede/spec.md) · [viability](../specs/m1.5-rede/viability.md)) e fog of war
-([spec](../specs/m1.5-fog/spec.md) · [plan](../specs/m1.5-fog/plan.md) · [tasks](../specs/m1.5-fog/tasks.md),
-F0–F6). O repo está no GitHub e o CI passa lá.
-
-1. **M2 (A emboscada)** ([ROADMAP](../ROADMAP.md)): **rodada de design e brainstorm** antes da spec. O dono
-   decidiu (2026-11-15) que o deploy e o playtest com pessoas novas não bloqueiam mais o M2 nem o M3. O esboço está
-   no [brainstorm de 2026-11-15](../brainstorm/2026-11-15-m2-m3.md), e o dono respondeu às perguntas na mesma
-   data (resumo na §0; decisões no GDD). **Fatias decididas (dono, 2026-11-15; [ROADMAP](../ROADMAP.md)):** A o
-   encontro → B o laboratório de batalha → C chat, console e macros → D a junção (com os errantes) → E cerco e
-   reparo. **A [spec da fatia A](../specs/m2-encontro/spec.md) está aprovada (2026-11-15).** O ADR-0007 (eventos
-   do `sim`) foi aceito na mesma data. O [plan](../specs/m2-encontro/plan.md) foi aprovado (P1–P11).
-   **Próximo passo: a F1, identidade, HP e eventos no `sim`** (skill `implement-phase`). As perguntas abertas do GDD 06 e 08 que a fatia A não
-   cobre (duração da batalha, tempo do mundo durante a luta, canais e sintaxe do chat, macros, reparo) ficam para
-   as fatias B–E. Anotado para o M2 pelo M1.5:
-   - **deploy** (quando acontecer): quem cria o mundo escolhe a seed no lobby (N9) e criar mundo deixa de ser
-     público; o snapshot com a memória do fog (117 MB de SQLite num mundo de 3 dias) passa a ser guardado
-     compactado, com o `SIM_VERSION` seguinte; os snapshots antigos são podados; o cliente ganha um link para o
-     código-fonte (a licença é a AGPL-3.0, cuja seção 13 pede oferecer o código a quem usa pela rede);
-   - **cristal:** o esgotamento (~9,7 h de 72) e o papel do cristal ficaram para o M2 ([GDD 03](../gdd/03-economia-e-logistica.md));
-   - **olhos novos** (quando o dono achar o jogo divertido): o playtest com pessoas que nunca viram o jogo responde
-     de novo à hipótese do M1.5 (o roteiro e as perguntas de névoa estão no [PLAYTEST.md](../PLAYTEST.md));
-     observar se travam num mundo só de humanos, em que ninguém explora sem ordem (regra D3).
-2. **O que vale saber do código do M1.5** para quem começa o M2:
-   - **visão e memória** (`sim/vision.ts`, `view.ts`): o que o time vê e lembra, e a `view` filtrada é a única
-     entrada do estrategista e do cliente; `fullView` (time −1) para o replay;
-   - **pelo que o time sabe** (`sim/known.ts`): mapa conhecido, A* e estradas no escuro, `explore`, preset batedor;
-   - **coleta** (`autopilot.ts`): `quickestDeposit` escolhe o depósito pelo custo do A* no mapa conhecido
-     (`nearestTargets` em `pathfinding.ts`); o `committedDeposit` pesa esperar × andar uma vez por intervalo de
-     regeneração, **no segundo do meio, o mesmo para todos** (uma fase pelo id quebrava o espelho entre os times:
-     teste em `bot-world.test.ts`); `params.gather.{materia,cristal}.{units,everySeconds}` (`economy.ts`);
-   - **rede:** `PROTOCOL_VERSION` 3, `welcome` só com o tamanho do mapa; o terreno chega pelo `known` do delta;
-   - **cliente:** a névoa é a `FogLayer` (`map/fog-layer.tsx`; véu 0,55, nunca visto `#050608`); seleção por área
-     (`map/layout.ts`, `MIN_HIT_PX` = 20) com lista quando o clique cai em vários; cursor da ação
-     (`map/cursor.ts`, `cursorAt` num signal ligado ao `style` do mapa); `roadPreview` compartilhado pela prévia
-     de estrada e pelo cursor;
-   - o replay de um mundo só abre depois que ele acaba: para uma sessão, `--mult` alto ou o mundo do soak;
-   - screenshot sem navegador: o Chromium headless do cache do Playwright
-     (`~/.cache/ms-playwright/chromium_headless_shell-*/*/chrome-headless-shell --screenshot … --virtual-time-budget=10000 <URL do dev:multi>`).
-     O cursor não aparece no screenshot: os ícones se conferem renderizando os SVG numa página.
-
-**Push:** o Git do WSL não tem credencial do GitHub; o dono faz o push pelo PowerShell (`git push origin main`).
+| Fim do mundo — brainstorm | ✅ Respondido pelo dono (2026-11-15, rodada interativa). A duração termina num apocalipse: a corrupção dos depósitos de cristal esgotados, que não pode ser limpa e é vista de longe; só o final feliz das tribos (M4) a detém, e salva o mundo inteiro; vitória pírrica com humor; qualquer creep vivo no fim vira lenda; empate no relógio da fatia E. **ROADMAP:** fatias do M2 como grafo, M2.5 "A jungle hostil e o fim do mundo", M5 novo, "As lendas" | [brainstorm §0](../brainstorm/2026-11-15-fim-do-mundo.md) · [ROADMAP](../ROADMAP.md) |
+| M2.5, M3, M4, M5 | ⬜ Não iniciados | [ROADMAP](../ROADMAP.md) |
 
 ## Achados do playtest
 
@@ -99,8 +144,7 @@ Um item por problema: o que a pessoa não entendeu ou não conseguiu, a tarefa o
 
 - **Sessão 1 (dono, 2026-11-14):** `npm run dev:multi -- --clients 3 --mult 36` (padrão de 3 dias de mundo), sem
   ir até o fim do mundo (o fim já é coberto pelo `npm run soak`). Replay testado pelo dono: ok, o pendente do F8
-  está resolvido. **Nenhum problema reportado.** Ainda sem uma pessoa que nunca viu o jogo (ver próximos passos,
-  item 3).
+  está resolvido. **Nenhum problema reportado.** Ainda sem uma pessoa que nunca viu o jogo (ver "Pendências vivas", no topo).
 
 - **Sessão 2 (dono, 2026-11-14):** `dev:multi` com o fog, na branch da F5. **O fog e a exploração cumprem o papel
   esperado.** Achados, todos levados à F6 ([tasks](../specs/m1.5-fog/tasks.md)) e resolvidos (sessão 3):
@@ -118,7 +162,9 @@ Um item por problema: o que a pessoa não entendeu ou não conseguiu, a tarefa o
   entre os depósitos, e a seleção por área (em vez de célula) melhorou bastante a UX de clique e toque.** Nenhum
   problema novo. Fecha o M1.5.
 
-## Pendências e pontos a esclarecer
+## Registro das fases
+
+Medições, interpretações e decisões de cada fase, da mais recente para a mais antiga.
 
 - **Checkpoint da F6 do fog** ✅ (fechou o M1.5; spec §11, decisões no [plan §10](../specs/m1.5-fog/plan.md)). Relatórios em `runs/m1.5-fog-f6/`; a F5 rodada de novo
   na mesma máquina (`f5-base-sweep`, worktree em `70b5457`).
@@ -460,8 +506,6 @@ Um item por problema: o que a pessoa não entendeu ou não conseguiu, a tarefa o
   `libgupnp-1.6-0`), `dpkg-deb -x` num diretório do scratchpad, e `webkit.launch({ executablePath })` com um
   script que repete o `minibrowser-wpe/MiniBrowser` acrescentando esse diretório ao `LD_LIBRARY_PATH`, mais
   `PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=1`. Com sudo, `npx playwright install-deps webkit` resolve de vez.
-- **Servidor no `/mnt/c`:** subir o `npm run server` às vezes leva mais de 5 s (WSL). Scripts que sobem o
-  servidor devem esperar a porta responder, não um `sleep` fixo.
 - **Interpretações do F6 a validar** (o plan não fixa):
   - a recuperação restaura o último snapshot e reaplica os comandos do log com `tick >=` o do snapshot até o
     último tick gravado (`worlds.tick`, coluna além do esquema do plan, como `players.bot`);
@@ -476,8 +520,6 @@ Um item por problema: o que a pessoa não entendeu ou não conseguiu, a tarefa o
   - sem `seed`, o servidor sorteia um; `multiplier` vai de 1 a 10 000 (padrão 1). Nome de jogador não é único;
   - `join` na fila conta para o limite de 3 humanos por time;
   - mensagem inválida sem `ref` legível volta com `ref: -1`.
-- **`SIM_VERSION` vale desde o F6 (hoje 2):** mundos persistidos guardam a versão. Mudou o comportamento do `sim`?
-  Suba a versão; um mundo de outra versão não é recuperado (o servidor loga e o pula).
 - **Interpretações do F5 a validar** (a spec e o plan não fixam):
   - tempo dos creeps em 5 atividades: as 4 da spec §7 (coletando, carregando, andando vazio, parado) mais
     **construindo**. "Andando" conta desde o tick em que o creep ganha pontos de movimento; esperar a obra de outro
@@ -535,15 +577,3 @@ Um item por problema: o que a pessoa não entendeu ou não conseguiu, a tarefa o
 - **Chutes de geração de mapa a calibrar no F5:** `map.crossingWidth`, `map.core`, `map.rocks`,
   `deposits.materia.{perSide, min/maxCoreDistance}`, `deposits.cristal.{minCoreDistance, contested*}`. Aprovados
   pelo dono como provisórios.
-
-- **`npm audit`:** aviso moderado (ReDoS no `minimatch`, dentro do typescript-eslint, só em dev). Sem correção
-  que não quebre; reavaliar quando o typescript-eslint atualizar.
-- **TypeScript fixado em `~6.0`:** o typescript-eslint ainda não suporta o TS 7.
-
-## Workflow
-
-- Branch por fase (`m<marco>/f<fase>-<slug>`), Conventional Commits por unidade lógica, merge `--no-ff` em `main`:
-  skill [`commit`](../../.claude/skills/commit/SKILL.md).
-- Implementar uma fase: skill `implement-phase`. Convenções de código: "Convenções do `sim`" no CLAUDE.md.
-- Outras skills: `adr`, `gdd-decision`, `spec-slice`. Skills novas só quando uma necessidade aparecer na prática.
-- Comandos: seção "Comandos" do [CLAUDE.md](../../CLAUDE.md). `npm run check` = o que o CI roda.
