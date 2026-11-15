@@ -34,6 +34,7 @@ const creep = (dna: Dna, materia = 0, cristal = 0): Creep => ({
   dna,
   name: "Abo",
   hp: 1000,
+  engagement: null,
   x: 0,
   y: 0,
   cargo: { materia, cristal },

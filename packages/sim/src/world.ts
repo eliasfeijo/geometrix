@@ -53,6 +53,8 @@ export type Creep = {
   name: string;
   /** Hit points in thousandths (plan P1): 300 HP is 300_000. */
   hp: number;
+  /** Id of the encounter the creep is in, or null (plan P2; set from F2). */
+  engagement: number | null;
   /** What the creep carries. Any amount above 0 counts as loaded. */
   cargo: Stock;
   /** What the creep is doing now. */
@@ -183,6 +185,7 @@ export function newCreep(
     dna,
     name: nameAt(birth),
     hp: maxHp(params, dna),
+    engagement: null,
     ...team.core,
     cargo: { materia: 0, cristal: 0 },
     order: { type: "stop" },

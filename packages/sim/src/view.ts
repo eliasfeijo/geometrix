@@ -158,6 +158,7 @@ function creepView(creep: Creep): CreepView {
     dna: creep.dna,
     name: creep.name,
     hp: creep.hp,
+    engagement: creep.engagement,
     x: creep.x,
     y: creep.y,
     cargo: creep.cargo,

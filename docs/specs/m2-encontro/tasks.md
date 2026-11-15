@@ -19,7 +19,7 @@ na sua branch (plan §12, skill `commit`), com merge `--no-ff` em `main`.
       `checkConsistency` (spec §6, plan §3)
 - [x] `names.ts` no `sim` (lista e `nameAt`, com os testes da lista), `state.births`, `name` e `hp` no nascimento
       (`createWorld` e produção); o cliente lê `creep.name` e o `names.ts` dele sai (spec D1, plan P5)
-- [ ] `hp.ts`: regeneração por minuto em milésimos, fora de encontro, mais rápida na zona do Núcleo (estágio 6);
+- [x] `hp.ts`: regeneração por minuto em milésimos, fora de encontro, mais rápida na zona do Núcleo (estágio 6);
       `kill`: tira o creep do estado e encerra o domínio, com testes (spec H-1..H-3, D3, D4, plan P1)
 - [ ] `events.ts`: tipos de evento, o coletor do tick, `born`, o público no fim do `step` e `eventsFor`; `step`
       devolve `SimEvent[]` (ADR-0007, plan §7, P9)
