@@ -25,7 +25,7 @@ na sua branch (plan §12, skill `commit`), com merge `--no-ff` em `main`.
       devolve `SimEvent[]` (ADR-0007, plan §7, P9)
 - [x] Visão: `name`, `hp` e `engagement` no creep inimigo, campos novos no próprio; "nada vaza" estendido (spec
       D18)
-- [ ] `SIM_VERSION` 6; hashes travados novos (mundo inicial, bot × bot de 6 h); o resto do repositório compila
+- [x] `SIM_VERSION` 6; hashes travados novos (mundo inicial, bot × bot de 6 h); o resto do repositório compila
       (estrategista, `protocol`, servidor, cliente, CLI)
 
 ## F2 — O encontro no `sim` (`m2/encontro-f2-encounter`)

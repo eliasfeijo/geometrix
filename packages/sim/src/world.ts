@@ -21,9 +21,11 @@ import { nameAt } from "./names.ts";
  * 3: fog of war, vision and team memory (M1.5 fog). 4: the explore target
  * ties go to the most cells never seen in sight (fog F5 checkpoint). 5: gather
  * picks the deposit by travel time and waits at a dry one only when quicker
- * (fog F6, E1), and each resource has its own gather pace (E2).
+ * (fog F6, E1), and each resource has its own gather pace (E2). 6: creeps
+ * have a name from the birth counter, HP that regenerates, and can die; step
+ * returns events (M2 encontro F1).
  */
-export const SIM_VERSION = 5;
+export const SIM_VERSION = 6;
 
 export type Stock = Record<Resource, number>;
 
