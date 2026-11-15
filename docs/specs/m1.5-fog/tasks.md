@@ -89,7 +89,7 @@ na sua branch (plan §12, skill `commit`), com merge `--no-ff` em `main`.
 Spec §11, plan §13. Achados e decisões da sessão 2 do dono (2026-11-14).
 
 - [x] Decisões no GDD 07 (E1) e 03 (E2); spec, plan e tasks da F6
-- [ ] E1: depósito escolhido por tempo de viagem; com a matéria vazia, espera só se compensar; `SIM_VERSION` 5
+- [x] E1: depósito escolhido por tempo de viagem; com a matéria vazia, espera só se compensar; `SIM_VERSION` 5
 - [ ] E2: ritmo de coleta por recurso; cristal com o chute de 1 a cada 5 s
 - [ ] E3: seleção de creep com área de clique mínima em pixels e lista quando o clique cai em vários
 - [ ] E4: cursor com o ícone da ação do clique

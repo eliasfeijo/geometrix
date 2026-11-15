@@ -24,6 +24,7 @@ import {
   knownRoadJob,
   memoryOf,
 } from "./known.ts";
+import { costWithin, nearestTargets } from "./pathfinding.ts";
 import { canBuildRoad, nextSegment } from "./roads.ts";
 import type { Creep, Deposit, WorldState } from "./world.ts";
 
@@ -104,9 +105,62 @@ export function nearestDeposit(
 }
 
 /**
- * The deposit of `kind` the creep is already gathering at, while the team
+ * The deposit of `kind` with some left that the creep reaches first, by
+ * travel time on the team's known map (fog spec §11, E1); ties go to the
+ * lower id. null when the team knows none it can reach.
+ */
+function quickestDeposit(
+  state: WorldState,
+  creep: Creep,
+  kind: Resource,
+): Deposit | null {
+  const deposits = known(state, creep).deposits.filter(
+    (d) => d.kind === kind && d.amount > 0,
+  );
+  return reachFirst(state, creep, deposits, Number.MAX_SAFE_INTEGER);
+}
+
+/**
+ * Which of `deposits` the creep reaches first within a path cost of
+ * `maxCost`, ties to the lower id; null when none.
+ */
+function reachFirst(
+  state: WorldState,
+  creep: Creep,
+  deposits: readonly Deposit[],
+  maxCost: number,
+): Deposit | null {
+  if (deposits.length === 0) return null;
+  const { width } = state.map;
+  const byCell = new Map<number, Deposit>();
+  for (const d of deposits) {
+    const cell = d.y * width + d.x;
+    const other = byCell.get(cell);
+    if (other === undefined || d.id < other.id) byCell.set(cell, d);
+  }
+  const reached = nearestTargets(
+    knownMap(state, creep.team),
+    creep,
+    new Set(byCell.keys()),
+    state.params,
+    maxCost,
+  );
+  if (reached === null) return null;
+  let best: Deposit | null = null;
+  for (const cell of reached.cells) {
+    const d = byCell.get(cell)!;
+    if (best === null || d.id < best.id) best = d;
+  }
+  return best;
+}
+
+/**
+ * The deposit of `kind` the creep keeps gathering at, while the team
  * remembers it with some left or it regenerates (owner decision, 2026-11-14):
- * no switching on the way, and waiting there when it runs dry.
+ * no switching on the way. At an empty materia deposit it waits only when
+ * that is quicker than walking to the nearest known one with enough for its
+ * free cargo (owner, fog F6, E1); it weighs that once per regeneration
+ * interval, on a tick spread by its id.
  */
 function committedDeposit(
   state: WorldState,
@@ -115,11 +169,50 @@ function committedDeposit(
 ): Deposit | null {
   if (creep.order.type !== "gather") return null;
   const { depositId } = creep.order;
-  const deposit = known(state, creep).deposits.find((d) => d.id === depositId);
+  const deposits = known(state, creep).deposits;
+  const deposit = deposits.find((d) => d.id === depositId);
   if (deposit === undefined || deposit.kind !== kind) return null;
-  return deposit.amount > 0 || regenerates(deposit, state.params)
-    ? deposit
-    : null;
+  if (deposit.amount > 0) return deposit;
+  if (!regenerates(deposit, state.params)) return null;
+  if (creep.x !== deposit.x || creep.y !== deposit.y) return deposit;
+  const { regen } = state.params.deposits.materia;
+  const elapsed = state.tick * state.params.world.tickSeconds;
+  if (elapsed % regen.everySeconds !== creep.id % regen.everySeconds) {
+    return deposit;
+  }
+  const free = freeCargo(state, creep);
+  // The team's creeps of lower id gathering here take the regeneration first.
+  let need = free;
+  for (const other of state.creeps) {
+    if (
+      other.id < creep.id &&
+      other.team === creep.team &&
+      other.order.type === "gather" &&
+      other.order.depositId === deposit.id &&
+      other.x === deposit.x &&
+      other.y === deposit.y
+    ) {
+      need += freeCargo(state, other);
+    }
+  }
+  const regens = Math.floor((need + regen.amount - 1) / regen.amount);
+  const wait = regens * regen.everySeconds;
+  const { cellsPerMinute } = state.params.dna[creep.dna];
+  const elsewhere = reachFirst(
+    state,
+    creep,
+    deposits.filter(
+      (d) => d.kind === kind && d.id !== deposit.id && d.amount >= free,
+    ),
+    costWithin(wait, cellsPerMinute) - 1,
+  );
+  return elsewhere ?? deposit;
+}
+
+function freeCargo(state: WorldState, creep: Creep): number {
+  return (
+    capacity(creep, teamOf(state, creep), state.params) - cargoTotal(creep)
+  );
 }
 
 function holds(state: WorldState, creep: Creep, condition: Condition): boolean {
@@ -157,7 +250,7 @@ function orderFor(
       if (isFull(state, creep)) return null;
       const deposit =
         committedDeposit(state, creep, action.resource) ??
-        nearestDeposit(known(state, creep).deposits, creep, action.resource);
+        quickestDeposit(state, creep, action.resource);
       return deposit === null
         ? null
         : { type: "gather", depositId: deposit.id };

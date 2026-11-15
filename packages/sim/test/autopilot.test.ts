@@ -3,7 +3,7 @@ import { nearestDeposit, type Rule } from "../src/autopilot.ts";
 import { step } from "../src/step.ts";
 import { updateVision } from "../src/vision.ts";
 import type { WorldState } from "../src/world.ts";
-import { creepOf, run, textWorld } from "./helpers.ts";
+import { creepOf, revealWorld, run, textWorld } from "./helpers.ts";
 
 /** Core A, materia at x=2 and x=6, cristal at x=4. */
 const ROW = ["A.m.c.m..B"];
@@ -188,6 +188,56 @@ describe("actions", () => {
     setAmount(world, 2, 0);
     step(world, []);
     expect(creep.order).toEqual(near);
+  });
+
+  test("gather picks the deposit reached first, by road if quicker", () => {
+    // 6 road cells to (6,0) cost less than 4 jungle cells to (0,4).
+    const { world, creep } = withRules(
+      [{ when: always, then: { type: "gather", resource: "materia" } }],
+      ["A.....m.", "........", "........", "........", "m......B"],
+    );
+    for (let x = 1; x <= 6; x++) world.map.road[x] = 1;
+    revealWorld(world);
+    step(world, []);
+    const road = world.deposits.find((d) => d.x === 6)!;
+    expect(creep.order).toEqual({ type: "gather", depositId: road.id });
+  });
+
+  /**
+   * A creep at its dry materia deposit with 1 free unit: waiting is 60 s, the
+   * time a circle walks 5 jungle cells. Returns its order after each of the 60
+   * ticks in which it weighs waiting once, with the deposit kept dry.
+   */
+  function dryDeposit(rows: string[]) {
+    const { world, creep } = withRules(
+      [{ when: always, then: { type: "gather", resource: "materia" } }],
+      rows,
+    );
+    revealWorld(world);
+    Object.assign(creep, { x: 2, y: 0 });
+    creep.cargo.materia = 9;
+    creep.order = { type: "gather", depositId: depositAt(world, 2).id };
+    const orders = [];
+    for (let i = 0; i < 60; i++) {
+      setAmount(world, 2, 0);
+      step(world, []);
+      orders.push(creep.order);
+    }
+    return { world, orders };
+  }
+
+  test("at a dry materia deposit it walks when another is quicker", () => {
+    const { world, orders } = dryDeposit(ROW);
+    const far = { type: "gather", depositId: depositAt(world, 6).id };
+    expect(orders.at(-1)).toEqual(far);
+  });
+
+  test("at a dry materia deposit it waits when walking is slower", () => {
+    const { world, orders } = dryDeposit(["A.m.......m...B"]);
+    const near = { type: "gather", depositId: depositAt(world, 2).id };
+    expect(
+      orders.every((o) => JSON.stringify(o) === JSON.stringify(near)),
+    ).toBe(true);
   });
 
   test("gather leaves a cristal deposit that runs dry for the next one", () => {
