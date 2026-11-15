@@ -23,7 +23,7 @@ na sua branch (plan §12, skill `commit`), com merge `--no-ff` em `main`.
       `kill`: tira o creep do estado e encerra o domínio, com testes (spec H-1..H-3, D3, D4, plan P1)
 - [x] `events.ts`: tipos de evento, o coletor do tick, `born`, o público no fim do `step` e `eventsFor`; `step`
       devolve `SimEvent[]` (ADR-0007, plan §7, P9)
-- [ ] Visão: `name`, `hp` e `engagement` no creep inimigo, campos novos no próprio; "nada vaza" estendido (spec
+- [x] Visão: `name`, `hp` e `engagement` no creep inimigo, campos novos no próprio; "nada vaza" estendido (spec
       D18)
 - [ ] `SIM_VERSION` 6; hashes travados novos (mundo inicial, bot × bot de 6 h); o resto do repositório compila
       (estrategista, `protocol`, servidor, cliente, CLI)

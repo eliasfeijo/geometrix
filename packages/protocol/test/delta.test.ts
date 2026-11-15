@@ -236,6 +236,8 @@ describe("diffView / applyDelta", () => {
         team: 1,
         dna: enemy.dna,
         name: enemy.name,
+        hp: enemy.hp,
+        engagement: null,
         ...world.teams[0]!.core,
         cargo: enemy.cargo,
       },
