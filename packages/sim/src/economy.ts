@@ -81,7 +81,7 @@ export function unload(creep: Creep, team: Team): void {
 }
 
 /**
- * Stage 5: every regen.everySeconds of world time, materia deposits gain
+ * Stage 6: every regen.everySeconds of world time, materia deposits gain
  * regen.amount, up to their initial amount. Cristal never regenerates (R-2):
  * an exhausted cristal deposit stays on the map at 0.
  */

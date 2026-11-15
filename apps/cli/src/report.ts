@@ -11,6 +11,9 @@ const ACTIVITY_LABELS: Record<Activity, string> = {
   carrying: "carregando",
   walkingEmpty: "andando vazio",
   building: "construindo",
+  talking: "em diálogo",
+  fighting: "lutando",
+  fleeing: "fugindo",
   idle: "parado",
 };
 const DNA_ORDER = ["square", "triangle", "circle"] as const;

@@ -32,7 +32,7 @@ na sua branch (plan §12, skill `commit`), com merge `--no-ff` em `main`.
 
 - [x] `Encounter`, `Spoil`, `engagement`, `safeConduct`, `extortBlocks` no estado; `spoils` na memória do time
       (plan §3)
-- [ ] Ordem `approach` (perseguição, fim quando o alvo sai da visão) e o passo **abrir** do estágio de encontros,
+- [x] Ordem `approach` (perseguição, fim quando o alvo sai da visão) e o passo **abrir** do estágio de encontros,
       com o encontro mútuo (D12); testes em mapas de texto, nos dois lados do mapa espelhado (spec E-1..E-3, E-9)
 - [ ] Diálogo: exigência (`demandFor`, D8), reações da vítima livre e do dominado (janela, `reply`), pagar com
       salvo-conduto e bloqueio do par (spec E-4..E-8, D6, D9)

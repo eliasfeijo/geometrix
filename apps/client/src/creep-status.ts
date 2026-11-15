@@ -62,6 +62,9 @@ export const STATUS_TEXTS: Record<CreepStatus, string> = {
   carrying: "carregando",
   walkingEmpty: "andando vazio",
   building: "construindo estrada",
+  talking: "em diálogo",
+  fighting: "lutando",
+  fleeing: "fugindo",
   idle: "parado",
   waiting: "esperando o depósito regenerar",
 };
