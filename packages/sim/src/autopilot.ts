@@ -163,7 +163,7 @@ export function nearestDeposit(
 /**
  * The deposit of `kind` with some left that the creep reaches first, by
  * travel time on the team's known map (fog spec §11, E1); ties go to the
- * lower id. null when the team knows none it can reach.
+ * first cell in the team's frame. null when the team knows none it can reach.
  */
 function quickestDeposit(
   state: WorldState,
@@ -178,7 +178,8 @@ function quickestDeposit(
 
 /**
  * Which of `deposits` (or spoils) the creep reaches first within a path cost
- * of `maxCost`, ties to the lower id; null when none.
+ * of `maxCost`, ties to the first cell in the team's frame (ids are not
+ * mirrored between the teams); null when none.
  */
 function reachFirst<T extends { id: number } & Cell>(
   state: WorldState,
@@ -202,12 +203,13 @@ function reachFirst<T extends { id: number } & Cell>(
     maxCost,
   );
   if (reached === null) return null;
-  let best: T | null = null;
+  const frame = (cell: number) =>
+    isRotatedSide(creep.team) ? width * state.map.height - 1 - cell : cell;
+  let best: number | null = null;
   for (const cell of reached.cells) {
-    const d = byCell.get(cell)!;
-    if (best === null || d.id < best.id) best = d;
+    if (best === null || frame(cell) < frame(best)) best = cell;
   }
-  return best;
+  return best === null ? null : byCell.get(best)!;
 }
 
 /**
