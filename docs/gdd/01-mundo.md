@@ -28,6 +28,13 @@
     vistos, ficam no mapa do time.
   - **Três estados na tela:** nunca visto (negro), lembrado (esmaecido, com o último valor) e visível agora.
   - O piloto automático também decide só pelo que o time sabe ([07](07-piloto-automatico.md)).
+- **Construções com HP no M2** (dono, 2026-11-15; registro no
+  [brainstorm M2–M3](../brainstorm/2026-11-15-m2-m3.md)): o **Núcleo**, as **estradas prontas** e as **obras em
+  andamento** têm HP e podem ser destruídos. O HP persiste e só se recupera com reparo pago
+  ([03](03-economia-e-logistica.md)). As estradas são neutras, então qualquer lado pode derrubá-las, inclusive a que
+  o inimigo usa.
+- **Árvores destrutíveis no M2.5** (ideia do dono, 2026-11-15): vegetação que bloqueia a visão e pode ser derrubada,
+  para aprofundar a jungle além das pedras de hoje. Entra com a jungle hostil.
 
 ## Proposta
 
@@ -56,6 +63,9 @@ do Núcleo conforme o time constrói.
 - A defesa offline vem de fortificações + piloto automático de defesa.
 
 ## Perguntas abertas
+- **Árvores (M2.5):** como bloqueiam a visão "de forma inteligente" (a árvore é vista e esconde o que está atrás,
+  como a pedra? esconde só quem está dentro dela?), quem pode derrubar e o que custa.
+- **Reparo:** quanto custa, quem repara e se é preciso estar no lugar.
 - O Núcleo pode ser movido ou reconstruído? Pode existir mais de uma base por time?
 - **Sem depósito garantido à vista no início** (névoa negra, 2026-11-14), o começo de partida fica lento ou
   desigual demais em alguma seed? Medir com os bots antes do playtest.

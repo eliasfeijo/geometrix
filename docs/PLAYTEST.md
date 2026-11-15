@@ -2,8 +2,9 @@
 
 Como rodar uma sessão de playtest do geometrix. Hoje cobre o **playtest de legibilidade e mecânica do M1** (F9,
 [spec M1 §8 item 4](specs/m1-ciclo-da-riqueza/spec.md)) e o **da névoa do M1.5** (seção "Névoa (M1.5)", [spec do
-fog §8](specs/m1.5-fog/spec.md)). O playtest de diversão, com deploy e túnel, entra aqui antes do M2
-([tasks M1](specs/m1-ciclo-da-riqueza/tasks.md), "Fora do M1").
+fog §8](specs/m1.5-fog/spec.md)). O playtest de diversão com pessoas novas, com deploy e túnel, não bloqueia mais
+o M2 nem o M3 (dono, 2026-11-15, no [ROADMAP](ROADMAP.md)): entra aqui quando o dono achar o jogo divertido o
+suficiente.
 
 ## Objetivo
 

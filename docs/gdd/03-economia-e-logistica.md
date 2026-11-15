@@ -21,6 +21,12 @@
   produz um creep por vez, com "repetir" que espera recurso; estradas são neutras (os dois times andam nelas),
   construídas célula a célula a partir da rede, nunca numa travessia do rio. Por isso, no M1 nenhuma estrada
   cruza o rio.
+- **Saque e despojo** (dono, 2026-11-15; registro no [brainstorm M2–M3](../brainstorm/2026-11-15-m2-m3.md)): se
+  ninguém fugir, o lado vencedor fica com os recursos dos perdedores que morreram na batalha. O **despojo** é uma
+  pilha no chão que qualquer creep pode catar: guarda o saque que não coube na carga de quem venceu, a bolsa largada
+  na fuga ([06](06-batalhas.md)) e o artefato que cai quando o portador morre.
+- **Construções só se recuperam com reparo pago** (dono, 2026-11-15): o Núcleo, as estradas prontas e as obras têm
+  HP no M2 ([01](01-mundo.md)).
 
 ## Proposta
 
@@ -54,6 +60,14 @@ Candidato para depois do M1:
 ### Sumidouros
 Uma partida de dias precisa de sumidouros para a economia não inflacionar: manutenção, desgaste de estruturas,
 consumo de cristal em evoluções.
+
+### Brainstorm de 2026-11-15 (não aprovado)
+Detalhes no [brainstorm M2–M3](../brainstorm/2026-11-15-m2-m3.md) §2, §4 e §5.
+- **Extorsão física** (agente): o que a vítima paga passa da carga dela para a do agressor, até a capacidade livre
+  dele.
+- **Escambo entre times** (agente): uma ação do encontro. Os bots terminam a partida com ~68% do cristal parado.
+- **Sumidouros candidatos** (agente): a pressão crescente dos errantes no fim da partida e a durabilidade das armas
+  (camada de forja).
 
 ## Ideias em incubação (sem marco definido)
 - **Pontes e construções no rio:** um conceito próprio de travessia construída, que deixaria a estrada cruzar o rio.

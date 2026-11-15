@@ -7,8 +7,9 @@
 | **M0 — Design** | Pilares, GDD, ADRs, harness de DX (CLAUDE.md, fluxo de spec) | O que estamos construindo? |
 | **M1 — O ciclo da riqueza** | Mundo mínimo: 2 Núcleos num mapa pequeno e simétrico, matéria + cristal, creeps que coletam e carregam até a base, produção de creeps, construção de estrada, piloto automático declarativo básico, dominar/liberar | Coletar, transportar e investir já é interessante sozinho? |
 | **M1.5 — A névoa** | Sincronização por deltas da visão de cada time ([ADR-0006](adr/0006-sync-do-mundo.md)), com a viabilidade validada localmente; fog of war no mundo, em que clientes e bots só veem o que o próprio time enxerga (design decidido em 2026-11-14 no [GDD 01](gdd/01-mundo.md): névoa negra, visão por DNA, memória do time, piloto e caminho pelo que o time sabe) | Esconder informação cria decisões interessantes (explorar, proteger rotas) sem tornar o mapa ilegível? |
-| **M2 — A emboscada** | Uma emboscada numa carga em trânsito abre uma instância de batalha; um humano domina um creep; o resultado volta ao mundo; auto-resolve quando não há humano | A batalha muda o rumo do mundo sem dominar o jogo? |
-| **M3 — O time** | 3v3, impostos, votação com níveis de autoridade, genética e progressão | A governança gera decisões interessantes, ou só burocracia? |
+| **M2 — A emboscada** | Uma emboscada numa carga em trânsito abre uma instância de batalha; um humano domina um creep; o resultado volta ao mundo; auto-resolve quando não há humano. Pela rodada de design de 2026-11-15: o encontro com diálogo (atacar, extorquir; pagar, recusar, fugir), com dois ou mais lados e entrada no meio da luta; o laboratório de batalha com o combate configurável, em paralelo; stats base por DNA; HP de creeps e construções; saque e despojo; errantes; crônica, chat, console e macros | A batalha muda o rumo do mundo sem dominar o jogo? |
+| **M2.5 — A jungle hostil** | Chefões com buffs e artefato; level, XP, evolução e skills; temperamentos; 3ª ação do encontro por DNA; árvores destrutíveis que bloqueiam a visão (nome provisório; marco criado em 2026-11-15) | — |
+| **M3 — O time** | 3v3, impostos, votação com níveis de autoridade, genética (a progressão foi para o M2.5) | A governança gera decisões interessantes, ou só burocracia? |
 | **M4 — O mundo vivo** | Jungle com tribos e diplomacia, piloto automático scriptável, construção ampla | — |
 
 **M1 sem playtest de diversão** (dono, 2026-11-14): sem combate não há o que vencer. O M1 fecha com a sessão do
@@ -32,5 +33,19 @@ playtest do dono: coleta por tempo de viagem, ritmo de coleta por recurso, sele�
 Hipótese: nas sessões do dono, o fog e a exploração cumprem o papel sem tornar o mapa ilegível; a mesma pergunta
 volta no playtest de diversão do M2, com pessoas que nunca viram o jogo. Ficaram para o M2: o esgotamento e o papel
 do cristal ([GDD 03](gdd/03-economia-e-logistica.md)) e o tamanho do snapshot com a memória do fog (deploy).
+
+**Diversão antes do deploy** (dono, 2026-11-15): o deploy e o playtest com pessoas que nunca viram o jogo **deixam
+de bloquear o M2 e o M3**. O indicador de sucesso de diversão passa a ser a aprovação do dono nos playtests locais;
+o teste com olhos novos volta quando o dono achar o jogo divertido o suficiente. O deploy espera o combate, que é
+quem vai dizer quanta latência é aceitável. Na sessão solo do dono, o jogo ainda não tem fator diversão. O que
+pode entrar no M2 e nos marcos seguintes (encontros, jungle hostil, tribos e quests, progressão, combate) está no
+[brainstorm de 2026-11-15](brainstorm/2026-11-15-m2-m3.md).
+
+**M2.5 entre o M2 e o M3** (dono, 2026-11-15, na rodada interativa do brainstorm): o M3 já tinha 3v3, impostos,
+votação, genética e progressão, e somar a jungle hostil a ele deixaria o marco grande demais. O M2.5 recebe os
+chefões, a progressão (level, XP, evolução, skills), os temperamentos, a 3ª ação por DNA e as árvores. O M2 ficou
+grande mesmo assim: cada frente tende a virar uma fatia com spec, plan e checkpoint próprios, como no M1.5. As
+tribos ficam no M4, com uma tribo-protótipo antes só se os encontros do M2 provarem diversão. Decisões nos GDD 01,
+02, 03, 05, 06, 07 e 08.
 
 O mapa completo de 3 lanes + 2 jungles entra conforme os marcos pedirem, não antes.

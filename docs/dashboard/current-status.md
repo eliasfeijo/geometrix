@@ -1,6 +1,6 @@
 # Status atual
 
-**Atualizado:** 2026-11-14 · **Marco:** M1.5 — A névoa ✅ concluído · **Próximo:** M2 — A emboscada · **Fatia de rede:** ✅ concluída (viabilidade aprovada) · **Design do fog:** ✅ decidido (GDD 01, 02, 07) · **Spec e plan do fog:** ✅ aprovados · **Fog F1:** ✅ · **Fog F2:** ✅ · **Fog F3:** ✅ · **Fog F4:** ✅ · **Fog F5:** ✅ · **Fog F6:** ✅
+**Atualizado:** 2026-11-15 · **Marco:** M1.5 — A névoa ✅ concluído · **Próximo:** M2 — A emboscada (🟡 brainstorm de design, [2026-11-15](../brainstorm/2026-11-15-m2-m3.md)) · **Fatia de rede:** ✅ concluída (viabilidade aprovada) · **Design do fog:** ✅ decidido (GDD 01, 02, 07) · **Spec e plan do fog:** ✅ aprovados · **Fog F1:** ✅ · **Fog F2:** ✅ · **Fog F3:** ✅ · **Fog F4:** ✅ · **Fog F5:** ✅ · **Fog F6:** ✅
 
 Resumo de bolso. A fonte de verdade continua nos docs linkados. Atualize este arquivo ao fechar uma fase, ao passar
 por um portão de aprovação ou quando surgir um bloqueio.
@@ -23,7 +23,8 @@ por um portão de aprovação ou quando surgir um bloqueio.
 | M1 — F7 Cliente | ✅ Concluída, merge em `main`. Checkpoint aprovado pelo dono (2026-11-14). Lobby, mapa SVG com pan/zoom, creeps interpolados com nomes gerados, pilhas de creeps com lista para escolher, inspetor, dominar/liberar, painel do Núcleo, editor de regras e presets, controle direto pelo botão direito. Detalhes decididos pelo dono na [spec §5](../specs/m1-ciclo-da-riqueza/spec.md) | [tasks.md §F7](../specs/m1-ciclo-da-riqueza/tasks.md) · `apps/client/src/` |
 | M1 — F8 Replay e multi-cliente | ✅ Concluída, merge em `main`. Replay no navegador (arquivo do `geo sim` ou `GET /api/worlds/:id/replay`) com velocidades, linha do tempo e hash ✓/✗; hash confere no WebKit/JSC; `npm run dev:multi`. Detalhes decididos pelo dono no [plan §8](../specs/m1-ciclo-da-riqueza/plan.md) | [tasks.md §F8](../specs/m1-ciclo-da-riqueza/tasks.md) · `apps/client/src/replay/` · `apps/server/src/dev-multi*.ts` |
 | M1 — F9 Legibilidade e playtest | ✅ Concluída, merge em `main`. Fecha o M1. Feito: `npm run soak` (teste de resistência comprimido, no lugar do mundo de 24 h), estrada × pedra, nomes no mapa (Chakra Petch), carga cheia, `+N`/`−N` no Núcleo, custo da estrada sob o cursor e tempo da obra, [PLAYTEST.md](../PLAYTEST.md). **Checkpoint** (dono, 2026-11-14): playtest parcial e replay validados, sem achados | [tasks.md §F9](../specs/m1-ciclo-da-riqueza/tasks.md) · [spec §8](../specs/m1-ciclo-da-riqueza/spec.md) |
-| Deploy e playtest de diversão | Saíram do M1 (dono, 2026-11-14): abrem o M2 | [ROADMAP](../ROADMAP.md) |
+| Deploy e playtest de diversão | Saíram do M1 (dono, 2026-11-14). **Não bloqueiam mais o M2 nem o M3** (dono, 2026-11-15): a diversão é julgada pelo dono nos playtests locais; o deploy espera o combate dizer quanta latência é aceitável | [ROADMAP](../ROADMAP.md) |
+| M2 — brainstorm | ✅ Respondido pelo dono (2026-11-15, rodada interativa). Ideias do dono com a análise do agente; decisões nos GDD 01, 02, 03, 05, 06, 07 e no GDD 08 novo (crônica, chat e console); **marco novo M2.5 — A jungle hostil** no ROADMAP. **Rodada de design encerrada**, merge em `main` (`m2/f0-design`); os detalhes restantes vão para a spec | [brainstorm §0](../brainstorm/2026-11-15-m2-m3.md) · [ROADMAP](../ROADMAP.md) |
 | M1.5 — A névoa | 🟡 Em andamento (dono, 2026-11-14). Duas fatias: rede (deltas da visão de cada time, [ADR-0006](../adr/0006-sync-do-mundo.md), aceito) ✅ concluída, e depois fog of war 🟡 (rodada de design, spec e plan ✅ 2026-11-14; F1 ✅; F2 ✅; F3 ✅; F4 ✅; F5 ✅; F6 ⬜) | [ROADMAP](../ROADMAP.md) |
 | M1.5 rede — spec | ✅ Aprovada (2026-11-14). Decisões D1–D8; critérios de viabilidade na §7 | [spec.md](../specs/m1.5-rede/spec.md) |
 | M1.5 rede — plan | ✅ Aprovado (2026-11-14), com R1–R7 decididas | [plan.md](../specs/m1.5-rede/plan.md) |
@@ -41,7 +42,7 @@ por um portão de aprovação ou quando surgir um bloqueio.
 | M1.5 fog — F4 Cliente | ✅ Concluída, merge em `main`. Névoa com os três estados (negro, véu, visível), lembrados sob o véu; creep inimigo que sai da visão; sem custo de estrada sobre célula nunca vista; ação explorar, condição "não conhece depósito de" e preset Batedor no editor; replay sem névoa. Nomes de creep pelo id | [tasks.md](../specs/m1.5-fog/tasks.md) · `apps/client/src/map/{fog,fog-layer}.ts*` |
 | M1.5 fog — F6 Ajustes do playtest | ✅ Concluída, merge em `main`. Coletor pelo tempo de viagem e que só espera a matéria se compensar, ritmo de coleta por recurso (cristal 1 a cada 5 s), clique por área com lista, cursor com a ação; `SIM_VERSION` 5. **Checkpoint** (dono, 2026-11-14): coletores mais produtivos, seleção bem melhor; recomendações aceitas; **fecha o M1.5** | [tasks.md](../specs/m1.5-fog/tasks.md) · `runs/m1.5-fog-f6/` |
 | M1.5 fog — F5 Soak e legibilidade | ✅ Concluída, merge em `main`. Soak com o fog (`SIM_VERSION` 3 e 4) sem divergência; perguntas de névoa no PLAYTEST; alvo de explorar desempatado pelo ganho (decisão do dono depois de um vídeo do batedor). Sessão 2 do dono: o fog e a exploração cumprem o papel; os achados viram a F6 | [tasks.md](../specs/m1.5-fog/tasks.md) · `runs/m1.5-fog-f5-explore/` |
-| M2–M4 | ⬜ Não iniciados | [ROADMAP](../ROADMAP.md) |
+| M2, M2.5, M3, M4 | ⬜ Não iniciados | [ROADMAP](../ROADMAP.md) |
 
 ## Próximos passos imediatos
 
@@ -50,16 +51,22 @@ por um portão de aprovação ou quando surgir um bloqueio.
 ([spec](../specs/m1.5-fog/spec.md) · [plan](../specs/m1.5-fog/plan.md) · [tasks](../specs/m1.5-fog/tasks.md),
 F0–F6). O repo está no GitHub e o CI passa lá.
 
-1. **M2 (A emboscada)** ([ROADMAP](../ROADMAP.md)): deploy e playtest de diversão primeiro (lista em "Fora do M1"
-   no [tasks.md do M1](../specs/m1-ciclo-da-riqueza/tasks.md)), com uma rodada agrupada sobre as perguntas abertas
-   de batalha ([GDD 06](../gdd/06-batalhas.md)) antes da spec (skill `spec-slice`). Anotado para o M2 pelo M1.5:
-   - **deploy:** quem cria o mundo escolhe a seed no lobby (N9) e criar mundo deixa de ser público; o snapshot com
-     a memória do fog (117 MB de SQLite num mundo de 3 dias) passa a ser guardado compactado, com o `SIM_VERSION`
-     seguinte; os snapshots antigos são podados;
+1. **M2 (A emboscada)** ([ROADMAP](../ROADMAP.md)): **rodada de design e brainstorm** antes da spec. O dono
+   decidiu (2026-11-15) que o deploy e o playtest com pessoas novas não bloqueiam mais o M2 nem o M3. O esboço está
+   no [brainstorm de 2026-11-15](../brainstorm/2026-11-15-m2-m3.md), e o dono respondeu às perguntas na mesma
+   data (resumo na §0; decisões no GDD). O M2 toca em paralelo o encontro no mundo (com a luta resolvida por um
+   sorteio descartável) e um laboratório de batalha local, com latência simulada, e junta os dois depois. Próximo
+   passo: dividir o M2 em fatias e abrir a spec da primeira (skill `spec-slice`). A spec decide os detalhes que
+   ficaram abertos no GDD 06 e 08 (raio e janela do encontro, duração da batalha, tempo do mundo durante a luta,
+   reparo, canais e sintaxe do chat, macros) e as propostas que o dono ainda não aprovou (resumo no fim da §0 do
+   brainstorm). Anotado para o M2 pelo M1.5:
+   - **deploy** (quando acontecer): quem cria o mundo escolhe a seed no lobby (N9) e criar mundo deixa de ser
+     público; o snapshot com a memória do fog (117 MB de SQLite num mundo de 3 dias) passa a ser guardado
+     compactado, com o `SIM_VERSION` seguinte; os snapshots antigos são podados;
    - **cristal:** o esgotamento (~9,7 h de 72) e o papel do cristal ficaram para o M2 ([GDD 03](../gdd/03-economia-e-logistica.md));
-   - **olhos novos:** o playtest com pessoas que nunca viram o jogo responde de novo à hipótese do M1.5 (o roteiro
-     e as perguntas de névoa estão no [PLAYTEST.md](../PLAYTEST.md)); observar se travam num mundo só de humanos,
-     em que ninguém explora sem ordem (regra D3).
+   - **olhos novos** (quando o dono achar o jogo divertido): o playtest com pessoas que nunca viram o jogo responde
+     de novo à hipótese do M1.5 (o roteiro e as perguntas de névoa estão no [PLAYTEST.md](../PLAYTEST.md));
+     observar se travam num mundo só de humanos, em que ninguém explora sem ordem (regra D3).
 2. **O que vale saber do código do M1.5** para quem começa o M2:
    - **visão e memória** (`sim/vision.ts`, `view.ts`): o que o time vê e lembra, e a `view` filtrada é a única
      entrada do estrategista e do cliente; `fullView` (time −1) para o replay;

@@ -21,12 +21,18 @@
 - **Visão por DNA** (M1.5, 2026-11-14): o círculo enxerga mais longe (raio 6), depois o triângulo (4) e o
   quadrado (3), provisórios. O rápido e leve é o batedor natural; o quadrado de carga pesada é o mais cego. É a
   primeira diferença entre os DNAs fora da economia. Fog of war no [01](01-mundo.md).
+- **Rodada de design do M2** (dono, 2026-11-15; registro no
+  [brainstorm M2–M3](../brainstorm/2026-11-15-m2-m3.md)):
+  - **No M2, só stats base por DNA** (vida, dano, alcance, velocidade na batalha), nos params. **Level, XP, a
+    evolução e as skills ficam para o M2.5**, para ver o combate sem a progressão por cima. Na batalha, quem vence
+    depende do level, dos stats, das skills e da micro, não do DNA sozinho ([06](06-batalhas.md)).
+  - **HP persiste no mundo:** o creep que sai ferido de uma batalha volta ferido ao mapa e recupera HP devagar, mais
+    rápido perto do Núcleo. Ferido, vira alvo: a punição vale entre as lutas.
+  - **Recuar é possível, com custo:** a fuga do encontro é largar a bolsa e correr ([06](06-batalhas.md)).
+  - **Temperamentos** (traço de personalidade ao nascer) ficam para o M2.5.
 
 ## Proposta
 - Dominar só troca **quem emite os comandos** do creep. Ver [ADR-0002](../adr/0002-tudo-e-comando.md).
-- **Com morte permanente, recuar precisa ser possível.** Se toda batalha for tudo-ou-nada, os jogadores passam a
-  evitar o combate para não perder creeps evoluídos. Recuar ou fugir de uma batalha deve ser uma opção real, com
-  custo.
 - **A população precisa de um limitador.** Num mundo de dias, sem limite, o número de creeps cresce sem parar e
   pesa na performance e no balanceamento. Candidatos: manutenção (consumo contínuo de recurso), teto por moradia, ou
   envelhecimento.
@@ -36,6 +42,15 @@
   mais tardar: no M1 o cliente gera o nome pela ordem de nascimento, que só é estável porque nenhum creep morre;
   com morte (M2), a ordem muda e os nomes trocariam. Renomear é um comando novo no vocabulário versionado
   ([ADR-0002](../adr/0002-tudo-e-comando.md)).
+
+- **Brainstorm de 2026-11-15** (não aprovado; [brainstorm M2–M3](../brainstorm/2026-11-15-m2-m3.md) §2 e §5),
+  para o M2.5:
+  - **evolução pelo uso** (agente, inspirada no treino dos jogos de ação do BYOND): o creep melhora no que faz pelo
+    piloto automático. Precisa de teto, ou de ficar fora da economia, para não quebrar a equivalência econômica dos
+    DNAs;
+  - **temperamento ao nascer** (agente): um traço sorteado (ex.: ganancioso, bravo, cauteloso) que dá a postura
+    padrão nos encontros e a voz do creep na crônica;
+  - o nome no estado passa a ser necessário para a crônica dos encontros (M2).
 
 ## Ideias em incubação (não entram antes do M3)
 - **Reprodução e gerações:** creeps M/F, idade, morte natural, herança de DNA. Seria um limitador de população

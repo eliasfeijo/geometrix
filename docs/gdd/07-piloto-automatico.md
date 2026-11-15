@@ -27,6 +27,9 @@
     células nunca vistas no raio de visão do creep** (dono, 2026-11-14, depois de ver o batedor varrer a borda do
     escuro uma linha por vez); o desempate que sobra fica no referencial do time, para os dois lados ficarem
     equivalentes no mapa espelhado.
+- **Linha de comando e macros no chat, no M2** (dono, 2026-11-15): o campo do chat também invoca comandos por
+  texto, no estilo do BYOND, e aceita macros de cliente. Detalhes no [08](08-cronica-chat-e-console.md). Os scripts
+  no servidor continuam para depois (M4).
 
 ## Proposta
 - Humanos, macros, piloto automático e bots emitem os **mesmos comandos** ([ADR-0002](../adr/0002-tudo-e-comando.md)).
@@ -36,6 +39,10 @@
 - **Fase 2, script:** JS rodando em sandbox no servidor (QuickJS/WASM ou isolated-vm), com limite de CPU e
   memória. Referências: Screeps, Gladiabots.
 - A mesma interface serve aos **bots de teste**: partidas inteiras rodando sem interface, para balanceamento.
+- **Posturas de encontro** (agente, brainstorm de 2026-11-15, não aprovado;
+  [brainstorm M2–M3](../brainstorm/2026-11-15-m2-m3.md) §2): como quase todo encontro acontece sem humano, a
+  resposta vem do piloto automático. Condição nova "inimigo à vista" (filtrável por DNA e carga), ação nova
+  "abordar", e regras de reação (ex.: "pago até 20% da carga; acima disso, luto; se eu for mais rápido, fujo").
 
 ## Perguntas abertas
 - Onde fica o piloto automático: por creep, por grupo de creeps, ou por jogador?
