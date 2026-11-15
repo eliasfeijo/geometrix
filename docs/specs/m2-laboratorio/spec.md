@@ -244,9 +244,9 @@ Os alvos são chutes. Quando um reprovar, o dono decide no checkpoint.
 ## 9. Pré-requisitos antes do `plan.md`
 
 - Aceite do dono nas decisões D1–D19 ✅ (2026-11-15); as de gameplay estão no GDD (02, 06, 07).
-- **ADR-0008 — Pacote de batalha** ✅ `Accepted` (2026-11-15): pacote próprio, determinístico, sem importar o `sim`; params e versão
-  próprios; a API de simulação com eventos fora do estado; a regra de combate como campo do setup; o laboratório
-  como servidor local num *worker*, sem predição.
+- **ADR-0008 — Pacote de batalha** ✅ `Accepted` (2026-11-15): pacote próprio, determinístico, sem importar o
+  `sim`; params e versão próprios; a API de simulação com eventos fora do estado; a regra de combate como campo do
+  setup; o laboratório como servidor local num *worker*, sem predição.
 - O contrato com o mundo (a bolha, o tempo do mundo, a entrada vinda do mundo) é o ADR da fatia D.
 
 ## 10. Perguntas abertas
