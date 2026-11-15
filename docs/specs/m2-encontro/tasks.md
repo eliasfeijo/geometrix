@@ -10,7 +10,7 @@ na sua branch (plan §12, skill `commit`), com merge `--no-ff` em `main`.
 - [x] Fatias do M2 decididas pelo dono e registradas no ROADMAP (2026-11-15)
 - [x] Spec aprovada, com D1–D21; as decisões de gameplay no GDD (2026-11-15)
 - [x] ADR-0007 (eventos do `sim`) aceito (2026-11-15)
-- [ ] **Checkpoint:** plan aprovado (decisões P1–P11)
+- [x] **Checkpoint:** plan aprovado (decisões P1–P11, 2026-11-15)
 
 ## F1 — Identidade, HP e eventos no `sim` (`m2/encontro-f1-identity`)
 

@@ -1,11 +1,12 @@
 # Plan M2 — O encontro
 
-**Status:** Rascunho · **Data:** 2026-11-15
+**Status:** Aprovado (2026-11-15) · **Data:** 2026-11-15
 **Spec:** [spec.md](spec.md) · **ADRs:** [0007](../../adr/0007-eventos-do-sim.md) (eventos do `sim`, `Accepted`),
 [0006](../../adr/0006-sync-do-mundo.md) (deltas da visão), [0004](../../adr/0004-persistencia-sqlite-log-de-comandos.md)
 (log e snapshots), [0002](../../adr/0002-tudo-e-comando.md) (vocabulário de comandos)
 
-As decisões que precisam do OK do dono estão marcadas **(P*n*)** e listadas na §11, com proposta e alternativa.
+As decisões que precisavam do OK do dono estão marcadas **(P*n*)** e listadas na §11. **Todas aprovadas pelo dono
+(2026-11-15), pela proposta.**
 
 ## 1. O que o código faz hoje e o que muda
 
@@ -296,9 +297,9 @@ type CreepRef = { id: number; team: number; dna: Dna; name: string };
   no teste para garantir que ele exercita a remoção.
 - **Soak:** a crônica final de cada cliente igual à do servidor.
 
-## 11. Decisões a aprovar
+## 11. Decisões aprovadas (dono, 2026-11-15)
 
-| # | Decisão | Proposta | Alternativa |
+| # | Decisão | Aprovada (a proposta) | Alternativa descartada |
 |---|---|---|---|
 | P1 | Unidade do HP | Milésimos de HP no estado; regeneração uma vez por minuto de mundo | HP inteiro, com o arredondamento para baixo a cada minuto (o círculo, de 120 HP, regeneraria proporcionalmente menos) |
 | P2 | Encontro no estado | Entidade `Encounter` em `state.encounters` (id do `nextId`), e o creep aponta para ela (`engagement`) | Campos só nos creeps (quem é o par, estágio, prazo): duplica o estado nos dois e complica a visão |
