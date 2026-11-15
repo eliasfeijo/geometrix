@@ -14,7 +14,7 @@ export type CreepView = Omit<Creep, "path" | "movePoints" | "trip">;
 /** Another team's creep in sight (spec D7): no order, rules or domination. */
 export type ForeignCreepView = Pick<
   Creep,
-  "id" | "team" | "dna" | "x" | "y" | "cargo"
+  "id" | "team" | "dna" | "name" | "x" | "y" | "cargo"
 >;
 
 /** Another team: its id and, once seen, where its core is (spec D7). */
@@ -156,6 +156,8 @@ function creepView(creep: Creep): CreepView {
     id: creep.id,
     team: creep.team,
     dna: creep.dna,
+    name: creep.name,
+    hp: creep.hp,
     x: creep.x,
     y: creep.y,
     cargo: creep.cargo,
@@ -171,6 +173,7 @@ function foreignCreepView(creep: Creep): ForeignCreepView {
     id: creep.id,
     team: creep.team,
     dna: creep.dna,
+    name: creep.name,
     x: creep.x,
     y: creep.y,
     cargo: creep.cargo,

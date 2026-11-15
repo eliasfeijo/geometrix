@@ -5,7 +5,7 @@
 
 import { canAfford, debit } from "./economy.ts";
 import type { Dna, Params } from "./params.ts";
-import { newCreep, type Team, type WorldState } from "./world.ts";
+import { spawnCreep, type Team, type WorldState } from "./world.ts";
 
 export type ProductionRefusal = "busy" | "populationCap" | "stock";
 
@@ -77,7 +77,7 @@ export function runProduction(state: WorldState): void {
     if (production !== null) {
       production.remainingSeconds -= state.params.world.tickSeconds;
       if (production.remainingSeconds <= 0) {
-        state.creeps.push(newCreep(state.nextId++, team, production.dna));
+        spawnCreep(state, team, production.dna);
         team.production = null;
       }
     }

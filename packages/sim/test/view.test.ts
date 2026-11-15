@@ -170,6 +170,7 @@ describe("view", () => {
         id: enemy.id,
         team: 1,
         dna: "square",
+        name: enemy.name,
         x: 3,
         y: 1,
         cargo: { materia: 0, cristal: 4 },

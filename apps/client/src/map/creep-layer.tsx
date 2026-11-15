@@ -18,7 +18,6 @@ import { useEffect } from "preact/hooks";
 import { useGame } from "../context.ts";
 import { creepStatus, viewCapacity, type Creep } from "../creep-status.ts";
 import type { GameStore } from "../store.ts";
-import { creepName } from "../names.ts";
 import { COLORS, teamColor, teamTextColor } from "./colors.ts";
 import { DnaShape } from "./creep-shape.tsx";
 import { creepPositions, glideProgress } from "./interpolate.ts";
@@ -125,7 +124,7 @@ export function CreepLayer() {
     <CreepName
       creep={creep}
       center={center}
-      name={creepName(creep.id)}
+      name={creep.name}
       fontSize={nameFontSize(
         inCell.get(`${creep.x},${creep.y}`) ?? 1,
         viewScale,

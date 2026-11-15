@@ -5,6 +5,7 @@ export * from "./economy.ts";
 export * from "./known.ts";
 export * from "./map.ts";
 export * from "./movement.ts";
+export * from "./names.ts";
 export * from "./orders.ts";
 export * from "./params.ts";
 export * from "./pathfinding.ts";
