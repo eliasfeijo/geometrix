@@ -55,8 +55,15 @@ export type Creep = {
   name: string;
   /** Hit points in thousandths (plan P1): 300 HP is 300_000. */
   hp: number;
-  /** Id of the encounter the creep is in, or null (plan P2; set from F2). */
+  /** Id of the Encounter the creep is in, or null (plan P2). */
   engagement: number | null;
+  /**
+   * After paying an extortion (spec D9): immune to approaches of `team` until
+   * `untilTick`, entering its own core zone, or approaching someone itself.
+   */
+  safeConduct: SafeConduct | null;
+  /** Aggressors that cannot extort this creep again yet (D9), by creep id. */
+  extortBlocks: ExtortBlock[];
   /** What the creep carries. Any amount above 0 counts as loaded. */
   cargo: Stock;
   /** What the creep is doing now. */
@@ -74,6 +81,38 @@ export type Creep = {
   /** The trip under way (stats), or null at rest. */
   trip: Trip | null;
 } & Cell;
+
+export type SafeConduct = { team: number; untilTick: number };
+export type ExtortBlock = { aggressor: number; untilTick: number };
+
+/** A reply of the player dominating a creep in an encounter (command react). */
+export type Reply = "pay" | "refuse" | "fight" | "flee";
+
+/**
+ * An encounter between two creeps (M2 encontro plan section 3, P2): a
+ * dialogue, then maybe a fight. Its cell is the victim's when it opened.
+ */
+export type Encounter = {
+  id: number;
+  aggressor: number;
+  victim: number;
+  intent: "attack" | "extort";
+  stage: "dialogue" | "fight";
+  /** What the aggressor demands (D8), set when an extortion opens. */
+  demand: Stock | null;
+  /** When the dominated victim's window ends (D6); null for a free one. */
+  deadlineTick: number | null;
+  /** The victim's player's answer, applied at the encounters stage. */
+  reply: Reply | null;
+  /** The aggressor's player asking to flee the fight (the victim's is reply). */
+  aggressorReply: "flee" | null;
+  /** Tick of the next round of the fight; null in the dialogue. */
+  nextRoundTick: number | null;
+  rounds: number;
+} & Cell;
+
+/** A pile of resources on a cell that any creep can pick up (spec D11). */
+export type Spoil = { id: number; cargo: Stock } & Cell;
 
 export type Deposit = { id: number; kind: Resource; amount: number } & Cell;
 
@@ -103,6 +142,10 @@ export type WorldState = {
   deposits: Deposit[];
   /** Segments under construction, by id. */
   roadJobs: RoadJob[];
+  /** Open encounters, by id (plan P2). */
+  encounters: Encounter[];
+  /** Spoils on the map, by id; one per cell at most (D11). */
+  spoils: Spoil[];
   /** What each team has seen and remembers, by team id (fog plan N1). */
   memory: TeamMemory[];
   nextId: number;
@@ -159,6 +202,8 @@ export function createWorld(seed: number, params: Params): WorldState {
     creeps,
     deposits,
     roadJobs: [],
+    encounters: [],
+    spoils: [],
     memory: createMemory(teams, layout.map),
     nextId,
     births,
@@ -188,6 +233,8 @@ export function newCreep(
     name: nameAt(birth),
     hp: maxHp(params, dna),
     engagement: null,
+    safeConduct: null,
+    extortBlocks: [],
     ...team.core,
     cargo: { materia: 0, cristal: 0 },
     order: { type: "stop" },

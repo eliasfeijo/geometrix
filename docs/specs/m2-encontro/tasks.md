@@ -30,7 +30,7 @@ na sua branch (plan §12, skill `commit`), com merge `--no-ff` em `main`.
 
 ## F2 — O encontro no `sim` (`m2/encontro-f2-encounter`)
 
-- [ ] `Encounter`, `Spoil`, `engagement`, `safeConduct`, `extortBlocks` no estado; `spoils` na memória do time
+- [x] `Encounter`, `Spoil`, `engagement`, `safeConduct`, `extortBlocks` no estado; `spoils` na memória do time
       (plan §3)
 - [ ] Ordem `approach` (perseguição, fim quando o alvo sai da visão) e o passo **abrir** do estágio de encontros,
       com o encontro mútuo (D12); testes em mapas de texto, nos dois lados do mapa espelhado (spec E-1..E-3, E-9)

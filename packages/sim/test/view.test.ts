@@ -41,6 +41,7 @@ const withoutSimFields = (creep: Creep) => {
   delete rest.path;
   delete rest.movePoints;
   delete rest.trip;
+  delete rest.extortBlocks;
   return rest;
 };
 
