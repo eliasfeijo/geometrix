@@ -13,8 +13,9 @@ merge, até acabar ou até um checkpoint que precise do julgamento do dono (seç
 
 ## 1. Abertura
 
-1. Leia `docs/dashboard/current-status.md`: fase atual, o que ela precisa saber do código atual, pendências e
-   interpretações a validar. Numa sessão nova, ele e o `CLAUDE.md` são todo o contexto: o que a fase anterior
+1. Leia o topo de `docs/dashboard/current-status.md` (a seção **Agora**: fase atual, o que ela precisa saber do
+   código atual, pendências vivas). O **Histórico**, no fim do arquivo, só quando precisar do detalhe de uma fase
+   passada. Numa sessão nova, ele e o `CLAUDE.md` são todo o contexto: o que a fase anterior
    aprendeu tem de estar lá.
 2. Leia a seção da fase no `tasks.md` e as seções do `plan.md` e da `spec.md` que ela cita ou de que depende
    (comportamento, parâmetros, pipeline). Leia o código que a fase vai estender.
@@ -30,10 +31,10 @@ Antes da primeira linha de código, liste o que a fase precisa e que **nem a spe
   entram em `params/default.json` como provisórios. Nunca como número no código.
 - **Regras de gameplay** que mudam o que o jogador vê ou decide: pergunte (regra "Não invente gameplay").
 - **Detalhes de implementação** que o plan deixa abertos e que não mudam decisões do jogador (ex.: qual célula
-  dá o modificador de velocidade): siga com a interpretação mais literal ou mais simples, registre-a no dashboard
-  em "Pendências" como "a validar no playtest" e cite-a no relatório final.
+  dá o modificador de velocidade): siga com a interpretação mais literal ou mais simples, registre-a no dashboard,
+  na entrada da fase em "Registro das fases", como "a validar no playtest", e cite-a no relatório final.
 - Se precisar de um valor neutro para seguir (ex.: estoque inicial 0), use-o como parâmetro e marque como
-  pendente de confirmação no dashboard.
+  pendente de confirmação nas "Pendências vivas" do dashboard.
 
 ## 3. Ciclo de cada task
 
@@ -51,22 +52,24 @@ Antes da primeira linha de código, liste o que a fase precisa e que **nem a spe
   faça a dependência antes. Cada uma mantém o seu commit e o seu `[x]`.
 - **Refatoração** que surgir (ex.: a terceira cópia de um helper de teste) vai num commit `refactor` separado.
 - **Decisão do dono no meio da fase:** registre na spec/plan (e no GDD, via skill `gdd-decision`) num commit
-  `docs` separado e tire o item das pendências do dashboard.
+  `docs` separado e tire o item das "Pendências vivas" do dashboard.
 - **Decisão arquitetural** detectada: pare e use a skill `adr`.
 
 ## 4. Fechamento
 
 1. Todas as tasks da fase `[x]`; o checkpoint da fase (se houver) cumprido. **Checkpoint que o dono julga**
-   (critério reprovado, economia, decisão do plan adiada para o checkpoint): rode as medições, ponha os números e
-   as perguntas numeradas no dashboard (commit `docs`), reporte e **pare antes do merge**. Com a resposta, registre
+   (critério reprovado, economia, decisão do plan adiada para o checkpoint): rode as medições, ponha os números no
+   "Registro das fases" e as perguntas numeradas em "Aguardando o dono", na seção Agora (commit `docs`), reporte e **pare antes do merge**. Com a resposta, registre
    a decisão no `tasks.md` (o `[x]` do checkpoint), no plan (seção de decisões) e no GDD se for gameplay (skill
    `gdd-decision`); então o fechamento segue.
 2. Código em caminho quente (pathfinding, loop do tick): meça com um script no scratchpad e compare com o
    orçamento da spec §7 (3 dias de mundo em menos de 10 min). Cite o número no relatório. Para achar o custo:
    `node --cpu-prof --cpu-prof-dir=<scratchpad>/prof apps/cli/src/main.ts sim ...` e some o tempo por função do
    `.cpuprofile` (JSON) com um script.
-3. Atualize `docs/dashboard/current-status.md`: fase concluída, próxima fase com o que ela precisa saber do
-   código atual, pendências e interpretações novas. Commit `docs: update status dashboard for the end of F<n>`.
+3. Atualize `docs/dashboard/current-status.md`. **Reescreva a seção Agora** (nunca acumule nela): próxima fase,
+   o que ela precisa saber do código atual, pendências vivas (tire as resolvidas), a tabela de marcos. As medições,
+   interpretações e decisões da fase entram **no topo** de "Registro das fases", no Histórico, e a fase ganha uma
+   linha em "Etapas". Commit `docs: update status dashboard for the end of F<n>`.
 4. Merge em `main` (skill `commit`), depois `npm run check` em `main`.
 
 ## 5. Relatório ao dono

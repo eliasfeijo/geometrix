@@ -17,6 +17,13 @@
     longe). Quando dois lados ferem o mesmo chefão, leva o buff ou o item **quem dá o último golpe**.
   - **Tribos no M4**, como no ROADMAP. Uma tribo-protótipo (conversa e uma quest de entrega) só antecipa se os
     encontros do M2 provarem diversão.
+- **Fim do mundo** (dono, 2026-11-15; registro no
+  [brainstorm do fim do mundo](../brainstorm/2026-11-15-fim-do-mundo.md) §0):
+  - **O final feliz secreto:** a única forma de não morrer no apocalipse ([01](01-mundo.md)) é seguir a quest das
+    tribos neutras. Ele **salva o mundo inteiro**, inclusive o time inimigo. Entra no M4, com as tribos.
+  - **A jungle que acorda:** as ondas de errantes e os chefões despertos são camadas do apocalipse, por cima da
+    corrupção.
+  - **Invasores de outros mundos:** lendas ([02](02-creeps-e-dominio.md)) invadem um mundo no fim, no M5 (As lendas).
 
 ## Proposta
 
@@ -32,6 +39,19 @@ Detalhes e análise no [brainstorm M2–M3](../brainstorm/2026-11-15-m2-m3.md) �
 - **Jungle hostil** (agente): nada de buff de dano puro (o buff é logístico, a assinatura do geometrix); o item do
   rio só funciona entregue no Núcleo (escolta pelo mapa, cruzando um vau); os monstros são a primeira facção neutra
   do `sim`, a base das tribos.
+
+### Fim do mundo: como fazer (agente, 2026-11-15, não aprovado)
+A direção está em Decidido; o detalhe, no [brainstorm do fim do mundo](../brainstorm/2026-11-15-fim-do-mundo.md)
+§4.3, §4.6 e §4.7.
+- **O caminho do final feliz varia por seed** (qual tribo, qual artefato, onde) e se descobre sob o fog, porque um
+  segredo fixo morre no primeiro replay compartilhado. A quest final é física: ex.: escoltar o artefato da tribo até
+  o foco mais antigo da corrupção, cruzando um vau. Como ele salva o mundo inteiro, os dois times podem cooperar
+  ou sabotar o ritual um do outro.
+- **A curva dos errantes por ato** do fim do mundo, na fatia D do M2; no ato 3, os chefões do M2.5 saem da toca e
+  marcham para os Núcleos.
+- **Invasores:** um por time, com o mesmo orçamento de poder, cada um com o objetivo de destruir um dos times.
+- **Um lado que não é um time:** errantes, chefões, tribos e invasores. O ADR do lado neutro, na fatia D, lista
+  esses quatro consumidores como restrições, sem construir nenhum antes da hora.
 
 ## Perguntas abertas
 - Onde exatamente fica cada chefão-buff "no caminho do inimigo": no lado do rio do inimigo, ou perto de um vau?

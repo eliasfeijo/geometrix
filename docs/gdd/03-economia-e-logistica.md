@@ -37,6 +37,11 @@
     fuga perde a bolsa inteira, mas fugir sempre dói.
 - **Construções só se recuperam com reparo pago** (dono, 2026-11-15): o Núcleo, as estradas prontas e as obras têm
   HP no M2 ([01](01-mundo.md)).
+- **O esgotamento do cristal é a semente do fim do mundo** (dono, 2026-11-15; registro no
+  [brainstorm do fim do mundo](../brainstorm/2026-11-15-fim-do-mundo.md) §0): todo depósito de cristal esgotado
+  vira um foco de **corrupção**, que envenena quem está perto e cresce até cobrir o mapa (M2.5, [01](01-mundo.md)).
+  Quantos depósitos se esgotaram decide se o fim já é inevitável. A corrupção **não pode ser limpa** pelos
+  jogadores, nem gastando recurso.
 
 ## Proposta
 
@@ -77,6 +82,19 @@ Detalhes no [brainstorm M2–M3](../brainstorm/2026-11-15-m2-m3.md) §2, §4 e �
 - **Sumidouros candidatos** (agente): a pressão crescente dos errantes no fim da partida e a durabilidade das armas
   (camada de forja).
 
+### A corrupção: como fazer (agente, 2026-11-15, não aprovado)
+A direção está em Decidido; o detalhe, no [brainstorm do fim do mundo](../brainstorm/2026-11-15-fim-do-mundo.md)
+§4.2.
+- **Uma tragédia dos comuns:** os dois times ganham minerando, e os dois pagam pelo esgotamento. É o papel que
+  falta ao cristal.
+- **Approach** (agente): cada depósito de cristal que chega a zero vira um foco (célula + tick de nascimento); o
+  raio é uma função inteira do tempo e do ato; dreno de HP em ‰ do HP máximo por minuto; depósitos de matéria na
+  terra corrompida ficam inúteis; o A* pesa as células corrompidas. Estado pequeno, delta trivial, custo O(focos).
+- **Restrição que já vale** (agente): o depósito esgotado continua no estado, com `amount` 0. Nenhuma decisão do
+  cristal no M2 deve removê-lo nem fazê-lo regenerar sem considerar esta proposta.
+- **Risco** (agente): os bots esgotam o cristal em ~9,7 h, o que dispararia o fim total em toda partida; o esgotamento
+  precisa ser rebalanceado junto, com o `geo sweep`.
+
 ## Ideias em incubação (sem marco definido)
 - **Pontes e construções no rio:** um conceito próprio de travessia construída, que deixaria a estrada cruzar o rio.
   O dono quer considerar mais à frente; não entra no M1.
@@ -97,7 +115,9 @@ Detalhes no [brainstorm M2–M3](../brainstorm/2026-11-15-m2-m3.md) §2, §4 e �
   mais perto das travessias, ou aceitar até o M2 dar mais usos ao cristal? **Fica para o M2 (dono,
   2026-11-14)**, onde o cristal vira o alvo da emboscada. O ritmo de coleta entrou antes, no M1.5 (coleta de
   cristal mais lenta, em Decidido), mas não resolve o esgotamento: o que esvazia o mapa é coletar sem precisar.
-  Os usos, a disputa e o esgotamento continuam para o M2.
+  Os usos, a disputa e o esgotamento continuam para o M2. O esgotamento ganhou um destino (a corrupção, em
+  Decidido); os usos e o ritmo do esgotamento vão para a **rodada de design do cristal, logo depois do checkpoint
+  da fatia A, F3**, que mede o cristal (dono, 2026-11-15; [ROADMAP](../ROADMAP.md)).
 - **Desempate em depósito disputado.** Quando creeps dos dois times coletam no mesmo depósito quase vazio, o de id
   menor leva a unidade (regra do M1, ordem do tick). Com o fog, os creeps passam a disputar depósitos e, no seed 42,
   o time 0 fica à frente depois de ~15 h (151 mil × 140 mil de matéria em 3 dias). **Aceito por ora; rever numa
