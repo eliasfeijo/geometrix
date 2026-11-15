@@ -2,7 +2,7 @@
 // decided 2026-11-13). Each free creep takes as its order the action of the
 // first rule whose condition holds and whose action is possible now. With no
 // such rule it keeps its current order. Dominated creeps are skipped: only
-// their player changes their order; so are creeps in an encounter. Rules decide by what the creep's team
+// their player changes their order; so are creeps in an encounter or fleeing. Rules decide by what the creep's team
 // knows (M1.5 fog spec A-1): deposits from its memory, cells from its known
 // map.
 
@@ -63,7 +63,14 @@ export type Rule = { when: Condition; then: Action };
 export function runAutopilot(state: WorldState): void {
   for (const creep of state.creeps) {
     // In an encounter, only its reactions decide (encounter.ts).
-    if (creep.dominatedBy !== null || creep.engagement !== null) continue;
+    // Fleeing is a locked order (plan P4).
+    if (
+      creep.dominatedBy !== null ||
+      creep.engagement !== null ||
+      creep.order.type === "flee"
+    ) {
+      continue;
+    }
     for (const rule of creep.rules) {
       if (!holds(state, creep, rule.when)) continue;
       const order = orderFor(state, creep, rule.then);
