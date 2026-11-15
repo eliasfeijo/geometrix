@@ -1,7 +1,8 @@
 // Behavior lock for the strategist (M1.5 rede plan section 7, spec D4): a
 // seed-42 world with one balanced bot per team, run for 6 world hours the way
 // the harness and the server run it. A changed hash means a bot decided
-// something different; it changes on purpose with the fog (fog spec D12).
+// something different; it changes on purpose with the fog (fog spec D12)
+// and with the raiders (M2 encontro spec D15, D20).
 
 import { createHash } from "node:crypto";
 import { expect, test } from "vitest";
@@ -34,7 +35,7 @@ test("a 6 h bot world of seed 42 hashes to a stable value", () => {
   expect(
     createHash("sha256").update(serialize(state)).digest("hex"),
   ).toMatchInlineSnapshot(
-    `"733c78e25f7fed0d5c036161469c817aa385e27ef49bdde5b9a49291c52de8eb"`,
+    `"c511228ae318fd522ec4fc025651735f2c357389dbd515cc65620f2e44b9a819"`,
   );
   // Growing to the population cap, the world takes a few seconds.
 }, 30_000);

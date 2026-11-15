@@ -20,7 +20,7 @@ import {
   type GameMap,
 } from "./map.ts";
 import { DNAS, type Dna, type Params } from "./params.ts";
-import { collectorRules, roadBuilderRules } from "./presets.ts";
+import { collectorRules, raiderRules, roadBuilderRules } from "./presets.ts";
 import { productionRefusal } from "./production.ts";
 import { nextSegment, type RoadContext } from "./roads.ts";
 import { canonicalJson } from "./serialize.ts";
@@ -42,6 +42,11 @@ export const BALANCED = {
   cristalShare: { numerator: 1, denominator: 3 },
   /** Creeps building roads while some deposit still lacks one. */
   builders: 1,
+  /**
+   * Share of the team's creeps raiding, rounded down (M2 encontro spec D15,
+   * plan P8): they extort loaded enemies in sight.
+   */
+  raiderShare: { numerator: 1, denominator: 6 },
 } as const;
 
 /** One bot player per team; player ids are team + 1. */
@@ -147,7 +152,10 @@ export function strategistActs(tick: number): boolean {
 }
 
 type Role =
-  { kind: "materia" } | { kind: "cristal" } | { kind: "builder"; target: Cell };
+  | { kind: "materia" }
+  | { kind: "cristal" }
+  | { kind: "builder"; target: Cell }
+  | { kind: "raider" };
 
 function balanced(known: Knowledge): Command[] {
   const commands: Command[] = [];
@@ -187,6 +195,7 @@ function roleOf(creep: Pick<Creep, "rules">): Role {
   const rules = canonicalJson(creep.rules);
   if (rules === canonicalJson(collectorRules("cristal")))
     return { kind: "cristal" };
+  if (rules === canonicalJson(raiderRules())) return { kind: "raider" };
   const build = creep.rules[1]?.then;
   if (
     build?.type === "buildRoad" &&
@@ -231,7 +240,8 @@ export function roadTarget(
 /**
  * Moves creeps between roles to reach the balanced split. Creeps leaving a
  * role that has too many are taken lowest id first, and so are the materia
- * creeps that fill a role short of creeps.
+ * creeps that fill a role short of creeps: cristal, then the road builder,
+ * then the raiders.
  */
 function assignRoles(known: Knowledge): Command[] {
   const { seen, team, map, explored, params } = known;
@@ -254,6 +264,10 @@ function assignRoles(known: Knowledge): Command[] {
     team,
   );
   const wantBuilders = target === null ? 0 : BALANCED.builders;
+  const raiders = BALANCED.raiderShare;
+  const wantRaiders = Math.floor(
+    (creeps.length * raiders.numerator) / raiders.denominator,
+  );
 
   const roles = new Map(creeps.map((c) => [c, roleOf(c)]));
   const next = new Map(roles);
@@ -274,12 +288,14 @@ function assignRoles(known: Knowledge): Command[] {
   };
   trim("builder", wantBuilders);
   trim("cristal", wantCristal);
+  trim("raider", wantRaiders);
   fill({ kind: "cristal" }, wantCristal);
   if (target !== null) {
     for (const creep of inRole("builder"))
       next.set(creep, { kind: "builder", target });
     fill({ kind: "builder", target }, wantBuilders);
   }
+  fill({ kind: "raider" }, wantRaiders);
 
   const commands: Command[] = [];
   for (const creep of creeps) {
@@ -306,6 +322,13 @@ function assignRoles(known: Knowledge): Command[] {
           creepId: creep.id,
           preset: "roadBuilder",
           target: role.target,
+        });
+        break;
+      case "raider":
+        commands.push({
+          type: "applyPreset",
+          creepId: creep.id,
+          preset: "raider",
         });
         break;
     }
