@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { population, startProduction } from "../src/production.ts";
+import { nameAt } from "../src/names.ts";
 import { newCreep, type WorldState } from "../src/world.ts";
 import { paramsWith, run, textWorld } from "./helpers.ts";
 
@@ -19,7 +20,9 @@ const teamCreeps = (world: WorldState, team = 0) =>
 function fillPopulation(world: WorldState, total: number): void {
   const team = world.teams[0]!;
   while (population(world, team) < total) {
-    world.creeps.push(newCreep(world.nextId++, team, "circle"));
+    world.creeps.push(
+      newCreep(world.nextId++, world.births++, team, "circle", world.params),
+    );
   }
 }
 
@@ -28,6 +31,7 @@ describe("startProduction", () => {
     const world = funded(1);
     const team = world.teams[0]!;
     const id = world.nextId;
+    const birth = world.births;
     expect(startProduction(world, 0, "triangle", false)).toBeNull();
     expect(team.stock).toEqual({ materia: 0, cristal: 0 });
     expect(team.production).toEqual({ dna: "triangle", remainingSeconds: 600 });
@@ -36,9 +40,12 @@ describe("startProduction", () => {
     run(world, 1);
     expect(teamCreeps(world)).toHaveLength(7);
     expect(world.creeps.at(-1)).toEqual({
-      ...newCreep(id, team, "triangle"),
+      ...newCreep(id, birth, team, "triangle", world.params),
     });
+    expect(world.creeps.at(-1)!.name).toBe(nameAt(birth));
+    expect(world.creeps.at(-1)!.hp).toBe(200_000);
     expect(world.nextId).toBe(id + 1);
+    expect(world.births).toBe(birth + 1);
     expect(team.production).toBeNull();
   });
 
