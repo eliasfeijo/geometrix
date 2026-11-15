@@ -34,6 +34,9 @@
   - **Nome no estado** (D1): o creep ganha o nome ao nascer, no `sim`, da lista de palavras que o cliente usava,
     pela mesma regra (ordem de nascimento, nascimentos seguidos com nomes distantes, sufixo quando a lista acaba).
     **Sem renomear no M2**: o comando entra quando o creep tiver identidade de jogo (M2.5).
+  - **Stats base na fatia A** (D2): cada DNA ganha só o HP máximo e um peso de luta para o sorteio descartável
+    (igual para os três de início). Dano, alcance e velocidade de batalha nascem no laboratório de batalha (fatia
+    B). Chutes provisórios de HP: quadrado 300, triângulo 200, círculo 120.
   - **Regeneração do HP** (D3): em ‰ do HP máximo por minuto de mundo, igual para os três DNAs, devagar no mapa e
     mais rápido a até um raio do próprio Núcleo; não regenera durante um encontro ou uma luta. Chutes provisórios:
     de 0 a cheio em 100 min no mapa e em 10 min perto do Núcleo (raio 8).

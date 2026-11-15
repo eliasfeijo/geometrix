@@ -1,6 +1,6 @@
 # Spec M2 — O encontro
 
-**Status:** Rascunho · **Data:** 2026-11-15 · **Marco:** M2 — A emboscada ([ROADMAP](../../ROADMAP.md)), fatia A de 5
+**Status:** Aprovada (2026-11-15) · **Data:** 2026-11-15 · **Marco:** M2 — A emboscada ([ROADMAP](../../ROADMAP.md)), fatia A de 5
 **GDD relacionado:** [01](../../gdd/01-mundo.md) (o inimigo na visão), [02](../../gdd/02-creeps-e-dominio.md)
 (HP, morte, nome), [03](../../gdd/03-economia-e-logistica.md) (extorsão, saque, despojo),
 [06](../../gdd/06-batalhas.md) (encontro, salvo-conduto, fuga, sorteio descartável),
@@ -44,13 +44,13 @@ Resumo; a fonte é o GDD. Inclui as decisões desta spec (§3), já registradas 
 
 ## 3. Decisões de escopo que esta spec assume
 
-**Aceitas pelo dono na rodada interativa de 2026-11-15**, menos as marcadas **(pendente)**. As marcadas com
+**Aceitas pelo dono na rodada interativa de 2026-11-15**, com a spec. As marcadas com
 **(gameplay)** completam o GDD e já estão nele. Os números estão na §6 e são chutes.
 
 | # | Decisão | Padrão | Por quê |
 |---|---|---|---|
 | D1 | Nome no estado **(gameplay)** | O creep ganha o nome ao nascer, no `sim`, da lista de 179 palavras que hoje está no cliente, pela mesma regra (ordem de nascimento, nascimentos seguidos com nomes distantes, sufixo "II" quando a lista acaba). **Sem comando de renomear** nesta fatia | GDD 02 pede o nome no estado no M2: com a morte, o nome gerado pela ordem trocaria. A crônica precisa de nomes estáveis. Renomear entra quando o creep tiver identidade de jogo (M2.5) |
-| D2 | Stats base: só o HP **(gameplay, pendente)** | Cada DNA ganha `hp` máximo e um **peso de luta** nos params (D7). Dano, alcance e velocidade de batalha ficam para o laboratório (B), onde fazem diferença | O sorteio não usa dano nem alcance; pôr esses números agora seria balancear algo que ninguém usa |
+| D2 | Stats base: só o HP **(gameplay)** | Cada DNA ganha `hp` máximo e um **peso de luta** nos params (D7). Dano, alcance e velocidade de batalha ficam para o laboratório (B), onde fazem diferença | O sorteio não usa dano nem alcance; pôr esses números agora seria balancear algo que ninguém usa |
 | D3 | Regeneração do HP **(gameplay)** | Em ‰ do HP máximo por minuto de mundo, igual para os três DNAs: devagar no mapa, mais rápido a até um raio do próprio Núcleo. Não regenera durante um encontro ou uma luta | GDD 02 ("mais rápido perto do Núcleo"). Em ‰, um DNA não sara mais rápido que o outro só por ter menos HP |
 | D4 | Morte e domínio **(gameplay)** | Com HP 0, o creep sai do estado; a carga vira saque ou despojo (D11). Se estava dominado, **o domínio termina**, como um `release`, sem cooldown | Responde à pergunta aberta do GDD 02 |
 | D5 | Abordar **(gameplay)** | Ordem nova `approach`, com a intenção já escolhida (**atacar** ou **extorquir**): o creep entra no modo de perseguição e anda até um creep inimigo que o time vê, recalculando o caminho quando o alvo muda de célula. O encontro abre quando os dois ficam a até o raio do encontro (Manhattan). Se o alvo sai da visão do time, a ordem termina | Dono: a intenção vai na ordem, e a ordem faz o creep perseguir o alvo. Funciona igual para o humano e para o piloto |
@@ -67,8 +67,8 @@ Resumo; a fonte é o GDD. Inclui as decisões desta spec (§3), já registradas 
 | D16 | Eventos do `sim` | O `step` passa a emitir **eventos estruturados** (quem, o quê, quanto), fora do estado e do hash. O replay e a recuperação os recalculam, como fazem com o resto. É um contrato novo: o ADR-0007 | O `sim` não emite eventos hoje, e a crônica precisa deles. Fora do estado, o snapshot não cresce |
 | D17 | Crônica **(gameplay)** | O cliente narra os eventos com modelos de frase em PT-BR, com a **voz pelo DNA** e a variante escolhida por um número do próprio evento (todos leem a mesma frase). Entram os encontros (com a declaração do agressor), as fugas, as lutas, as mortes, os saques e os nascimentos. Um time vê o evento em que um creep dele participa ou que acontece na visão dele. O texto fica fora do `sim`. **O agente escreve o banco inicial e o dono revisa o tom no checkpoint** | GDD 08. O texto muda sem mudar o `SIM_VERSION` |
 | D18 | O inimigo na visão **(gameplay)** | O creep inimigo à vista passa a mostrar também o **nome**, o **HP** e se está num encontro ou numa luta | Ferido, ele vira alvo (GDD 02), e o jogador precisa ver isso para escolher a vítima |
-| D19 | Comandos sobre o desconhecido **(pendente)** | Abordar um creep que o time não vê, ou catar um despojo que ele não conhece, é recusado com a recusa de id inexistente | A regra D6 da spec do fog |
-| D20 | O que muda de propósito **(pendente)** | `SIM_VERSION` 6, `PROTOCOL_VERSION` 4, vocabulário de comandos novo (`BREAKING CHANGE`), e os hashes fixos (3 dias do seed 42, 6 h do `bot-world.test.ts`) mudam | Gameplay novo: snapshots e replays antigos ficam inválidos (ADR-0004) |
+| D19 | Comandos sobre o desconhecido | Abordar um creep que o time não vê, ou catar um despojo que ele não conhece, é recusado com a recusa de id inexistente | A regra D6 da spec do fog |
+| D20 | O que muda de propósito | `SIM_VERSION` 6, `PROTOCOL_VERSION` 4, vocabulário de comandos novo (`BREAKING CHANGE`), e os hashes fixos (3 dias do seed 42, 6 h do `bot-world.test.ts`) mudam | Gameplay novo: snapshots e replays antigos ficam inválidos (ADR-0004) |
 | D21 | Sem zona segura **(gameplay)** | Nesta fatia, ninguém está a salvo perto do Núcleo. O harness mede se os bots acampam na saída do Núcleo inimigo | Dono: sem zona segura, mas com previsão para os acampamentos e as estruturas neutras (ideia do dono no GDD 01, a decidir no momento adequado) |
 
 ## 4. Escopo
@@ -255,8 +255,7 @@ população ao longo do tempo.
 
 ## 9. Pré-requisitos antes do `plan.md`
 
-- Aceite do dono nas decisões D1–D21 (✅ 2026-11-15, menos D2, D19 e D20, pendentes); as de gameplay estão no GDD
-  (01, 02, 03, 06, 07, 08).
+- Aceite do dono nas decisões D1–D21 ✅ (2026-11-15); as de gameplay estão no GDD (01, 02, 03, 06, 07, 08).
 - **ADR-0007 — Eventos do `sim`** (`Proposed` → `Accepted`): o `step` emite eventos fora do estado; como o servidor
   os filtra por time, guarda a crônica e a recupera depois de um restart; o versionamento do formato dos eventos
   com o vocabulário de comandos (ADR-0002). Rascunho com a skill `adr` depois da aprovação da spec.
