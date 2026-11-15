@@ -127,12 +127,12 @@ export function nearestUnseen(
   taken: ReadonlySet<number> = new Set(),
   radius = 0,
 ): Cell | null {
-  // Once the team has seen every cell, as it does late in a world, skip the
-  // search.
-  if (!explored.includes(0)) return null;
   const { width, height, terrain } = map;
   const size = width * height;
   const start = from.y * width + from.x;
+  // Late in a world the cells never seen are only the inside of rock blocks,
+  // which no one reaches: skip the search over the whole map.
+  if (explored[start] === 1 && !hasFrontier(map, explored)) return null;
   const steps = new Int32Array(size).fill(-1);
   const queue = new Int32Array(size);
   let tail = 0;
@@ -168,4 +168,30 @@ export function nearestUnseen(
     }
   }
   return best < 0 ? null : { x: best % width, y: Math.floor(best / width) };
+}
+
+/**
+ * Whether some cell never seen borders a seen passable cell. A path from a
+ * seen cell to a cell never seen enters the dark from such a border, so
+ * without one no cell never seen can be reached (nearestUnseen).
+ */
+function hasFrontier(
+  map: Pick<GameMap, "width" | "height" | "terrain">,
+  explored: readonly number[],
+): boolean {
+  const { width, height, terrain } = map;
+  const open = (j: number) => explored[j] === 1 && isPassable(terrain[j]!);
+  for (let i = 0; i < width * height; i++) {
+    if (explored[i] !== 0) continue;
+    const x = i % width;
+    if (
+      (i >= width && open(i - width)) ||
+      (x > 0 && open(i - 1)) ||
+      (x < width - 1 && open(i + 1)) ||
+      (i < width * (height - 1) && open(i + width))
+    ) {
+      return true;
+    }
+  }
+  return false;
 }
