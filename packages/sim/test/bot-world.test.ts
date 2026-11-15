@@ -37,8 +37,9 @@ test("a 6 h bot world of seed 42 hashes to a stable value", () => {
   ).toMatchInlineSnapshot(
     `"c511228ae318fd522ec4fc025651735f2c357389dbd515cc65620f2e44b9a819"`,
   );
-  // Growing to the population cap, the world takes a few seconds.
-}, 30_000);
+  // Growing to the population cap, with raiders exploring, the world takes
+  // over 10 s alone and some 30 s with the whole suite running.
+}, 60_000);
 
 /**
  * The mirrored teams play the same world: the first hours, before contested
