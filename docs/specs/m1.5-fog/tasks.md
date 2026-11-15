@@ -93,5 +93,7 @@ Spec §11, plan §13. Achados e decisões da sessão 2 do dono (2026-11-14).
 - [x] E2: ritmo de coleta por recurso; cristal com o chute de 1 a cada 5 s
 - [x] E3: seleção de creep com área de clique mínima em pixels e lista quando o clique cai em vários
 - [x] E4: cursor com o ícone da ação do clique
-- [ ] **Checkpoint:** economia lado a lado com a F5 (parados, vazão, esgotamento do cristal, upgrade, teto, custo
-      do tick), valor do cristal, sessão de legibilidade do dono; fecha o M1.5
+- [x] **Checkpoint:** economia lado a lado com a F5 (parados, vazão, esgotamento do cristal, upgrade, teto, custo
+      do tick), valor do cristal, sessão de legibilidade do dono; fecha o M1.5. **Dono, 2026-11-14:** coletores mais
+      produtivos e seleção por área bem melhor; recomendações aceitas (cristal 5 s provisório, esgotamento para o
+      M2; interpretações mantidas; snapshot no M2; custo do tick aceito). [Plan §10](plan.md)

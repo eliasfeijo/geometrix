@@ -195,7 +195,8 @@ Nenhuma no momento.
 
 Achados da sessão 2 do dono ([dashboard](../../dashboard/current-status.md), "Achados do playtest"). O dono
 decidiu as regras (E1, E2) e o que o cursor sinaliza (E4), e pôs a fase no M1.5, antes de fechá-lo. O resto é
-interpretação do agente, a validar na sessão que fecha o M1.5.
+interpretação do agente, a validar na sessão que fecha o M1.5. **Validadas no checkpoint da F6 (dono,
+2026-11-14)**, que fechou o M1.5 ([plan §10](plan.md)).
 
 | # | Achado | Decisão |
 |---|---|---|

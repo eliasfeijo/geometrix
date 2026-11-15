@@ -10,8 +10,11 @@
 - A riqueza pode ser investida em upgrades, fortificações, itens individuais e na produção de creeps.
 - **Direção para o M1: dois recursos, matéria + cristal** (descritos abaixo). Os valores são provisórios.
 - **Coleta de cristal mais lenta** (dono, sessão 2 do M1.5, 2026-11-14): o ritmo de coleta passa a ser por
-  recurso, e o cristal é coletado mais devagar que a matéria (chute: 1 unidade a cada 5 s; o valor é medido antes de
-  ser fixado). Motivo: o cristal do mapa inteiro se esgotava em 8,6 h de um mundo de 72 h.
+  recurso, e o cristal é coletado mais devagar que a matéria: **1 unidade a cada 5 s** (a matéria, 1 por segundo),
+  provisório. Motivo: o cristal do mapa inteiro se esgotava em 8,6 h de um mundo de 72 h. **Medido no checkpoint
+  da F6 do fog, o ritmo quase não adia o esgotamento** (1 s → 8,7 h; 5 s → 9,1 h; 30 s → 12,6 h, nas seeds 1–3): os
+  bots coletam todo o cristal do mapa e terminam com ~68% dele parado no estoque. **O dono fixou os 5 s como
+  provisórios e deixou o esgotamento para o M2** (2026-11-14), com o papel do cristal (abaixo).
 - **Regras de economia do M1** (2026-11-13, na F3; detalhes na
   [spec M1 §5](../specs/m1-ciclo-da-riqueza/spec.md)): coleta de 1 unidade/s (provisório), com a capacidade
   contando os dois recursos somados; entrega instantânea no Núcleo; matéria regenera até o valor inicial; o Núcleo
@@ -70,8 +73,9 @@ consumo de cristal em evoluções.
 - **Papel do cristal no M1.** Cada time precisa de ~390 cristais e coleta ~1 200, que se esgotam em ~8 h. Os
   depósitos disputados quase não são disputados, então o sinal do M2 não aparece. Depósitos disputados mais ricos,
   mais perto das travessias, ou aceitar até o M2 dar mais usos ao cristal? **Fica para o M2 (dono,
-  2026-11-14)**, onde o cristal vira o alvo da emboscada. O ritmo de esgotamento entrou antes, no M1.5 (coleta de
-  cristal mais lenta, em Decidido); os usos e a disputa continuam para o M2.
+  2026-11-14)**, onde o cristal vira o alvo da emboscada. O ritmo de coleta entrou antes, no M1.5 (coleta de
+  cristal mais lenta, em Decidido), mas não resolve o esgotamento: o que esvazia o mapa é coletar sem precisar.
+  Os usos, a disputa e o esgotamento continuam para o M2.
 - **Desempate em depósito disputado.** Quando creeps dos dois times coletam no mesmo depósito quase vazio, o de id
   menor leva a unidade (regra do M1, ordem do tick). Com o fog, os creeps passam a disputar depósitos e, no seed 42,
   o time 0 fica à frente depois de ~15 h (151 mil × 140 mil de matéria em 3 dias). **Aceito por ora; rever numa

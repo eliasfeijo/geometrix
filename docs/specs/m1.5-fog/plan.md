@@ -264,6 +264,22 @@ quadrado 316–351, 498–532, 773–918, 769–882. **Decisão:** desempate pel
 no losango de raio igual à visão do DNA em volta do alvo (sem linha de visão: é uma estimativa); a ordem continua
 acabando quando o alvo é visto. `SIM_VERSION` 4.
 
+**Checkpoint da F6, que fecha o M1.5 (dono, 2026-11-14).** Números em `docs/dashboard/current-status.md`
+("Checkpoint da F6 do fog"). O dono jogou a branch da F6: os coletores ficaram mais produtivos, circulando entre os
+depósitos, e o clique por área melhorou bastante a seleção. **Hipótese do M1.5:** na sessão 2 o dono disse que o fog
+e a exploração cumprem o papel esperado, e nesta fechou o marco; a mesma pergunta com pessoas que nunca viram o
+jogo fica para o playtest de diversão do M2. Aceitou as recomendações do agente:
+
+- **Cristal:** 1 unidade a cada 5 s fica como provisório; o esgotamento (9,7 h de 72, igual à F5) fica para o M2,
+  com o papel do cristal no [GDD 03](../../gdd/03-economia-e-logistica.md). O ritmo quase não adia o esgotamento: os
+  bots coletam todo o cristal e terminam com ~68% dele parado.
+- **Interpretações da F4 e da F6** ficam como estão: nomes de creep pelo id, véu com opacidade 0,55, área mínima de
+  clique de 20 px, ícones do cursor e as do E1/E2 (dashboard).
+- **Mundo só de humanos sem exploração sem ordem** (regra D3): mantida; observar no playtest com pessoas novas.
+- **Tamanho do snapshot** (55 → 117 MB num mundo de 3 dias): rever no deploy do M2 (memória compactada, com o
+  `SIM_VERSION` seguinte).
+- **Custo do tick:** ~1,35× o da F5 (~3× o de antes do fog; 13 s para 3 dias), aceito.
+
 ## 11. Harness e testes
 
 | Tipo | O quê |
@@ -296,15 +312,19 @@ seed 42 antes (em `main`) e depois.
 
 ## 13. F6 — Ajustes do playtest
 
-- **E1, tempo de viagem** (`pathfinding.ts`): uma busca de Dijkstra a partir do creep no mapa conhecido do time, com
-  o `stepCost` do A*, que para no primeiro depósito candidato alcançado (ou num custo máximo). O custo vira segundos
+- **E1, tempo de viagem** (`pathfinding.ts`, `nearestTargets`): um A* a partir do creep no mapa conhecido do time,
+  com o `stepCost` de sempre e a heurística Manhattan até o candidato mais próximo × o passo de estrada (nunca
+  superestima, então os custos são exatos), que para no primeiro depósito candidato alcançado (ou num custo máximo).
+  Na implementação, um Dijkstra puro custava ~60% a mais de CPU no mundo de 3 dias. O custo vira segundos
   pela velocidade do DNA sem carga: `Σ stepCost × 60 / (cellsPerMinute × 1000)`. Desempate entre depósitos à mesma
   distância: o menor id, como hoje. O `resourceInRange` continua em Manhattan (o raio da condição é em células).
 - **E1, esperar ou ir** (`autopilot.ts`, no `committedDeposit`): só com o depósito de matéria vazio e o creep nele.
   Espera = regenerações que faltam para a matéria cobrir a carga livre do creep **e a dos creeps do time de id menor
   coletando ali** (eles coletam antes no tick), vezes `regen.everySeconds`. Candidatos: os outros depósitos de
   matéria da memória com pelo menos a carga livre do creep. A busca para assim que o custo passa da espera, o que a
-  mantém pequena. `SIM_VERSION` 5.
+  mantém pequena. O creep pesa isso uma vez por intervalo de regeneração, **no segundo do meio, o mesmo para
+  todos**: uma fase pelo id do creep separava os times espelhados (o creep espelhado tem outro id) em 0,5–1,3 h.
+  `SIM_VERSION` 5.
 - **E2, ritmo por recurso** (`params.ts`, `economy.ts`): `gather` vira `{ materia: { units, everySeconds },
   cristal: { units, everySeconds } }`; a coleta acontece nos segundos de mundo múltiplos de `everySeconds` (como a
   regeneração), sem campo novo no estado. Consistência: `everySeconds` múltiplo de `tickSeconds`.
