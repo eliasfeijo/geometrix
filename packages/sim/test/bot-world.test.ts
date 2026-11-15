@@ -34,7 +34,7 @@ test("a 6 h bot world of seed 42 hashes to a stable value", () => {
   expect(
     createHash("sha256").update(serialize(state)).digest("hex"),
   ).toMatchInlineSnapshot(
-    `"1695584d071b1d3dadb748c36431d403046b5397f5f718d9a0bed6f74154ec9a"`,
+    `"733c78e25f7fed0d5c036161469c817aa385e27ef49bdde5b9a49291c52de8eb"`,
   );
   // Growing to the population cap, the world takes a few seconds.
 }, 30_000);

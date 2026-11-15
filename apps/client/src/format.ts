@@ -61,6 +61,10 @@ export const REJECT_TEXTS: Record<RejectReason | "disconnected", string> = {
   stock: "Estoque insuficiente.",
   notDominating: "Você não domina esse creep.",
   invalidOrder: "Ordem inválida.",
+  engaged: "Esse creep está num encontro.",
+  fleeing: "Esse creep está fugindo.",
+  notEngaged: "Esse creep não está num encontro.",
+  invalidReaction: "Essa resposta não cabe agora.",
   tooManyRules: "Regras demais para um creep.",
   invalidRule: "Regra inválida.",
   invalidPreset: "Preset inválido.",
@@ -96,8 +100,22 @@ export function conditionText(c: Condition): string {
       return `estoque de ${RESOURCE_NAMES[c.resource]} < ${c.amount}`;
     case "resourceUnknown":
       return `não conhece depósito de ${RESOURCE_NAMES[c.resource]}`;
+    case "enemyInSight":
+      return `inimigo à vista a até ${c.radius} células${dnaFilter(c.dna)}${cargoFilter(c.minCargo)}`;
+    case "hpBelow":
+      return `HP abaixo de ${c.permille / 10}%`;
+    case "demandAtMost":
+      return `exigência até ${c.permille / 10}% da carga`;
   }
 }
+
+const dnaFilter = (dna: readonly Dna[] | undefined) =>
+  dna === undefined
+    ? ""
+    : ` (${dna.map((d) => DNA_NAMES[d].toLowerCase()).join(", ")})`;
+
+const cargoFilter = (minCargo: number) =>
+  minCargo > 0 ? `, com carga ≥ ${minCargo}` : "";
 
 export function actionText(a: Action): string {
   switch (a.type) {
@@ -113,6 +131,16 @@ export function actionText(a: Action): string {
       return "ficar parado";
     case "explore":
       return "explorar";
+    case "pickup":
+      return "catar despojo";
+    case "approach":
+      return `${a.intent === "attack" ? "atacar" : "extorquir"} o inimigo mais perto a até ${a.radius} células${dnaFilter(a.dna)}${cargoFilter(a.minCargo)}`;
+    case "pay":
+      return "pagar a extorsão";
+    case "fight":
+      return "lutar";
+    case "flee":
+      return "fugir";
   }
 }
 
@@ -138,6 +166,14 @@ export function orderText(order: Order, deposits: readonly Deposit[]): string {
       return "entregar no Núcleo";
     case "buildRoad":
       return `construir estrada até (${order.x}, ${order.y})`;
+    case "approach":
+      return order.intent === "attack"
+        ? `atacar o creep #${order.targetId}`
+        : `extorquir o creep #${order.targetId}`;
+    case "pickup":
+      return `catar o despojo #${order.spoilId}`;
+    case "flee":
+      return "fugir para o Núcleo";
   }
 }
 

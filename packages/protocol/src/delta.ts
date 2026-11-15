@@ -118,7 +118,12 @@ const KINDS = {
     upgrades: "value",
     production: "value",
   },
-  creeps: { cargo: "value", order: "value", rules: "ref" },
+  creeps: {
+    cargo: "value",
+    order: "value",
+    rules: "ref",
+    safeConduct: "value",
+  },
   deposits: {},
   roadJobs: {},
   players: {},

@@ -12,10 +12,10 @@
 | | |
 |---|---|
 | **Marco** | **M2 — A emboscada** ([ROADMAP](../ROADMAP.md)). M0, M1 e M1.5 ✅ |
-| **Fatia** | **A — O encontro** ([spec](../specs/m2-encontro/spec.md) · [plan](../specs/m2-encontro/plan.md) · [tasks](../specs/m2-encontro/tasks.md)): F0 ✅, F1 ✅ (nomes, HP e eventos no `sim`) |
-| **Em execução** | Nada nesta árvore. **Spec da fatia B** (laboratório de batalha) numa outra sessão, no worktree `../geometrix-lab`, branch `m2/laboratorio-spec`: ela não mexe no dashboard nem no `CLAUDE.md`; o merge em `main` é feito entre duas fases da A |
-| **Próxima fase** | **A F2 — O encontro no `sim`**, branch `m2/encontro-f2-encounter` (skill `implement-phase`) |
-| **Pode andar em paralelo** | A implementação da B, quando a spec dela for aprovada |
+| **Fatia** | **A — O encontro** ([spec](../specs/m2-encontro/spec.md) · [plan](../specs/m2-encontro/plan.md) · [tasks](../specs/m2-encontro/tasks.md)): F0 ✅, F1 ✅ (nomes, HP e eventos), F2 ✅ (o encontro no `sim`) · **B — O laboratório de batalha** ([spec](../specs/m2-laboratorio/spec.md) · [plan](../specs/m2-laboratorio/plan.md) · [tasks](../specs/m2-laboratorio/tasks.md)): F0 ✅ (spec, ADR-0008 e plan aprovados) |
+| **Em execução** | Nada |
+| **Próxima fase** | **A F3 — Bots e harness**, branch `m2/encontro-f3-harness` (skill `implement-phase`), com o checkpoint do dono nos números |
+| **Pode andar em paralelo** | **B F1 — O pacote e o movimento**, branch `m2/laboratorio-f1-package`, numa outra sessão com worktree próprio (como a spec da B); a B mexe no pacote de batalha, não no `sim`. Ela não edita o dashboard nem o `CLAUDE.md`; o merge em `main` acontece entre duas fases da A |
 | **Aguardando o dono** | Nada |
 | **Bloqueios** | Nenhum |
 
@@ -23,14 +23,26 @@
 
 As fatias do M2 seguem o grafo de dependências do [ROADMAP](../ROADMAP.md), não uma fila.
 
-1. **A F2 a F6**, em sequência.
-2. **Spec da B** em andamento (outra sessão), e a implementação da B em paralelo à A, no pacote de batalha.
+1. **A F3 a F6**, em sequência.
+2. **A implementação da B** (F1 a F5) em paralelo à A, numa outra sessão.
 3. **Depois do checkpoint da A F3:** as rodadas de design do **papel do cristal** e da **fatia E** (se o cerco
    passa pela instância de batalha, a E depende da D; senão, pode vir antes dela).
 4. **Depois da A:** a D (com a B pronta) ou a E, e a C em paralelo à D.
 
 ### O que a próxima fase precisa saber
 
+- **o encontro** (F2, `sim/encounter.ts`): estágio 4 do `step` (`runEncounters`): expira salvo-condutos e
+  bloqueios, abre (`approach` a até `encounter.radius`; mútuo por D12), decide o diálogo (vítima livre na hora,
+  dominada pelo `reply` ou pelas regras no fim da janela), rola as rodadas (`nextRoundTick`), fecha. Critérios
+  de abordagem e a exigência em `sim/approach.ts` (`opening`, `demandFor`, `freeCapacity`); despojos em
+  `sim/spoils.ts`; `speedHere` em `movement.ts`; reações do piloto em `autopilot.ts` (`ruleReaction`,
+  `isReaction`); o comando `react` e as ordens `approach`/`pickup` em `domination.ts`. Atividades novas:
+  `talking`, `fighting`, `fleeing`;
+- **para o estrategista (F3):** o preset `raider` (`raiderRules`) já existe; o bot só precisa dar o preset a
+  `floor(creeps ÷ 6)` coletores de matéria de menor id. Num teste de rascunho (metade dos creeps salteadores,
+  24 h), o seed 42 levou 47 s: o `explore` dos salteadores pesa; medir com a fração real;
+- **ainda fora da visão:** `encounters` e `spoils` não estão na `TeamView` (entram na F4, junto com o delta,
+  senão o hash do cliente diverge); o creep inimigo já mostra `engagement`;
 - **identidade e HP** (F1): `creep.name` vem de `nameAt(state.births)` (`sim/names.ts`) no nascimento
   (`newCreep(id, birth, team, dna, params)`; a produção usa `spawnCreep`); `creep.hp` em milésimos (`maxHp`);
   `creep.engagement` já existe e é sempre `null` até a F2 criar o `Encounter`; `hp.ts` tem `regenerateHp`
@@ -73,7 +85,7 @@ Só o que ainda está aberto. Ao resolver, tire daqui e registre no Histórico.
 - **Olhos novos** (quando o dono achar o jogo divertido): o playtest com pessoas que nunca viram o jogo responde de
   novo à hipótese do M1.5 (o roteiro e as perguntas de névoa estão no [PLAYTEST.md](../PLAYTEST.md)); observar se
   travam num mundo só de humanos, em que ninguém explora sem ordem (regra D3).
-- **`SIM_VERSION` (hoje 6, desde a F1 do encontro):** mundos persistidos guardam a versão. Mudou o comportamento do `sim`?
+- **`SIM_VERSION` (hoje 7, desde a F2 do encontro):** mundos persistidos guardam a versão. Mudou o comportamento do `sim`?
   Suba a versão; um mundo de outra versão não é recuperado (o servidor loga e o pula).
 - **Servidor no `/mnt/c`:** subir o `npm run server` às vezes leva mais de 5 s (WSL). Scripts que sobem o
   servidor devem esperar a porta responder, não um `sleep` fixo.
@@ -88,7 +100,7 @@ Só o que ainda está aberto. Ao resolver, tire daqui e registre no Histórico.
 | M0 — Design | ✅ |
 | M1 — O ciclo da riqueza | ✅ 2026-11-14 |
 | M1.5 — A névoa | ✅ 2026-11-14 (rede e fog of war) |
-| M2 — A emboscada | 🟡 Fatia A: F0 ✅, F1 ✅, F2–F6 ⬜ · Fatia B: spec 🟡 · Fatias C, D, E ⬜ |
+| M2 — A emboscada | 🟡 Fatia A: F0 ✅, F1 ✅, F2 ✅, F3–F6 ⬜ · Fatia B: F0 ✅, F1–F5 ⬜ · Fatias C, D, E ⬜ |
 | M2.5 — A jungle hostil e o fim do mundo | ⬜ (fim do mundo decidido no GDD, 2026-11-15) |
 | M3 — O time · M4 — O mundo vivo · M5 — As lendas | ⬜ |
 
@@ -144,6 +156,8 @@ Só o que ainda está aberto. Ao resolver, tire daqui e registre no Histórico.
 | M2 — fatias | ✅ Decididas pelo dono (2026-11-15): A o encontro → B o laboratório de batalha → C chat, console e macros → D a junção (com os errantes) → E cerco e reparo | [ROADMAP](../ROADMAP.md) |
 | M2 A (encontro) — spec | ✅ Aprovada (2026-11-15), com D1–D21 decididas na rodada interativa; as de gameplay no GDD 01, 02, 03, 06, 07, 08; a ideia do dono de acampamento e torres em incubação no GDD 01. ADR-0007 (eventos do `sim`) ✅ `Accepted` (2026-11-15) |
 | M2 A (encontro) — plan | ✅ Aprovado (2026-11-15), com P1–P11 pela proposta; fases F1–F6 no tasks.md. F0 ✅ | [plan.md](../specs/m2-encontro/plan.md) · [tasks.md](../specs/m2-encontro/tasks.md) | [spec.md](../specs/m2-encontro/spec.md) |
+| M2 B (laboratório) — spec e plan | ✅ Aprovados (2026-11-15), escritos numa sessão paralela (worktree `../geometrix-lab`); ADR-0008 (pacote de batalha) ✅ `Accepted`. Fases F1–F5 no tasks.md | [spec.md](../specs/m2-laboratorio/spec.md) · [plan.md](../specs/m2-laboratorio/plan.md) · [tasks.md](../specs/m2-laboratorio/tasks.md) |
+| M2 A — F2 O encontro no `sim` | ✅ Concluída, merge em `main`. Ordens `approach`/`pickup`/`flee`, o estágio de encontros (abrir, diálogo, rodadas, fechar), extorsão com salvo-conduto e bloqueio, fuga pela velocidade, sorteio pelo HP × DNA, morte, saque e despojo, o vocabulário de encontro e as regras de reação, o preset salteador, o comando `react`, todos os eventos; `SIM_VERSION` 7 | [tasks.md](../specs/m2-encontro/tasks.md) · `packages/sim/src/{encounter,approach,spoils}.ts` |
 | M2 A — F1 Identidade, HP e eventos | ✅ Concluída, merge em `main`. Params do encontro, nomes no `sim` pelo contador de nascimentos, HP em milésimos com regeneração e `kill`, `step` devolve os eventos (`born`) com o público e `eventsFor`, nome/HP/encontro do inimigo na visão, `SIM_VERSION` 6 | [tasks.md](../specs/m2-encontro/tasks.md) · `packages/sim/src/{names,hp,events}.ts` |
 | Fim do mundo — brainstorm | ✅ Respondido pelo dono (2026-11-15, rodada interativa). A duração termina num apocalipse: a corrupção dos depósitos de cristal esgotados, que não pode ser limpa e é vista de longe; só o final feliz das tribos (M4) a detém, e salva o mundo inteiro; vitória pírrica com humor; qualquer creep vivo no fim vira lenda; empate no relógio da fatia E. **ROADMAP:** fatias do M2 como grafo, M2.5 "A jungle hostil e o fim do mundo", M5 novo, "As lendas" | [brainstorm §0](../brainstorm/2026-11-15-fim-do-mundo.md) · [ROADMAP](../ROADMAP.md) |
 | M2.5, M3, M4, M5 | ⬜ Não iniciados | [ROADMAP](../ROADMAP.md) |
@@ -176,6 +190,30 @@ Um item por problema: o que a pessoa não entendeu ou não conseguiu, a tarefa o
 ## Registro das fases
 
 Medições, interpretações e decisões de cada fase, da mais recente para a mais antiga.
+
+- **M2 A F2 — O encontro no `sim`** ✅ (2026-11-15). 2 263 testes; `geo verify` OK; `geo sim` de 3 dias do seed
+  42 em 14,2 s (F1: 12,1 s; o bot ainda não aborda ninguém), hash `e15dcec1…`. Rascunho com salteadores (1 em 4
+  e 1 em 2 creeps, seeds 42, 1, 7 e 649, 6 h e 24 h): nenhuma exceção, nenhum encontro órfão; de 6 a 17
+  encontros por mundo, quase todos pagos (o padrão do coletor é pagar), 1–2 mortes. Interpretações, a validar:
+  - **`SIM_VERSION` 7**, não 6 como na spec D20: a F1 já estava em `main` com o 6, e a F2 muda o comportamento.
+  - As tasks de diálogo, luta e fuga saíram num commit só: são uma máquina de estados (a fuga que falha abre a
+    luta; a luta tem fuga).
+  - A 1ª rodada vem `fight.roundSeconds` depois do início da luta, não no mesmo tick.
+  - O `Encounter` ganhou `aggressorReply` (o plan só tinha `reply`): na luta, o jogador que domina o agressor
+    também pode pedir a fuga.
+  - Abordagem do jogador a um alvo engajado, com salvo-conduto contra o time ou (na extorsão) em fuga: a ordem
+    continua perseguindo e espera. Par bloqueado, como exigência 0: a ordem termina.
+  - No encontro mútuo, se quem escolhe primeiro não pode abrir (ex.: extorsão sem exigência), o outro tenta.
+  - Na luta, o evento `reaction` sai só quando alguém tenta fugir; o creep dominado sem resposta segue as regras
+    dele (ex.: o salteador foge abaixo de 400‰).
+  - A ação `approach` mantém o alvo enquanto ele passa em todo o filtro, raio incluído; `minCargo` é a carga
+    total; o empate é pela célula no referencial do time e depois pelo id.
+  - O `pickup` anda pela memória e cata no tick em que chega; a ação mantém o despojo enquanto o time lembra dele.
+  - O creep em fuga regenera HP (não está em encontro).
+  - A fuga sorteia a fração dos dois recursos sempre (a sequência do `rng` não depende da carga).
+  - O próprio creep na visão mostra o `safeConduct` (o `protocol` o compara por valor); `extortBlocks` fica fora da
+    visão.
+  - O cliente ganhou só o mínimo para compilar (rótulos, textos, botão "Salteador"); o editor e o mapa são da F5.
 
 - **M2 A F1 — Identidade, HP e eventos** ✅ (2026-11-15). 2 205 testes; `geo verify` OK
   (`cbeb5ef5…`, 50 000 ticks); `geo sim` de 3 dias do seed 42 em 12,1 s (a F6 do fog: 13–14 s), hash novo

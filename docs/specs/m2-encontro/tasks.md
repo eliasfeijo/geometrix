@@ -30,22 +30,22 @@ na sua branch (plan §12, skill `commit`), com merge `--no-ff` em `main`.
 
 ## F2 — O encontro no `sim` (`m2/encontro-f2-encounter`)
 
-- [ ] `Encounter`, `Spoil`, `engagement`, `safeConduct`, `extortBlocks` no estado; `spoils` na memória do time
+- [x] `Encounter`, `Spoil`, `engagement`, `safeConduct`, `extortBlocks` no estado; `spoils` na memória do time
       (plan §3)
-- [ ] Ordem `approach` (perseguição, fim quando o alvo sai da visão) e o passo **abrir** do estágio de encontros,
+- [x] Ordem `approach` (perseguição, fim quando o alvo sai da visão) e o passo **abrir** do estágio de encontros,
       com o encontro mútuo (D12); testes em mapas de texto, nos dois lados do mapa espelhado (spec E-1..E-3, E-9)
-- [ ] Diálogo: exigência (`demandFor`, D8), reações da vítima livre e do dominado (janela, `reply`), pagar com
+- [x] Diálogo: exigência (`demandFor`, D8), reações da vítima livre e do dominado (janela, `reply`), pagar com
       salvo-conduto e bloqueio do par (spec E-4..E-8, D6, D9)
-- [ ] Luta: rodadas com o `rng` (peso pelo HP relativo × DNA), morte, saque e despojo (spec L-1..L-3, D7, D11)
-- [ ] Fuga: chance pela velocidade (`speedHere`), fração largada, ordem `flee` travada com o bônus; fuga na
+- [x] Luta: rodadas com o `rng` (peso pelo HP relativo × DNA), morte, saque e despojo (spec L-1..L-3, D7, D11)
+- [x] Fuga: chance pela velocidade (`speedHere`), fração largada, ordem `flee` travada com o bônus; fuga na
       reação e no meio da luta; em fuga, não extorquível (spec F-1..F-4, D10, plan P4, P11)
-- [ ] Despojo: ordem `pickup`, ação `pickup`, despojos somados na célula (spec S-1, D11)
-- [ ] Vocabulário: condições `enemyInSight`, `hpBelow`, `demandAtMost`; ações `approach`, `pickup`, `pay`, `fight`,
+- [x] Despojo: ordem `pickup`, ação `pickup`, despojos somados na célula (spec S-1, D11)
+- [x] Vocabulário: condições `enemyInSight`, `hpBelow`, `demandAtMost`; ações `approach`, `pickup`, `pay`, `fight`,
       `flee`; regras de reação com os padrões; `rules.ts` copia e valida; preset `raider` (spec D13, D14, A-1..A-3,
       plan §6)
-- [ ] Comando `react` e as ordens novas no `orderRefusal`, com as recusas sem vazamento (spec D19); vocabulário
+- [x] Comando `react` e as ordens novas no `orderRefusal`, com as recusas sem vazamento (spec D19); vocabulário
       com `BREAKING CHANGE`
-- [ ] Todos os eventos do encontro (spec K-1, plan §7), com testes de ordem e de público (K-2)
+- [x] Todos os eventos do encontro (spec K-1, plan §7), com testes de ordem e de público (K-2)
 
 ## F3 — Bots e harness (`m2/encontro-f3-harness`)
 

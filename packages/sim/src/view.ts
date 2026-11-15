@@ -9,8 +9,14 @@ import type { Player } from "./domination.ts";
 import type { Cell } from "./map.ts";
 import type { Creep, Deposit, RoadJob, Team, WorldState } from "./world.ts";
 
-/** A creep as its team sees it: no cached path, move points or trip stats. */
-export type CreepView = Omit<Creep, "path" | "movePoints" | "trip">;
+/**
+ * A creep as its team sees it: no cached path, move points, trip stats or
+ * extortion blocks (sim bookkeeping).
+ */
+export type CreepView = Omit<
+  Creep,
+  "path" | "movePoints" | "trip" | "extortBlocks"
+>;
 
 /**
  * Another team's creep in sight (spec D7, M2 encontro D18): no order, rules
@@ -163,6 +169,7 @@ function creepView(creep: Creep): CreepView {
     name: creep.name,
     hp: creep.hp,
     engagement: creep.engagement,
+    safeConduct: creep.safeConduct,
     x: creep.x,
     y: creep.y,
     cargo: creep.cargo,

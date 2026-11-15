@@ -310,7 +310,12 @@ export function orderTarget(creep: CreepView, state: TeamView): Cell | null {
     case "gather":
       return state.deposits.find((d) => d.id === order.depositId) ?? null;
     case "deliver":
+    case "flee":
       return state.teams[creep.team]?.core ?? null;
+    case "approach":
+      return state.creeps.find((c) => c.id === order.targetId) ?? null;
+    case "pickup":
+      return null;
   }
 }
 

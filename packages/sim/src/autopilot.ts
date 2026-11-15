@@ -2,7 +2,7 @@
 // decided 2026-11-13). Each free creep takes as its order the action of the
 // first rule whose condition holds and whose action is possible now. With no
 // such rule it keeps its current order. Dominated creeps are skipped: only
-// their player changes their order. Rules decide by what the creep's team
+// their player changes their order; so are creeps in an encounter or fleeing. Rules decide by what the creep's team
 // knows (M1.5 fog spec A-1): deposits from its memory, cells from its known
 // map.
 
@@ -13,10 +13,11 @@ import {
   regenerates,
   teamOf,
 } from "./economy.ts";
-import { isInMap, manhattan, type Cell } from "./map.ts";
+import { opening, stockTotal } from "./approach.ts";
+import { isInMap, isRotatedSide, manhattan, type Cell } from "./map.ts";
 import { cellModifier } from "./movement.ts";
 import type { Order } from "./orders.ts";
-import type { Resource } from "./params.ts";
+import type { Dna, Resource } from "./params.ts";
 import {
   exploreTarget,
   knownMap,
@@ -26,7 +27,13 @@ import {
 } from "./known.ts";
 import { costWithin, nearestTargets } from "./pathfinding.ts";
 import { canBuildRoad, nextSegment } from "./roads.ts";
-import type { Creep, Deposit, WorldState } from "./world.ts";
+import {
+  maxHp,
+  type Creep,
+  type Deposit,
+  type Encounter,
+  type WorldState,
+} from "./world.ts";
 
 export type Condition =
   | { type: "always" }
@@ -40,7 +47,19 @@ export type Condition =
    * The team knows no deposit of `resource` with some left or that
    * regenerates (fog plan section 6).
    */
-  | { type: "resourceUnknown"; resource: Resource };
+  | { type: "resourceUnknown"; resource: Resource }
+  /**
+   * An enemy creep in the team's sight within `radius` (Manhattan), of one of
+   * `dna` if given, carrying at least `minCargo` (M2 encontro spec D13).
+   */
+  | { type: "enemyInSight"; radius: number; dna?: Dna[]; minCargo: number }
+  /** HP below `permille` of the maximum. */
+  | { type: "hpBelow"; permille: number }
+  /**
+   * In an extortion, the demand is at most `permille` of the cargo; false
+   * outside one. Only reaction rules see it hold.
+   */
+  | { type: "demandAtMost"; permille: number };
 
 export type Action =
   /**
@@ -56,15 +75,52 @@ export type Action =
    * Go toward the nearest cell never seen that no teammate is exploring
    * (fog spec D4, A-3); impossible when none can be reached.
    */
-  | { type: "explore" };
+  | { type: "explore" }
+  /**
+   * Pick up the spoil the team knows that the creep reaches first (M2
+   * encontro spec D11, D13); impossible when full or none can be reached.
+   */
+  | { type: "pickup" }
+  /**
+   * Approach the nearest enemy creep in sight within `radius` that passes the
+   * filter and can be approached now, to attack or to extort (D13).
+   */
+  | {
+      type: "approach";
+      intent: "attack" | "extort";
+      radius: number;
+      dna?: Dna[];
+      minCargo: number;
+    }
+  /** Reactions: decided only in an encounter (plan section 6). */
+  | { type: "pay" }
+  | { type: "fight" }
+  | { type: "flee" };
+
+/** The actions that make a rule a reaction rule. */
+export const REACTIONS = ["pay", "fight", "flee"] as const;
+export type Reaction = (typeof REACTIONS)[number];
+
+export function isReaction(action: Action): boolean {
+  return REACTIONS.includes(action.type as Reaction);
+}
 
 export type Rule = { when: Condition; then: Action };
 
 export function runAutopilot(state: WorldState): void {
   for (const creep of state.creeps) {
-    if (creep.dominatedBy !== null) continue;
+    // In an encounter, only its reactions decide (encounter.ts).
+    // Fleeing is a locked order (plan P4).
+    if (
+      creep.dominatedBy !== null ||
+      creep.engagement !== null ||
+      creep.order.type === "flee"
+    ) {
+      continue;
+    }
     for (const rule of creep.rules) {
-      if (!holds(state, creep, rule.when)) continue;
+      if (isReaction(rule.then)) continue;
+      if (!holds(state, creep, rule.when, null)) continue;
       const order = orderFor(state, creep, rule.then);
       if (order === null) continue;
       creep.order = order;
@@ -121,18 +177,18 @@ function quickestDeposit(
 }
 
 /**
- * Which of `deposits` the creep reaches first within a path cost of
- * `maxCost`, ties to the lower id; null when none.
+ * Which of `deposits` (or spoils) the creep reaches first within a path cost
+ * of `maxCost`, ties to the lower id; null when none.
  */
-function reachFirst(
+function reachFirst<T extends { id: number } & Cell>(
   state: WorldState,
   creep: Creep,
-  deposits: readonly Deposit[],
+  deposits: readonly T[],
   maxCost: number,
-): Deposit | null {
+): T | null {
   if (deposits.length === 0) return null;
   const { width } = state.map;
-  const byCell = new Map<number, Deposit>();
+  const byCell = new Map<number, T>();
   for (const d of deposits) {
     const cell = d.y * width + d.x;
     const other = byCell.get(cell);
@@ -146,7 +202,7 @@ function reachFirst(
     maxCost,
   );
   if (reached === null) return null;
-  let best: Deposit | null = null;
+  let best: T | null = null;
   for (const cell of reached.cells) {
     const d = byCell.get(cell)!;
     if (best === null || d.id < best.id) best = d;
@@ -217,7 +273,12 @@ function freeCargo(state: WorldState, creep: Creep): number {
   );
 }
 
-function holds(state: WorldState, creep: Creep, condition: Condition): boolean {
+function holds(
+  state: WorldState,
+  creep: Creep,
+  condition: Condition,
+  encounter: Encounter | null,
+): boolean {
   switch (condition.type) {
     case "always":
       return true;
@@ -238,7 +299,70 @@ function holds(state: WorldState, creep: Creep, condition: Condition): boolean {
           d.kind === condition.resource &&
           (d.amount > 0 || regenerates(d, state.params)),
       );
+    case "enemyInSight":
+      return enemiesInSight(state, creep, condition).length > 0;
+    case "hpBelow":
+      return (
+        creep.hp * 1000 < maxHp(state.params, creep.dna) * condition.permille
+      );
+    case "demandAtMost": {
+      if (
+        encounter === null ||
+        encounter.intent !== "extort" ||
+        encounter.victim !== creep.id ||
+        encounter.demand === null
+      ) {
+        return false;
+      }
+      return (
+        stockTotal(encounter.demand) * 1000 <=
+        cargoTotal(creep) * condition.permille
+      );
+    }
   }
+}
+
+type EnemyFilter = { radius: number; dna?: Dna[]; minCargo: number };
+
+/**
+ * Enemy creeps in the team's sight (at the end of the last tick) within the
+ * filter, by id. The team sees them: deciding by them leaks nothing.
+ */
+function enemiesInSight(
+  state: WorldState,
+  creep: Creep,
+  filter: EnemyFilter,
+): Creep[] {
+  const { visible } = known(state, creep);
+  const { width } = state.map;
+  return state.creeps.filter(
+    (other) =>
+      other.team !== creep.team &&
+      visible[other.y * width + other.x] === 1 &&
+      manhattan(creep, other) <= filter.radius &&
+      (filter.dna === undefined || filter.dna.includes(other.dna)) &&
+      cargoTotal(other) >= filter.minCargo,
+  );
+}
+
+/**
+ * The reaction of the creep's first reaction rule whose condition holds and
+ * whose action is possible in `context` (paying only in an extortion), or
+ * null: then the defaults apply (spec D13).
+ */
+export function ruleReaction(
+  state: WorldState,
+  creep: Creep,
+  context: "extorted" | "attacked" | "round",
+  encounter: Encounter,
+): Reaction | null {
+  for (const rule of creep.rules) {
+    const { type } = rule.then;
+    if (type !== "pay" && type !== "fight" && type !== "flee") continue;
+    if (type === "pay" && context !== "extorted") continue;
+    if (holds(state, creep, rule.when, encounter)) return type;
+  }
+  return null;
 }
 
 /** The order that carries out `action` now, or null if it is impossible. */
@@ -272,7 +396,70 @@ function orderFor(
       return buildRoadFor(state, creep, action);
     case "explore":
       return exploreFor(state, creep);
+    case "pickup":
+      return pickupFor(state, creep);
+    case "approach":
+      return approachFor(state, creep, action);
+    case "pay":
+    case "fight":
+    case "flee":
+      return null;
   }
+}
+
+/**
+ * Keeps the current target while it still passes the action's filter and
+ * can be approached; else the nearest that does, by Manhattan distance, ties
+ * by the cell index in the team's frame (like explore) and then by id.
+ */
+function approachFor(
+  state: WorldState,
+  creep: Creep,
+  action: Extract<Action, { type: "approach" }>,
+): Order | null {
+  const { intent } = action;
+  const candidates = enemiesInSight(state, creep, action).filter(
+    (target) => opening(state, creep, target, intent) === "open",
+  );
+  if (candidates.length === 0) return null;
+  const { order } = creep;
+  if (
+    order.type === "approach" &&
+    order.intent === intent &&
+    candidates.some((c) => c.id === order.targetId)
+  ) {
+    return { type: "approach", targetId: order.targetId, intent };
+  }
+  const { width, height } = state.map;
+  const rotated = isRotatedSide(creep.team);
+  const frameIndex = (c: Cell) =>
+    rotated
+      ? (height - 1 - c.y) * width + (width - 1 - c.x)
+      : c.y * width + c.x;
+  let best = candidates[0]!;
+  for (const target of candidates) {
+    const d = manhattan(creep, target) - manhattan(creep, best);
+    if (d < 0 || (d === 0 && frameIndex(target) < frameIndex(best))) {
+      best = target;
+    }
+  }
+  return { type: "approach", targetId: best.id, intent };
+}
+
+/**
+ * Keeps going for the spoil of the current pickup order while the team still
+ * remembers it, else the one it reaches first, ties to the lower id.
+ */
+function pickupFor(state: WorldState, creep: Creep): Order | null {
+  if (isFull(state, creep)) return null;
+  const spoils = known(state, creep).spoils;
+  if (spoils.length === 0) return null;
+  const { order } = creep;
+  if (order.type === "pickup" && spoils.some((s) => s.id === order.spoilId)) {
+    return { type: "pickup", spoilId: order.spoilId };
+  }
+  const spoil = reachFirst(state, creep, spoils, Number.MAX_SAFE_INTEGER);
+  return spoil === null ? null : { type: "pickup", spoilId: spoil.id };
 }
 
 /**

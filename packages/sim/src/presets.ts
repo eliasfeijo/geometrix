@@ -10,6 +10,7 @@ export const PRESETS = [
   "cristalCollector",
   "roadBuilder",
   "scout",
+  "raider",
 ] as const;
 export type PresetId = (typeof PRESETS)[number];
 
@@ -71,6 +72,27 @@ export function roadBuilderRules(target: Cell): Rule[] {
   ];
 }
 
+/**
+ * The raider (M2 encontro spec D14, plan section 6): extorts a loaded enemy
+ * in sight, picks up spoils, delivers when full, explores; fights when
+ * approached and flees below 400‰ of its HP (a number of the rule, not a
+ * param).
+ */
+export function raiderRules(): Rule[] {
+  return [
+    { when: { type: "hpBelow", permille: 400 }, then: { type: "flee" } },
+    { when: { type: "always" }, then: { type: "fight" } },
+    {
+      when: { type: "always" },
+      then: { type: "approach", intent: "extort", radius: 10, minCargo: 1 },
+    },
+    { when: { type: "always" }, then: { type: "pickup" } },
+    deliverWhenFull(),
+    { when: { type: "always" }, then: { type: "explore" } },
+    deliverLeftover(),
+  ];
+}
+
 /** The preset's rules; roadBuilder needs its target. */
 export function presetRules(preset: PresetId, target: Cell | null): Rule[] {
   switch (preset) {
@@ -83,5 +105,7 @@ export function presetRules(preset: PresetId, target: Cell | null): Rule[] {
       return roadBuilderRules(target);
     case "scout":
       return scoutRules();
+    case "raider":
+      return raiderRules();
   }
 }

@@ -11,6 +11,9 @@ export const CONDITION_TYPES = [
   "resourceInRange",
   "stockBelow",
   "resourceUnknown",
+  "enemyInSight",
+  "hpBelow",
+  "demandAtMost",
 ] as const satisfies readonly Condition["type"][];
 
 export const ACTION_TYPES = [
@@ -19,7 +22,12 @@ export const ACTION_TYPES = [
   "buildRoad",
   "moveTo",
   "explore",
+  "pickup",
+  "approach",
   "stop",
+  "pay",
+  "fight",
+  "flee",
 ] as const satisfies readonly Action["type"][];
 
 export const CONDITION_LABELS: Record<Condition["type"], string> = {
@@ -29,6 +37,9 @@ export const CONDITION_LABELS: Record<Condition["type"], string> = {
   resourceInRange: "recurso a até R células",
   stockBelow: "estoque abaixo de N",
   resourceUnknown: "não conhece depósito de",
+  enemyInSight: "inimigo à vista",
+  hpBelow: "HP abaixo de",
+  demandAtMost: "exigência até",
 };
 
 export const ACTION_LABELS: Record<Action["type"], string> = {
@@ -38,6 +49,11 @@ export const ACTION_LABELS: Record<Action["type"], string> = {
   moveTo: "ir até",
   stop: "ficar parado",
   explore: "explorar",
+  pickup: "catar despojo",
+  approach: "abordar",
+  pay: "pagar (quando abordado)",
+  fight: "lutar (quando abordado)",
+  flee: "fugir (quando abordado)",
 };
 
 /**
@@ -46,6 +62,7 @@ export const ACTION_LABELS: Record<Action["type"], string> = {
  */
 const DEFAULT_RADIUS = 10;
 const DEFAULT_AMOUNT = 100;
+const DEFAULT_PERMILLE = 500;
 
 /** A condition of `type`, keeping the resource of `from` when it has one. */
 export function conditionOf(
@@ -72,6 +89,16 @@ export function conditionOf(
         resource,
         amount: from.type === type ? from.amount : DEFAULT_AMOUNT,
       };
+    case "enemyInSight":
+      return from.type === type
+        ? from
+        : { type, radius: DEFAULT_RADIUS, minCargo: 1 };
+    case "hpBelow":
+    case "demandAtMost":
+      return {
+        type,
+        permille: "permille" in from ? from.permille : DEFAULT_PERMILLE,
+      };
   }
 }
 
@@ -85,7 +112,15 @@ export function actionOf(
     case "deliver":
     case "stop":
     case "explore":
+    case "pickup":
+    case "pay":
+    case "fight":
+    case "flee":
       return { type };
+    case "approach":
+      return from.type === type
+        ? from
+        : { type, intent: "extort", radius: DEFAULT_RADIUS, minCargo: 1 };
     case "gather":
       return {
         type,

@@ -19,6 +19,9 @@ const id = z.number().int().nonnegative();
 const coord = z.number().int();
 const cell = z.object({ x: coord, y: coord });
 const resource = z.enum(["materia", "cristal"]);
+const dnaList = z.array(z.enum(["square", "triangle", "circle"])).max(3);
+const permille = z.number().int().nonnegative().max(1000);
+const intent = z.enum(["attack", "extort"]);
 
 const condition = z.discriminatedUnion("type", [
   z.object({ type: z.literal("always") }),
@@ -35,6 +38,14 @@ const condition = z.discriminatedUnion("type", [
     amount: z.number().int().nonnegative(),
   }),
   z.object({ type: z.literal("resourceUnknown"), resource }),
+  z.object({
+    type: z.literal("enemyInSight"),
+    radius: z.number().int().nonnegative(),
+    dna: dnaList.optional(),
+    minCargo: z.number().int().nonnegative(),
+  }),
+  z.object({ type: z.literal("hpBelow"), permille: permille }),
+  z.object({ type: z.literal("demandAtMost"), permille: permille }),
 ]);
 
 const action = z.discriminatedUnion("type", [
@@ -44,6 +55,17 @@ const action = z.discriminatedUnion("type", [
   cell.extend({ type: z.literal("moveTo") }),
   z.object({ type: z.literal("stop") }),
   z.object({ type: z.literal("explore") }),
+  z.object({ type: z.literal("pickup") }),
+  z.object({
+    type: z.literal("approach"),
+    intent,
+    radius: z.number().int().nonnegative(),
+    dna: dnaList.optional(),
+    minCargo: z.number().int().nonnegative(),
+  }),
+  z.object({ type: z.literal("pay") }),
+  z.object({ type: z.literal("fight") }),
+  z.object({ type: z.literal("flee") }),
 ]);
 
 const rule = z.object({ when: condition, then: action });
@@ -55,6 +77,8 @@ const orderInput = z.discriminatedUnion("type", [
   cell.extend({ type: z.literal("moveTo") }),
   cell.extend({ type: z.literal("explore") }),
   cell.extend({ type: z.literal("buildRoad") }),
+  z.object({ type: z.literal("approach"), targetId: id, intent }),
+  z.object({ type: z.literal("pickup"), spoilId: id }),
 ]);
 
 /**
@@ -79,6 +103,7 @@ export const clientCommand = z.discriminatedUnion("type", [
       "cristalCollector",
       "roadBuilder",
       "scout",
+      "raider",
     ]),
     target: cell.optional(),
   }),
@@ -89,6 +114,11 @@ export const clientCommand = z.discriminatedUnion("type", [
   }),
   z.object({ type: z.literal("stopRepeat") }),
   z.object({ type: z.literal("buyUpgrade"), upgrade: z.enum(["capacity"]) }),
+  z.object({
+    type: z.literal("react"),
+    creepId: id,
+    choice: z.enum(["pay", "refuse", "fight", "flee"]),
+  }),
 ]);
 
 export type ClientCommand = z.infer<typeof clientCommand>;

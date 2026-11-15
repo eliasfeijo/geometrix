@@ -72,6 +72,7 @@ Opcional. Lista fechada:
 | scope | Onde |
 |---|---|
 | `sim` | `packages/sim` |
+| `battle` | `packages/battle` |
 | `protocol` | `packages/protocol` |
 | `server` | `apps/server` |
 | `client` | `apps/client` |
