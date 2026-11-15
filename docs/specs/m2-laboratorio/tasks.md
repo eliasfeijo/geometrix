@@ -10,7 +10,7 @@ cada merge, conferir os pontos de contato do plan §16.
 
 - [x] Spec aprovada, com D1–D19; as decisões de gameplay no GDD (02, 06, 07) (2026-11-15)
 - [x] ADR-0008 (pacote de batalha) aceito; scope `battle` na skill `commit` (2026-11-15)
-- [ ] **Checkpoint:** plan aprovado (decisões P1–P14)
+- [x] **Checkpoint:** plan aprovado (decisões P1–P14, 2026-11-15)
 
 ## F1 — O pacote e o movimento (`m2/laboratorio-f1-package`)
 

@@ -54,7 +54,8 @@
     provisórios na spec:
     - **ataque direcional** (D4): o creep olha para uma de 4 direções; o quadrado bate na célula da frente; o
       círculo e o triângulo disparam um projétil que anda célula a célula e acerta o primeiro inimigo, e dá para
-      desviar. Sem fogo amigo. Uma célula, um creep: o quadrado bloqueia a passagem (D5);
+      desviar. Sem fogo amigo. Uma célula, um creep: o quadrado bloqueia a passagem (D5). No mesmo instante, o golpe
+      sai antes do passo, e o projétil anda depois dos creeps (plan do laboratório, P3);
     - **fuga pela borda** (D7): a arena é a bolha; quem fica na saída por um instante sem levar golpe sai da
       batalha. A carga freia o creep; ele pode largar a bolsa numa pilha, e qualquer um cata (D8);
     - **o fim** (D9): **sem relógio da batalha**. Cada creep tem um relógio de inatividade, que zera quando ele

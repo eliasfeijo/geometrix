@@ -46,7 +46,8 @@
   na batalha, cada creep não dominado segue uma lista ordenada condição → ação, como o piloto do mundo. Condições
   de HP, distância, alinhamento, projétil vindo, carga e aliado ferido; ações de atacar, aproximar, manter
   distância, esquivar, proteger aliado, fugir, largar a bolsa e catar. Presets por DNA (linha de frente, atirador,
-  escaramuçador, portador), editáveis no laboratório.
+  escaramuçador, portador), editáveis no laboratório. A IA decide com um **tempo de reação** (250 ms ± 100 ms,
+  provisório; plan do laboratório, P12): sem ele, ela desviaria de todo projétil.
 
 ## Proposta
 - Humanos, macros, piloto automático e bots emitem os **mesmos comandos** ([ADR-0002](../adr/0002-tudo-e-comando.md)).

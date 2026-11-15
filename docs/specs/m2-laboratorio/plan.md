@@ -1,11 +1,12 @@
 # Plan M2 — O laboratório de batalha
 
-**Status:** Rascunho · **Data:** 2026-11-15
+**Status:** Aprovado (2026-11-15) · **Data:** 2026-11-15
 **Spec:** [spec.md](spec.md) · **ADRs:** [0008](../../adr/0008-pacote-de-batalha.md) (pacote de batalha, `Accepted`),
 [0007](../../adr/0007-eventos-do-sim.md) (eventos fora do estado), [0003](../../adr/0003-stack-typescript-node.md)
 (simulação pura e inteira), [0002](../../adr/0002-tudo-e-comando.md) (tudo é comando)
 
-As decisões que precisam do OK do dono estão marcadas **(P*n*)** e listadas na §15.
+As decisões que precisavam do OK do dono estão marcadas **(P*n*)** e listadas na §15. **Todas aprovadas pelo dono
+(2026-11-15), pela proposta.**
 
 ## 1. O que existe e o que é novo
 
@@ -337,9 +338,9 @@ contrato interno v0 do ADR-0008, versionado pela `BATTLE_VERSION`.
 - **`client`:** o canal (atraso, jitter, ordem preservada, com relógio falso), a entrada do teclado → intenção, a
   interpolação, o registro da sessão e o resumo nota × RTT.
 
-## 15. Decisões para o OK do dono
+## 15. Decisões aprovadas (dono, 2026-11-15)
 
-| # | Decisão | Proposta | Alternativa |
+| # | Decisão | Aprovada (a proposta) | Alternativa descartada |
 |---|---|---|---|
 | P1 | RNG e JSON canônico | Copiar os dois arquivos do `sim` para o pacote de batalha, com um teste de igualdade; extrair um pacote comum na junção | Extrair já um `@geometrix/core` com os dois: mexe no `sim` enquanto a fatia A está nele |
 | P2 | Unidades | 20 ticks por segundo; durações em ms múltiplas de 50; movimento em pontos (`CELL_COST` 6 000); HP inteiro | Durações em ticks nos params (menos legíveis; mudar o tick muda todos os números) |
