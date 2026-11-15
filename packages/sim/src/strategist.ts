@@ -44,7 +44,8 @@ export const BALANCED = {
   builders: 1,
   /**
    * Share of the team's creeps raiding, rounded down (M2 encontro spec D15,
-   * plan P8): they extort loaded enemies in sight.
+   * plan P8): they extort loaded enemies in sight. Only while the team can
+   * still reach a cell never seen (F3 checkpoint, C1).
    */
   raiderShare: { numerator: 1, denominator: 6 },
 } as const;
@@ -257,9 +258,12 @@ function assignRoles(known: Knowledge): Command[] {
   const creeps = seen.creeps
     .filter(isOwnCreep)
     .filter((c) => c.team === team.id);
+  // Some cell never seen is within the team's reach.
+  const canExplore =
+    nearestUnseen(map, explored, team.core, isRotatedSide(team.id)) !== null;
   const hasCristal =
     seen.deposits.some((d) => d.kind === "cristal" && d.amount > 0) ||
-    nearestUnseen(map, explored, team.core, isRotatedSide(team.id)) !== null;
+    canExplore;
   const { numerator, denominator } = BALANCED.cristalShare;
   const wantCristal = hasCristal
     ? Math.floor((creeps.length * numerator + denominator - 1) / denominator)
@@ -273,10 +277,12 @@ function assignRoles(known: Knowledge): Command[] {
     team,
   );
   const wantBuilders = target === null ? 0 : BALANCED.builders;
+  // With nothing left to explore, a raider would only wait at its core
+  // (encontro F3 checkpoint, C1): it goes back to gathering.
   const raiders = BALANCED.raiderShare;
-  const wantRaiders = Math.floor(
-    (creeps.length * raiders.numerator) / raiders.denominator,
-  );
+  const wantRaiders = canExplore
+    ? Math.floor((creeps.length * raiders.numerator) / raiders.denominator)
+    : 0;
 
   const roles = new Map(creeps.map((c) => [c, roleOf(c)]));
   const next = new Map(roles);
