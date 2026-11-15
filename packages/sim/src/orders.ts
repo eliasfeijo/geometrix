@@ -25,6 +25,8 @@ import {
   nextSegment,
 } from "./roads.ts";
 import { findCreep } from "./domination.ts";
+import { creepRef, emit, type EventLog } from "./events.ts";
+import { findSpoil, takeSpoil } from "./spoils.ts";
 import { recordDelivery, type Activity } from "./stats.ts";
 import type { Creep, Deposit, WorldState } from "./world.ts";
 
@@ -55,7 +57,7 @@ export type Order =
  */
 export type BuildRoadOrder = { type: "buildRoad"; segment: number } & Cell;
 
-export function resolveOrders(state: WorldState): void {
+export function resolveOrders(state: WorldState, log: EventLog): void {
   // Road jobs already advanced this tick: one builder per job.
   const built = new Set<number>();
   for (const creep of state.creeps) {
@@ -99,7 +101,7 @@ export function resolveOrders(state: WorldState): void {
         flee(state, creep, order.untilTick);
         break;
       case "pickup":
-        halt(creep);
+        pickup(state, log, creep, order.spoilId);
         break;
     }
   }
@@ -126,6 +128,46 @@ function approach(state: WorldState, creep: Creep, targetId: number): void {
     return;
   }
   if (walk(state, creep, target) === "unreachable") halt(creep);
+}
+
+/**
+ * Walks to a spoil the team remembers and takes what fits on arrival, cristal
+ * first (spec S-1). It goes by the memory: a pile already gone is found out
+ * there, like a deposit's amount.
+ */
+function pickup(
+  state: WorldState,
+  log: EventLog,
+  creep: Creep,
+  spoilId: number,
+): void {
+  const known = memoryOf(state, creep.team).spoils.find(
+    (s) => s.id === spoilId,
+  );
+  if (known === undefined || isFull(state, creep)) {
+    halt(creep);
+    return;
+  }
+  if (!isAt(creep, known)) {
+    const result = walk(state, creep, known);
+    if (result === "unreachable") halt(creep);
+    if (result !== "arrived") return;
+  }
+  const spoil = findSpoil(state, spoilId);
+  if (spoil !== undefined && isAt(creep, spoil)) {
+    const free =
+      capacity(creep, teamOf(state, creep), state.params) - cargoTotal(creep);
+    const taken = takeSpoil(state, creep, spoil, free);
+    emit(log, {
+      type: "pickedUp",
+      creep: creepRef(creep),
+      spoil: spoilId,
+      taken,
+      x: spoil.x,
+      y: spoil.y,
+    });
+  }
+  halt(creep);
 }
 
 /**

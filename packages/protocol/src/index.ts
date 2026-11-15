@@ -44,6 +44,7 @@ const action = z.discriminatedUnion("type", [
   cell.extend({ type: z.literal("moveTo") }),
   z.object({ type: z.literal("stop") }),
   z.object({ type: z.literal("explore") }),
+  z.object({ type: z.literal("pickup") }),
 ]);
 
 const rule = z.object({ when: condition, then: action });

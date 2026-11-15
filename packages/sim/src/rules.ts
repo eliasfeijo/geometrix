@@ -55,6 +55,7 @@ function copyAction(a: Action, map: GameMap): Action | null {
     case "deliver":
     case "stop":
     case "explore":
+    case "pickup":
       return { type: a.type };
     case "gather":
       return isResource(a.resource)

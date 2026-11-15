@@ -50,7 +50,7 @@ export function step(
     );
   }
   runAutopilot(state);
-  resolveOrders(state);
+  resolveOrders(state, log);
   runEncounters(state, log);
   runProduction(state, log);
   regenerate(state);
