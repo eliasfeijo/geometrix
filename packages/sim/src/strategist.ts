@@ -190,12 +190,21 @@ function scarcestDna(seen: TeamView, team: Team): Dna {
   return DNAS[counts.indexOf(Math.min(...counts))]!;
 }
 
+/**
+ * The rules of the presets without a target, as canonical JSON: built once,
+ * since roleOf compares every creep with them every minute.
+ */
+let presetJson: { cristal: string; raider: string } | null = null;
+
 /** The role a creep's rules match; anything else counts as materia. */
 function roleOf(creep: Pick<Creep, "rules">): Role {
+  presetJson ??= {
+    cristal: canonicalJson(collectorRules("cristal")),
+    raider: canonicalJson(raiderRules()),
+  };
   const rules = canonicalJson(creep.rules);
-  if (rules === canonicalJson(collectorRules("cristal")))
-    return { kind: "cristal" };
-  if (rules === canonicalJson(raiderRules())) return { kind: "raider" };
+  if (rules === presetJson.cristal) return { kind: "cristal" };
+  if (rules === presetJson.raider) return { kind: "raider" };
   const build = creep.rules[1]?.then;
   if (
     build?.type === "buildRoad" &&
