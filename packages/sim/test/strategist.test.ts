@@ -26,6 +26,19 @@ function joined(): WorldState {
   return world;
 }
 
+/**
+ * The world of joined() with one passable cell left never seen by each team,
+ * mirrored: there is something to explore, so the bot keeps raiders.
+ */
+function withDark(): WorldState {
+  const world = joined();
+  const size = world.map.width * world.map.height;
+  const cell = world.map.terrain.findIndex((t) => t === Terrain.jungle);
+  world.memory[0]!.explored[cell] = 0;
+  world.memory[1]!.explored[size - 1 - cell] = 0;
+  return world;
+}
+
 /** The balanced bot's commands for the team, from its view as the harness. */
 const decide = (world: WorldState, team: number) =>
   strategistCommands("balanced", view(world, team), world.map, world.params);
@@ -49,7 +62,7 @@ const presetsOf = (commands: Command[]) =>
 
 describe("balanced", () => {
   test("splits 6 creeps into 2 cristal, 1 road builder, 1 raider and 2 materia, lowest ids first", () => {
-    const world = joined();
+    const world = withDark();
     const [a, b, c, d] = teamCreeps(world, 0);
     const commands = decide(world, 0);
     expect(presetsOf(commands)).toEqual([
@@ -76,7 +89,7 @@ describe("balanced", () => {
   });
 
   test("keeps one raider for every 6 creeps, rounded down (spec D15, plan P8)", () => {
-    const world = joined();
+    const world = withDark();
     const raiders = () =>
       teamCreeps(world, 0).filter(
         (c) => canonicalJson(c.rules) === canonicalJson(raiderRules()),
@@ -107,6 +120,22 @@ describe("balanced", () => {
     world.creeps = world.creeps.filter((c) => c.team !== 0 || keep.has(c.id));
     settle();
     expect(raiders()).toEqual([]);
+  });
+
+  test("sends the raiders back to gathering once there is nothing to explore (F3 checkpoint, C1)", () => {
+    const world = withDark();
+    const raider = teamCreeps(world, 0)[3]!;
+    raider.rules = raiderRules();
+    expect(presetsOf(decide(world, 0))).not.toContainEqual([
+      raider.id,
+      "materiaCollector",
+    ]);
+    // Every cell seen: no raider.
+    world.memory[0]!.explored.fill(1);
+    expect(presetsOf(decide(world, 0))).toContainEqual([
+      raider.id,
+      "materiaCollector",
+    ]);
   });
 
   test("produces the DNA the team has fewest of, ties in ■ ▲ ● order", () => {
@@ -147,11 +176,11 @@ describe("balanced", () => {
     b!.rules = collectorRules("cristal");
     for (const d of world.deposits) if (d.kind === "cristal") d.amount = 0;
     revealWorld(world);
-    // Freed first, a and b are then the lowest-id materia creeps: they fill
-    // the builder and the raider.
+    // Freed first, a is then the lowest-id materia creep: it fills the
+    // builder. With every cell seen, there is no raider (C1).
     expect(presetsOf(decide(world, 0))).toEqual([
       [a!.id, "roadBuilder"],
-      [b!.id, "raider"],
+      [b!.id, "materiaCollector"],
     ]);
   });
 
