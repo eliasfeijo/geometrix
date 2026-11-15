@@ -16,4 +16,4 @@ Regra: a spec é a fonte de verdade. Diante de uma ambiguidade não coberta, par
 | [M1.5 — Rede: deltas da visão de cada time](m1.5-rede/spec.md) | Concluída (2026-11-14): viabilidade aprovada pelo dono |
 | [M1.5 — Fog of war](m1.5-fog/spec.md) | Concluída (2026-11-14) |
 | [M2 — O encontro](m2-encontro/spec.md) (fatia A de 5) | Aprovada (2026-11-15), com D1–D21 · ADR-0007 aceito · plan aprovado (P1–P11) · F1 a seguir |
-| [M2 — O laboratório de batalha](m2-laboratorio/spec.md) (fatia B de 5) | Rascunho (2026-11-15) · ADR-0008 proposto |
+| [M2 — O laboratório de batalha](m2-laboratorio/spec.md) (fatia B de 5) | Aprovada (2026-11-15), com D1–D19 · ADR-0008 aceito · plan a seguir |

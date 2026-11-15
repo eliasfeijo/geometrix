@@ -54,7 +54,7 @@ tribos ficam no M4, com uma tribo-protótipo antes só se os encontros do M2 pro
 | Fatia | Escopo |
 |---|---|
 | **A — O encontro** ([spec](specs/m2-encontro/spec.md)) | Nome no estado, HP de creep, morte; abordar, atacar, extorquir; pagar, recusar, fugir; despojo, saque, salvo-conduto; a luta por um sorteio descartável; posturas do piloto; eventos do `sim` e a crônica |
-| **B — O laboratório de batalha** | O pacote de batalha determinístico, a 1ª regra de combate (grade), a IA de gambits, os stats base por DNA e a latência simulada, numa página local sem mundo. Independente da A |
+| **B — O laboratório de batalha** ([spec](specs/m2-laboratorio/spec.md)) | O pacote de batalha determinístico, a 1ª regra de combate (grade), a IA de gambits, os stats base por DNA e a latência simulada, numa página local sem mundo. Independente da A |
 | **C — Chat, console e macros** | Chat livre, a linha de comando no chat e as macros de cliente, sobre o painel da crônica da A |
 | **D — A junção** | O encontro abre a instância de batalha no lugar do sorteio; dois ou mais lados e entrada no meio da luta; auto-resolve; os **errantes**, a primeira facção neutra (o "frágil e fraco" só faz sentido com stats de combate), com a curva de reaparecimento por ato do fim do mundo. O ADR do lado neutro lista os consumidores conhecidos (errantes, chefões, tribos, invasores) como restrições |
 | **E — Cerco e reparo** | HP do Núcleo, das estradas prontas e das obras; como uma construção é atacada; o reparo pago; a vitória pelo Núcleo; **o fim mínimo**: empate quando o relógio acaba, tela de fim de mundo com o resumo da crônica, replay com marcadores. Pede uma rodada de design própria (o cerco leva horas? avisa o atacado?) |

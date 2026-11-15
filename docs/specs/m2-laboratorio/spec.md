@@ -1,11 +1,11 @@
 # Spec M2 — O laboratório de batalha
 
-**Status:** Rascunho · **Data:** 2026-11-15 · **Marco:** M2 — A emboscada ([ROADMAP](../../ROADMAP.md)), fatia B de 5
+**Status:** Aprovada (2026-11-15) · **Data:** 2026-11-15 · **Marco:** M2 — A emboscada ([ROADMAP](../../ROADMAP.md)), fatia B de 5
 **GDD relacionado:** [02](../../gdd/02-creeps-e-dominio.md) (stats base por DNA, domínio),
 [06](../../gdd/06-batalhas.md) (combate experimental e configurável, lados, fuga, fim da batalha),
 [07](../../gdd/07-piloto-automatico.md) (gambits) ·
 **Brainstorm:** [2026-11-15](../../brainstorm/2026-11-15-m2-m3.md) §6 · **ADR:** [0008](../../adr/0008-pacote-de-batalha.md)
-(pacote de batalha, `Proposed`)
+(pacote de batalha, `Accepted`)
 
 ## 1. Hipótese
 
@@ -42,9 +42,10 @@ Resumo; a fonte é o GDD e a rodada interativa desta spec (§3).
 
 ## 3. Decisões de escopo que esta spec assume
 
-As marcadas com **(gameplay)** completam o GDD e entram nele com o aceite. **D4, D7, D9 e D11 já foram escolhidas
-pelo dono** na rodada de 2026-11-15; as demais são propostas, e todas valem só com o aceite da spec. Os números
-estão na §6 e são chutes.
+**Aceitas pelo dono na rodada interativa de 2026-11-15**, com a spec: D4, D7, D9 e D11 foram escolhidas por ele
+entre alternativas (D9 com o fim pela inatividade, ideia dele, e "ativo" como dar ou levar dano); D14 e D15 com o
+editor no laboratório. As marcadas com **(gameplay)** completam o GDD e já estão nele. Os números estão na §6 e são
+chutes.
 
 | # | Decisão | Padrão | Por quê |
 |---|---|---|---|
@@ -242,8 +243,8 @@ Os alvos são chutes. Quando um reprovar, o dono decide no checkpoint.
 
 ## 9. Pré-requisitos antes do `plan.md`
 
-- Aceite do dono nas decisões D1–D19; as de gameplay entram no GDD (02, 06, 07).
-- **ADR-0008 — Pacote de batalha** `Accepted`: pacote próprio, determinístico, sem importar o `sim`; params e versão
+- Aceite do dono nas decisões D1–D19 ✅ (2026-11-15); as de gameplay estão no GDD (02, 06, 07).
+- **ADR-0008 — Pacote de batalha** ✅ `Accepted` (2026-11-15): pacote próprio, determinístico, sem importar o `sim`; params e versão
   próprios; a API de simulação com eventos fora do estado; a regra de combate como campo do setup; o laboratório
   como servidor local num *worker*, sem predição.
 - O contrato com o mundo (a bolha, o tempo do mundo, a entrada vinda do mundo) é o ADR da fatia D.
