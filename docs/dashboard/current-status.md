@@ -16,7 +16,7 @@
 | **Em execução** | **A F3 — Bots e harness**, branch `m2/encontro-f3-harness`: as três tasks prontas; **parada no checkpoint do dono**, antes do merge |
 | **Próxima fase** | **A F3 — Bots e harness**, branch `m2/encontro-f3-harness` (skill `implement-phase`), com o checkpoint do dono nos números |
 | **Pode andar em paralelo** | **B F1 — O pacote e o movimento**, branch `m2/laboratorio-f1-package`, numa outra sessão com worktree próprio (como a spec da B); a B mexe no pacote de batalha, não no `sim`. Ela não edita o dashboard nem o `CLAUDE.md`; o merge em `main` acontece entre duas fases da A |
-| **Aguardando o dono** | Checkpoint da A F3 (números no topo do "Registro das fases"): 1. o salteador parado em casa depois de explorar; 2. a vítima do bot sempre paga; 3. a frequência e o peso dos encontros; 4. o custo do tick (1,47–1,55×, alvo ≤ 1,5×); 5. as interpretações da F3 |
+| **Aguardando o dono** | Fechar a A F3 (2ª rodada, no topo do "Registro das fases"): 6. o depósito lembrado vazio que ninguém revisita (25% de diferença entre os times no seed 42); 7. encontros só nas primeiras ~8 h; 8. o ▲ quase nunca paga; 9. custo do tick (1,10×) |
 | **Bloqueios** | Nenhum |
 
 ### Próximos passos
@@ -190,6 +190,39 @@ Um item por problema: o que a pessoa não entendeu ou não conseguiu, a tarefa o
 ## Registro das fases
 
 Medições, interpretações e decisões de cada fase, da mais recente para a mais antiga.
+
+- **M2 A F3, 2ª rodada do checkpoint** (2026-11-15). Decisões do dono na 1ª rodada no [plan §11.1](../specs/m2-encontro/plan.md)
+  (C1–C5): os salteadores do bot voltam a coletar sem nada para explorar (C1); os coletores do bot ganham postura
+  de reação pelo DNA (C2). 2 278 testes. Relatórios `runs/m2-encontro-f3/f3b-*`.
+
+  | Medida | F6 do fog | F3, 1ª rodada | F3 com C1 e C2 |
+  |---|---|---|---|
+  | `geo sim` de 3 dias, seed 42 (intercalado) | 12,2–12,4 s | 17,9–18,6 s | **13,4–13,7 s (1,10×)**; só com o C1: 9,2–9,8 s |
+  | Matéria entregue, seed 42, 3 dias (time 0 / time 1) | 177 310 / 177 310 | 175 821 / 175 821 | **140 230 / 185 830** |
+  | Creeps parados, seed 42 (time 0 / time 1) | 24% / 24% | 41% / 41% | 49% / 22% |
+  | Encontros, seed 42, 3 dias (abordou, time 0 / time 1) | — | 32 / 32 | 8 / 52, todos nas primeiras 6 h |
+  | Seeds 1–20 × 6 h: encontros por time por hora | — | 0,8 | 3,4 (0,3–9,6) |
+  | pagos / com fuga / com morte | — | 97% / 1% / 1% | 1% / 90% / 9% |
+  | fugas que escaparam | — | 25% (18 seeds sem fuga) | 53% (6–82%) |
+  | na zona do Núcleo da vítima | — | 65% | 90% (50–100%) |
+  | mortes por time; diferença em matéria | — | 0,1; 38 | 0,9; 273 (15–1 090) |
+
+  - **Encontros só no começo.** Com o C1, os salteadores existem enquanto há o que explorar (~8 h no seed 42);
+    depois não há mais nenhum encontro. Nas primeiras horas eles extorquem perto do Núcleo inimigo, onde passam os
+    coletores carregados (90% dos encontros na zona do Núcleo da vítima).
+  - **A postura em ação:** quase toda vítima tenta fugir (o ● é o mais abordado: 74 tentativas no time 0, 58%
+    escapam); fugir pela estrada escapa mais que pela selva (67% × 47% no time 0). **O ▲ quase nunca paga:** a
+    exigência costuma ser a carga inteira (o salteador está vazio), acima dos 500‰ da regra.
+  - **O espelho do seed 3 acaba no 1º sorteio** (tick 7040, duas fugas no 7039), como o plan §4 aceita; o teste de
+    espelho vale até ali. No seed 42, até as 2 h não há sorteio.
+  - **A diferença de 25% no seed 42 não vem dos encontros** (o saldo deles é de 141 de matéria). Vem da memória do
+    fog: o time 0 lembra o depósito nº 2 (a 10 células do Núcleo dele, fora da visão) como vazio, e o piloto só
+    escolhe depósito com quantidade lembrada acima de zero; ele regenera até 133 e os coletores do time 0 esperam em
+    depósitos secos, enquanto o time 1, que tem creeps ali, o explora. Com os times espelhados (F6, seed 42) isso
+    não aparecia; o primeiro sorteio os separa e a diferença cresce a partir da 30ª hora. Os dois chegam ao teto de
+    30 creeps (44,2 h × 41,1 h); B-2 continua OK.
+  - Interpretação, a validar: as regras de reação não distinguem o diálogo da luta, então o ▲ e o ● tentam fugir
+    também a cada rodada.
 
 - **M2 A F3 — Bots e harness** 🟡 checkpoint do dono (2026-11-15). 2 276 testes; `geo verify` OK nas seeds 1, 42 e
   649, agora com o hash dos eventos. Relatórios em `runs/m2-encontro-f3/` (`f3-*`: atual; `f6-base-*`: a F6 do
