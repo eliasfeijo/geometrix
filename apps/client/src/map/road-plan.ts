@@ -8,6 +8,7 @@ import { RESOURCE_NAMES } from "../format.ts";
 import {
   canAfford,
   findPath,
+  isOwnTeam,
   isRotatedSide,
   Terrain,
   type Cell,
@@ -110,4 +111,23 @@ function costText(cost: Cost): string {
     .filter((r) => cost[r] > 0)
     .map((r) => `${cost[r]} ${RESOURCE_NAMES[r]}`);
   return parts.length === 0 ? "já paga" : parts.join(" + ");
+}
+
+/**
+ * Road mode under the pointer: the plan for `cell`, its text and whether the
+ * stock is short, for the preview and the cursor (fog F6, E4).
+ */
+export function roadPreview(
+  map: { width: number; height: number; terrain: readonly number[] },
+  state: TeamView,
+  params: Params,
+  team: number,
+  cell: Cell,
+): { plan: RoadPlan; text: string; short: boolean } {
+  const plan = roadPlan(map, state, params, team, cell);
+  const own = state.teams[team];
+  const stock = own !== undefined && isOwnTeam(own) ? own.stock : undefined;
+  const seen = state.known[cell.y * map.width + cell.x] !== -1;
+  const [text, short] = roadPlanLabel(plan, stock, seen);
+  return { plan, text, short };
 }
