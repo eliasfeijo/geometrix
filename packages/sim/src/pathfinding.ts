@@ -13,6 +13,12 @@ import type { Params } from "./params.ts";
 import type { Creep, WorldState } from "./world.ts";
 
 const COST_SCALE = 1_000_000;
+/**
+ * A step cost is COST_SCALE / modifier (per mille), and a cell at modifier
+ * 1000 takes 60 / cellsPerMinute seconds: seconds = cost * 60 /
+ * (cellsPerMinute * COST_SCALE / 1000).
+ */
+const COST_SCALE_PER_MILLE = 1_000;
 
 /** Cost of entering cell `index`, or -1 if impassable. */
 export function stepCost(map: GameMap, index: number, params: Params): number {
@@ -74,6 +80,79 @@ class OpenSet {
     }
     return top;
   }
+}
+
+/**
+ * The cheapest cost from `from` at which some cell of `targets` is reached,
+ * with the A* step costs (fog spec §11, E1), and every target reached at that
+ * cost, in increasing index; null when none is reached at a cost up to
+ * `maxCost`. A* toward the nearest target: the heuristic is the Manhattan
+ * distance to the closest target times the cheapest step (a road), which
+ * never overestimates, so the costs are exact.
+ */
+export function nearestTargets(
+  map: GameMap,
+  from: Cell,
+  targets: ReadonlySet<number>,
+  params: Params,
+  maxCost: number,
+): { cost: number; cells: number[] } | null {
+  if (targets.size === 0) return null;
+  const { width } = map;
+  const size = width * map.height;
+  const { road, jungle, crossing } = params.movementPermille;
+  const minStep = Math.floor(COST_SCALE / Math.max(road, jungle, crossing));
+  const goals = [...targets].map((t) => [t % width, Math.floor(t / width)]);
+  const h = (i: number) => {
+    const x = i % width;
+    const y = Math.floor(i / width);
+    let best = Number.MAX_SAFE_INTEGER;
+    for (const [gx, gy] of goals) {
+      const d = Math.abs(gx! - x) + Math.abs(gy! - y);
+      if (d < best) best = d;
+    }
+    return best * minStep;
+  };
+  const cost = new Map<number, number>();
+  const done = new Set<number>();
+  const open = new OpenSet();
+  const start = from.y * width + from.x;
+  cost.set(start, 0);
+  open.push([h(start), start]);
+  let found: { cost: number; cells: number[] } | null = null;
+  while (open.size > 0) {
+    const [f, i] = open.pop();
+    if (done.has(i)) continue;
+    if (f > maxCost || (found !== null && f > found.cost)) break;
+    done.add(i);
+    const g = cost.get(i)!;
+    if (targets.has(i)) {
+      if (found === null) found = { cost: g, cells: [] };
+      found.cells.push(i);
+      continue;
+    }
+    const x = i % width;
+    for (const next of [i - width, i - 1, i + 1, i + width]) {
+      if (next < 0 || next >= size || done.has(next)) continue;
+      if ((next === i - 1 && x === 0) || (next === i + 1 && x === width - 1))
+        continue;
+      const step = stepCost(map, next, params);
+      if (step < 0) continue;
+      const total = g + step;
+      const known = cost.get(next);
+      if (known === undefined || total < known) {
+        cost.set(next, total);
+        open.push([total + h(next), next]);
+      }
+    }
+  }
+  if (found !== null) found.cells.sort((a, b) => a - b);
+  return found;
+}
+
+/** The path cost an empty creep of `cellsPerMinute` covers in `seconds`. */
+export function costWithin(seconds: number, cellsPerMinute: number): number {
+  return Math.floor((seconds * cellsPerMinute * COST_SCALE_PER_MILLE) / 60);
 }
 
 /**

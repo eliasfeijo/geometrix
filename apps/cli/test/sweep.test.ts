@@ -150,7 +150,7 @@ describe("geo sweep", () => {
         [
           "sweep",
           "--set",
-          "gather.unitsPerSecond=1,2",
+          "gather.materia.units=1,2",
           "--seeds",
           "3",
           "--hours",
@@ -165,7 +165,7 @@ describe("geo sweep", () => {
       ),
     ).toBe(0);
     expect(
-      readdirSync(join(out, "k", "gather.unitsPerSecond=2-s3")).sort(),
+      readdirSync(join(out, "k", "gather.materia.units=2-s3")).sort(),
     ).toEqual([
       "metrics.csv",
       "replay.json",

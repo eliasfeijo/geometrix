@@ -1,6 +1,7 @@
-// The creeps of a clicked stack, to choose one: each row says what tells
-// them apart (DNA, team, status, cargo, who dominates it). Hovering a row
-// highlights that creep on the map.
+// The creeps of a clicked stack, or of a click that fell on several markers
+// (fog F6, E3), to choose one: each row says what tells them apart (DNA,
+// team, status, cargo, who dominates it). Hovering a row highlights that
+// creep on the map.
 
 import { isOwnCreep } from "@geometrix/sim";
 import { useGame } from "../context.ts";
@@ -32,11 +33,11 @@ export function StackList() {
       class="stack-list panel"
       style={{ left: `${left}px`, top: `${top}px`, width: `${WIDTH}px` }}
       role="listbox"
-      aria-label="Creeps nesta célula"
+      aria-label="Creeps sob o clique"
       onMouseLeave={() => (store.hovered.value = null)}
     >
       <div class="stack-head">
-        <strong>{creeps.length} creeps nesta célula</strong>
+        <strong>{creeps.length} creeps aqui</strong>
         <button class="ghost" title="Fechar (Esc)" onClick={close}>
           ×
         </button>

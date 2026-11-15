@@ -68,6 +68,8 @@ export class GameStore {
   readonly mode = signal<Mode>({ type: "select" });
   /** Cell under the pointer, while it is over the map and not dragging. */
   readonly pointerCell = signal<Cell | null>(null);
+  /** The map point under the pointer, likewise: for the cursor (fog F6, E4). */
+  readonly pointer = signal<Point | null>(null);
   /** Last order target, drawn briefly as feedback. */
   readonly ping = signal<{ cell: Cell; id: number } | null>(null);
 

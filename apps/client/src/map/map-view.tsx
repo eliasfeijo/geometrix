@@ -2,7 +2,7 @@
 // Left drag (or middle drag) pans, the wheel zooms at the pointer, a left
 // click selects and a right click orders (owner decision, F7).
 
-import { useComputed } from "@preact/signals";
+import { useComputed, type ReadonlySignal } from "@preact/signals";
 import type { ComponentChildren } from "preact";
 import { useEffect, useRef } from "preact/hooks";
 import { useGame } from "../context.ts";
@@ -33,6 +33,8 @@ type Props = {
   onOrder?(point: Point, event: MouseEvent): void;
   /** Layers drawn above the world (creeps, selection). */
   children?: ComponentChildren;
+  /** The CSS cursor over the map; the mode's when absent (a replay). */
+  cursor?: ReadonlySignal<string>;
 };
 
 type Drag = {
@@ -45,7 +47,7 @@ type Drag = {
   button: number;
 };
 
-export function MapView({ onSelect, onOrder, children }: Props) {
+export function MapView({ onSelect, onOrder, children, cursor }: Props) {
   const { store } = useGame();
   const info = store.info.value;
   const map = store.map.value;
@@ -148,14 +150,16 @@ export function MapView({ onSelect, onOrder, children }: Props) {
   const trackCell = (e: MouseEvent | null) => {
     const point = e === null ? null : mapPoint(e);
     const { width, height } = info.map;
-    const cell =
-      point === null ||
-      point.x < 0 ||
-      point.y < 0 ||
-      point.x >= width ||
-      point.y >= height
-        ? null
-        : { x: Math.floor(point.x), y: Math.floor(point.y) };
+    const inside =
+      point !== null &&
+      point.x >= 0 &&
+      point.y >= 0 &&
+      point.x < width &&
+      point.y < height;
+    store.pointer.value = inside ? point : null;
+    const cell = inside
+      ? { x: Math.floor(point.x), y: Math.floor(point.y) }
+      : null;
     const old = store.pointerCell.value;
     if (cell?.x !== old?.x || cell?.y !== old?.y) {
       store.pointerCell.value = cell;
@@ -212,6 +216,7 @@ export function MapView({ onSelect, onOrder, children }: Props) {
     <div
       ref={element}
       class={`map mode-${store.mode.value.type}`}
+      style={cursor}
       tabIndex={0}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}

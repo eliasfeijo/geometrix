@@ -41,8 +41,9 @@ export function findDeposit(
 }
 
 /**
- * Moves this tick's share from the deposit into the creep's cargo, limited by
- * the free capacity and by what the deposit holds.
+ * Moves the resource's share from the deposit into the creep's cargo on the
+ * world seconds of its pace (fog F6, E2), limited by the free capacity and by
+ * what the deposit holds. Between them the creep is gathering, waiting.
  */
 export function gatherFrom(
   state: WorldState,
@@ -52,11 +53,13 @@ export function gatherFrom(
   const { params } = state;
   const free =
     capacity(creep, teamOf(state, creep), params) - cargoTotal(creep);
-  const rate = params.gather.unitsPerSecond * params.world.tickSeconds;
-  const taken = Math.max(0, Math.min(rate, free, deposit.amount));
+  creep.activity = "gathering";
+  const pace = params.gather[deposit.kind];
+  const elapsed = (state.tick + 1) * params.world.tickSeconds;
+  if (elapsed % pace.everySeconds !== 0) return;
+  const taken = Math.max(0, Math.min(pace.units, free, deposit.amount));
   deposit.amount -= taken;
   creep.cargo[deposit.kind] += taken;
-  creep.activity = "gathering";
   recordDepositAmount(state, deposit);
 }
 

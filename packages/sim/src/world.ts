@@ -18,9 +18,11 @@ import { createMemory, updateVision, type TeamMemory } from "./vision.ts";
  * (ADR-0004): the server persists worlds since F6 and refuses to recover one
  * of another version. 2: gather keeps its deposit and waits for regeneration.
  * 3: fog of war, vision and team memory (M1.5 fog). 4: the explore target
- * ties go to the most cells never seen in sight (fog F5 checkpoint).
+ * ties go to the most cells never seen in sight (fog F5 checkpoint). 5: gather
+ * picks the deposit by travel time and waits at a dry one only when quicker
+ * (fog F6, E1), and each resource has its own gather pace (E2).
  */
-export const SIM_VERSION = 4;
+export const SIM_VERSION = 5;
 
 export type Stock = Record<Resource, number>;
 
