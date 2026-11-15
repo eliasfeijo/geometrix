@@ -9,7 +9,14 @@
 import { COMMAND_TYPES, type CommandType } from "./commands.ts";
 import { DNAS, type Dna, type Resource } from "./params.ts";
 import { PRESETS, type PresetId } from "./presets.ts";
-import type { Creep, Deposit, Stock, Team, WorldState } from "./world.ts";
+import {
+  maxHp,
+  type Creep,
+  type Deposit,
+  type Stock,
+  type Team,
+  type WorldState,
+} from "./world.ts";
 
 /**
  * What a creep did in a tick (set at stage 3): gathering, moving with cargo,
@@ -194,6 +201,12 @@ export type TeamSample = Omit<TeamStats, "team"> & {
   exploredCells: number;
   /** The team's creeps with an explore order. */
   exploring: number;
+  /**
+   * The team's creeps' HP and maximum HP, summed, in thousandths of HP (M2
+   * encontro spec §7): the mean share is hp ÷ hpMax.
+   */
+  hp: number;
+  hpMax: number;
 };
 
 export type DepositSample = DepositStats & {
@@ -218,12 +231,16 @@ export function sampleMetrics(state: WorldState): MetricsSample {
     const inTransit = { materia: 0, cristal: 0 };
     const creeps = countBy(DNAS);
     let exploring = 0;
+    let hp = 0;
+    let hpMax = 0;
     for (const creep of state.creeps) {
       if (creep.team !== team.id) continue;
       inTransit.materia += creep.cargo.materia;
       inTransit.cristal += creep.cargo.cristal;
       creeps[creep.dna] += 1;
       if (creep.order.type === "explore") exploring += 1;
+      hp += creep.hp;
+      hpMax += maxHp(state.params, creep.dna);
     }
     let exploredCells = 0;
     for (const cell of state.memory[team.id]!.explored) exploredCells += cell;
@@ -236,6 +253,8 @@ export function sampleMetrics(state: WorldState): MetricsSample {
       capacityUpgrade: team.upgrades.capacity,
       exploredCells,
       exploring,
+      hp,
+      hpMax,
     };
   });
   const deposits = state.deposits.map((deposit, i): DepositSample => ({
