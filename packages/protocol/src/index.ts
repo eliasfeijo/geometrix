@@ -77,6 +77,8 @@ const orderInput = z.discriminatedUnion("type", [
   cell.extend({ type: z.literal("moveTo") }),
   cell.extend({ type: z.literal("explore") }),
   cell.extend({ type: z.literal("buildRoad") }),
+  z.object({ type: z.literal("approach"), targetId: id, intent }),
+  z.object({ type: z.literal("pickup"), spoilId: id }),
 ]);
 
 /**
@@ -112,6 +114,11 @@ export const clientCommand = z.discriminatedUnion("type", [
   }),
   z.object({ type: z.literal("stopRepeat") }),
   z.object({ type: z.literal("buyUpgrade"), upgrade: z.enum(["capacity"]) }),
+  z.object({
+    type: z.literal("react"),
+    creepId: id,
+    choice: z.enum(["pay", "refuse", "fight", "flee"]),
+  }),
 ]);
 
 export type ClientCommand = z.infer<typeof clientCommand>;

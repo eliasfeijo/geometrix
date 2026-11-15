@@ -13,9 +13,12 @@ import {
   join,
   joinRefusal,
   orderRefusal,
+  react,
+  reactRefusal,
   release,
   releaseRefusal,
   type DominationRefusal,
+  type ReactRefusal,
   type JoinRefusal,
   type OrderInput,
 } from "./domination.ts";
@@ -41,7 +44,7 @@ import {
   setRulesRefusal,
   type RulesRefusal,
 } from "./rules.ts";
-import type { WorldState } from "./world.ts";
+import type { Reply, WorldState } from "./world.ts";
 
 export type Command =
   /** System command the server emits when a player joins (not a client input). */
@@ -55,7 +58,9 @@ export type Command =
   | { type: "applyPreset"; creepId: number; preset: PresetId; target?: Cell }
   | { type: "produce"; dna: Dna; repeat: boolean }
   | { type: "stopRepeat" }
-  | { type: "buyUpgrade"; upgrade: UpgradeId };
+  | { type: "buyUpgrade"; upgrade: UpgradeId }
+  /** The dominating player answers its creep's encounter (M2 encontro). */
+  | { type: "react"; creepId: number; choice: Reply };
 
 export const COMMAND_TYPES = [
   "join",
@@ -67,6 +72,7 @@ export const COMMAND_TYPES = [
   "produce",
   "stopRepeat",
   "buyUpgrade",
+  "react",
 ] as const satisfies readonly Command["type"][];
 export type CommandType = Command["type"];
 
@@ -76,6 +82,7 @@ export type CommandInput = { playerId: number; command: Command };
 export type Refusal =
   | JoinRefusal
   | DominationRefusal
+  | ReactRefusal
   | RulesRefusal
   | ProductionRefusal
   | UpgradeRefusal
@@ -98,6 +105,8 @@ export function validate(
       return releaseRefusal(state, playerId);
     case "order":
       return orderRefusal(state, playerId, command.creepId, command.order);
+    case "react":
+      return reactRefusal(state, playerId, command.creepId, command.choice);
     case "setRules":
       return setRulesRefusal(state, playerId, command.creepId, command.rules);
     case "applyPreset":
@@ -160,6 +169,9 @@ export function applyCommand(
       break;
     case "order":
       giveOrder(state, command.creepId, command.order);
+      break;
+    case "react":
+      react(state, command.creepId, command.choice);
       break;
     case "setRules":
       setRules(state, command.creepId, command.rules);
