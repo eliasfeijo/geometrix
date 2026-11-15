@@ -23,7 +23,8 @@ const USAGE = `usage: geo <command> [options]
 
 commands:
   sim      runs a bot x bot world and writes runs/<id>/: run.json,
-           samples.jsonl, metrics.csv, replay.json, report.md
+           samples.jsonl, encounters.json, metrics.csv, replay.json,
+           report.md
            --seed <n>            world seed (default 42)
            --params <file>       params JSON (default params/default.json)
            --days <n> | --hours <n>
