@@ -49,6 +49,20 @@
       relativa; o empate, pelo `state.rng`, nunca pelo id;
     - **salvo-conduto** (D9): termina pelo tempo **ou ao entrar na zona do próprio Núcleo**, no lugar de "até a
       própria rede de estradas" (a estrada pronta é neutra e não guarda quem a construiu).
+  - **Spec do M2, fatia B, o laboratório de batalha** (dono, 2026-11-15;
+    [spec M2 do laboratório](../specs/m2-laboratorio/spec.md)). A **primeira regra é a grade**; detalhes e números
+    provisórios na spec:
+    - **ataque direcional** (D4): o creep olha para uma de 4 direções; o quadrado bate na célula da frente; o
+      círculo e o triângulo disparam um projétil que anda célula a célula e acerta o primeiro inimigo, e dá para
+      desviar. Sem fogo amigo. Uma célula, um creep: o quadrado bloqueia a passagem (D5). No mesmo instante, o golpe
+      sai antes do passo, e o projétil anda depois dos creeps (plan do laboratório, P3);
+    - **fuga pela borda** (D7): a arena é a bolha; quem fica na saída por um instante sem levar golpe sai da
+      batalha. A carga freia o creep; ele pode largar a bolsa numa pilha, e qualquer um cata (D8);
+    - **o fim** (D9): **sem relógio da batalha**. Cada creep tem um relógio de inatividade, que zera quando ele
+      dá ou leva dano; quando estoura, ele foge sozinho. A batalha acaba quando sobra no máximo um lado na arena;
+    - **lados** (D10, D11): de 2 a 4, hostis entre si; dá para entrar no meio da luta, sem diálogo;
+    - **IA de gambits** (D14, D15): lista ordenada condição → ação por creep, com presets por DNA, editável no
+      laboratório; é o adversário do laboratório e o auto-resolve.
   - **Chefão disputado** (M2.5): quando dois lados ferem o mesmo chefão, leva o buff ou o item quem dá o último
     golpe ([05](05-tribos-e-diplomacia.md)).
 
@@ -90,5 +104,4 @@ Detalhes e análise no [brainstorm M2–M3](../brainstorm/2026-11-15-m2-m3.md) �
 ## Perguntas abertas
 - Qual é o raio da "bolha" da batalha? Até que distância alguém pode entrar no meio da luta? (Que reforços e
   terceiros entram já está decidido; o raio do encontro na fatia A, também.) Fatia D.
-- Duração máxima de uma batalha e como ela termina (aniquilação, recuo, tempo).
 - Quanto tempo do mundo passa durante uma batalha?

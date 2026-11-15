@@ -42,6 +42,13 @@
   - **Preset salteador:** extorquir um inimigo carregado à vista → catar despojo à vista → entregar se cheio →
     explorar; luta quando é atacado e foge com o HP baixo.
 
+- **Gambits de batalha** (dono, 2026-11-15; [spec M2 do laboratório](../specs/m2-laboratorio/spec.md) D14, D15):
+  na batalha, cada creep não dominado segue uma lista ordenada condição → ação, como o piloto do mundo. Condições
+  de HP, distância, alinhamento, projétil vindo, carga e aliado ferido; ações de atacar, aproximar, manter
+  distância, esquivar, proteger aliado, fugir, largar a bolsa e catar. Presets por DNA (linha de frente, atirador,
+  escaramuçador, portador), editáveis no laboratório. A IA decide com um **tempo de reação** (250 ms ± 100 ms,
+  provisório; plan do laboratório, P12): sem ele, ela desviaria de todo projétil.
+
 ## Proposta
 - Humanos, macros, piloto automático e bots emitem os **mesmos comandos** ([ADR-0002](../adr/0002-tudo-e-comando.md)).
   Um script nunca tem mais poder do que um humano.

@@ -41,6 +41,10 @@
     mais rápido a até um raio do próprio Núcleo; não regenera durante um encontro ou uma luta. Chutes provisórios:
     de 0 a cheio em 100 min no mapa e em 10 min perto do Núcleo (raio 8).
   - **Morte de um creep dominado** (D4): o domínio termina, como um `release`, sem cooldown.
+- **Spec do M2, fatia B, o laboratório de batalha** (dono, 2026-11-15;
+  [spec M2 do laboratório](../specs/m2-laboratorio/spec.md) D6): os stats base de combate por DNA (HP máximo, dano,
+  alcance, recarga do ataque, velocidade de batalha, velocidade do projétil, capacidade) moram nos params do pacote
+  de batalha até a junção, que escolhe uma fonte só para o que existe dos dois lados. Chutes provisórios na spec.
 - **As lendas** (dono, 2026-11-15; registro no
   [brainstorm do fim do mundo](../brainstorm/2026-11-15-fim-do-mundo.md) §0): **qualquer creep vivo no fim do
   mundo vira lenda**, inclusive do time derrotado. Se o apocalipse não deixa ninguém vivo, ninguém leva lenda,
