@@ -160,7 +160,9 @@ function reachFirst(
  * no switching on the way. At an empty materia deposit it waits only when
  * that is quicker than walking to the nearest known one with enough for its
  * free cargo (owner, fog F6, E1); it weighs that once per regeneration
- * interval, on a tick spread by its id.
+ * interval, in its middle second. The same second for every creep: a phase
+ * spread by id would differ between the mirrored teams, whose creeps have
+ * other ids.
  */
 function committedDeposit(
   state: WorldState,
@@ -177,7 +179,7 @@ function committedDeposit(
   if (creep.x !== deposit.x || creep.y !== deposit.y) return deposit;
   const { regen } = state.params.deposits.materia;
   const elapsed = state.tick * state.params.world.tickSeconds;
-  if (elapsed % regen.everySeconds !== creep.id % regen.everySeconds) {
+  if (elapsed % regen.everySeconds !== Math.floor(regen.everySeconds / 2)) {
     return deposit;
   }
   const free = freeCargo(state, creep);
