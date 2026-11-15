@@ -12,6 +12,7 @@ import type { PathCache } from "./pathfinding.ts";
 import type { RngState } from "./rng.ts";
 import { createStats, type Activity, type Stats, type Trip } from "./stats.ts";
 import { createMemory, updateVision, type TeamMemory } from "./vision.ts";
+import { nameAt } from "./names.ts";
 
 /**
  * Bump when a rule or state change makes old snapshots or replays invalid
@@ -20,9 +21,11 @@ import { createMemory, updateVision, type TeamMemory } from "./vision.ts";
  * 3: fog of war, vision and team memory (M1.5 fog). 4: the explore target
  * ties go to the most cells never seen in sight (fog F5 checkpoint). 5: gather
  * picks the deposit by travel time and waits at a dry one only when quicker
- * (fog F6, E1), and each resource has its own gather pace (E2).
+ * (fog F6, E1), and each resource has its own gather pace (E2). 6: creeps
+ * have a name from the birth counter, HP that regenerates, and can die; step
+ * returns events (M2 encontro F1).
  */
-export const SIM_VERSION = 5;
+export const SIM_VERSION = 6;
 
 export type Stock = Record<Resource, number>;
 
@@ -48,6 +51,12 @@ export type Creep = {
   id: number;
   team: number;
   dna: Dna;
+  /** Given at birth from state.births (spec D1, plan P5); never changes. */
+  name: string;
+  /** Hit points in thousandths (plan P1): 300 HP is 300_000. */
+  hp: number;
+  /** Id of the encounter the creep is in, or null (plan P2; set from F2). */
+  engagement: number | null;
   /** What the creep carries. Any amount above 0 counts as loaded. */
   cargo: Stock;
   /** What the creep is doing now. */
@@ -97,6 +106,8 @@ export type WorldState = {
   /** What each team has seen and remembers, by team id (fog plan N1). */
   memory: TeamMemory[];
   nextId: number;
+  /** Creeps born so far, the initial ones included: the next name (plan P5). */
+  births: number;
   /** Accumulators behind the metrics (spec section 7). */
   stats: Stats;
 };
@@ -104,6 +115,7 @@ export type WorldState = {
 export function createWorld(seed: number, params: Params): WorldState {
   const { layout, rng, mapSeed } = generateMap(seed, params);
   let nextId = 1;
+  let births = 0;
 
   const deposits: Deposit[] = layout.deposits.map((site) => ({
     id: nextId++,
@@ -129,7 +141,7 @@ export function createWorld(seed: number, params: Params): WorldState {
   for (const team of teams) {
     for (const dna of DNAS) {
       for (let i = 0; i < params.population.initial[dna]; i++) {
-        creeps.push(newCreep(nextId++, team, dna));
+        creeps.push(newCreep(nextId++, births++, team, dna, params));
       }
     }
   }
@@ -149,6 +161,7 @@ export function createWorld(seed: number, params: Params): WorldState {
     roadJobs: [],
     memory: createMemory(teams, layout.map),
     nextId,
+    births,
     stats: createStats(teams, deposits),
   };
   // The vision of tick 0 (fog plan N10).
@@ -157,14 +170,24 @@ export function createWorld(seed: number, params: Params): WorldState {
 }
 
 /**
- * A creep standing stopped and empty on its team's core, with the materia
- * collector rules (F4 decision, spec section 5).
+ * A creep standing stopped and empty on its team's core, with full HP and the
+ * materia collector rules (F4 decision, spec section 5). `birth` is its rank
+ * in the world's births, which names it.
  */
-export function newCreep(id: number, team: Team, dna: Dna): Creep {
+export function newCreep(
+  id: number,
+  birth: number,
+  team: Team,
+  dna: Dna,
+  params: Params,
+): Creep {
   return {
     id,
     team: team.id,
     dna,
+    name: nameAt(birth),
+    hp: maxHp(params, dna),
+    engagement: null,
     ...team.core,
     cargo: { materia: 0, cristal: 0 },
     order: { type: "stop" },
@@ -175,4 +198,25 @@ export function newCreep(id: number, team: Team, dna: Dna): Creep {
     activity: "idle",
     trip: null,
   };
+}
+
+/** A creep's full HP, in thousandths (plan P1). */
+export function maxHp(params: Params, dna: Dna): number {
+  return params.hp.dna[dna].max * 1000;
+}
+
+/**
+ * Spawns a creep of `dna` on the team's core (production), with the next id
+ * and the next name. Returns it, already in state.creeps.
+ */
+export function spawnCreep(state: WorldState, team: Team, dna: Dna): Creep {
+  const creep = newCreep(
+    state.nextId++,
+    state.births++,
+    team,
+    dna,
+    state.params,
+  );
+  state.creeps.push(creep);
+  return creep;
 }

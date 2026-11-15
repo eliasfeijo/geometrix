@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { fullView, step, view } from "@geometrix/sim";
-import { creepName, NAME_STRIDE, nameAt, NAMES } from "../src/names.ts";
-import { testWorld } from "./helpers.ts";
+import { NAME_STRIDE, nameAt, NAMES } from "../src/names.ts";
+import { startProduction } from "../src/production.ts";
+import { fullView, view } from "../src/view.ts";
+import { createWorld } from "../src/world.ts";
+import { loadTestParams, run } from "./helpers.ts";
 
 function edits(a: string, b: string): number {
   const x = a.toLowerCase();
@@ -46,17 +48,30 @@ describe("creep names", () => {
     expect(nameAt(2 * NAMES.length + 5)).toBe(`${nameAt(5)} III`);
   });
 
-  it("come from the id alone, whatever the view has in sight", () => {
-    const world = testWorld();
-    for (let i = 0; i < 600; i++) step(world, []);
-    const own = world.creeps.find((c) => c.team === 0)!;
-    // Team 0's view with and without an enemy creep of a smaller id in sight
-    // names its own creep the same, as does the replay's full view.
-    expect(creepName(own.id)).toBe(nameAt(own.id));
-    const names = (seen: { creeps: { id: number }[] }) =>
-      new Map(seen.creeps.map((c) => [c.id, creepName(c.id)]));
-    expect(names(view(world, 0)).get(own.id)).toBe(
-      names(fullView(world)).get(own.id),
+  it("are given at birth by the birth order and never change", () => {
+    const world = createWorld(42, loadTestParams());
+    // The initial creeps of both teams take the first births.
+    expect(world.creeps.map((c) => c.name)).toEqual(
+      world.creeps.map((_, i) => nameAt(i)),
+    );
+    expect(world.births).toBe(world.creeps.length);
+    const team = world.teams[0]!;
+    team.stock = { materia: 1000, cristal: 1000 };
+    expect(startProduction(world, 0, "circle", false)).toBeNull();
+    const before = world.creeps.map((c) => [c.id, c.name]);
+    run(world, world.params.creep.productionSeconds);
+    const born = world.creeps.at(-1)!;
+    expect(born.name).toBe(nameAt(before.length));
+    // Removing a creep renames nobody: the name lives in the state.
+    world.creeps.splice(0, 1);
+    for (const creep of world.creeps.slice(0, -1)) {
+      expect(before).toContainEqual([creep.id, creep.name]);
+    }
+    // The team's view and the replay's full view carry the same name.
+    const own = view(world, 0).creeps.find((c) => c.id === born.id)!;
+    expect(own.name).toBe(born.name);
+    expect(fullView(world).creeps.find((c) => c.id === born.id)!.name).toBe(
+      born.name,
     );
   });
 });

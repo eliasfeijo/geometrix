@@ -7,7 +7,6 @@ import { isOwnCreep } from "@geometrix/sim";
 import { useGame } from "../context.ts";
 import { creepStatus, STATUS_TEXTS, viewCapacity } from "../creep-status.ts";
 import { DNA_NAMES, teamName } from "../format.ts";
-import { creepName } from "../names.ts";
 import { DnaIcon } from "./dna-icon.tsx";
 
 const WIDTH = 280;
@@ -60,7 +59,7 @@ export function StackList() {
               >
                 <DnaIcon dna={creep.dna} team={creep.team} size={16} />
                 <span class="stack-name">
-                  <strong>{creepName(creep.id)}</strong>{" "}
+                  <strong>{creep.name}</strong>{" "}
                   <span class="muted small">
                     {DNA_NAMES[creep.dna]} · #{creep.id}
                   </span>

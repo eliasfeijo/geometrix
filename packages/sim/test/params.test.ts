@@ -71,6 +71,32 @@ describe("parseParams", () => {
     );
   });
 
+  test("encounter durations must be whole ticks, and a tick divide a minute", () => {
+    const issues = issuesOf(withLeaf("world.tickSeconds", 7));
+    for (const path of [
+      "fight.roundSeconds",
+      "flee.seconds",
+      "encounter.reactionSeconds",
+      "safeConduct.seconds",
+      "safeConduct.blockSeconds",
+    ]) {
+      expect(issues).toContain(
+        `${path}: must be a multiple of world.tickSeconds`,
+      );
+    }
+    expect(issues).toContain(
+      "world.tickSeconds: must divide 60 (HP regenerates per minute)",
+    );
+  });
+
+  test.each([
+    ["flee.dropMinPermille", 1001, "flee.dropMinPermille: must be <= 1000"],
+    ["fight.hitPermille", 1500, "fight.hitPermille: must be <= 1000"],
+    ["fight.hitPermille", 0, "fight.hitPermille: must be >= 1"],
+  ])("per mille shares: %s = %s", (path, value, issue) => {
+    expect(issuesOf(withLeaf(path, value))).toEqual([issue]);
+  });
+
   test.each([
     ["map.width", 63, "map.width: must be even"],
     ["map.height", 65, "map.height: must be even"],

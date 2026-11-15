@@ -12,7 +12,6 @@ import { useGame } from "../context.ts";
 import { toggleRoadMode } from "../interaction.ts";
 import { inSight } from "../map/fog.ts";
 import { cellmates } from "../map/pick.ts";
-import { creepName } from "../names.ts";
 import { creepStatus, STATUS_TEXTS, viewCapacity } from "../creep-status.ts";
 import {
   DNA_NAMES,
@@ -79,7 +78,7 @@ function CreepInspector({ id }: { id: number }) {
       <h2 class="title creep-title">
         <DnaIcon dna={creep.dna} team={creep.team} />
         <span>
-          {creepName(creep.id)}
+          {creep.name}
           <span class="subtitle muted">
             {DNA_NAMES[creep.dna]} · #{creep.id}
           </span>
@@ -202,7 +201,7 @@ function ForeignCreepInspector({ creep }: { creep: ForeignCreepView }) {
       <h2 class="title creep-title">
         <DnaIcon dna={creep.dna} team={creep.team} />
         <span>
-          {creepName(creep.id)}
+          {creep.name}
           <span class="subtitle muted">
             {DNA_NAMES[creep.dna]} · #{creep.id}
           </span>

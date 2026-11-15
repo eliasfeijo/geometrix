@@ -12,10 +12,10 @@
 | | |
 |---|---|
 | **Marco** | **M2 — A emboscada** ([ROADMAP](../ROADMAP.md)). M0, M1 e M1.5 ✅ |
-| **Fatia** | **A — O encontro** ([spec](../specs/m2-encontro/spec.md) · [plan](../specs/m2-encontro/plan.md) · [tasks](../specs/m2-encontro/tasks.md)): F0 ✅ (spec, ADR-0007 e plan aprovados) |
-| **Em execução** | Nada |
-| **Próxima fase** | **A F1 — Identidade, HP e eventos no `sim`**, branch `m2/encontro-f1-identity` (skill `implement-phase`) |
-| **Pode andar em paralelo** | A **spec da fatia B** (laboratório de batalha), que não depende da A (skill `spec-slice`) |
+| **Fatia** | **A — O encontro** ([spec](../specs/m2-encontro/spec.md) · [plan](../specs/m2-encontro/plan.md) · [tasks](../specs/m2-encontro/tasks.md)): F0 ✅, F1 ✅ (nomes, HP e eventos no `sim`) |
+| **Em execução** | Nada nesta árvore. **Spec da fatia B** (laboratório de batalha) numa outra sessão, no worktree `../geometrix-lab`, branch `m2/laboratorio-spec`: ela não mexe no dashboard nem no `CLAUDE.md`; o merge em `main` é feito entre duas fases da A |
+| **Próxima fase** | **A F2 — O encontro no `sim`**, branch `m2/encontro-f2-encounter` (skill `implement-phase`) |
+| **Pode andar em paralelo** | A implementação da B, quando a spec dela for aprovada |
 | **Aguardando o dono** | Nada |
 | **Bloqueios** | Nenhum |
 
@@ -23,14 +23,24 @@
 
 As fatias do M2 seguem o grafo de dependências do [ROADMAP](../ROADMAP.md), não uma fila.
 
-1. **A F1 a F6**, em sequência (a F1 é a raiz de quase tudo: nome, HP e eventos).
-2. **Spec da B** já, e a implementação da B em paralelo à A, no pacote de batalha.
+1. **A F2 a F6**, em sequência.
+2. **Spec da B** em andamento (outra sessão), e a implementação da B em paralelo à A, no pacote de batalha.
 3. **Depois do checkpoint da A F3:** as rodadas de design do **papel do cristal** e da **fatia E** (se o cerco
    passa pela instância de batalha, a E depende da D; senão, pode vir antes dela).
 4. **Depois da A:** a D (com a B pronta) ou a E, e a C em paralelo à D.
 
 ### O que a próxima fase precisa saber
 
+- **identidade e HP** (F1): `creep.name` vem de `nameAt(state.births)` (`sim/names.ts`) no nascimento
+  (`newCreep(id, birth, team, dna, params)`; a produção usa `spawnCreep`); `creep.hp` em milésimos (`maxHp`);
+  `creep.engagement` já existe e é sempre `null` até a F2 criar o `Encounter`; `hp.ts` tem `regenerateHp`
+  (estágio 5, no tick que fecha o minuto, como os depósitos; pula `engagement !== null`), `inCoreZone` e `kill`
+  (só tira do estado: a carga, o saque e o `died` são da F2);
+- **eventos** (F1, `sim/events.ts`): `step` devolve `SimEvent[]`; os estágios recebem o `EventLog` do tick
+  (`emit(log, body)`; só a produção, hoje); `setAudience` roda depois do `updateVision`; `eventsFor(events,
+  team)` filtra e tira o `teams`; o union `EventBody` já tem todos os tipos do plan §7, mas só o `born` é emitido;
+  o `createWorld` não emite eventos;
+- **visão** (F1): o `ForeignCreepView` tem `name`, `hp` e `engagement`; o `CreepView`, os mesmos e o resto;
 - **visão e memória** (`sim/vision.ts`, `view.ts`): o que o time vê e lembra, e a `view` filtrada é a única
   entrada do estrategista e do cliente; `fullView` (time −1) para o replay;
 - **pelo que o time sabe** (`sim/known.ts`): mapa conhecido, A* e estradas no escuro, `explore`, preset batedor;
@@ -63,7 +73,7 @@ Só o que ainda está aberto. Ao resolver, tire daqui e registre no Histórico.
 - **Olhos novos** (quando o dono achar o jogo divertido): o playtest com pessoas que nunca viram o jogo responde de
   novo à hipótese do M1.5 (o roteiro e as perguntas de névoa estão no [PLAYTEST.md](../PLAYTEST.md)); observar se
   travam num mundo só de humanos, em que ninguém explora sem ordem (regra D3).
-- **`SIM_VERSION` (hoje 5; a F1 do encontro sobe para 6):** mundos persistidos guardam a versão. Mudou o comportamento do `sim`?
+- **`SIM_VERSION` (hoje 6, desde a F1 do encontro):** mundos persistidos guardam a versão. Mudou o comportamento do `sim`?
   Suba a versão; um mundo de outra versão não é recuperado (o servidor loga e o pula).
 - **Servidor no `/mnt/c`:** subir o `npm run server` às vezes leva mais de 5 s (WSL). Scripts que sobem o
   servidor devem esperar a porta responder, não um `sleep` fixo.
@@ -78,7 +88,7 @@ Só o que ainda está aberto. Ao resolver, tire daqui e registre no Histórico.
 | M0 — Design | ✅ |
 | M1 — O ciclo da riqueza | ✅ 2026-11-14 |
 | M1.5 — A névoa | ✅ 2026-11-14 (rede e fog of war) |
-| M2 — A emboscada | 🟡 Fatia A: F0 ✅, F1–F6 ⬜ · Fatias B, C, D, E ⬜ |
+| M2 — A emboscada | 🟡 Fatia A: F0 ✅, F1 ✅, F2–F6 ⬜ · Fatia B: spec 🟡 · Fatias C, D, E ⬜ |
 | M2.5 — A jungle hostil e o fim do mundo | ⬜ (fim do mundo decidido no GDD, 2026-11-15) |
 | M3 — O time · M4 — O mundo vivo · M5 — As lendas | ⬜ |
 
@@ -134,6 +144,7 @@ Só o que ainda está aberto. Ao resolver, tire daqui e registre no Histórico.
 | M2 — fatias | ✅ Decididas pelo dono (2026-11-15): A o encontro → B o laboratório de batalha → C chat, console e macros → D a junção (com os errantes) → E cerco e reparo | [ROADMAP](../ROADMAP.md) |
 | M2 A (encontro) — spec | ✅ Aprovada (2026-11-15), com D1–D21 decididas na rodada interativa; as de gameplay no GDD 01, 02, 03, 06, 07, 08; a ideia do dono de acampamento e torres em incubação no GDD 01. ADR-0007 (eventos do `sim`) ✅ `Accepted` (2026-11-15) |
 | M2 A (encontro) — plan | ✅ Aprovado (2026-11-15), com P1–P11 pela proposta; fases F1–F6 no tasks.md. F0 ✅ | [plan.md](../specs/m2-encontro/plan.md) · [tasks.md](../specs/m2-encontro/tasks.md) | [spec.md](../specs/m2-encontro/spec.md) |
+| M2 A — F1 Identidade, HP e eventos | ✅ Concluída, merge em `main`. Params do encontro, nomes no `sim` pelo contador de nascimentos, HP em milésimos com regeneração e `kill`, `step` devolve os eventos (`born`) com o público e `eventsFor`, nome/HP/encontro do inimigo na visão, `SIM_VERSION` 6 | [tasks.md](../specs/m2-encontro/tasks.md) · `packages/sim/src/{names,hp,events}.ts` |
 | Fim do mundo — brainstorm | ✅ Respondido pelo dono (2026-11-15, rodada interativa). A duração termina num apocalipse: a corrupção dos depósitos de cristal esgotados, que não pode ser limpa e é vista de longe; só o final feliz das tribos (M4) a detém, e salva o mundo inteiro; vitória pírrica com humor; qualquer creep vivo no fim vira lenda; empate no relógio da fatia E. **ROADMAP:** fatias do M2 como grafo, M2.5 "A jungle hostil e o fim do mundo", M5 novo, "As lendas" | [brainstorm §0](../brainstorm/2026-11-15-fim-do-mundo.md) · [ROADMAP](../ROADMAP.md) |
 | M2.5, M3, M4, M5 | ⬜ Não iniciados | [ROADMAP](../ROADMAP.md) |
 
@@ -165,6 +176,19 @@ Um item por problema: o que a pessoa não entendeu ou não conseguiu, a tarefa o
 ## Registro das fases
 
 Medições, interpretações e decisões de cada fase, da mais recente para a mais antiga.
+
+- **M2 A F1 — Identidade, HP e eventos** ✅ (2026-11-15). 2 205 testes; `geo verify` OK
+  (`cbeb5ef5…`, 50 000 ticks); `geo sim` de 3 dias do seed 42 em 12,1 s (a F6 do fog: 13–14 s), hash novo
+  `34b29d28…` (o estado tem campos novos; nenhum creep perde HP ainda, então o comportamento é o da F6).
+  Interpretações, a validar:
+  - O `engagement` entrou no `Creep` já na F1 (sempre `null`), porque a visão (D18) e a regeneração ("fora de
+    encontro") dependem dele; a entidade `Encounter` é da F2.
+  - O `name` foi para o creep inimigo na visão já na task dos nomes (o cliente desenha o nome de todos).
+  - A regeneração do HP acontece no tick que fecha o minuto de mundo, como a dos depósitos; os params passam a
+    exigir que `world.tickSeconds` divida 60.
+  - Os nomes mudam em relação ao M1.5 (P5): os 12 creeps iniciais pegam os nascimentos 0 a 11, e o `createWorld`
+    não emite `born` (não é um `step`).
+  - O union dos eventos já tem os nove tipos do plan §7; só o `born` é emitido na F1.
 
 - **Checkpoint da F6 do fog** ✅ (fechou o M1.5; spec §11, decisões no [plan §10](../specs/m1.5-fog/plan.md)). Relatórios em `runs/m1.5-fog-f6/`; a F5 rodada de novo
   na mesma máquina (`f5-base-sweep`, worktree em `70b5457`).
