@@ -27,4 +27,10 @@ além de só filtrar a visão. A fatia passa a incluir a ação "explorar" do pi
 que o time sabe (cache por time), o terreno explorado no delta da rede (hoje o mapa vai inteiro no `welcome`) e a
 exploração no estrategista dos bots, e a linha de visão (pedras bloqueiam; spec do fog, D1).
 
+**M1.5 concluído** (dono, 2026-11-14): as duas fatias entregues, com uma fase a mais no fog (F6, ajustes do
+playtest do dono: coleta por tempo de viagem, ritmo de coleta por recurso, seleção por área e cursor com a ação).
+Hipótese: nas sessões do dono, o fog e a exploração cumprem o papel sem tornar o mapa ilegível; a mesma pergunta
+volta no playtest de diversão do M2, com pessoas que nunca viram o jogo. Ficaram para o M2: o esgotamento e o papel
+do cristal ([GDD 03](gdd/03-economia-e-logistica.md)) e o tamanho do snapshot com a memória do fog (deploy).
+
 O mapa completo de 3 lanes + 2 jungles entra conforme os marcos pedirem, não antes.
