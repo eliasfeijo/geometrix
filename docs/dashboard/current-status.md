@@ -13,10 +13,10 @@
 |---|---|
 | **Marco** | **M2 — A emboscada** ([ROADMAP](../ROADMAP.md)). M0, M1 e M1.5 ✅ |
 | **Fatia** | **A — O encontro** ([spec](../specs/m2-encontro/spec.md) · [plan](../specs/m2-encontro/plan.md) · [tasks](../specs/m2-encontro/tasks.md)): F0 ✅, F1 ✅ (nomes, HP e eventos), F2 ✅ (o encontro no `sim`) · **B — O laboratório de batalha** ([spec](../specs/m2-laboratorio/spec.md) · [plan](../specs/m2-laboratorio/plan.md) · [tasks](../specs/m2-laboratorio/tasks.md)): F0 ✅ (spec, ADR-0008 e plan aprovados) |
-| **Em execução** | Nada |
+| **Em execução** | **A F3 — Bots e harness**, branch `m2/encontro-f3-harness`: as três tasks prontas; **parada no checkpoint do dono**, antes do merge |
 | **Próxima fase** | **A F3 — Bots e harness**, branch `m2/encontro-f3-harness` (skill `implement-phase`), com o checkpoint do dono nos números |
 | **Pode andar em paralelo** | **B F1 — O pacote e o movimento**, branch `m2/laboratorio-f1-package`, numa outra sessão com worktree próprio (como a spec da B); a B mexe no pacote de batalha, não no `sim`. Ela não edita o dashboard nem o `CLAUDE.md`; o merge em `main` acontece entre duas fases da A |
-| **Aguardando o dono** | Nada |
+| **Aguardando o dono** | Checkpoint da A F3 (números no topo do "Registro das fases"): 1. o salteador parado em casa depois de explorar; 2. a vítima do bot sempre paga; 3. a frequência e o peso dos encontros; 4. o custo do tick (1,47–1,55×, alvo ≤ 1,5×); 5. as interpretações da F3 |
 | **Bloqueios** | Nenhum |
 
 ### Próximos passos
@@ -190,6 +190,57 @@ Um item por problema: o que a pessoa não entendeu ou não conseguiu, a tarefa o
 ## Registro das fases
 
 Medições, interpretações e decisões de cada fase, da mais recente para a mais antiga.
+
+- **M2 A F3 — Bots e harness** 🟡 checkpoint do dono (2026-11-15). 2 276 testes; `geo verify` OK nas seeds 1, 42 e
+  649, agora com o hash dos eventos. Relatórios em `runs/m2-encontro-f3/` (`f3-*`: atual; `f6-base-*`: a F6 do
+  fog, worktree em `b36df57`, rodada na mesma máquina, intercalada).
+
+  | Medida | F6 do fog | F3 |
+  |---|---|---|
+  | `geo sim` de 3 dias, seed 42 (3 execuções cada, intercaladas) | 12,0–12,5 s | 17,9–18,6 s (**1,47–1,55×**; alvo ≤ 1,5×) |
+  | Hash de 3 dias, seed 42 | `b64579c3…` | `cdc25785…` |
+  | Matéria entregue, seed 42, 3 dias (por time) | 177 310 | 175 821 (−0,8%) |
+  | Matéria entregue, seeds 1–20, 6 h (média por time) | 6 181 | 4 969 (−20%: 1 dos 3 coletores de matéria vira salteador) |
+  | Teto de 30 creeps, seed 42 | 39,4 h | 40,1 h |
+  | Creeps parados, seed 42, 3 dias | 24% | 41% (47–49% depois da 42ª hora) |
+  | Cristal do mapa esgotado, seed 42 | 9,4 h | 7,6 h |
+  | Cristal parado no estoque, seed 42 / seeds 1–20 × 6 h | 68% / 78% | 68% / 81% |
+  | Mapa explorado, seeds 1–20 × 6 h | 37% | 95% (o salteador explora) |
+  | Núcleo inimigo visto, seeds 1–20 × 6 h | 3,7 h (18× nunca) | 1,8 h (2× nunca) |
+
+  **Encontros.** Seed 42, 3 dias: 32 por time (0,4 por hora), todos extorsões, **todos pagos pelo padrão** (D13),
+  nenhuma luta, nenhuma morte; 422 de matéria e 15 de cristal mudaram de mão por time (0,24% da matéria entregue);
+  os times terminam idênticos (nenhum sorteio aconteceu, o espelho vale os 3 dias). Seeds 1–20 × 6 h: 0,8 por time
+  por hora (0,3–1,4); 97% pagos, 1% com fuga, 1% com morte; 0,1 morte por time; 25% das fugas escaparam (18 seeds
+  sem fuga nenhuma); diferença entre os times de 0–1 creep e 38 de matéria (0–269). **Sem bola de neve** (B-2 OK).
+  **Acampamento** (D21): 65% dos encontros das 6 h na zona do Núcleo da vítima (0–100%); 9% nos 3 dias do seed 42.
+
+  **Por quê** (seed 42, eventos e estado): até ~8 h os salteadores exploram, chegam ao lado inimigo e extorquem
+  coletores perto do Núcleo deles (a 4–10 células). **Com o mapa explorado, o preset não tem o que fazer:** os 5
+  salteadores de cada time voltam e ficam parados no próprio Núcleo (`stop`) até o fim. Só há encontro quando um
+  coletor inimigo passa a até 10 células desse Núcleo (30–38 h, quando os depósitos do lado dele secam; 26
+  encontros por time); depois da 42ª hora, nenhum. Os parados a mais são esses 5 e coletores esperando em depósito
+  seco (média de 9 por depósito no fim, contra 78 na F6).
+
+  **Custo do tick.** O 1º `geo sim` de 3 dias levou 189 s: o salteador sem nada para explorar varria o mapa todo
+  atrás de célula nunca vista, a cada tick (sobram 11, todas pedra no miolo de blocos de rocha). Corrigido sem
+  mudar o resultado (`perf(sim)`: sem célula nunca vista vizinha de uma vista transitável, nenhuma é alcançável;
+  teste de propriedade contra a busca completa). O que sobra é essa verificação (~4 µs, ~2 milhões de vezes em 3
+  dias): cortá-la pede um cache no estado (muda o hash) ou que o salteador pare de tentar explorar (pergunta 1).
+
+  Interpretações, a validar:
+  - Os salteadores saem dos coletores de matéria de menor id **depois** dos coletores de cristal e do construtor
+    de estrada (com 6 creeps: 2 cristal, 1 estrada, 1 salteador, 2 matéria).
+  - **Dois desempates por id quebravam o espelho entre os times** e o salteador explorando os expôs (seed 3 se
+    separava em 1,3 h): o alvo de estrada do bot e o depósito (ou despojo) alcançado com o mesmo custo no piloto.
+    Agora desempatam pela célula no referencial do time, como o `explore` e o `approach` (`fix(sim)`). O hash de 6
+    h sem salteadores não mudou.
+  - Métricas na CLI (P6): `encounters.json` no run; o desfecho conta "escapou no diálogo" e "escapou na luta"
+    (de qualquer um dos dois); a reação conta só a da vítima no diálogo; a fuga por terreno usa a célula de quem
+    foge, com estrada valendo sobre o terreno; o que um morto larga no despojo é a carga dele no fim do tick
+    anterior menos o saque (o evento `looted` não traz o resto).
+  - O HP médio entra nas amostras do `sampleMetrics` como somas (`hp`, `hpMax`), fora do estado.
+  - O mundo de 6 h do `bot-world.test.ts` leva ~30 s com a suíte inteira: timeout de 60 s.
 
 - **M2 A F2 — O encontro no `sim`** ✅ (2026-11-15). 2 263 testes; `geo verify` OK; `geo sim` de 3 dias do seed
   42 em 14,2 s (F1: 12,1 s; o bot ainda não aborda ninguém), hash `e15dcec1…`. Rascunho com salteadores (1 em 4
