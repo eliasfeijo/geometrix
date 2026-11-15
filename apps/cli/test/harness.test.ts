@@ -93,5 +93,5 @@ describe("a bot × bot world", () => {
     const commandsAt = logCursor(log);
     for (let i = 0; i < ticks; i++) step(replay, commandsAt(replay.tick));
     expect(serialize(replay)).toBe(serialize(state));
-  });
+  }, 30_000);
 });

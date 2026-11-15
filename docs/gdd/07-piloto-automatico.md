@@ -19,7 +19,10 @@
     vale quando o time não conhece depósito do recurso. Um preset novo, **batedor**, só explora; sem nada a
     explorar, volta ao Núcleo.
   - **Alvo** (spec do fog, D4; plan N4): a célula nunca vista mais próxima em passos pelo mapa que o time conhece,
-    que nenhum outro creep do time já tenha como alvo; desempate no referencial do time, para os dois lados ficarem equivalentes no mapa espelhado.
+    que nenhum outro creep do time já tenha como alvo. **Entre as igualmente próximas, vence a que revelaria mais
+    células nunca vistas no raio de visão do creep** (dono, 2026-11-14, depois de ver o batedor varrer a borda do
+    escuro uma linha por vez); o desempate que sobra fica no referencial do time, para os dois lados ficarem
+    equivalentes no mapa espelhado.
 
 ## Proposta
 - Humanos, macros, piloto automático e bots emitem os **mesmos comandos** ([ADR-0002](../adr/0002-tudo-e-comando.md)).

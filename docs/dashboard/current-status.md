@@ -1,6 +1,6 @@
 # Status atual
 
-**Atualizado:** 2026-11-14 · **Marco:** M1.5 — A névoa · **Fatia de rede:** ✅ concluída (viabilidade aprovada) · **Design do fog:** ✅ decidido (GDD 01, 02, 07) · **Spec e plan do fog:** ✅ aprovados · **Fog F1:** ✅ · **Fog F2:** ✅ · **Fog F3:** ✅ · **Fog F4:** ✅ · **Próximo:** fog F5 (soak e legibilidade)
+**Atualizado:** 2026-11-14 · **Marco:** M1.5 — A névoa · **Fatia de rede:** ✅ concluída (viabilidade aprovada) · **Design do fog:** ✅ decidido (GDD 01, 02, 07) · **Spec e plan do fog:** ✅ aprovados · **Fog F1:** ✅ · **Fog F2:** ✅ · **Fog F3:** ✅ · **Fog F4:** ✅ · **Fog F5:** ✅ · **Próximo:** fog F6 (ajustes do playtest), que fecha o M1.5
 
 Resumo de bolso. A fonte de verdade continua nos docs linkados. Atualize este arquivo ao fechar uma fase, ao passar
 por um portão de aprovação ou quando surgir um bloqueio.
@@ -24,7 +24,7 @@ por um portão de aprovação ou quando surgir um bloqueio.
 | M1 — F8 Replay e multi-cliente | ✅ Concluída, merge em `main`. Replay no navegador (arquivo do `geo sim` ou `GET /api/worlds/:id/replay`) com velocidades, linha do tempo e hash ✓/✗; hash confere no WebKit/JSC; `npm run dev:multi`. Detalhes decididos pelo dono no [plan §8](../specs/m1-ciclo-da-riqueza/plan.md) | [tasks.md §F8](../specs/m1-ciclo-da-riqueza/tasks.md) · `apps/client/src/replay/` · `apps/server/src/dev-multi*.ts` |
 | M1 — F9 Legibilidade e playtest | ✅ Concluída, merge em `main`. Fecha o M1. Feito: `npm run soak` (teste de resistência comprimido, no lugar do mundo de 24 h), estrada × pedra, nomes no mapa (Chakra Petch), carga cheia, `+N`/`−N` no Núcleo, custo da estrada sob o cursor e tempo da obra, [PLAYTEST.md](../PLAYTEST.md). **Checkpoint** (dono, 2026-11-14): playtest parcial e replay validados, sem achados | [tasks.md §F9](../specs/m1-ciclo-da-riqueza/tasks.md) · [spec §8](../specs/m1-ciclo-da-riqueza/spec.md) |
 | Deploy e playtest de diversão | Saíram do M1 (dono, 2026-11-14): abrem o M2 | [ROADMAP](../ROADMAP.md) |
-| M1.5 — A névoa | 🟡 Em andamento (dono, 2026-11-14). Duas fatias: rede (deltas da visão de cada time, [ADR-0006](../adr/0006-sync-do-mundo.md), aceito) ✅ concluída, e depois fog of war 🟡 (rodada de design, spec e plan ✅ 2026-11-14; F1 ✅; F2 ✅; F3 ✅; F4 ✅; F5 ⬜) | [ROADMAP](../ROADMAP.md) |
+| M1.5 — A névoa | 🟡 Em andamento (dono, 2026-11-14). Duas fatias: rede (deltas da visão de cada time, [ADR-0006](../adr/0006-sync-do-mundo.md), aceito) ✅ concluída, e depois fog of war 🟡 (rodada de design, spec e plan ✅ 2026-11-14; F1 ✅; F2 ✅; F3 ✅; F4 ✅; F5 ✅; F6 ⬜) | [ROADMAP](../ROADMAP.md) |
 | M1.5 rede — spec | ✅ Aprovada (2026-11-14). Decisões D1–D8; critérios de viabilidade na §7 | [spec.md](../specs/m1.5-rede/spec.md) |
 | M1.5 rede — plan | ✅ Aprovado (2026-11-14), com R1–R7 decididas | [plan.md](../specs/m1.5-rede/plan.md) |
 | M1.5 fog — spec | ✅ Aprovada (2026-11-14). Decisões D1–D12 (D1: pedras bloqueiam a visão, escolha do dono; D3/D4: como e para onde se explora, no GDD 07); critérios na §7 | [spec.md](../specs/m1.5-fog/spec.md) |
@@ -39,6 +39,7 @@ por um portão de aprovação ou quando surgir um bloqueio.
 | M1.5 fog — F2 Pelo que o time sabe | ✅ Concluída, merge em `main`. Mapa conhecido (`known.ts`), A* e estradas pelo que o time sabe, piloto pela memória, ordem/ação `explore` e condição `resourceUnknown`, presets coletor e `scout`, recusas sem vazamento, estrategista só com a visão, métricas novas. **Checkpoint** (dono, 2026-11-14): início de partida ✅ (1ª matéria em 2–7 min, seeds 1–20); economia aceita (matéria −13% a −20% em 3 dias); custo do tick 2,2× aceito; divergência entre os times a rever no rebalanceamento ([plan §10](../specs/m1.5-fog/plan.md)) | [tasks.md](../specs/m1.5-fog/tasks.md) · `packages/sim/src/known.ts` · `runs/m1.5-fog-f2-checkpoint/` |
 | M1.5 fog — F3 Rede e servidor | ✅ Concluída, merge em `main`. `welcome` só com o tamanho do mapa (sem terreno, sem `cores`), `PROTOCOL_VERSION` 3; seed `null` e replay → 409 em mundo vivo; propriedade de 6 h com creep inimigo e Núcleo inimigo. **Checkpoint `geo net`** ✅: 195 B/s, 121 µs por envio, 0 divergências | [tasks.md](../specs/m1.5-fog/tasks.md) · `apps/server/src/{http,ws}.ts` · `runs/m1.5-fog-f3-checkpoint-net/` |
 | M1.5 fog — F4 Cliente | ✅ Concluída, merge em `main`. Névoa com os três estados (negro, véu, visível), lembrados sob o véu; creep inimigo que sai da visão; sem custo de estrada sobre célula nunca vista; ação explorar, condição "não conhece depósito de" e preset Batedor no editor; replay sem névoa. Nomes de creep pelo id | [tasks.md](../specs/m1.5-fog/tasks.md) · `apps/client/src/map/{fog,fog-layer}.ts*` |
+| M1.5 fog — F5 Soak e legibilidade | ✅ Concluída, merge em `main`. Soak com o fog (`SIM_VERSION` 3 e 4) sem divergência; perguntas de névoa no PLAYTEST; alvo de explorar desempatado pelo ganho (decisão do dono depois de um vídeo do batedor). Sessão 2 do dono: o fog e a exploração cumprem o papel; os achados viram a F6 | [tasks.md](../specs/m1.5-fog/tasks.md) · `runs/m1.5-fog-f5-explore/` |
 | M2–M4 | ⬜ Não iniciados | [ROADMAP](../ROADMAP.md) |
 
 ## Próximos passos imediatos
@@ -56,10 +57,11 @@ por um portão de aprovação ou quando surgir um bloqueio.
    Ficaram em aberto, para a spec: como os creeps começam explorando (regra no preset coletor, preset "batedor" ou
    os dois; GDD 07). Terreno e Núcleo inimigo vistos ficam conhecidos, e a tela tem três estados (nunca visto,
    lembrado, visível): confirmados pelo dono na mesma rodada.
-2. **Implementar o fog** ([tasks](../specs/m1.5-fog/tasks.md), skill `implement-phase`). F1–F4 ✅. Próxima:
-   **F5** (`m1.5/fog-f5-playtest`, a criar a partir de `main`): `npm run soak` completo com o fog, perguntas de
-   névoa no [PLAYTEST.md](../PLAYTEST.md) (spec §8) e o **checkpoint** da sessão de legibilidade do dono com
-   `dev:multi`, que fecha o M1.5. O que a F5 precisa saber da F4:
+2. **Implementar o fog** ([tasks](../specs/m1.5-fog/tasks.md), skill `implement-phase`). F1–F5 ✅. Próxima: **F6
+   — Ajustes do playtest** (`m1.5/fog-f6-tuning`), decidida pelo dono na sessão 2 (2026-11-14): coletor de matéria
+   que só espera o depósito vazio se compensar, coleta de cristal mais lenta (valor medido antes de fixar), seleção
+   de creep com área de clique maior e lista quando vários se sobrepõem, cursor com o ícone da ação do clique. O
+   checkpoint da F6 fecha o M1.5 (com as perguntas abertas abaixo). O que vale saber da F4 e da F5:
    - **num mundo só de humanos, ninguém explora sem ordem:** todo creep nasce coletor de matéria, que só explora
      quando o time não conhece depósito do recurso (spec D3), e no seed 42 há matéria à vista do Núcleo. Em 4 h de
      mundo (×360) o time Azul ficou no losango inicial, com 0 cristal. É a regra da spec; o jogador explora com o
@@ -92,7 +94,77 @@ Um item por problema: o que a pessoa não entendeu ou não conseguiu, a tarefa o
   está resolvido. **Nenhum problema reportado.** Ainda sem uma pessoa que nunca viu o jogo (ver próximos passos,
   item 3).
 
+- **Sessão 2 (dono, 2026-11-14), em andamento:** `dev:multi` com o fog, na branch da F5. **O fog e a exploração
+  cumprem o papel esperado.** Achados, todos levados à F6 ([tasks](../specs/m1.5-fog/tasks.md)):
+  - **o batedor varria a borda do escuro uma linha de visão por vez** (vídeo do dono): resolvido na F5, com o alvo
+    de explorar desempatado pelo ganho;
+  - **coletores de matéria disputam o depósito mais perto do Núcleo e esperam a regeneração, 1 a 1,** em vez de
+    pegar a estrada pronta até um depósito cheio um pouco mais longe (nos 3 dias do seed 42, os creeps passam
+    29–51% do tempo parados a partir da 12ª hora);
+  - **o cristal se esgota rápido demais** (o mapa inteiro em 8,6 h de 72);
+  - **com o zoom afastado, o clique numa "bola" sobreposta a outros creeps não seleciona o que se quer:** a área
+    de clique é de meia célula pelo centro mais próximo;
+  - **falta feedback de qual ação o clique vai gerar:** pedido de cursor com o ícone da ação.
+
 ## Pendências e pontos a esclarecer
+
+- **Fechamento do M1.5** (spec §8, "Critério para fechar o M1.5"; passou do checkpoint da F5 para o da F6).
+  Critérios da spec §7:
+
+  | Critério | Resultado | Onde |
+  |---|---|---|
+  | Início de partida (seeds 1–20) | ✅ 1ª matéria em 2–7 min (alvo 30) | F2 |
+  | Equivalência entre os times | ✅ diferença 0 na 1ª entrega; divergência depois de ~15 h aceita (rebalanceamento) | F2 |
+  | Economia (3 dias, seed 42) | ✅ aceita pelo dono (matéria −13% a −20%) | F2 |
+  | Determinismo | ✅ `geo verify` | F2–F4 |
+  | Correção do diff | ✅ 0 divergências (6 h × 3 seeds no CI; 518 400 verificações no `geo net`) | F3 |
+  | Banda e CPU | ✅ 195 B/s, 121 µs por envio | F3 |
+  | Custo do tick | ❌ 2,2× (alvo 2×), **aceito** pelo dono | F2 |
+  | Sem divergência (soak) | ✅ abaixo | F5 |
+  | Linha de visão; nada vaza | ✅ testes do `sim` | F1 |
+
+  **Soak com o `SIM_VERSION` 4** (depois do alvo por ganho, `runs/soak-20261115-000828-s42/summary.md`): OK; 0
+  hashes divergentes em 14 372, as 4 visões finais iguais às do servidor, replay com o hash do servidor; banda
+  10,9–11,2 KB/s (pico 40,9); laço com mediana 100% e o tick mais lento a 10% (um instante, como antes do fog);
+  memória máxima 220 MB; SQLite 115,8 MB.
+
+  **Soak com o `SIM_VERSION` 3** (`npm run soak`, `runs/soak-20261114-230613-s42/summary.md`; antes do fog,
+  `runs/soak-20261114-172301-s42/`): resultado OK, 12,3 min reais; 6 interrupções (5 `kill -9` e 1 SIGTERM), cada
+  uma de volta em 1,5–2,3 s; replay reconstruído no Node com o hash do servidor; 4 clientes, **0 hashes
+  divergentes** em 14 364 conferidos, as 4 visões finais iguais às do servidor, 0 resyncs. Banda a ×360: 10,6–10,8
+  KB/s em média por cliente, pico 32,7 KB/s (antes 12,9 e 47,9). Laço: mediana 100% do ritmo, o tick mais lento a
+  95% (antes 10%). Memória: máximo 212 MB (antes 202). **SQLite no fim: 115 MB (antes 55 MB):** a memória dos
+  times (bitmaps de 4 096 células por time: `explored`, `visible`, `terrain`, `road`) é 71% de cada snapshot (66 de
+  93 KB na 1ª hora do seed 42), e há um snapshot a cada 300 ticks.
+
+  **Alvo de explorar desempatado pelo ganho** (dono, 2026-11-14, depois do vídeo do batedor varrendo a borda do
+  escuro uma linha por vez; [plan §10](../specs/m1.5-fog/plan.md), GDD 07, spec D4; `SIM_VERSION` 4). Medido de novo
+  (relatórios em `runs/m1.5-fog-f5-explore/`, comparados com `runs/m1.5-fog-f2-checkpoint/`):
+  - **batedor sozinho** (seeds 42, 7, 649, células conhecidas pelo time em 60 min): círculo 840–1 217 → 2 193–2 659;
+    quadrado 316–351 → 773–918; os mesmos ~600 passos em 2 h;
+  - **sweep de 6 h, seeds 1–20:** 1ª matéria do time mais lento em 2–6 min (✅, antes 2–7); 1ª entrega de cristal do
+    time mais lento em 44 min na média (20–69; antes 90, 17–219); cristal entregue 733 (antes 563); upgrade em 1,8 h
+    (antes 2,5); mapa explorado 38% (antes 34%); diferença entre os times 0;
+  - **3 dias, seed 42** (hash `8df206ba…`): matéria 146 535 / 156 495 (antes 151 065 / 140 175; sem fog 174 540),
+    cristal 1 200 por time nos dois, teto de 30 creeps em 42,6 / 42,0 h (antes 43,2 / 43,3), Núcleo inimigo visto
+    em 8,9 h (antes 13,6); neste seed a 1ª entrega de cristal saiu mais tarde (39 min, antes 19) e o upgrade também
+    (1,4 h, antes 0,9);
+  - **custo do tick:** `geo sim` de 3 dias em 9,3–10,0 s (antes 8,4–9,6; sem fog 4,0–4,3): ~2,3×, já aceito;
+  - `geo verify` OK; 2 161 testes. A propriedade do diff baixou o piso de creeps inimigos à vista em 6 h de 100 para
+    20 (no seed 42 os times se cruzam menos: 68).
+
+  **Perguntas ao dono** (para o checkpoint da F6):
+  1. **Sessão de legibilidade:** sessão 2 em andamento; o fog e a exploração cumprem o papel. Falta a resposta à
+     hipótese depois da F6: *esconder informação cria decisões interessantes (explorar, proteger rotas) sem tornar
+     o mapa ilegível?* De preferência também com alguém que nunca viu o jogo.
+  2. **Interpretações da F4** (abaixo): nomes de creep pelo id, com sufixo nos últimos ~30 creeps de um mundo
+     longo; véu com opacidade 0,55. Ok, ou algo a mudar depois da sessão?
+  3. **Num mundo só de humanos, ninguém explora sem ordem** (regra D3: o coletor só explora sem depósito
+     conhecido do recurso). Recomendo manter e observar na tarefa N3 da sessão; se as pessoas travarem, a resposta
+     vira proposta no GDD 07.
+  4. **Tamanho do snapshot:** o banco de um mundo de 3 dias dobrou (55 → 115 MB). Recomendo deixar como está no
+     M1.5 e rever no deploy do M2: guardar a memória compactada (a alternativa descartada da N1, listas de índices,
+     ou bitsets em base64) muda o formato do snapshot e pede o `SIM_VERSION` seguinte.
 
 - **Interpretações da F4 do fog** (o plan não fixa; a validar na sessão de legibilidade):
   - **nomes de creep pelo id**, não pela posição na lista da visão: com o fog a lista só tem os inimigos à vista, e

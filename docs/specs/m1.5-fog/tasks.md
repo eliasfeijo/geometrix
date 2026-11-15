@@ -72,6 +72,14 @@ na sua branch (plan §12, skill `commit`), com merge `--no-ff` em `main`.
 
 ## F5 — Soak e legibilidade (`m1.5/fog-f5-playtest`)
 
-- [ ] `npm run soak` completo com o fog: 0 divergências, visões finais iguais às do servidor
-- [ ] Perguntas de névoa no `PLAYTEST.md` (spec §8)
-- [ ] **Checkpoint:** sessão de legibilidade do dono com `dev:multi`; resposta à hipótese; fecha o M1.5
+- [x] `npm run soak` completo com o fog: 0 divergências, visões finais iguais às do servidor (2026-11-14,
+      `runs/soak-20261114-230613-s42/`): 14 364 hashes conferidos, 0 divergentes; as 4 visões finais iguais; replay
+      com o hash do servidor; 6 interrupções retomadas. De novo com o `SIM_VERSION` 4
+      (`runs/soak-20261115-000828-s42/`): 14 372 hashes, 0 divergentes, visões e replay iguais
+- [x] Perguntas de névoa no `PLAYTEST.md` (spec §8): roteiro N1–N9 e questionário N1–N6
+- [x] Alvo de explorar desempatado pelo ganho: entre as células nunca vistas igualmente próximas, a com mais células
+      nunca vistas no raio de visão do creep (dono, 2026-11-14, no checkpoint; plan §10); `SIM_VERSION` 4
+- [x] **Checkpoint:** sessão de legibilidade do dono com `dev:multi`; resposta à hipótese; fecha o M1.5. Dono,
+      2026-11-14 (sessão 2, em andamento): **o fog e a exploração cumprem o papel esperado**; o alvo de explorar
+      passou a desempatar pelo ganho (task acima). Os achados de economia e legibilidade viram a **F6**, e o
+      fechamento do M1.5 passa para o checkpoint dela

@@ -17,9 +17,10 @@ import { createMemory, updateVision, type TeamMemory } from "./vision.ts";
  * Bump when a rule or state change makes old snapshots or replays invalid
  * (ADR-0004): the server persists worlds since F6 and refuses to recover one
  * of another version. 2: gather keeps its deposit and waits for regeneration.
- * 3: fog of war, vision and team memory (M1.5 fog).
+ * 3: fog of war, vision and team memory (M1.5 fog). 4: the explore target
+ * ties go to the most cells never seen in sight (fog F5 checkpoint).
  */
-export const SIM_VERSION = 3;
+export const SIM_VERSION = 4;
 
 export type Stock = Record<Resource, number>;
 
