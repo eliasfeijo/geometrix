@@ -66,7 +66,8 @@ F0–F6). O repo está no GitHub e o CI passa lá.
    as fatias B–E. Anotado para o M2 pelo M1.5:
    - **deploy** (quando acontecer): quem cria o mundo escolhe a seed no lobby (N9) e criar mundo deixa de ser
      público; o snapshot com a memória do fog (117 MB de SQLite num mundo de 3 dias) passa a ser guardado
-     compactado, com o `SIM_VERSION` seguinte; os snapshots antigos são podados;
+     compactado, com o `SIM_VERSION` seguinte; os snapshots antigos são podados; o cliente ganha um link para o
+     código-fonte (a licença é a AGPL-3.0, cuja seção 13 pede oferecer o código a quem usa pela rede);
    - **cristal:** o esgotamento (~9,7 h de 72) e o papel do cristal ficaram para o M2 ([GDD 03](../gdd/03-economia-e-logistica.md));
    - **olhos novos** (quando o dono achar o jogo divertido): o playtest com pessoas que nunca viram o jogo responde
      de novo à hipótese do M1.5 (o roteiro e as perguntas de névoa estão no [PLAYTEST.md](../PLAYTEST.md));

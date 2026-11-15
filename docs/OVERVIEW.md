@@ -4,9 +4,11 @@
 > funciona por dentro, quanto custa e onde estão os limites. As fontes de verdade continuam sendo os docs linkados
 > em cada seção; este arquivo é o mapa.
 >
-> **Retrato de 2026-11-14, no fim do M1.5 (A névoa).** O M1 e o M1.5 estão concluídos: o mundo sincroniza por
-> deltas da visão de cada time e tem fog of war de ponta a ponta (simulação, rede, tela e bots), com uma rodada de
-> ajustes do playtest do dono. O próximo marco é o M2 (A emboscada). Os números da seção 7 são medidos com o fog.
+> **Retrato de 2026-11-15, no começo do M2 (A emboscada).** O M1 e o M1.5 estão concluídos: o mundo sincroniza por
+> deltas da visão de cada time e tem fog of war de ponta a ponta (simulação, rede, tela e bots). O M2 foi dividido
+> em cinco fatias, e a primeira, **o encontro** (abordar, extorquir, pagar, lutar ou fugir), tem spec, ADR e plan
+> aprovados; a implementação começa agora. Os números da seção 7 são medidos com o fog. Para uma apresentação curta,
+> em inglês, veja o [README](../README.md).
 
 ## Sumário
 
@@ -28,21 +30,26 @@
 ## 1. Em uma frase
 
 **Um jogo de estratégia multiplayer no navegador, num mundo persistente que dura dias**, em que times coletam,
-transportam e investem riqueza (camada RTS/economia/sandbox), e em que **batalhas em tempo real no estilo MOBA**
-decidem os confrontos, mas não a guerra. Tudo desenhado só com geometria.
+transportam e investem riqueza física (camada RTS/economia/sandbox), creeps programáveis trabalham enquanto o jogador
+dorme, e **encontros no caminho** (pedágio, emboscada, fuga) viram batalhas curtas em tempo real que decidem os
+confrontos, mas não a guerra. Tudo desenhado só com geometria.
 
 ## 2. O conceito e a motivação
 
 ### A ideia
 
-Pense num cruzamento de três coisas:
+Pense num cruzamento de quatro coisas:
 
 - a **macro de um RTS** (economia, logística, construção), mas num mundo que não acaba em 40 minutos: ele roda por
   **dias**, mesmo com você offline;
-- o **MOBA** (controle direto de um herói numa luta em tempo real), mas sem herói fixo: **qualquer creep pode virar
-  o herói**. Você *domina* um creep do seu time, joga com ele e depois o *libera*;
 - a **programação de comportamento** de jogos como Screeps e Gladiabots, ou os *gambits* de Final Fantasy XII:
-  enquanto você não está lá, seus creeps seguem as regras de piloto automático que você deixou.
+  enquanto você não está lá, seus creeps seguem as regras de piloto automático que você deixou. Mais à frente, com
+  linha de comando, macros e scripts, para quem quiser montar o próprio bot;
+- os **encontros e as histórias emergentes** de Mount & Blade, RimWorld e Dwarf Fortress: o inimigo aborda a sua
+  carga no caminho e exige pedágio; você paga, luta ou larga a bolsa e corre, e uma crônica conta o que aconteceu.
+  Creeps têm nome e morrem de vez;
+- o **controle direto** dos jogos de ação (os 2D top-down do BYOND, os MOBAs), mas sem herói fixo: **qualquer creep
+  pode virar o herói**. Você *domina* um creep do seu time, joga com ele e depois o *libera*.
 
 ### Os pilares (o filtro de toda decisão)
 
@@ -71,6 +78,9 @@ Os pilares respondem a uma tensão real dos gêneros:
 - O geometrix junta os dois separando as escalas de tempo: o **mundo** é lento, durável e funciona sozinho; a
   **batalha** é rápida, curta e é onde a habilidade de mão aparece. O elo entre eles é o pilar 2: a carga que
   atravessa a jungle é o alvo da emboscada.
+- Quase todo encontro acontece sem nenhum humano olhando (o mundo não espera ninguém). Por isso o encontro é, antes
+  de tudo, uma **regra do piloto automático** ("pago até tanto; se me atacarem, fujo"), e o humano que domina um
+  creep é a exceção que escolhe na hora. Configurar essas posturas é o tipo de decisão que o pilar 4 promete.
 
 O visual geométrico é uma escolha de linguagem (forma comunica papel) e também de viabilidade: dá para fazer um jogo
 legível sem pipeline de arte.
@@ -91,9 +101,10 @@ flowchart LR
     style M0 fill:#2e7d32,color:#fff
     style M1 fill:#2e7d32,color:#fff
     style M15 fill:#2e7d32,color:#fff
+    style M2 fill:#f9a825,color:#000
 ```
 
-Verde: concluído. O próximo é o M2.
+Verde: concluído. Amarelo: em construção.
 
 ## 3. O GDD em uma página
 
@@ -103,12 +114,13 @@ O [GDD](gdd/README.md) tem um arquivo por sistema, e cada um separa **Decidido**
 | Sistema | O que está decidido | O que ainda está em aberto | Marco |
 |---|---|---|---|
 | [01 Mundo e mapa](gdd/01-mundo.md) | Mundo persistente de dias (hipótese: 3); times de 3; vitória = destruir a base inimiga; início "fundação" (cada time começa com um Núcleo e cresce a partir dele); **fog of war**: névoa negra, pedras bloqueiam a visão, memória do time (depósitos com o último valor, estradas, terreno explorado), três estados na tela (nunca visto, lembrado, visível) | O começo sem depósito garantido à vista (medido nos bots: funciona), entrar no meio da partida, onde se pode construir, rio como rota | M1 · M1.5 |
-| [02 Creeps e domínio](gdd/02-creeps-e-dominio.md) | Herói = creep dominado; 1 domínio por jogador; DNA = forma inata; morte permanente; inventário; os 3 DNAs se equivalem na economia (a diferença vem do combate); **visão por DNA** (círculo 6, triângulo 4, quadrado 3; Núcleo 8) | Custo de dominar, limite de população, vários creeps na mesma célula, nome do creep no estado | M1 (domínio) · M1.5 (visão) · M3 (genética) |
-| [03 Economia](gdd/03-economia-e-logistica.md) | Transporte físico; dois recursos no M1: **matéria** (pesada, renovável, perto da base) e **cristal** (leve, valioso, esgotável, disputado); ritmo de coleta por recurso (cristal: 1 unidade a cada 5 s, matéria: 1 por segundo); imposto votado | Moeda cunhada × recurso; sumidouros; papel e esgotamento do cristal (~10 h de 72; fica para o M2) | M1 · M1.5 · M3 |
+| [02 Creeps e domínio](gdd/02-creeps-e-dominio.md) | Herói = creep dominado; 1 domínio por jogador; DNA = forma inata; morte permanente; inventário; os 3 DNAs se equivalem na economia (a diferença vem do combate); **visão por DNA** (círculo 6, triângulo 4, quadrado 3; Núcleo 8); **no M2:** nome no estado, HP que persiste e regenera devagar (mais rápido perto do Núcleo), só stats base por DNA | Custo de dominar, limite de população, vários creeps na mesma célula | M1 (domínio) · M1.5 (visão) · M2 (HP, nome) · M2.5 (level, skills) · M3 (genética) |
+| [03 Economia](gdd/03-economia-e-logistica.md) | Transporte físico; dois recursos no M1: **matéria** (pesada, renovável, perto da base) e **cristal** (leve, valioso, esgotável, disputado); ritmo de coleta por recurso (cristal: 1 unidade a cada 5 s, matéria: 1 por segundo); imposto votado; **no M2:** extorsão física (a carga da vítima até o que cabe na bolsa do agressor), saque dos mortos e **despojo** no chão | Moeda cunhada × recurso; sumidouros; papel e esgotamento do cristal (~10 h de 72; medido no M2) | M1 · M1.5 · M2 · M3 |
 | [04 Governança](gdd/04-governanca.md) | Votação com níveis de autoridade (bots podem decidir / só humanos / unanimidade); representantes em times grandes | Quais decisões existem, quórum, prazo, voto delegado | M3 |
-| [05 Tribos](gdd/05-tribos-e-diplomacia.md) | Jungle com monstros e tribos neutras que podem virar aliadas ou rivais | Quase tudo | M4 |
-| [06 Batalhas](gdd/06-batalhas.md) | Mundo e batalha são estados separados; a batalha é uma instância dedicada que devolve só eventos | O gatilho, a "bolha", reforços, duração, o tempo do mundo durante a batalha | M2 |
-| [07 Piloto automático](gdd/07-piloto-automatico.md) | Configurável por creep; persiste depois do domínio; no M1, regras declarativas `condição → ação`; no M1.5, decide só pelo que o time sabe, com a ação **explorar** (alvo desempatado pelo que se vê de novo) e o preset batedor; o coletor escolhe o depósito pelo tempo de viagem e só espera a matéria regenerar se compensar | Script em sandbox (fase 2), piloto por grupo, macros de cliente | M1 · M1.5 · M4 |
+| [05 Tribos](gdd/05-tribos-e-diplomacia.md) | Jungle com monstros e tribos neutras que podem virar aliadas ou rivais; **errantes** (monstros que vagam e reaparecem cada vez mais) no M2; **chefões** com buff logístico e um item raro no M2.5 | As tribos: relação, quests, aliança | M2 · M2.5 · M4 |
+| [06 Batalhas](gdd/06-batalhas.md) | Mundo e batalha são estados separados; a batalha é uma instância dedicada que devolve só eventos; **o encontro dispara a batalha**: o agressor ataca ou extorque, a vítima paga, recusa ou foge (a chance de escapar vem da velocidade, da carga e do terreno); salvo-conduto depois de pagar; lados, não grupos (2+ lados, entrada no meio da luta); combate experimental e configurável, com um laboratório de batalha; até a junção, a luta se resolve por um sorteio descartável | A "bolha", a duração da batalha, o tempo do mundo durante a luta, a regra de combate | M2 · M2.5 |
+| [07 Piloto automático](gdd/07-piloto-automatico.md) | Configurável por creep; persiste depois do domínio; no M1, regras declarativas `condição → ação`; no M1.5, decide só pelo que o time sabe, com a ação **explorar** e o preset batedor; o coletor escolhe o depósito pelo tempo de viagem; **no M2:** posturas de encontro (inimigo à vista, abordar, pagar, lutar, fugir) e o preset salteador | Script em sandbox (fase 2, M4), piloto por grupo | M1 · M1.5 · M2 · M4 |
+| [08 Crônica, chat e console](gdd/08-cronica-chat-e-console.md) | A crônica narra os encontros e os eventos do jogo (o `sim` emite eventos, o cliente os narra com modelos de frase, voz pelo DNA, sem LLM); chat livre; linha de comando no chat (verbos no estilo do BYOND que viram os mesmos comandos); macros de cliente com rate limit | Canais, sintaxe dos verbos, onde as macros ficam, moderação | M2 |
 
 ### O ciclo do M1 (o que já se joga)
 
@@ -133,7 +145,7 @@ Os números são provisórios (candidato B da [passada de balanceamento 1](specs
 
 | Área | O que existe |
 |---|---|
-| **Design** | Pilares, GDD com 7 sistemas (o fog decidido nos GDD 01, 02 e 07), 6 ADRs `Accepted`, spec/plan/tasks do M1 e das duas fatias do M1.5 |
+| **Design** | Pilares, GDD com 8 sistemas, 7 ADRs `Accepted`, spec/plan/tasks do M1, das duas fatias do M1.5 e da fatia A do M2 (o encontro); o [brainstorm do M2–M3](brainstorm/2026-11-15-m2-m3.md) com as respostas do dono |
 | **Simulação** (`packages/sim`) | Mapa gerado por seed com simetria de ponto (rio, travessias, rochas); movimento em grid 4-direções com A* e cache; coleta, entrega, regeneração; produção com "repetir"; estradas célula a célula; upgrade; domínio; interpretador de regras + 3 presets; estrategista bot; métricas |
 | **Servidor** (`apps/server`) | HTTP (criar, listar, entrar), WebSocket com ack/reject, loop de tick com multiplicador, SQLite (log + snapshots + métricas), recuperação após crash, bots por time, liberação automática do domínio por inatividade/desconexão |
 | **Cliente** (`apps/client`) | Lobby; mapa SVG com pan/zoom e névoa em três estados; creeps interpolados com nomes; seleção por área (com lista quando o clique cai em vários creeps); cursor com o ícone da ação do clique; inspetor; painel do Núcleo; editor de regras; controle direto pelo botão direito; feedback visual (`+N`/`−N`, carga cheia, custo da estrada) |
@@ -143,7 +155,8 @@ Os números são provisórios (candidato B da [passada de balanceamento 1](specs
 | **Rede por deltas** (M1.5, fatia 1) | Cada time recebe a própria visão como deltas numerados ([ADR-0006](adr/0006-sync-do-mundo.md)): `welcome` com a visão completa, depois só o que mudou; hash da visão a cada 60 ticks; retomada pelo buffer de 30 s; `resync` quando algo diverge; painel de rede no cliente (`?net=1`). Todos os critérios de viabilidade verdes ([viability.md](specs/m1.5-rede/viability.md)) |
 | **Fog of war** (M1.5, fatia 2, F0–F6) | **Simulação:** visão por raio (Núcleo e DNA) com linha de visão inteira (pedras bloqueiam); memória do time; a visão do time só com o que ele vê ou lembra. Caminho, estradas, piloto automático e bots decidem pelo que o time sabe; ação `explore` e preset batedor; comando sobre o que o time não conhece é recusado como id inexistente. **Rede:** o `welcome` só manda o tamanho do mapa, o terreno chega conforme o time explora, a seed de um mundo vivo não aparece e o replay só abre depois que o mundo acaba. **Tela:** nunca visto (negro), lembrado (véu) e visível; o inimigo só como a visão mostra. **Ajustes do playtest (F6):** coletor pelo tempo de viagem e que só espera a matéria se compensar, cristal mais lento, seleção por área, cursor com a ação |
 
-**Em números:** ~15 700 linhas de código de produção, ~10 000 de teste, **2 188 testes** em 64 arquivos, ~250 commits.
+**Em números** (fim do M1.5; o design do M2 não mudou código): ~15 700 linhas de código de produção, ~10 000 de
+teste, **2 188 testes** em 64 arquivos, ~270 commits.
 
 | Pacote | Código | Testes |
 |---|---|---|
@@ -155,9 +168,11 @@ Os números são provisórios (candidato B da [passada de balanceamento 1](specs
 
 ### Pendente
 
-- **Spec do M2** pela skill `spec-slice`, depois da rodada de design em andamento: o
-  [brainstorm de 2026-11-15](brainstorm/2026-11-15-m2-m3.md) (encontros, jungle hostil, tribos e quests,
-  progressão, combate configurável) e as perguntas abertas de batalha.
+- **Fatia A do M2, o encontro** ([spec](specs/m2-encontro/spec.md) · [plan](specs/m2-encontro/plan.md) ·
+  [tasks](specs/m2-encontro/tasks.md)): spec, ADR-0007 e plan aprovados; a implementação vai da F1 (nome, HP e
+  eventos no `sim`) à F6 (soak e a sessão do dono a ×6).
+- **As outras fatias do M2** (B laboratório de batalha, C chat/console/macros, D junção com os errantes, E cerco e
+  reparo): cada uma com spec, plan e checkpoint próprios ([ROADMAP](ROADMAP.md)).
 - **Deploy**: Dockerfile, `compose.yml` (app + Caddy + Litestream), workflow de deploy manual. Desenhado no
   [plan §11](specs/m1-ciclo-da-riqueza/plan.md), ainda não escrito (não existe `infra/`). Não bloqueia mais o M2 nem
   o M3 (dono, 2026-11-15): espera o combate dizer quanta latência é aceitável.
@@ -171,7 +186,7 @@ O repo foi publicado em 2026-11-14, e o CI passa no GitHub.
 | Marco | Escopo |
 |---|---|
 | **M1.5 · A névoa** | ✅ Concluído. Deltas da visão de cada time (ADR-0006), validados localmente; fog of war: névoa negra, visão por DNA com linha de visão, memória do time, caminho e piloto pelo que o time sabe, ação explorar; clientes e bots vendo só o que o time enxerga |
-| **M2 · A emboscada** | Uma emboscada numa carga em trânsito abre uma instância de batalha; um humano domina um creep e luta; o resultado volta ao mundo como eventos; sem humano presente, a mesma simulação roda acelerada (auto-resolve) |
+| **M2 · A emboscada** | Em cinco fatias: **A** o encontro no mundo (abordar, extorquir, pagar, lutar, fugir; HP, morte, despojo; a crônica), com a luta por um sorteio descartável; **B** o laboratório de batalha (combate configurável, IA de gambits, latência simulada); **C** chat, console e macros; **D** a junção (o encontro abre a instância de batalha, 2+ lados, auto-resolve, errantes); **E** cerco e reparo (HP de construções, vitória pelo Núcleo) |
 | **M2.5 · A jungle hostil** | Marco novo (dono, 2026-11-15): chefões com buffs e artefato; level, XP, evolução e skills; temperamentos; 3ª ação do encontro por DNA; árvores destrutíveis |
 | **M3 · O time** | 3v3, impostos, votação com níveis de autoridade, genética (a progressão foi para o M2.5) |
 | **M4 · O mundo vivo** | Jungle com tribos e diplomacia, piloto automático scriptável (JS em sandbox), construção ampla |
@@ -472,7 +487,7 @@ o `sim` rodar no navegador). WebTransport/WebRTC só se o head-of-line blocking 
 flowchart LR
     A["M1<br/>estado completo em JSON<br/>~27 KB por tick"] --> B["M1.5 rede ✅<br/>delta da visão do time<br/>~230 B/s, numerado"]
     B --> D["M1.5 fog ✅<br/>a visão do time encolhe;<br/>o terreno chega conforme se explora"]
-    B --> C["M2 · batalha<br/>a decidir no plan do M2<br/>20–30 Hz + previsão do creep dominado"]
+    B --> C["M2 · batalha<br/>a decidir nas fatias B e D<br/>20–30 Hz + previsão do creep dominado"]
     style B fill:#2e7d32,color:#fff
     style D fill:#2e7d32,color:#fff
 ```
@@ -554,8 +569,9 @@ onde trocar o renderizador por Canvas/WebGL (sem mudar a arquitetura) é a prime
 
 **De jogo (por design do M1 e do M1.5, ou ainda em aberto):**
 
-- Não tem combate, morte nem vitória: o mundo termina por tempo. É por isso que o M1 não teve playtest de
-  *diversão*, só de legibilidade.
+- Ainda não tem combate, morte nem vitória: o mundo termina por tempo. É por isso que o M1 não teve playtest de
+  *diversão*, só de legibilidade. A fatia A do M2 traz o encontro, a morte e o saque, com a luta resolvida por um
+  sorteio até a batalha real chegar (fatia D); a vitória pelo Núcleo vem na fatia E.
 - Depois do teto de população (~38–50 h de mundo), não há onde gastar: o estoque cresce sem uso. Falta um
   sumidouro (adiado pelo dono).
 - O cristal se esgota em ~10 h de 72, e os depósitos "disputados" quase não são disputados. A coleta mais lenta do
@@ -565,8 +581,7 @@ onde trocar o renderizador por Canvas/WebGL (sem mudar a arquitetura) é a prime
 - Creeps não colidem: "gêmeos" andam colados na mesma célula.
 - Os nomes dos creeps são gerados no cliente a partir do id (a ordem de nascimento), o mesmo em todos os clientes e
   no replay, qualquer que seja a visão. Como os ids também contam depósitos e obras, os últimos ~30 creeps de um
-  mundo de 3 dias ganham sufixo ("Taro II"). Nome no estado é pergunta aberta no GDD 02, para quando creeps
-  morrerem (M2).
+  mundo de 3 dias ganham sufixo ("Taro II"). Na fatia A do M2, o nome passa para o estado, dado no nascimento.
 - **Num mundo só de humanos, ninguém explora sem ordem:** todo creep nasce coletor de matéria, que só explora
   quando o time não conhece depósito do recurso. É a regra (o jogador explora com o preset batedor); a observar no
   playtest com pessoas novas.
@@ -602,12 +617,19 @@ onde trocar o renderizador por Canvas/WebGL (sem mudar a arquitetura) é a prime
   ([viability.md](specs/m1.5-rede/viability.md)) antes de o fog começar.
 - **Harness primeiro.** A F5 (CLI, bots, métricas) veio antes do servidor e do cliente. A primeira passada de
   balanceamento aconteceu sem nenhuma interface gráfica, com relatórios em Markdown legíveis por humanos e por IA.
-- **Desenvolvido com o Claude Code.** Os ~250 commits do M0, do M1 e do M1.5 (dois dias de trabalho, 2026-11-13 e
-  14) são co-autorados com o Claude. O [`CLAUDE.md`](../CLAUDE.md) e as skills em `.claude/skills/` (commit, fase, ADR, GDD,
+- **Desenvolvido com o Claude Code.** Os ~270 commits do M0 ao M1.5 (dois dias de trabalho, 2026-11-13 e 14) e do
+  design do M2 (2026-11-15) são co-autorados com o Claude. O [`CLAUDE.md`](../CLAUDE.md) e as skills em `.claude/skills/` (commit, fase, ADR, GDD,
   fatia) codificam o fluxo; o dono decide o design e aprova cada portão. É um dos motivos de "tudo é texto" pesar
   tanto na seção 8.
 
 ## 11. FAQ rápido
+
+**É um MOBA?**
+Não. Do MOBA vêm os creeps, a ideia de dominar um deles e a luta curta em tempo real, mas a batalha é o tempero: o
+prato é o mundo persistente, a logística e os encontros no caminho. Um jogador que nunca entra numa luta ainda decide
+a partida pela economia, pelas rotas e pelas regras que deixa para os creeps (pilar 1). A regra de combate nem está
+decidida: o laboratório de batalha do M2 vai experimentar variantes (em grade, como os jogos de ação do BYOND, ou
+livre) até achar a mais divertida.
 
 **Por que não usar float e pronto?**
 Porque o replay no navegador tem de dar o mesmo hash do servidor. `Math.sin` e companhia podem diferir entre V8 e
@@ -660,5 +682,6 @@ npm run soak                            # teste de resistência (~12 min)
 | Entender as decisões técnicas | [`adr/`](adr/README.md) |
 | Ver como o M1 foi especificado e construído | [`specs/m1-ciclo-da-riqueza/`](specs/m1-ciclo-da-riqueza/spec.md) (spec, plan, tasks, balance) |
 | Ver o M1.5 | [`specs/m1.5-rede/`](specs/m1.5-rede/spec.md) (com o [relatório de viabilidade](specs/m1.5-rede/viability.md)) · [`specs/m1.5-fog/`](specs/m1.5-fog/spec.md) |
+| Ver o M2 | [brainstorm do M2–M3](brainstorm/2026-11-15-m2-m3.md) · [`specs/m2-encontro/`](specs/m2-encontro/spec.md) (fatia A) |
 | Jogar um playtest | [`PLAYTEST.md`](PLAYTEST.md) |
 | O que vem depois | [`ROADMAP.md`](ROADMAP.md) |
