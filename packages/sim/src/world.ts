@@ -20,7 +20,7 @@ import { createMemory, updateVision, type TeamMemory } from "./vision.ts";
  * 3: fog of war, vision and team memory (M1.5 fog). 4: the explore target
  * ties go to the most cells never seen in sight (fog F5 checkpoint). 5: gather
  * picks the deposit by travel time and waits at a dry one only when quicker
- * (fog F6, E1).
+ * (fog F6, E1), and each resource has its own gather pace (E2).
  */
 export const SIM_VERSION = 5;
 
