@@ -154,11 +154,14 @@ Os números são provisórios (candidato B da [passada de balanceamento 1](specs
 
 ### Pendente
 
-- **Deploy** (abre o M2): Dockerfile, `compose.yml` (app + Caddy + Litestream), workflow de deploy manual. Desenhado no
-  [plan §11](specs/m1-ciclo-da-riqueza/plan.md), ainda não escrito (não existe `infra/`).
-- **Playtest de diversão** com pessoas que nunca viram o jogo (o roteiro está em [`PLAYTEST.md`](PLAYTEST.md)). Ele
-  também repete, com olhos novos, a pergunta do M1.5, que até aqui só o dono respondeu.
-- **Spec do M2** pela skill `spec-slice`, depois de uma rodada com o dono sobre as perguntas abertas de batalha.
+- **Spec do M2** pela skill `spec-slice`, depois da rodada de design em andamento: o
+  [brainstorm de 2026-11-15](brainstorm/2026-11-15-m2-m3.md) (encontros, jungle hostil, tribos e quests,
+  progressão, combate configurável) e as perguntas abertas de batalha.
+- **Deploy**: Dockerfile, `compose.yml` (app + Caddy + Litestream), workflow de deploy manual. Desenhado no
+  [plan §11](specs/m1-ciclo-da-riqueza/plan.md), ainda não escrito (não existe `infra/`). Não bloqueia mais o M2 nem
+  o M3 (dono, 2026-11-15): espera o combate dizer quanta latência é aceitável.
+- **Playtest de diversão** com pessoas que nunca viram o jogo (o roteiro está em [`PLAYTEST.md`](PLAYTEST.md)). Volta
+  quando o dono, que hoje julga a diversão nos playtests locais, achar o jogo divertido o suficiente.
 
 O repo foi publicado em 2026-11-14, e o CI passa no GitHub.
 

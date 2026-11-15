@@ -33,4 +33,11 @@ Hipótese: nas sessões do dono, o fog e a exploração cumprem o papel sem torn
 volta no playtest de diversão do M2, com pessoas que nunca viram o jogo. Ficaram para o M2: o esgotamento e o papel
 do cristal ([GDD 03](gdd/03-economia-e-logistica.md)) e o tamanho do snapshot com a memória do fog (deploy).
 
+**Diversão antes do deploy** (dono, 2026-11-15): o deploy e o playtest com pessoas que nunca viram o jogo **deixam
+de bloquear o M2 e o M3**. O indicador de sucesso de diversão passa a ser a aprovação do dono nos playtests locais;
+o teste com olhos novos volta quando o dono achar o jogo divertido o suficiente. O deploy espera o combate, que é
+quem vai dizer quanta latência é aceitável. Na sessão solo do dono, o jogo ainda não tem fator diversão. O que
+pode entrar no M2 e nos marcos seguintes (encontros, jungle hostil, tribos e quests, progressão, combate) está no
+[brainstorm de 2026-11-15](brainstorm/2026-11-15-m2-m3.md), ainda sem decisões de escopo.
+
 O mapa completo de 3 lanes + 2 jungles entra conforme os marcos pedirem, não antes.
