@@ -1,8 +1,8 @@
 import { readFileSync } from "node:fs";
-import { botsFor, parseParams } from "@geometrix/sim";
+import { botsFor, parseParams, type SimEvent } from "@geometrix/sim";
 import { runBots } from "../src/harness.ts";
 import { describe, expect, test } from "vitest";
-import { stateHash } from "../src/hash.ts";
+import { EventHash, stateHash } from "../src/hash.ts";
 import { run, type Output } from "../src/main.ts";
 import { verify } from "../src/verify.ts";
 
@@ -10,6 +10,15 @@ const params = parseParams(
   JSON.parse(
     readFileSync(
       new URL("../../../params/default.json", import.meta.url),
+      "utf8",
+    ),
+  ),
+);
+
+const testParams = parseParams(
+  JSON.parse(
+    readFileSync(
+      new URL("../../../packages/sim/test/params.json", import.meta.url),
       "utf8",
     ),
   ),
@@ -24,6 +33,15 @@ function capture(): Output & { lines: string[]; errors: string[] } {
     log: (l) => lines.push(l),
     error: (l) => errors.push(l),
   };
+}
+
+/** A bot run's events, in order. */
+function withEvents(seed: number, ticks: number) {
+  const events: SimEvent[] = [];
+  runBots(seed, testParams, ticks, botsFor(["balanced", "balanced"]), (_, e) =>
+    events.push(...e),
+  );
+  return { events };
 }
 
 describe("verify", () => {
@@ -44,6 +62,38 @@ describe("verify", () => {
       `replay of the log (${log.length} commands)`,
     ]);
     for (const r of result.runs) expect(r.hash).toBe(stateHash(state));
+    const [first] = result.runs;
+    for (const r of result.runs) expect(r.eventsHash).toBe(first!.eventsHash);
+  });
+
+  test("all four runs emit the same events", () => {
+    // The sim tests' params: creeps are cheap, so there are births and
+    // encounters to hash.
+    const result = verify(42, 2 * 3600, testParams);
+    expect(result.ok).toBe(true);
+    const [first] = result.runs;
+    expect(first!.events).toBeGreaterThan(10);
+    for (const r of result.runs) {
+      expect(r.eventsHash).toBe(first!.eventsHash);
+      expect(r.events).toBe(first!.events);
+    }
+  });
+
+  test("the events hash takes every event in order, however the run is split", () => {
+    const { events } = withEvents(42, 2 * 3600);
+    expect(events.length).toBeGreaterThan(2);
+    const whole = new EventHash();
+    whole.add(events);
+    const split = new EventHash();
+    split.add(events.slice(0, 2));
+    split.add(events.slice(2));
+    expect(split.digest()).toBe(whole.digest());
+    const swapped = new EventHash();
+    swapped.add([events[1]!, events[0]!, ...events.slice(2)]);
+    expect(swapped.digest()).not.toBe(whole.digest());
+    const fewer = new EventHash();
+    fewer.add(events.slice(1));
+    expect(fewer.digest()).not.toBe(whole.digest());
   });
 
   test("the bots change the world, so the replay run is not vacuous", () => {

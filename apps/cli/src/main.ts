@@ -45,6 +45,7 @@ commands:
            geo report <run dir>
   verify   determinism check with bots: two runs, a snapshot -> restore run
            and a replay of the command log must reach the same state hash
+           and emit the same events
            --seed <n>      world seed (default 42)
            --ticks <n>     ticks to simulate (default 50000)
            --params <file> params JSON (default params/default.json)
@@ -255,7 +256,10 @@ function runVerify(args: string[], out: Output): number {
 
   const result = verify(seed, ticks, params, strategists);
   out.log(`geo verify --seed ${seed} --ticks ${ticks}`);
-  for (const run of result.runs) out.log(`  ${run.hash}  ${run.name}`);
+  for (const run of result.runs) {
+    out.log(`  ${run.hash}  ${run.name}`);
+    out.log(`  ${run.eventsHash}    events: ${run.events}`);
+  }
   out.log(result.ok ? "OK: deterministic" : "FAIL: hashes differ");
   return result.ok ? 0 : 1;
 }
