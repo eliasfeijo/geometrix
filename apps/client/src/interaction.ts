@@ -27,6 +27,7 @@ export function select(
     markersNow(store, now),
     state.deposits,
     store.cores.value,
+    store.view.value?.scale ?? 1,
   );
   if (pick?.kind === "stack") {
     store.stack.value = { ids: pick.ids, at: px };
