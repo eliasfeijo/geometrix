@@ -108,7 +108,12 @@ Um item por problema: o que a pessoa não entendeu ou não conseguiu, a tarefa o
   | Sem divergência (soak) | ✅ abaixo | F5 |
   | Linha de visão; nada vaza | ✅ testes do `sim` | F1 |
 
-  **Soak** (`npm run soak`, `runs/soak-20261114-230613-s42/summary.md`; antes do fog,
+  **Soak com o `SIM_VERSION` 4** (depois do alvo por ganho, `runs/soak-20261115-000828-s42/summary.md`): OK; 0
+  hashes divergentes em 14 372, as 4 visões finais iguais às do servidor, replay com o hash do servidor; banda
+  10,9–11,2 KB/s (pico 40,9); laço com mediana 100% e o tick mais lento a 10% (um instante, como antes do fog);
+  memória máxima 220 MB; SQLite 115,8 MB.
+
+  **Soak com o `SIM_VERSION` 3** (`npm run soak`, `runs/soak-20261114-230613-s42/summary.md`; antes do fog,
   `runs/soak-20261114-172301-s42/`): resultado OK, 12,3 min reais; 6 interrupções (5 `kill -9` e 1 SIGTERM), cada
   uma de volta em 1,5–2,3 s; replay reconstruído no Node com o hash do servidor; 4 clientes, **0 hashes
   divergentes** em 14 364 conferidos, as 4 visões finais iguais às do servidor, 0 resyncs. Banda a ×360: 10,6–10,8
@@ -116,6 +121,22 @@ Um item por problema: o que a pessoa não entendeu ou não conseguiu, a tarefa o
   95% (antes 10%). Memória: máximo 212 MB (antes 202). **SQLite no fim: 115 MB (antes 55 MB):** a memória dos
   times (bitmaps de 4 096 células por time: `explored`, `visible`, `terrain`, `road`) é 71% de cada snapshot (66 de
   93 KB na 1ª hora do seed 42), e há um snapshot a cada 300 ticks.
+
+  **Alvo de explorar desempatado pelo ganho** (dono, 2026-11-14, depois do vídeo do batedor varrendo a borda do
+  escuro uma linha por vez; [plan §10](../specs/m1.5-fog/plan.md), GDD 07, spec D4; `SIM_VERSION` 4). Medido de novo
+  (relatórios em `runs/m1.5-fog-f5-explore/`, comparados com `runs/m1.5-fog-f2-checkpoint/`):
+  - **batedor sozinho** (seeds 42, 7, 649, células conhecidas pelo time em 60 min): círculo 840–1 217 → 2 193–2 659;
+    quadrado 316–351 → 773–918; os mesmos ~600 passos em 2 h;
+  - **sweep de 6 h, seeds 1–20:** 1ª matéria do time mais lento em 2–6 min (✅, antes 2–7); 1ª entrega de cristal do
+    time mais lento em 44 min na média (20–69; antes 90, 17–219); cristal entregue 733 (antes 563); upgrade em 1,8 h
+    (antes 2,5); mapa explorado 38% (antes 34%); diferença entre os times 0;
+  - **3 dias, seed 42** (hash `8df206ba…`): matéria 146 535 / 156 495 (antes 151 065 / 140 175; sem fog 174 540),
+    cristal 1 200 por time nos dois, teto de 30 creeps em 42,6 / 42,0 h (antes 43,2 / 43,3), Núcleo inimigo visto
+    em 8,9 h (antes 13,6); neste seed a 1ª entrega de cristal saiu mais tarde (39 min, antes 19) e o upgrade também
+    (1,4 h, antes 0,9);
+  - **custo do tick:** `geo sim` de 3 dias em 9,3–10,0 s (antes 8,4–9,6; sem fog 4,0–4,3): ~2,3×, já aceito;
+  - `geo verify` OK; 2 161 testes. A propriedade do diff baixou o piso de creeps inimigos à vista em 6 h de 100 para
+    20 (no seed 42 os times se cruzam menos: 68).
 
   **Perguntas ao dono:**
   1. **Sessão de legibilidade:** rodar a seção "Névoa (M1.5)" do [PLAYTEST.md](../PLAYTEST.md) (de preferência
