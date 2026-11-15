@@ -31,6 +31,17 @@
   texto, no estilo do BYOND, e aceita macros de cliente. Detalhes no [08](08-cronica-chat-e-console.md). Os scripts
   no servidor continuam para depois (M4).
 
+- **Posturas de encontro** (dono, 2026-11-15; [spec M2 do encontro](../specs/m2-encontro/spec.md) D13, D14): como quase todo encontro acontece sem
+  humano olhando, a reação vem do piloto automático.
+  - Condição **inimigo à vista** (raio, DNA, carga mínima); ações **abordar** (atacar ou extorquir o inimigo à vista
+    mais próximo que passa no filtro) e **catar despojo**.
+  - **Regras de reação**, avaliadas só no encontro e na luta: condições "exigência até X‰ da carga" e "HP abaixo
+    de X‰"; ações pagar, lutar e fugir.
+  - **Sem regra de reação que valha:** paga a extorsão, tenta fugir do ataque e, no meio da luta, continua
+    lutando. Os presets de coletor seguem esses padrões.
+  - **Preset salteador:** extorquir um inimigo carregado à vista → catar despojo à vista → entregar se cheio →
+    explorar; luta quando é atacado e foge com o HP baixo.
+
 ## Proposta
 - Humanos, macros, piloto automático e bots emitem os **mesmos comandos** ([ADR-0002](../adr/0002-tudo-e-comando.md)).
   Um script nunca tem mais poder do que um humano.
@@ -39,10 +50,6 @@
 - **Fase 2, script:** JS rodando em sandbox no servidor (QuickJS/WASM ou isolated-vm), com limite de CPU e
   memória. Referências: Screeps, Gladiabots.
 - A mesma interface serve aos **bots de teste**: partidas inteiras rodando sem interface, para balanceamento.
-- **Posturas de encontro** (agente, brainstorm de 2026-11-15, não aprovado;
-  [brainstorm M2–M3](../brainstorm/2026-11-15-m2-m3.md) §2): como quase todo encontro acontece sem humano, a
-  resposta vem do piloto automático. Condição nova "inimigo à vista" (filtrável por DNA e carga), ação nova
-  "abordar", e regras de reação (ex.: "pago até 20% da carga; acima disso, luto; se eu for mais rápido, fujo").
 
 ## Perguntas abertas
 - Onde fica o piloto automático: por creep, por grupo de creeps, ou por jogador?

@@ -14,14 +14,16 @@
   - **Macros de cliente** no M2: sequências de verbos num atalho, com **rate limit**. Os scripts personalizados no
     servidor ficam para o M4 ([07](07-piloto-automatico.md)).
   - **Sem LLM** para gerar o texto em tempo de execução.
+- **Spec do M2, fatia A, o encontro** (dono, 2026-11-15; [spec M2 do encontro](../specs/m2-encontro/spec.md) D16, D17):
+  - **O texto não mora no `sim`:** o `sim` emite eventos estruturados (quem, o quê, quanto) e o cliente os narra
+    por modelos de frase em PT-BR, com a variante escolhida pelo próprio evento. Todos leem a mesma frase e o texto
+    muda sem trocar o `SIM_VERSION`. Os bots leem o evento, não o texto.
+  - **Voz pelo DNA no M2** (pelo temperamento, no M2.5).
+  - Entram na crônica da fatia A: os encontros (com a declaração do agressor), as fugas, as lutas, as mortes, os
+    saques e os nascimentos. Um time vê o evento em que um creep dele participa ou que acontece na visão dele.
+  - **O agente escreve o banco inicial de frases e o dono revisa o tom.**
 
 ## Proposta
-- **O texto não mora no `sim`** (agente): o `sim` emite eventos estruturados (quem, o quê, quanto, uma semente) e o
-  cliente os narra por modelos e uma gramática simples, escolhida pela semente. Todos leem a mesma frase, o texto muda
-  sem trocar o `SIM_VERSION`, pode ser traduzido e o dono escreve sem mexer na simulação. Os bots leem o evento, não
-  o texto. Hoje o `sim` não emite eventos: é um contrato novo, provável ADR na spec do M2.
-- **Voz pelo DNA no M2, pelo temperamento no M2.5** (agente): sem temperamentos no M2
-  ([02](02-creeps-e-dominio.md)), a frase de cada creep vem do DNA e da ação.
 - **Um verbo, um comando** (agente): cada verbo do console vira um comando do mesmo vocabulário versionado, com as
   mesmas validações e recusas de quem clica. Nenhum verbo tem mais poder do que a interface.
 - **LLM na autoria** (agente): gerar e revisar o banco de modelos offline, fora do jogo.

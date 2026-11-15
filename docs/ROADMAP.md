@@ -48,4 +48,14 @@ grande mesmo assim: cada frente tende a virar uma fatia com spec, plan e checkpo
 tribos ficam no M4, com uma tribo-protótipo antes só se os encontros do M2 provarem diversão. Decisões nos GDD 01,
 02, 03, 05, 06, 07 e 08.
 
+**Fatias do M2** (dono, 2026-11-15), nesta ordem, cada uma com spec, plan e checkpoint próprios em `docs/specs/`:
+
+| Fatia | Escopo |
+|---|---|
+| **A — O encontro** ([spec](specs/m2-encontro/spec.md)) | Nome no estado, HP de creep, morte; abordar, atacar, extorquir; pagar, recusar, fugir; despojo, saque, salvo-conduto; a luta por um sorteio descartável; posturas do piloto; eventos do `sim` e a crônica |
+| **B — O laboratório de batalha** | O pacote de batalha determinístico, a 1ª regra de combate (grade), a IA de gambits, os stats base por DNA e a latência simulada, numa página local sem mundo. Independente da A |
+| **C — Chat, console e macros** | Chat livre, a linha de comando no chat e as macros de cliente, sobre o painel da crônica da A |
+| **D — A junção** | O encontro abre a instância de batalha no lugar do sorteio; dois ou mais lados e entrada no meio da luta; auto-resolve; os **errantes**, a primeira facção neutra (o "frágil e fraco" só faz sentido com stats de combate) |
+| **E — Cerco e reparo** | HP do Núcleo, das estradas prontas e das obras; como uma construção é atacada; o reparo pago; a vitória pelo Núcleo. Pede uma rodada de design própria (o cerco leva horas? avisa o atacado?) |
+
 O mapa completo de 3 lanes + 2 jungles entra conforme os marcos pedirem, não antes.

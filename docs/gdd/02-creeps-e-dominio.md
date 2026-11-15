@@ -30,18 +30,26 @@
     rápido perto do Núcleo. Ferido, vira alvo: a punição vale entre as lutas.
   - **Recuar é possível, com custo:** a fuga do encontro é largar a bolsa e correr ([06](06-batalhas.md)).
   - **Temperamentos** (traço de personalidade ao nascer) ficam para o M2.5.
+- **Spec do M2, fatia A, o encontro** (dono, 2026-11-15; [spec M2 do encontro](../specs/m2-encontro/spec.md)):
+  - **Nome no estado** (D1): o creep ganha o nome ao nascer, no `sim`, da lista de palavras que o cliente usava,
+    pela mesma regra (ordem de nascimento, nascimentos seguidos com nomes distantes, sufixo quando a lista acaba).
+    **Sem renomear no M2**: o comando entra quando o creep tiver identidade de jogo (M2.5).
+  - **Stats base na fatia A** (D2): cada DNA ganha só o HP máximo e um peso de luta para o sorteio descartável
+    (igual para os três de início). Dano, alcance e velocidade de batalha nascem no laboratório de batalha (fatia
+    B). Chutes provisórios de HP: quadrado 300, triângulo 200, círculo 120.
+  - **Regeneração do HP** (D3): em ‰ do HP máximo por minuto de mundo, igual para os três DNAs, devagar no mapa e
+    mais rápido a até um raio do próprio Núcleo; não regenera durante um encontro ou uma luta. Chutes provisórios:
+    de 0 a cheio em 100 min no mapa e em 10 min perto do Núcleo (raio 8).
+  - **Morte de um creep dominado** (D4): o domínio termina, como um `release`, sem cooldown.
 
 ## Proposta
 - Dominar só troca **quem emite os comandos** do creep. Ver [ADR-0002](../adr/0002-tudo-e-comando.md).
 - **A população precisa de um limitador.** Num mundo de dias, sem limite, o número de creeps cresce sem parar e
   pesa na performance e no balanceamento. Candidatos: manutenção (consumo contínuo de recurso), teto por moradia, ou
   envelhecimento.
-- **Nome do creep no estado do mundo** (levantada no F7, 2026-11-14): cada creep ganha um nome curto ao nascer,
-  guardado no estado (igual para todos, persistido e no replay), e um comando para renomear. Ganha sentido quando
-  o creep tiver identidade de jogo (o herói dominado, level/XP e progressão no M3). Precisa chegar no M2, no
-  mais tardar: no M1 o cliente gera o nome pela ordem de nascimento, que só é estável porque nenhum creep morre;
-  com morte (M2), a ordem muda e os nomes trocariam. Renomear é um comando novo no vocabulário versionado
-  ([ADR-0002](../adr/0002-tudo-e-comando.md)).
+- **Renomear o creep** (levantada no F7, 2026-11-14): um comando novo no vocabulário versionado
+  ([ADR-0002](../adr/0002-tudo-e-comando.md)), quando o creep tiver identidade de jogo (M2.5). O nome no estado já
+  está decidido (acima).
 
 - **Brainstorm de 2026-11-15** (não aprovado; [brainstorm M2–M3](../brainstorm/2026-11-15-m2-m3.md) §2 e §5),
   para o M2.5:
@@ -49,8 +57,7 @@
     piloto automático. Precisa de teto, ou de ficar fora da economia, para não quebrar a equivalência econômica dos
     DNAs;
   - **temperamento ao nascer** (agente): um traço sorteado (ex.: ganancioso, bravo, cauteloso) que dá a postura
-    padrão nos encontros e a voz do creep na crônica;
-  - o nome no estado passa a ser necessário para a crônica dos encontros (M2).
+    padrão nos encontros e a voz do creep na crônica.
 
 ## Ideias em incubação (não entram antes do M3)
 - **Reprodução e gerações:** creeps M/F, idade, morte natural, herança de DNA. Seria um limitador de população
@@ -59,7 +66,6 @@
 
 ## Perguntas abertas
 - Dominar tem custo, cooldown ou restrição de distância?
-- O que acontece com o domínio quando o creep dominado morre?
 - As skills e a ultimate valem para todo creep, ou só a partir de certo level?
 - Um creep pode mudar de forma ao evoluir, ou o DNA é fixo para sempre?
 - É possível dominar creeps de tribos aliadas?

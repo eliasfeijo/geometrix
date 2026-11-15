@@ -1,6 +1,6 @@
 # Status atual
 
-**Atualizado:** 2026-11-15 · **Marco:** M1.5 — A névoa ✅ concluído · **Próximo:** M2 — A emboscada (🟡 brainstorm de design, [2026-11-15](../brainstorm/2026-11-15-m2-m3.md)) · **Fatia de rede:** ✅ concluída (viabilidade aprovada) · **Design do fog:** ✅ decidido (GDD 01, 02, 07) · **Spec e plan do fog:** ✅ aprovados · **Fog F1:** ✅ · **Fog F2:** ✅ · **Fog F3:** ✅ · **Fog F4:** ✅ · **Fog F5:** ✅ · **Fog F6:** ✅
+**Atualizado:** 2026-11-15 · **Marco:** M1.5 — A névoa ✅ concluído · **Próximo:** M2 — A emboscada (🟡 fatia A, o encontro: spec, ADR-0007 e plan ✅; F1 a seguir, [plan](../specs/m2-encontro/plan.md)) · **Fatia de rede:** ✅ concluída (viabilidade aprovada) · **Design do fog:** ✅ decidido (GDD 01, 02, 07) · **Spec e plan do fog:** ✅ aprovados · **Fog F1:** ✅ · **Fog F2:** ✅ · **Fog F3:** ✅ · **Fog F4:** ✅ · **Fog F5:** ✅ · **Fog F6:** ✅
 
 Resumo de bolso. A fonte de verdade continua nos docs linkados. Atualize este arquivo ao fechar uma fase, ao passar
 por um portão de aprovação ou quando surgir um bloqueio.
@@ -42,7 +42,10 @@ por um portão de aprovação ou quando surgir um bloqueio.
 | M1.5 fog — F4 Cliente | ✅ Concluída, merge em `main`. Névoa com os três estados (negro, véu, visível), lembrados sob o véu; creep inimigo que sai da visão; sem custo de estrada sobre célula nunca vista; ação explorar, condição "não conhece depósito de" e preset Batedor no editor; replay sem névoa. Nomes de creep pelo id | [tasks.md](../specs/m1.5-fog/tasks.md) · `apps/client/src/map/{fog,fog-layer}.ts*` |
 | M1.5 fog — F6 Ajustes do playtest | ✅ Concluída, merge em `main`. Coletor pelo tempo de viagem e que só espera a matéria se compensar, ritmo de coleta por recurso (cristal 1 a cada 5 s), clique por área com lista, cursor com a ação; `SIM_VERSION` 5. **Checkpoint** (dono, 2026-11-14): coletores mais produtivos, seleção bem melhor; recomendações aceitas; **fecha o M1.5** | [tasks.md](../specs/m1.5-fog/tasks.md) · `runs/m1.5-fog-f6/` |
 | M1.5 fog — F5 Soak e legibilidade | ✅ Concluída, merge em `main`. Soak com o fog (`SIM_VERSION` 3 e 4) sem divergência; perguntas de névoa no PLAYTEST; alvo de explorar desempatado pelo ganho (decisão do dono depois de um vídeo do batedor). Sessão 2 do dono: o fog e a exploração cumprem o papel; os achados viram a F6 | [tasks.md](../specs/m1.5-fog/tasks.md) · `runs/m1.5-fog-f5-explore/` |
-| M2, M2.5, M3, M4 | ⬜ Não iniciados | [ROADMAP](../ROADMAP.md) |
+| M2 — fatias | ✅ Decididas pelo dono (2026-11-15): A o encontro → B o laboratório de batalha → C chat, console e macros → D a junção (com os errantes) → E cerco e reparo | [ROADMAP](../ROADMAP.md) |
+| M2 A (encontro) — spec | ✅ Aprovada (2026-11-15), com D1–D21 decididas na rodada interativa; as de gameplay no GDD 01, 02, 03, 06, 07, 08; a ideia do dono de acampamento e torres em incubação no GDD 01. ADR-0007 (eventos do `sim`) ✅ `Accepted` (2026-11-15) |
+| M2 A (encontro) — plan | ✅ Aprovado (2026-11-15), com P1–P11 pela proposta; fases F1–F6 no tasks.md. F0 ✅ | [plan.md](../specs/m2-encontro/plan.md) · [tasks.md](../specs/m2-encontro/tasks.md) | [spec.md](../specs/m2-encontro/spec.md) |
+| M2.5, M3, M4 | ⬜ Não iniciados | [ROADMAP](../ROADMAP.md) |
 
 ## Próximos passos imediatos
 
@@ -54,12 +57,13 @@ F0–F6). O repo está no GitHub e o CI passa lá.
 1. **M2 (A emboscada)** ([ROADMAP](../ROADMAP.md)): **rodada de design e brainstorm** antes da spec. O dono
    decidiu (2026-11-15) que o deploy e o playtest com pessoas novas não bloqueiam mais o M2 nem o M3. O esboço está
    no [brainstorm de 2026-11-15](../brainstorm/2026-11-15-m2-m3.md), e o dono respondeu às perguntas na mesma
-   data (resumo na §0; decisões no GDD). O M2 toca em paralelo o encontro no mundo (com a luta resolvida por um
-   sorteio descartável) e um laboratório de batalha local, com latência simulada, e junta os dois depois. Próximo
-   passo: dividir o M2 em fatias e abrir a spec da primeira (skill `spec-slice`). A spec decide os detalhes que
-   ficaram abertos no GDD 06 e 08 (raio e janela do encontro, duração da batalha, tempo do mundo durante a luta,
-   reparo, canais e sintaxe do chat, macros) e as propostas que o dono ainda não aprovou (resumo no fim da §0 do
-   brainstorm). Anotado para o M2 pelo M1.5:
+   data (resumo na §0; decisões no GDD). **Fatias decididas (dono, 2026-11-15; [ROADMAP](../ROADMAP.md)):** A o
+   encontro → B o laboratório de batalha → C chat, console e macros → D a junção (com os errantes) → E cerco e
+   reparo. **A [spec da fatia A](../specs/m2-encontro/spec.md) está aprovada (2026-11-15).** O ADR-0007 (eventos
+   do `sim`) foi aceito na mesma data. O [plan](../specs/m2-encontro/plan.md) foi aprovado (P1–P11).
+   **Próximo passo: a F1, identidade, HP e eventos no `sim`** (skill `implement-phase`). As perguntas abertas do GDD 06 e 08 que a fatia A não
+   cobre (duração da batalha, tempo do mundo durante a luta, canais e sintaxe do chat, macros, reparo) ficam para
+   as fatias B–E. Anotado para o M2 pelo M1.5:
    - **deploy** (quando acontecer): quem cria o mundo escolhe a seed no lobby (N9) e criar mundo deixa de ser
      público; o snapshot com a memória do fog (117 MB de SQLite num mundo de 3 dias) passa a ser guardado
      compactado, com o `SIM_VERSION` seguinte; os snapshots antigos são podados;

@@ -11,3 +11,4 @@ vira `Superseded by NNNN`.
 | [0004](0004-persistencia-sqlite-log-de-comandos.md) | Persistência do mundo: SQLite + snapshots + log de comandos + Litestream | Accepted | 2026-11-13 |
 | [0005](0005-deploy-mvp-vps-websocket.md) | Deploy do MVP: VPS única + Docker Compose + Caddy; transporte por WebSocket | Accepted | 2026-11-13 |
 | [0006](0006-sync-do-mundo.md) | Sincronização do mundo: deltas por campo da visão de cada time | Accepted | 2026-11-14 |
+| [0007](0007-eventos-do-sim.md) | Eventos do `sim`: saída derivada do `step`, fora do estado | Accepted | 2026-11-15 |
