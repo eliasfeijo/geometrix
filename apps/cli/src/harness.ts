@@ -12,6 +12,7 @@ import {
   type Command,
   type CommandInput,
   type Params,
+  type SimEvent,
   type WorldState,
 } from "@geometrix/sim";
 
@@ -23,19 +24,22 @@ export type LoggedCommand = {
   command: Command;
 };
 
-/** Steps one tick with the bots' accepted commands, appending them to `log`. */
+/**
+ * Steps one tick with the bots' accepted commands, appending them to `log`.
+ * Returns the tick's events (ADR-0007).
+ */
 export function stepWithBots(
   state: WorldState,
   bots: readonly Bot[],
   log: LoggedCommand[],
-): void {
+): SimEvent[] {
   const accepted = botCommands(state, bots).filter(
     ({ playerId, command }) => validate(state, command, playerId) === null,
   );
   accepted.forEach(({ playerId, command }, seq) => {
     log.push({ tick: state.tick, seq, playerId, command });
   });
-  step(state, accepted);
+  return step(state, accepted);
 }
 
 /** Groups a log by tick for replay: commands of `tick` in seq order. */
@@ -56,21 +60,21 @@ export type BotRun = { state: WorldState; log: LoggedCommand[] };
 
 /**
  * Creates a world and runs `ticks` ticks with the bots. `onTick` sees the new
- * world (tick 0) and the state after each tick, for metric samples.
+ * world (tick 0, no events) and the state after each tick with the tick's
+ * events, for metric samples.
  */
 export function runBots(
   seed: number,
   params: Params,
   ticks: number,
   bots: readonly Bot[],
-  onTick: (state: WorldState) => void = () => {},
+  onTick: (state: WorldState, events: readonly SimEvent[]) => void = () => {},
 ): BotRun {
   const state = createWorld(seed, params);
   const log: LoggedCommand[] = [];
-  onTick(state);
+  onTick(state, []);
   for (let i = 0; i < ticks; i++) {
-    stepWithBots(state, bots, log);
-    onTick(state);
+    onTick(state, stepWithBots(state, bots, log));
   }
   return { state, log };
 }
