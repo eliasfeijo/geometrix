@@ -43,7 +43,7 @@ por um portão de aprovação ou quando surgir um bloqueio.
 | M1.5 fog — F6 Ajustes do playtest | ✅ Concluída, merge em `main`. Coletor pelo tempo de viagem e que só espera a matéria se compensar, ritmo de coleta por recurso (cristal 1 a cada 5 s), clique por área com lista, cursor com a ação; `SIM_VERSION` 5. **Checkpoint** (dono, 2026-11-14): coletores mais produtivos, seleção bem melhor; recomendações aceitas; **fecha o M1.5** | [tasks.md](../specs/m1.5-fog/tasks.md) · `runs/m1.5-fog-f6/` |
 | M1.5 fog — F5 Soak e legibilidade | ✅ Concluída, merge em `main`. Soak com o fog (`SIM_VERSION` 3 e 4) sem divergência; perguntas de névoa no PLAYTEST; alvo de explorar desempatado pelo ganho (decisão do dono depois de um vídeo do batedor). Sessão 2 do dono: o fog e a exploração cumprem o papel; os achados viram a F6 | [tasks.md](../specs/m1.5-fog/tasks.md) · `runs/m1.5-fog-f5-explore/` |
 | M2 — fatias | ✅ Decididas pelo dono (2026-11-15): A o encontro → B o laboratório de batalha → C chat, console e macros → D a junção (com os errantes) → E cerco e reparo | [ROADMAP](../ROADMAP.md) |
-| M2 A (encontro) — spec | ✅ Aprovada (2026-11-15), com D1–D21 decididas na rodada interativa; as de gameplay no GDD 01, 02, 03, 06, 07, 08; a ideia do dono de acampamento e torres em incubação no GDD 01. Próximo: o ADR-0007 (eventos do `sim`), depois o plan | [spec.md](../specs/m2-encontro/spec.md) |
+| M2 A (encontro) — spec | ✅ Aprovada (2026-11-15), com D1–D21 decididas na rodada interativa; as de gameplay no GDD 01, 02, 03, 06, 07, 08; a ideia do dono de acampamento e torres em incubação no GDD 01. ADR-0007 (eventos do `sim`) ✅ `Accepted` (2026-11-15). Próximo: o plan | [spec.md](../specs/m2-encontro/spec.md) |
 | M2.5, M3, M4 | ⬜ Não iniciados | [ROADMAP](../ROADMAP.md) |
 
 ## Próximos passos imediatos
@@ -58,8 +58,8 @@ F0–F6). O repo está no GitHub e o CI passa lá.
    no [brainstorm de 2026-11-15](../brainstorm/2026-11-15-m2-m3.md), e o dono respondeu às perguntas na mesma
    data (resumo na §0; decisões no GDD). **Fatias decididas (dono, 2026-11-15; [ROADMAP](../ROADMAP.md)):** A o
    encontro → B o laboratório de batalha → C chat, console e macros → D a junção (com os errantes) → E cerco e
-   reparo. **A [spec da fatia A](../specs/m2-encontro/spec.md) está aprovada (2026-11-15).** Próximo passo: o
-   dono aceita o ADR-0007 (eventos do `sim`); depois, o `plan.md` e o `tasks.md`. As perguntas abertas do GDD 06 e 08 que a fatia A não
+   reparo. **A [spec da fatia A](../specs/m2-encontro/spec.md) está aprovada (2026-11-15).** O ADR-0007 (eventos
+   do `sim`) foi aceito na mesma data. Próximo passo: o `plan.md` e o `tasks.md`. As perguntas abertas do GDD 06 e 08 que a fatia A não
    cobre (duração da batalha, tempo do mundo durante a luta, canais e sintaxe do chat, macros, reparo) ficam para
    as fatias B–E. Anotado para o M2 pelo M1.5:
    - **deploy** (quando acontecer): quem cria o mundo escolhe a seed no lobby (N9) e criar mundo deixa de ser

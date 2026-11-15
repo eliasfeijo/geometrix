@@ -5,8 +5,8 @@
 (HP, morte, nome), [03](../../gdd/03-economia-e-logistica.md) (extorsão, saque, despojo),
 [06](../../gdd/06-batalhas.md) (encontro, salvo-conduto, fuga, sorteio descartável),
 [07](../../gdd/07-piloto-automatico.md) (posturas), [08](../../gdd/08-cronica-chat-e-console.md) (crônica) ·
-**Brainstorm:** [2026-11-15](../../brainstorm/2026-11-15-m2-m3.md) §2, §5 · **ADR:** 0007 (eventos do `sim`, a
-rascunhar; §9)
+**Brainstorm:** [2026-11-15](../../brainstorm/2026-11-15-m2-m3.md) §2, §5 · **ADR:** [0007](../../adr/0007-eventos-do-sim.md) (eventos do
+`sim`, `Accepted`)
 
 ## 1. Hipótese
 
@@ -256,9 +256,9 @@ população ao longo do tempo.
 ## 9. Pré-requisitos antes do `plan.md`
 
 - Aceite do dono nas decisões D1–D21 ✅ (2026-11-15); as de gameplay estão no GDD (01, 02, 03, 06, 07, 08).
-- **ADR-0007 — Eventos do `sim`** (`Proposed` → `Accepted`): o `step` emite eventos fora do estado; como o servidor
+- **ADR-0007 — Eventos do `sim`** ✅ `Accepted` (2026-11-15): o `step` emite eventos fora do estado; como o servidor
   os filtra por time, guarda a crônica e a recupera depois de um restart; o versionamento do formato dos eventos
-  com o vocabulário de comandos (ADR-0002). Rascunho com a skill `adr` depois da aprovação da spec.
+  com o vocabulário de comandos (ADR-0002).
 - O sorteio é descartável e não pede ADR. O contrato mundo ↔ batalha (ADR-0001 com entrada no meio da luta) é da
   fatia D.
 

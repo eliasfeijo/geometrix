@@ -1,6 +1,6 @@
 # ADR-0007: Eventos do `sim`: saída derivada do `step`, fora do estado
 
-**Status:** Proposed · **Data:** 2026-11-15
+**Status:** Accepted (2026-11-15) · **Data:** 2026-11-15
 **Relaciona:** ADR-0002 (tudo é comando; o vocabulário versionado), ADR-0003 (o `sim` puro e determinístico),
 ADR-0004 (o que o banco guarda; o event sourcing descartado), ADR-0006 (a visão de cada time e o delta),
 [spec M2 do encontro](../specs/m2-encontro/spec.md) (D16, D17, K-1..K-3, N-1, N-2), GDD
@@ -27,7 +27,7 @@ Até o M1.5, o `sim` não conta o que aconteceu: o `step` só muta o estado, e q
 
 ## Alternativas
 
-- **A. O `step` devolve os eventos do tick, fora do estado** (recomendada).
+- **A. O `step` devolve os eventos do tick, fora do estado** (escolhida).
   - Prós: o estado e o hash não mudam de tamanho nem de forma; o snapshot não cresce; o replay e a recuperação
     recalculam os eventos de graça, porque o `sim` é determinístico; um teste confere o evento direto, sem montar
     dois estados.
