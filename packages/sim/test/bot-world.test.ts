@@ -35,7 +35,7 @@ test("a 6 h bot world of seed 42 hashes to a stable value", () => {
   expect(
     createHash("sha256").update(serialize(state)).digest("hex"),
   ).toMatchInlineSnapshot(
-    `"e755239e17a722b70583b5cc44b207b5ac5f83426a2c5814ca14f73cd7cc8108"`,
+    `"bacd0b01eba74918ebec37eeaf2f1088c9edc9b2762dcf8d256548d00c846216"`,
   );
   // Growing to the population cap, with raiders exploring, the world takes
   // over 10 s alone and some 30 s with the whole suite running.
@@ -43,11 +43,13 @@ test("a 6 h bot world of seed 42 hashes to a stable value", () => {
 
 /**
  * The mirrored teams play the same world: the first hours, before contested
- * deposits split them by creep id (fog F2 checkpoint, accepted), each creep
- * of team 1 is the mirror of the one born in the same place of team 0.
+ * deposits split them by creep id (fog F2 checkpoint, accepted) and before
+ * the first draw of the rng in an encounter (M2 encontro plan section 4,
+ * accepted), each creep of team 1 is the mirror of the one born in the same
+ * place of team 0.
  */
 test.each([3, 42])(
-  "seed %i: the teams stay mirrored for the first 2 h",
+  "seed %i: the teams stay mirrored for the first 2 h, until the rng draws",
   (seed) => {
     const state = createWorld(seed, loadTestParams());
     const bots = botsFor(["balanced", "balanced"]);
@@ -65,8 +67,11 @@ test.each([3, 42])(
       const accepted = botCommands(state, bots).filter(
         ({ playerId, command }) => validate(state, command, playerId) === null,
       );
+      const rng = JSON.stringify(state.rng);
       step(state, accepted);
+      if (JSON.stringify(state.rng) !== rng) break;
     }
+    expect(state.tick).toBeGreaterThan(3600);
     expect(of(0).length).toBeGreaterThan(6);
   },
   30_000,

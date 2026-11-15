@@ -9,6 +9,7 @@
 // runs it for every team; a server world may give each team one bot (spec
 // section 5, F6 details). Its commands go into the log like a human's.
 
+import { isReaction, type Rule } from "./autopilot.ts";
 import { canAfford } from "./economy.ts";
 import type { Command, CommandInput } from "./commands.ts";
 import { nearestUnseen } from "./known.ts";
@@ -48,6 +49,12 @@ export const BALANCED = {
    * still reach a cell never seen (F3 checkpoint, C1).
    */
   raiderShare: { numerator: 1, denominator: 6 },
+  /**
+   * The gatherers' posture when approached, by DNA (F3 checkpoint, C2; see
+   * postureRules): below this HP share any of them flees, and the triangle
+   * pays a demand up to this share of its cargo.
+   */
+  posture: { fleeBelowPermille: 400, triangleMaxDemandPermille: 500 },
 } as const;
 
 /** One bot player per team; player ids are team + 1. */
@@ -192,21 +199,61 @@ function scarcestDna(seen: TeamView, team: Team): Dna {
 }
 
 /**
- * The rules of the presets without a target, as canonical JSON: built once,
- * since roleOf compares every creep with them every minute.
+ * The reaction rules the bot puts before a gatherer's rules (F3 checkpoint,
+ * C2): the square refuses an extortion and fights, the triangle pays a
+ * small demand and flees otherwise, the circle always flees. Below
+ * BALANCED.posture.fleeBelowPermille of its HP any of them flees. The rules
+ * cannot tell the dialogue from the fight: a triangle or a circle tries to
+ * flee in every round too. Human players' gatherers keep the defaults (D13).
+ */
+export function postureRules(dna: Dna): Rule[] {
+  const { fleeBelowPermille, triangleMaxDemandPermille } = BALANCED.posture;
+  const always = { type: "always" } as const;
+  const fleeBelow: Rule = {
+    when: { type: "hpBelow", permille: fleeBelowPermille },
+    then: { type: "flee" },
+  };
+  switch (dna) {
+    case "square":
+      return [fleeBelow, { when: always, then: { type: "fight" } }];
+    case "triangle":
+      return [
+        fleeBelow,
+        {
+          when: { type: "demandAtMost", permille: triangleMaxDemandPermille },
+          then: { type: "pay" },
+        },
+        { when: always, then: { type: "flee" } },
+      ];
+    case "circle":
+      return [{ when: always, then: { type: "flee" } }];
+  }
+}
+
+/**
+ * The rules of the presets without a target, without their reaction rules,
+ * as canonical JSON: built once, since roleOf compares every creep with them
+ * every minute.
  */
 let presetJson: { cristal: string; raider: string } | null = null;
 
-/** The role a creep's rules match; anything else counts as materia. */
+const actionsOf = (rules: readonly Rule[]) =>
+  rules.filter((rule) => !isReaction(rule.then));
+
+/**
+ * The role a creep's rules match, leaving out the reaction rules; anything
+ * else counts as materia.
+ */
 function roleOf(creep: Pick<Creep, "rules">): Role {
   presetJson ??= {
     cristal: canonicalJson(collectorRules("cristal")),
-    raider: canonicalJson(raiderRules()),
+    raider: canonicalJson(actionsOf(raiderRules())),
   };
-  const rules = canonicalJson(creep.rules);
+  const actions = actionsOf(creep.rules);
+  const rules = canonicalJson(actions);
   if (rules === presetJson.cristal) return { kind: "cristal" };
   if (rules === presetJson.raider) return { kind: "raider" };
-  const build = creep.rules[1]?.then;
+  const build = actions[1]?.then;
   if (
     build?.type === "buildRoad" &&
     rules === canonicalJson(roadBuilderRules(build))
@@ -214,6 +261,20 @@ function roleOf(creep: Pick<Creep, "rules">): Role {
     return { kind: "builder", target: { x: build.x, y: build.y } };
   }
   return { kind: "materia" };
+}
+
+/** The rules the bot gives a creep of `dna` in `role`. */
+function rulesFor(role: Role, dna: Dna): Rule[] {
+  switch (role.kind) {
+    case "raider":
+      return raiderRules();
+    case "materia":
+      return [...postureRules(dna), ...collectorRules("materia")];
+    case "cristal":
+      return [...postureRules(dna), ...collectorRules("cristal")];
+    case "builder":
+      return [...postureRules(dna), ...roadBuilderRules(role.target)];
+  }
 }
 
 /**
@@ -312,41 +373,18 @@ function assignRoles(known: Knowledge): Command[] {
   }
   fill({ kind: "raider" }, wantRaiders);
 
+  // A raider gets its preset; a gatherer, its role's preset behind its
+  // posture (setRules), also when only the posture is missing (a newborn).
   const commands: Command[] = [];
   for (const creep of creeps) {
     const role = next.get(creep)!;
-    if (canonicalJson(role) === canonicalJson(roles.get(creep))) continue;
-    switch (role.kind) {
-      case "materia":
-        commands.push({
-          type: "applyPreset",
-          creepId: creep.id,
-          preset: "materiaCollector",
-        });
-        break;
-      case "cristal":
-        commands.push({
-          type: "applyPreset",
-          creepId: creep.id,
-          preset: "cristalCollector",
-        });
-        break;
-      case "builder":
-        commands.push({
-          type: "applyPreset",
-          creepId: creep.id,
-          preset: "roadBuilder",
-          target: role.target,
-        });
-        break;
-      case "raider":
-        commands.push({
-          type: "applyPreset",
-          creepId: creep.id,
-          preset: "raider",
-        });
-        break;
-    }
+    const rules = rulesFor(role, creep.dna);
+    if (canonicalJson(creep.rules) === canonicalJson(rules)) continue;
+    commands.push(
+      role.kind === "raider"
+        ? { type: "applyPreset", creepId: creep.id, preset: "raider" }
+        : { type: "setRules", creepId: creep.id, rules },
+    );
   }
   return commands;
 }

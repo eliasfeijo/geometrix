@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import { isReaction } from "../src/autopilot.ts";
 import type { Command } from "../src/commands.ts";
 import {
   collectorRules,
@@ -8,14 +9,21 @@ import {
 import { mirrorCell, Terrain } from "../src/map.ts";
 import { canonicalJson, serialize } from "../src/serialize.ts";
 import { step } from "../src/step.ts";
-import { roadTarget, strategistCommands } from "../src/strategist.ts";
+import {
+  postureRules,
+  roadTarget,
+  strategistCommands,
+} from "../src/strategist.ts";
 import { view } from "../src/view.ts";
 import { createWorld, type WorldState } from "../src/world.ts";
 import { loadTestParams, revealWorld, textWorld } from "./helpers.ts";
 
 const params = loadTestParams();
 
-/** The seed-42 world after one bot per team joined at tick 0, all revealed. */
+/**
+ * The seed-42 world after one bot per team joined at tick 0, all revealed,
+ * its materia collectors already with the bot's posture.
+ */
 function joined(): WorldState {
   const world = createWorld(42, params);
   step(world, [
@@ -23,6 +31,9 @@ function joined(): WorldState {
     { playerId: 2, command: { type: "join", team: 1, bot: true } },
   ]);
   revealWorld(world);
+  for (const creep of world.creeps) {
+    creep.rules = [...postureRules(creep.dna), ...collectorRules("materia")];
+  }
   return world;
 }
 
@@ -55,10 +66,38 @@ const botInputs = (world: WorldState) =>
 const teamCreeps = (world: WorldState, team: number) =>
   world.creeps.filter((c) => c.team === team);
 
+/**
+ * The role each command gives a creep, as a preset id: applyPreset names it;
+ * a gatherer's setRules has its preset's rules behind the posture.
+ */
+const assignments = (commands: Command[]) =>
+  commands.flatMap((c) => {
+    if (c.type === "applyPreset") {
+      return [{ creepId: c.creepId, role: c.preset, target: c.target }];
+    }
+    if (c.type !== "setRules") return [];
+    const actions = canonicalJson(c.rules.filter((r) => !isReaction(r.then)));
+    const build = c.rules.find((r) => r.then.type === "buildRoad")?.then;
+    const role =
+      actions === canonicalJson(collectorRules("materia"))
+        ? "materiaCollector"
+        : actions === canonicalJson(collectorRules("cristal"))
+          ? "cristalCollector"
+          : build?.type === "buildRoad"
+            ? "roadBuilder"
+            : "unknown";
+    const target =
+      build?.type === "buildRoad" ? { x: build.x, y: build.y } : undefined;
+    return [{ creepId: c.creepId, role, target }];
+  });
+
 const presetsOf = (commands: Command[]) =>
-  commands.flatMap((c) =>
-    c.type === "applyPreset" ? [[c.creepId, c.preset] as const] : [],
-  );
+  assignments(commands).map((a) => [a.creepId, a.role] as const);
+
+const builderTargets = (commands: Command[]) =>
+  assignments(commands)
+    .filter((a) => a.role === "roadBuilder")
+    .map((a) => a.target);
 
 describe("balanced", () => {
   test("splits 6 creeps into 2 cristal, 1 road builder, 1 raider and 2 materia, lowest ids first", () => {
@@ -71,12 +110,9 @@ describe("balanced", () => {
       [c!.id, "roadBuilder"],
       [d!.id, "raider"],
     ]);
-    const builder = commands.find(
-      (cmd) => cmd.type === "applyPreset" && cmd.preset === "roadBuilder",
-    );
-    expect(builder).toMatchObject({
-      target: roadTarget(world, world.teams[0]!),
-    });
+    expect(builderTargets(commands)).toEqual([
+      roadTarget(world, world.teams[0]!),
+    ]);
   });
 
   test("leaves a team that already has the split alone", () => {
@@ -135,6 +171,46 @@ describe("balanced", () => {
     expect(presetsOf(decide(world, 0))).toContainEqual([
       raider.id,
       "materiaCollector",
+    ]);
+  });
+
+  test("gives the gatherers their posture by DNA, and the raider its own (F3 checkpoint, C2)", () => {
+    const world = withDark();
+    const creeps = teamCreeps(world, 0);
+    // A newborn: the materia preset without the posture.
+    const newborn = creeps.at(-1)!;
+    newborn.rules = collectorRules("materia");
+    const commands = decide(world, 0);
+    const rulesOf = (id: number) =>
+      commands.find(
+        (c): c is Extract<Command, { type: "setRules" }> =>
+          c.type === "setRules" && c.creepId === id,
+      )?.rules;
+    expect(rulesOf(newborn.id)).toEqual([
+      ...postureRules(newborn.dna),
+      ...collectorRules("materia"),
+    ]);
+    for (const creep of creeps.slice(0, 3)) {
+      expect(
+        rulesOf(creep.id)!.slice(0, postureRules(creep.dna).length),
+      ).toEqual(postureRules(creep.dna));
+    }
+    expect(commands).toContainEqual({
+      type: "applyPreset",
+      creepId: creeps[3]!.id,
+      preset: "raider",
+    });
+    expect(postureRules("square").map((r) => r.then.type)).toEqual([
+      "flee",
+      "fight",
+    ]);
+    expect(postureRules("triangle")).toEqual([
+      { when: { type: "hpBelow", permille: 400 }, then: { type: "flee" } },
+      { when: { type: "demandAtMost", permille: 500 }, then: { type: "pay" } },
+      { when: { type: "always" }, then: { type: "flee" } },
+    ]);
+    expect(postureRules("circle")).toEqual([
+      { when: { type: "always" }, then: { type: "flee" } },
     ]);
   });
 
@@ -217,10 +293,9 @@ describe("balanced", () => {
     // The builder moves on to the new target.
     const builder = teamCreeps(world, 0)[2]!;
     builder.rules = roadBuilderRules(first);
-    expect(decide(world, 0)).toContainEqual({
-      type: "applyPreset",
+    expect(assignments(decide(world, 0))).toContainEqual({
       creepId: builder.id,
-      preset: "roadBuilder",
+      role: "roadBuilder",
       target: second,
     });
   });
@@ -254,17 +329,17 @@ describe("balanced", () => {
     const world = textWorld(["A..m.......B"]);
     const seen = view(world, 0);
     const builders = () =>
-      strategistCommands("balanced", seen, world.map, world.params).filter(
-        (c) => c.type === "applyPreset" && c.preset === "roadBuilder",
+      builderTargets(
+        strategistCommands("balanced", seen, world.map, world.params),
       );
-    expect(builders()).toMatchObject([{ target: { x: 3, y: 0 } }]);
+    expect(builders()).toEqual([{ x: 3, y: 0 }]);
     // A view that knows a rock at x = 1 walls the materia off: no builder,
     // whatever the world's map says.
     seen.known = seen.known.map((t, i) => (i === 1 ? Terrain.rock : t));
     expect(builders()).toEqual([]);
     // A cell never seen counts as jungle: the deposit looks reachable again.
     seen.known = seen.known.map((t, i) => (i === 1 ? -1 : t));
-    expect(builders()).toMatchObject([{ target: { x: 3, y: 0 } }]);
+    expect(builders()).toEqual([{ x: 3, y: 0 }]);
   });
 
   test("sees roads through the view", () => {
@@ -278,15 +353,11 @@ describe("balanced", () => {
     world.map.road[first.y * world.map.width + first.x] = 1;
     const second = roadTarget(world, team)!;
     world.map.road[first.y * world.map.width + first.x] = 0;
-    const builders = (commands: Command[]) =>
-      commands.flatMap((c) =>
-        c.type === "applyPreset" && c.preset === "roadBuilder"
-          ? [c.target]
-          : [],
-      );
-    expect(builders(decide(world, 0))).toEqual([first]);
+    expect(builderTargets(decide(world, 0))).toEqual([first]);
     expect(
-      builders(strategistCommands("balanced", seen, world.map, world.params)),
+      builderTargets(
+        strategistCommands("balanced", seen, world.map, world.params),
+      ),
     ).toEqual([second]);
   });
 });
