@@ -1,10 +1,7 @@
-// Creep names for the screen (owner decision, F7): short invented words, easier
-// to tell apart than "Quadrado #46". Generated on the client from the birth
-// order, the same on every client and in a replay. The birth order is the id
-// (ids only grow): with fog of war a team's view has only the enemy creeps in
-// sight, so a creep's place in the view's list would change its name as they
-// come and go. Names in the world state are a proposal in GDD 02 for when
-// creeps can die (M2).
+// Creep names (M2 encontro spec D1, plan P5): short invented words, easier to
+// tell apart than "Quadrado #46" (owner decision, M1 F7). A creep gets its
+// name at birth from the world's birth counter (state.births), so a name
+// never changes when other creeps die, and the chronicle can name the dead.
 
 /**
  * Pairwise at least 2 edits apart, so no two read alike at a glance (checked
@@ -42,20 +39,14 @@ export const NAME_STRIDE = 37;
 
 const ROMAN = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"];
 
-/** The name of the creep born `rank`-th (0 = first); after the list, "Taro II". */
+/**
+ * The name of the creep born `rank`-th in the world (0 = first); after the
+ * list, "Taro II".
+ */
 export function nameAt(rank: number): string {
   const n = NAMES.length;
   const base = NAMES[(rank * NAME_STRIDE) % n]!;
   const round = Math.floor(rank / n) + 1;
   if (round === 1) return base;
   return `${base} ${ROMAN[round] ?? String(round)}`;
-}
-
-/**
- * The name of creep `id`, from the id alone: the same whatever the view has
- * in sight. Ids are shared with deposits and road jobs, so a long world's
- * last creeps come back with a numeral ("Taro II").
- */
-export function creepName(id: number): string {
-  return nameAt(id);
 }

@@ -4,8 +4,9 @@
 // core is free, waiting while the stock or the population cap does not allow.
 
 import { canAfford, debit } from "./economy.ts";
+import { creepRef, emit, type EventLog } from "./events.ts";
 import type { Dna, Params } from "./params.ts";
-import { newCreep, type Team, type WorldState } from "./world.ts";
+import { spawnCreep, type Team, type WorldState } from "./world.ts";
 
 export type ProductionRefusal = "busy" | "populationCap" | "stock";
 
@@ -68,16 +69,22 @@ function tryStart(
 }
 
 /**
- * Stage 4: advances each core's production, spawns finished creeps, and
- * restarts armed repeats. Teams in id order.
+ * Stage 4: advances each core's production, spawns finished creeps (a born
+ * event each), and restarts armed repeats. Teams in id order.
  */
-export function runProduction(state: WorldState): void {
+export function runProduction(state: WorldState, log: EventLog): void {
   for (const team of state.teams) {
     const { production } = team;
     if (production !== null) {
       production.remainingSeconds -= state.params.world.tickSeconds;
       if (production.remainingSeconds <= 0) {
-        state.creeps.push(newCreep(state.nextId++, team, production.dna));
+        const creep = spawnCreep(state, team, production.dna);
+        emit(log, {
+          type: "born",
+          creep: creepRef(creep),
+          x: creep.x,
+          y: creep.y,
+        });
         team.production = null;
       }
     }
