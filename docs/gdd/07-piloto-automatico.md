@@ -7,9 +7,13 @@
 - **M1** (2026-11-13; detalhes na [spec M1 §5](../specs/m1-ciclo-da-riqueza/spec.md)): piloto automático
   declarativo por creep. A 1ª regra com condição verdadeira e ação possível vira a ordem; sem regra válida, o creep
   mantém o que fazia. Creeps nascem com o preset *coletor de matéria*.
-- **Coletar com os depósitos zerados** (2026-11-14): o creep escolhe o depósito não vazio mais próximo e fica com
-  ele até encher. Se o depósito zerar, espera ali a regeneração; se for cristal esgotado, escolhe outro. Deixar um
-  depósito rico sem uso é uma decisão do jogador, que pode mandar creeps para lá.
+- **Coletar com os depósitos zerados** (2026-11-14; revisto pelo dono na sessão 2 do M1.5, 2026-11-14): o creep
+  escolhe o depósito não vazio a que chega mais rápido (tempo de viagem pelo mapa que o time conhece, contando as
+  estradas) e fica com ele até encher. Se o depósito zerar, **só espera ali a regeneração se compensar**: compara o
+  tempo de esperar encher a carga com o tempo de andar até o depósito conhecido mais próximo com matéria
+  suficiente, e vai se andar for mais rápido. Se for cristal esgotado, escolhe outro. Motivo: no playtest, os
+  coletores disputavam o depósito mais perto do Núcleo e esperavam a regeneração 1 a 1, em vez de pegar a estrada
+  pronta até um depósito cheio um pouco mais longe.
 - **O piloto automático respeita o fog** (M1.5, 2026-11-14): as condições (ex.: `resourceInRange`) e a escolha
   do depósito usam só o que o time sabe, a visão mais a memória ([01](01-mundo.md)). Um creep não coleta de um
   depósito que o time nunca viu.
