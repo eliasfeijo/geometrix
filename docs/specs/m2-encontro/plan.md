@@ -335,6 +335,13 @@ Números no [dashboard](../../dashboard/current-status.md), "Registro das fases"
 | C9 | **Custo do tick aceito:** 3 dias do seed 42 em 12,5–12,9 s, contra 12,2–12,4 s da F6 (~1,04×) |
 | C10 | Interpretação mantida: as regras de reação não distinguem o diálogo da luta, então o ▲ e o ● tentam fugir a cada rodada da luta |
 
+3ª rodada (dono, 2026-11-17), depois da F5 (as observações estão no [dashboard](../../dashboard/current-status.md),
+"Registro das fases", M2 A F5):
+
+| # | Decisão |
+|---|---|
+| C11 | **Subir a carga mínima do alvo no preset salteador** (a ação `approach` de `raiderRules`, hoje `minCargo: 1`), para o bot só emboscar quem vale a pena. Vale para o preset inteiro (jogador e bot). O número sai na abertura da F6 (proposta do agente: **10**, a capacidade do círculo, um terço da do quadrado; provisório). É mudança de comportamento do `sim`: `SIM_VERSION` 9 e os hashes fixos mudam. Rejeitada por agora a alternativa de bloquear o par agressor–vítima também depois de uma fuga (seria regra nova de gameplay) |
+
 ## 12. Ordem de implementação
 
 Cada fase na sua branch `m2/encontro-f<n>-<slug>`, com merge `--no-ff` em `main` (skill `commit`).

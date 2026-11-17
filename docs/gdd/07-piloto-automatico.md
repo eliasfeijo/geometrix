@@ -41,6 +41,11 @@
     lutando. Os presets de coletor seguem esses padrões.
   - **Preset salteador:** extorquir um inimigo carregado à vista → catar despojo à vista → entregar se cheio →
     explorar; luta quando é atacado e foge com o HP baixo.
+  - **A carga mínima do alvo do salteador sobe** (dono, 2026-11-17, depois da F5 do encontro): com carga mínima 1,
+    os salteadores do bot extorquiam 1 ou 2 de matéria e repetiam com a mesma vítima depois da fuga, e a crônica
+    enchia de ruído. Vale para o preset (o botão "Salteador" do jogador e os salteadores do bot). O número é
+    provisório e é escolhido com o dono na abertura da F6 do encontro ([plan](../specs/m2-encontro/plan.md) §11.1,
+    C11).
 
 - **Gambits de batalha** (dono, 2026-11-15; [spec M2 do laboratório](../specs/m2-laboratorio/spec.md) D14, D15):
   na batalha, cada creep não dominado segue uma lista ordenada condição → ação, como o piloto do mundo. Condições
