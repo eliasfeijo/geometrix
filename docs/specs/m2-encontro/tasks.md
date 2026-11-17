@@ -61,7 +61,7 @@ na sua branch (plan §12, skill `commit`), com merge `--no-ff` em `main`.
 
 - [x] `protocol`: zod dos comandos, ordens e regras novos; `Delta` e `Sent` com `encounters` e `spoils`;
       `DeltaMessage.events`; `WelcomeMessage.chronicle`; `PROTOCOL_VERSION` 4 (plan §8)
-- [ ] Propriedade do diff com encontros, mortes e despojos (6 h × 3 seeds), com piso de mortes (spec N-3)
+- [x] Propriedade do diff com encontros, mortes e despojos (6 h × 3 seeds), com piso de mortes (spec N-3)
 - [ ] Servidor: eventos por time no stream e no buffer de retomada; crônica no `welcome` (spec N-1)
 - [ ] Tabela `chronicle`, gravação na transação do tick, recuperação que apaga a partir do snapshot e refaz;
       teste de restart com a crônica igual (spec N-2, plan P7)
