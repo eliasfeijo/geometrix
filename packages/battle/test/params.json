@@ -1,5 +1,6 @@
 {
   "tick": { "ticksPerSecond": 20 },
+  "start": { "countdownMs": 0 },
   "dna": {
     "square": {
       "hp": 300,

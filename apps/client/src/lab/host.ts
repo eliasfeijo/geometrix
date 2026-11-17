@@ -51,6 +51,8 @@ export class LabHost {
   private state: BattleState | null = null;
   private log: BattleLog | null = null;
   private pending: { seq: number; command: unknown }[] = [];
+  /** The page's number of the current battle. */
+  private battle = 0;
   private speed: Speed = 1;
   private paused = false;
   /** Clock origin and the ticks stepped since it (plan P10). */
@@ -77,9 +79,14 @@ export class LabHost {
         this.start(message);
         return;
       case "input":
-        // An ended battle takes nothing (spec F-4); a paused one keeps the
-        // input for the tick after it resumes.
-        if (this.state !== null && this.state.ended === null) {
+        // An ended battle takes nothing (spec F-4), nor does a new one take
+        // the previous one's; a paused one keeps the input for the tick
+        // after it resumes.
+        if (
+          this.state !== null &&
+          this.state.ended === null &&
+          message.battle === this.battle
+        ) {
           this.pending.push({ seq: message.seq, command: message.command });
         }
         return;
@@ -112,6 +119,7 @@ export class LabHost {
 
   private start(message: Extract<ToWorker, { type: "start" }>): void {
     this.stopClock();
+    this.battle = message.battle;
     try {
       this.state = createBattle(message.setup, message.params);
     } catch (error) {
@@ -126,6 +134,7 @@ export class LabHost {
     this.paused = false;
     this.post({
       type: "frame",
+      battle: this.battle,
       view: battleView(this.state),
       events: [],
       applied: [],
@@ -194,6 +203,7 @@ export class LabHost {
     this.stepped += 1;
     this.post({
       type: "frame",
+      battle: this.battle,
       view: battleView(state),
       events,
       applied: batch.map((b) => b.seq),
@@ -213,7 +223,13 @@ export class LabHost {
       events.push(...stepLogged(state, this.log!, commands));
       commands = [];
     }
-    this.post({ type: "frame", view: battleView(state), events, applied });
+    this.post({
+      type: "frame",
+      battle: this.battle,
+      view: battleView(state),
+      events,
+      applied,
+    });
     if (state.ended !== null) void this.finish();
   }
 
@@ -224,7 +240,7 @@ export class LabHost {
     const log = this.log!;
     const hash = await this.sha256(json);
     log.finalHash = hash;
-    this.post({ type: "ended", hash, ticks });
+    this.post({ type: "ended", battle: this.battle, hash, ticks });
   }
 
   /**

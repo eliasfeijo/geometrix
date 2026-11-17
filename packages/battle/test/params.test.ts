@@ -87,6 +87,11 @@ describe("parseBattleParams", () => {
     expect(issuesOf(withLeaf("dna.circle.cooldownMs", 825))).toEqual([
       "dna.circle.cooldownMs: must be a multiple of one tick (50 ms)",
     ]);
+    expect(issuesOf(withLeaf("start.countdownMs", 2990))).toEqual([
+      "start.countdownMs: must be a multiple of one tick (50 ms)",
+    ]);
+    // No countdown is allowed (spec D21: the fight starts at once).
+    expect(issuesOf(withLeaf("start.countdownMs", 0))).toEqual([]);
   });
 
   test("the tick rate must divide 1000 ms", () => {

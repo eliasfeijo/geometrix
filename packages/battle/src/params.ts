@@ -49,6 +49,11 @@ const reaction = {
 
 const schema = {
   tick: { ticksPerSecond: positive },
+  /**
+   * The countdown at the start of a battle (spec D21, S-4): everyone stands
+   * still and may only turn. 0 starts the fight at once.
+   */
+  start: { countdownMs: nonNegative },
   dna: { square: dna, triangle: dna, circle: dna },
   /** A full bag slows the creep by this much (spec D8), linearly with the load. */
   carry: { fullBrakePermille: nonNegative },
@@ -138,6 +143,7 @@ function checkConsistency(p: BattleParams, issues: string[]): void {
       `dna.${d}.cooldownMs`,
       p.dna[d].cooldownMs,
     ]),
+    ["start.countdownMs", p.start.countdownMs],
     ["exit.dwellMs", p.exit.dwellMs],
     ["inactivity.timeoutMs", p.inactivity.timeoutMs],
     ...REACTIONS.flatMap((r): [string, number][] => [
@@ -187,4 +193,9 @@ export function pointsPerTick(
   cellsPerSecond: number,
 ): number {
   return (cellsPerSecond * CELL_COST) / params.tick.ticksPerSecond;
+}
+
+/** Ticks of the countdown at the start of a battle (spec D21, S-4). */
+export function countdownTicks(params: BattleParams): number {
+  return msToTicks(params, params.start.countdownMs);
 }

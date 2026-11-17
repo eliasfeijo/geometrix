@@ -75,6 +75,33 @@ describe("the keyboard (spec D13, plan P4)", () => {
     expect(input.down(key("Digit0"), 1).release).toBe(true);
   });
 
+  test("R restarts, P and Esc pause, once per press", () => {
+    const input = new KeyboardInput();
+    expect(input.down(key("KeyR"), 1)).toEqual({
+      handled: true,
+      commands: [],
+      restart: true,
+    });
+    expect(input.down(key("KeyR", { repeat: true }), 1).restart).toBe(
+      undefined,
+    );
+    expect(input.down(key("KeyP"), null).pause).toBe(true);
+    expect(input.down(key("Escape"), 1).pause).toBe(true);
+    expect(input.down(key("Escape", { repeat: true }), 1).pause).toBe(
+      undefined,
+    );
+  });
+
+  test("with Ctrl, Alt or Meta the key belongs to the browser", () => {
+    const input = new KeyboardInput();
+    expect(input.down(key("KeyR", { ctrlKey: true }), 1)).toEqual({
+      handled: false,
+      commands: [],
+    });
+    expect(input.down(key("ArrowUp", { altKey: true }), 1).handled).toBe(false);
+    expect(input.down(key("Tab", { metaKey: true }), 1).handled).toBe(false);
+  });
+
   test("without a dominated participant, game keys send nothing", () => {
     const input = new KeyboardInput();
     expect(input.down(key("ArrowUp"), null)).toEqual({

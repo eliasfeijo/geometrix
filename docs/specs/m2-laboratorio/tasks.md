@@ -333,9 +333,91 @@ referência do `serialize.test.ts` da batalha também.
 
 ## F5 — Às cegas e o playtest (`m2/laboratorio-f5-playtest`)
 
-- [ ] `session.ts`: o registro de cada batalha (setup, domínio, desfecho, RTT, nota) no `localStorage` com
+**Abertura (dono, 2026-11-17, depois de jogar o laboratório da F4):** com 300 ms e a interpolação ligada, "rodou
+suave"; o que atrapalha é chegar à luta. Hoje é preciso começar, correr para pausar, dominar, continuar e clicar na
+arena para o teclado valer, e o aliado já está morrendo. A nota às cegas mediria essa correria, não a latência.
+Decidido: a **contagem de 3 s** no começo é regra da batalha (spec D21, S-4; GDD 06) e a sessão às cegas usa **um
+setup único** (spec §8). O resto do pacote abaixo é do laboratório (sem gameplay).
+
+- [x] A contagem do começo (spec D21, S-4): um parâmetro em `params/battle.json` (e nos params de teste), em que só
+      o `face` vale, do humano e da IA; o evento ou o campo da visão que a página precisa para mostrá-la; a
+      `BATTLE_VERSION` sobe para 2 (o mesmo log passa a dar outro resultado), o hash de referência e a *fixture* do
+      laboratório refeitos (um log novo exportado da página). **Interpretações a validar:** o relógio de inatividade
+      começa a correr no fim da contagem; largar e catar também esperam a contagem; quem entra no meio da luta não
+      ganha contagem própria
+- [x] A UX do combate humano: escolher no setup quem o dono domina desde o começo (ou "só assistir"), e o Começar e
+      o Reiniciar já dominam; o teclado vale na página inteira durante a batalha, salvo com o foco num campo do
+      formulário (sem clicar na arena); atalhos para reiniciar (R) e pausar (Esc ou P); a contagem visível na arena
+- [x] `session.ts`: o registro de cada batalha (setup, domínio, desfecho, RTT, nota) no `localStorage` com
       `try/catch`, o export em JSON, o resumo nota × RTT e vitórias dominando × IA (spec L-5, plan P14)
-- [ ] O modo às cegas: o RTT sorteado pela página e escondido, a nota de 1 a 5 antes de revelar (spec D17)
-- [ ] Perguntas do laboratório no [PLAYTEST.md](../../PLAYTEST.md) (spec §8)
+- [x] O modo às cegas: o RTT sorteado pela página e escondido, a nota de 1 a 5 antes de revelar (spec D17). Um
+      setup único na sessão (dono); o sorteio sem repetição (5 de cada RTT embaralhados, com quantas faltam); o
+      atraso medido escondido até a nota (ele entregaria o RTT); "próxima batalha" num toque, com o mesmo setup e o
+      próximo RTT
+- [x] Perguntas do laboratório no [PLAYTEST.md](../../PLAYTEST.md) (spec §8)
 - [ ] **Checkpoint:** sessão livre e sessão às cegas do dono (pelo menos 5 batalhas por RTT); ele responde às
       perguntas 1 a 4 da hipótese e decide a próxima regra (livre, forja ou nenhuma antes da junção); fecha a fatia B
+
+### Registro da F5 (2026-11-17)
+
+Como nas fases anteriores, o registro fica aqui e entra no "Registro das fases" do dashboard no merge da B em `main`
+(que fecha a fatia, depois do checkpoint).
+
+**A contagem do começo** (`start.countdownMs` = 3 000 em `params/battle.json`; `BATTLE_VERSION` 2). O `geo battle
+sweep` (seeds 1–100, 9 200 batalhas em 45 s), comparado com a F4:
+
+| O quê | Na F4 | Na F5 (com a contagem) |
+|---|---|---|
+| Duração do 1 × 1 (mediana) | 15,6 s | 18,6 s |
+| Duração do 3 × 3 (mediana) | 28,3 s | 32,0 s |
+| Custo do 3 × 3 por 2 400 ticks (mediana; alvo 50 ms) | 38–39 ms | 38 ms |
+| Inatividade no 3 × 3 (aberta, pedras, corredor) | 7–20% | 7%, 19%, 2% |
+| Triângulo × círculo (A / B: aberta, pedras, corredor) | 43/57, 68/31, 41/59 | 49/51, 66/34, 49/51 |
+| Quadrado × círculo, quadrado × triângulo, fuga carregada | — | iguais aos da F4 (0–2/98–100, 99–100/0–1, 2–7% escapa) |
+
+A duração sobe pelos 3 s parados; o resto mexe só onde a IA decide diferente (ela vira e sorteia a reação durante a
+contagem, o que muda a ordem do `rng`). A *fixture* do laboratório foi refeita: um log exportado da página no
+Chromium a 300 ms de RTT, com teclas durante a contagem, o domínio, um reforço num lado novo e a troca de gambits, que
+dá na CLI o hash do worker.
+
+**O laboratório**, conferido no Chromium headless dirigido pelo CDP: o Começar já domina (o `control` atravessa a
+rede durante a contagem); o "3, 2, 1" aparece sobre a arena; as setas andam sem clicar na arena; P pausa, Esc
+continua, R reinicia já dominando; um R com o foco no campo da seed não reinicia. O registro da sessão guardou
+batalhas assistidas e dominadas e sobreviveu a recarregar a página; a sessão às cegas escondeu o RTT, o atraso medido
+e o esperado até a nota, revelou depois, abriu a próxima com Enter, ofereceu a próxima depois de recarregar e
+mostrou a tabela nota × RTT ao encerrar. Testes: 2 686 no total (eram 2 664 no fim da F4).
+
+**Interpretações a validar:**
+
+1. **A contagem:** durante ela, os comandos, a IA e o virar rodam (o humano e a IA miram); ataque, movimento,
+   largar e catar esperam, e a saída pela borda e o relógio de inatividade só começam a contar no fim. O que foi
+   pedido na contagem (uma tecla segurada, o *latch* do espaço, um largar) sai no primeiro tick da luta. Quem entra
+   durante a contagem espera por ela; quem entra depois não ganha contagem própria. A página lê a contagem de um
+   campo da visão (`countdownTicks`), sem evento novo.
+2. **Os params de teste** do pacote têm a contagem em 0, para as regras continuarem testadas desde o tick 0; os
+   testes da contagem a ligam.
+3. **Quem o dono domina** é escolhido no formulário ("você joga com"), por padrão o primeiro participante do lado A;
+   o id vem da posição no setup (a batalha numera os participantes do setup a partir de 1).
+4. **O teclado na página:** fica com o formulário só num campo de texto ou número, num seletor ou com Ctrl, Alt ou
+   Meta (o Ctrl + R ainda recarrega). O Tab, durante a batalha, troca o domínio em vez de navegar.
+5. **As batalhas numeradas:** depois de um R, uma tecla ainda em trânsito da batalha anterior e os quadros dela são
+   descartados, em vez de cair na nova.
+6. **O registro:** só a batalha que acaba entra; o RTT é o do começo da batalha. "Você × IA" compara as vitórias do
+   lado que o dono dominou do começo ao fim com as da IA no mesmo lado, nas batalhas do mesmo confronto (a arena, os
+   DNAs e o HP de cada lado) em que ele só assistiu. Trocar ou soltar o domínio no meio tira a batalha das duas
+   contas.
+7. **A sessão às cegas:** o setup único inclui a seed; o RTT é sorteado no começo de cada batalha (recarregar no meio
+   dela perde aquele sorteio, e o saco segue); R reinicia com o mesmo RTT escondido; a nota pelas teclas 1 a 5, a
+   próxima com Enter ou N; a tabela nota × RTT fica escondida até encerrar a sessão, para não ancorar as notas. A
+   mediana de um número par de notas é a média das duas do meio; o "até onde a nota fica em 4 ou mais" para no
+   primeiro RTT que cai abaixo de 4.
+8. **O setup sugerido** para a sessão às cegas, no PLAYTEST: ▲ (você) × ● (IA normal) nas pedras, o duelo à
+   distância em que mirar e desviar mais sentem o atraso.
+
+**Aguardando o dono (o checkpoint):**
+
+1. A **sessão livre** e a **sessão às cegas** (`npm run lab`; o roteiro no [PLAYTEST.md](../../PLAYTEST.md), seção
+   "Laboratório de batalha (M2)"), com o **"Exportar sessão"** no fim.
+2. As **perguntas 1 a 4 da hipótese** (spec §1) e a **próxima regra**: a livre, a forja ou nenhuma antes da junção.
+3. As **interpretações 1 a 8** acima, e o *jitter* da reação de cada nível, pendente da F4 (fácil 600 ± 250 ms,
+   normal 250 ± 100, difícil 100 ± 50).

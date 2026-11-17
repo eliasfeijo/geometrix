@@ -6,7 +6,7 @@
 // decision never sees another's turn, and the worker can post it as is.
 
 import type { Dir } from "./arena.ts";
-import type { Dna, Reaction } from "./params.ts";
+import { countdownTicks, type Dna, type Reaction } from "./params.ts";
 import type { BattleState, Carry, Controller, Pile } from "./state.ts";
 
 export type ViewParticipant = {
@@ -39,6 +39,11 @@ export type ViewProjectile = {
 
 export type BattleView = {
   tick: number;
+  /**
+   * Ticks of the start countdown still to go before the fight (spec D21):
+   * the next step fights when it is 0.
+   */
+  countdownTicks: number;
   participants: ViewParticipant[];
   projectiles: ViewProjectile[];
   piles: Pile[];
@@ -48,6 +53,7 @@ export type BattleView = {
 export function battleView(state: BattleState): BattleView {
   return {
     tick: state.tick,
+    countdownTicks: Math.max(0, countdownTicks(state.params) - state.tick),
     participants: state.participants.map((p) => ({
       id: p.id,
       side: p.side,

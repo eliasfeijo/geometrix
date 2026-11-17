@@ -72,6 +72,10 @@
       zona a meio caminho entre a borda e o centro, longe da saída, parecido com o Mount & Blade, sem a mesma escala;
     - **a borda sob fogo:** um golpe zerar a contagem da fuga não é problema, desde que a **dificuldade do bot seja
       configurável** (no laboratório, a reação de cada participante da IA).
+  - **A contagem no começo da batalha** (dono, 2026-11-17, depois de jogar o laboratório): a batalha começa com uma
+    **contagem de 3 s** (provisório), em que todos ficam parados: podem virar, mas não andar nem atacar, e a IA
+    também. É **regra da batalha**: vale no laboratório, no mundo e no auto-resolve. Dá ao humano tempo de se
+    preparar antes da luta.
   - **Chefão disputado** (M2.5): quando dois lados ferem o mesmo chefão, leva o buff ou o item quem dá o último
     golpe ([05](05-tribos-e-diplomacia.md)).
 
