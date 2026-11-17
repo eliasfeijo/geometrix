@@ -106,8 +106,9 @@ test.each([1, 42, 649])(
     // the D7 fields: a new entity is sent whole, so it has its team) and left
     // it, and each team found the enemy core (seen after ~4.5-5.3 h in these
     // seeds). Since M2 (encontro spec N-3) creeps also die, and encounters
-    // and spoils come and go: 3, 8 and 7 deaths, 46-102 encounters closed and
-    // 34-66 spoils dropped (as the two teams saw them) in these seeds.
+    // and spoils come and go: 9, 5 and 7 deaths, 26-54 encounters closed and
+    // 20-31 spoils dropped (as the two teams saw them) in these seeds, since
+    // raiders only approach targets carrying 10 or more (plan C11).
     expect(state.creeps.length).toBeGreaterThan(12);
     expect(upserts).toBeGreaterThan(ticks);
     expect(explored).toBeGreaterThan(300);
@@ -118,7 +119,7 @@ test.each([1, 42, 649])(
     expect(enemyCoreSeen).toEqual([true, true]);
     expect(deaths).toBeGreaterThanOrEqual(2);
     expect(encounters).toBeGreaterThan(20);
-    expect(spoils).toBeGreaterThan(20);
+    expect(spoils).toBeGreaterThan(10);
   },
   60_000,
 );
