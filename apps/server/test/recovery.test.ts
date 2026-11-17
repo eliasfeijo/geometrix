@@ -12,7 +12,11 @@ import {
 } from "../src/world-host.ts";
 import { testApp, testParams } from "./helpers.ts";
 
-const config = { snapshotEveryTicks: 300, metricsEveryTicks: 60 };
+const config = {
+  snapshotEveryTicks: 300,
+  metricsEveryTicks: 60,
+  chronicleWelcome: 100,
+};
 const TICKS = 1_000;
 
 const dbFile = () => join(mkdtempSync(join(tmpdir(), "geo-db-")), "geo.db");
@@ -97,6 +101,42 @@ describe("recovery after a restart", () => {
       steady.commandsFrom(reference.id, 0),
     );
   });
+
+  test("the chronicle after a restart is the one before it (spec N-2)", () => {
+    const steady = new Store(":memory:");
+    const reference = newWorld(steady);
+    // The first events (births) come on tick 2160; the last snapshot before
+    // the crash is at 2100.
+    run(reference, addHuman(steady, reference), 2_250);
+
+    const file = dbFile();
+    let store = new Store(file);
+    const crashed = newWorld(store);
+    run(crashed, addHuman(store, crashed), 2_250);
+    // Events after the last snapshot are stored, and get redone.
+    expect(store.latestSnapshot(crashed.id)?.tick).toBe(2_100);
+    const tail = store
+      .recentChronicle(crashed.id, 1, 1_000)
+      .filter((e) => e.tick >= 2_100);
+    expect(tail.length).toBeGreaterThan(0);
+    const rows = store.chronicleCount(crashed.id);
+    store.close();
+
+    store = new Store(file);
+    const recovered = WorldHost.recover(
+      { store, config },
+      store.world(crashed.id)!,
+    );
+    expect(store.chronicleCount(crashed.id)).toBe(rows);
+    expect(rows).toBe(steady.chronicleCount(reference.id));
+    for (const team of [0, 1]) {
+      expect(recovered.chronicle(team)).toEqual(reference.chronicle(team));
+      expect(store.recentChronicle(crashed.id, team, 1_000)).toEqual(
+        steady.recentChronicle(reference.id, team, 1_000),
+      );
+    }
+    expect(recovered.chronicle(1).length).toBeGreaterThan(0);
+  }, 30_000);
 
   test("a player whose join was still queued joins again", () => {
     const file = dbFile();

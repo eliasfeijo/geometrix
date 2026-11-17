@@ -7,7 +7,15 @@
 
 import type { Player } from "./domination.ts";
 import type { Cell } from "./map.ts";
-import type { Creep, Deposit, RoadJob, Team, WorldState } from "./world.ts";
+import type {
+  Creep,
+  Deposit,
+  Encounter,
+  RoadJob,
+  Spoil,
+  Team,
+  WorldState,
+} from "./world.ts";
 
 /**
  * A creep as its team sees it: no cached path, move points, trip stats or
@@ -25,6 +33,22 @@ export type CreepView = Omit<
 export type ForeignCreepView = Pick<
   Creep,
   "id" | "team" | "dna" | "name" | "hp" | "engagement" | "x" | "y" | "cargo"
+>;
+
+/**
+ * An encounter with one of the team's creeps (M2 encontro plan section 8):
+ * whole, except the other side's pending reply to the fight, which would tell
+ * the team what the enemy's player is about to do. In fullView, whole.
+ */
+export type EncounterView = Encounter;
+
+/**
+ * Other teams' encounter on a cell in sight (plan section 8): who, the
+ * intent, the stage and where; no demand, window, replies or rounds.
+ */
+export type ForeignEncounterView = Pick<
+  Encounter,
+  "id" | "aggressor" | "victim" | "intent" | "stage" | "x" | "y"
 >;
 
 /** Another team: its id and, once seen, where its core is (spec D7). */
@@ -48,6 +72,13 @@ export type TeamView = {
   /** The team's own road jobs and the ones it remembers, by id. */
   roadJobs: RoadJob[];
   players: (Player | ForeignPlayer)[];
+  /**
+   * The encounters with a creep of the team, and the others on a cell in
+   * sight, by id (plan section 8).
+   */
+  encounters: (EncounterView | ForeignEncounterView)[];
+  /** The spoils the team remembers, with the last cargo seen, by id. */
+  spoils: Spoil[];
   /** Per cell: -1 never seen, else its Terrain (plan N6). */
   known: number[];
   /** Cell indices in sight at the end of the tick, increasing. */
@@ -59,6 +90,13 @@ export function isOwnCreep(
   creep: CreepView | ForeignCreepView,
 ): creep is CreepView {
   return "rules" in creep;
+}
+
+/** Whether the view has the encounter whole: the team's own, or any in fullView. */
+export function isOwnEncounter(
+  encounter: EncounterView | ForeignEncounterView,
+): encounter is EncounterView {
+  return "demand" in encounter;
 }
 
 /** Whether the view has the team whole: its own, or any in fullView. */
@@ -99,6 +137,18 @@ export function view(state: WorldState, team: number): TeamView {
     else if (inSight(creep)) creeps.push(foreignCreepView(creep));
   }
 
+  const encounters: (EncounterView | ForeignEncounterView)[] = [];
+  for (const encounter of state.encounters) {
+    const own = state.creeps.some(
+      (c) =>
+        c.team === team &&
+        (c.id === encounter.aggressor || c.id === encounter.victim),
+    );
+    if (own) encounters.push(encounterView(state, encounter, team));
+    else if (inSight(encounter))
+      encounters.push(foreignEncounterView(encounter));
+  }
+
   const roadJobs: RoadJob[] = [];
   for (const job of state.roadJobs) {
     if (job.team === team) roadJobs.push({ ...job });
@@ -133,6 +183,8 @@ export function view(state: WorldState, team: number): TeamView {
     players: state.players.map((p) =>
       p.team === team ? { ...p } : { id: p.id, team: p.team, bot: p.bot },
     ),
+    encounters,
+    spoils: memory.spoils.map((s) => ({ ...s })),
     known,
     visible: seen,
   };
@@ -156,6 +208,8 @@ export function fullView(state: WorldState): TeamView {
     roads,
     roadJobs: state.roadJobs.map((j) => ({ ...j })),
     players: state.players.map((p) => ({ ...p })),
+    encounters: state.encounters.map((e) => ({ ...e })),
+    spoils: state.spoils.map((s) => ({ ...s, cargo: { ...s.cargo } })),
     known: [...map.terrain],
     visible: map.terrain.map((_, i) => i),
   };
@@ -191,5 +245,35 @@ function foreignCreepView(creep: Creep): ForeignCreepView {
     x: creep.x,
     y: creep.y,
     cargo: creep.cargo,
+  };
+}
+
+/**
+ * The team's encounter: whole, with the other side's pending reply hidden.
+ * The fight's replies wait for the next round, several ticks ahead.
+ */
+function encounterView(
+  state: WorldState,
+  encounter: Encounter,
+  team: number,
+): EncounterView {
+  const aggressorSide =
+    state.creeps.find((c) => c.id === encounter.aggressor)?.team === team;
+  return {
+    ...encounter,
+    reply: aggressorSide ? null : encounter.reply,
+    aggressorReply: aggressorSide ? encounter.aggressorReply : null,
+  };
+}
+
+function foreignEncounterView(encounter: Encounter): ForeignEncounterView {
+  return {
+    id: encounter.id,
+    aggressor: encounter.aggressor,
+    victim: encounter.victim,
+    intent: encounter.intent,
+    stage: encounter.stage,
+    x: encounter.x,
+    y: encounter.y,
   };
 }

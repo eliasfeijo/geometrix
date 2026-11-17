@@ -1,4 +1,9 @@
-import { createWorld, sampleMetrics, SIM_VERSION } from "@geometrix/sim";
+import {
+  createWorld,
+  sampleMetrics,
+  SIM_VERSION,
+  type SimEvent,
+} from "@geometrix/sim";
 import { describe, expect, test } from "vitest";
 import { Store } from "../src/persistence.ts";
 import { testParams } from "./helpers.ts";
@@ -113,5 +118,57 @@ describe("Store", () => {
     ).toThrow();
     expect(store.commandsFrom(id, 0)).toEqual([]);
     expect(store.world(id)!.tick).toBe(0);
+  });
+
+  test("keeps the chronicle per team, newest last, and deletes from a tick", () => {
+    const { store, id } = storeWithWorld();
+    const born = (tick: number, index: number, teams: number[]): SimEvent => ({
+      type: "born",
+      creep: { id: 10 + tick, team: 0, dna: "square", name: "Ada" },
+      x: 0,
+      y: 0,
+      tick,
+      index,
+      teams,
+    });
+    store.commitTick({
+      worldId: id,
+      commands: [],
+      tick: 4,
+      events: [born(3, 0, [0]), born(3, 1, [0, 1])],
+    });
+    store.commitTick({
+      worldId: id,
+      commands: [],
+      tick: 5,
+      events: [born(4, 0, [1])],
+    });
+    const plain = (tick: number, index: number) => {
+      const event: Partial<SimEvent> = born(tick, index, []);
+      delete event.teams;
+      return event;
+    };
+    expect(store.chronicleCount(id)).toBe(4);
+    expect(store.recentChronicle(id, 0, 10)).toEqual([
+      plain(3, 0),
+      plain(3, 1),
+    ]);
+    expect(store.recentChronicle(id, 1, 10)).toEqual([
+      plain(3, 1),
+      plain(4, 0),
+    ]);
+    expect(store.recentChronicle(id, 1, 1)).toEqual([plain(4, 0)]);
+    store.deleteChronicleFrom(id, 4);
+    expect(store.recentChronicle(id, 1, 10)).toEqual([plain(3, 1)]);
+    // A failed tick writes no chronicle either.
+    expect(() =>
+      store.commitTick({
+        worldId: id,
+        commands: [],
+        tick: 6,
+        events: [born(5, 0, [0]), born(5, 0, [0])],
+      }),
+    ).toThrow();
+    expect(store.chronicleCount(id)).toBe(3);
   });
 });

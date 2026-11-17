@@ -9,11 +9,14 @@ import {
   canonicalJson,
   type CreepView,
   type Deposit,
+  type EncounterView,
   type ForeignCreepView,
+  type ForeignEncounterView,
   type ForeignPlayer,
   type ForeignTeam,
   type Player,
   type RoadJob,
+  type Spoil,
   type Team,
   type TeamView,
 } from "@geometrix/sim";
@@ -35,6 +38,8 @@ export type Delta = {
   deposits?: EntityDelta<Deposit>;
   roadJobs?: EntityDelta<RoadJob>;
   players?: EntityDelta<Player | ForeignPlayer>;
+  encounters?: EntityDelta<EncounterView | ForeignEncounterView>;
+  spoils?: EntityDelta<Spoil>;
   /** Cells that got a road, increasing. Roads never go away in M1. */
   roads?: number[];
   /** [cell, terrain] of the cells whose known terrain changed (fog plan §8). */
@@ -60,6 +65,8 @@ export type Sent = {
   deposits: Entity[];
   roadJobs: Entity[];
   players: Entity[];
+  encounters: Entity[];
+  spoils: Entity[];
   roads: Set<number>;
   /**
    * The view's known and visible arrays as last diffed. Views build them anew
@@ -78,6 +85,8 @@ export function emptySent(): Sent {
     deposits: [],
     roadJobs: [],
     players: [],
+    encounters: [],
+    spoils: [],
     roads: new Set(),
     known: [],
     visible: [],
@@ -99,6 +108,8 @@ export function emptyView(team: number, cells: number): TeamView {
     roads: [],
     roadJobs: [],
     players: [],
+    encounters: [],
+    spoils: [],
     known: new Array<number>(cells).fill(-1),
     visible: [],
   };
@@ -127,6 +138,8 @@ const KINDS = {
   deposits: {},
   roadJobs: {},
   players: {},
+  encounters: { demand: "value" },
+  spoils: { cargo: "value" },
 } satisfies Record<
   keyof Omit<Sent, "roads" | "tick" | "team" | "known" | "visible">,
   FieldKinds
@@ -301,6 +314,8 @@ export function sentView(sent: Sent): TeamView {
     roads: [...sent.roads].sort((a, b) => a - b),
     roadJobs: sent.roadJobs,
     players: sent.players,
+    encounters: sent.encounters,
+    spoils: sent.spoils,
     known: sent.known,
     visible: sent.visible,
   } as unknown as TeamView;

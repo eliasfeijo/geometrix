@@ -1,3 +1,4 @@
+import { eventsFor, type SimEvent } from "@geometrix/sim";
 import { describe, expect, test } from "vitest";
 import { Store } from "../src/persistence.ts";
 import { WorldHost, type HostContext } from "../src/world-host.ts";
@@ -7,7 +8,11 @@ const params = testParams();
 
 function setup(
   botTeams: number[] = [],
-  config = { snapshotEveryTicks: 300, metricsEveryTicks: 60 },
+  config: HostContext["config"] = {
+    snapshotEveryTicks: 300,
+    metricsEveryTicks: 60,
+    chronicleWelcome: 100,
+  },
 ) {
   const context: HostContext = { store: new Store(":memory:"), config };
   const host = WorldHost.create(context, {
@@ -111,6 +116,7 @@ describe("WorldHost", () => {
     const { host, store } = setup([], {
       snapshotEveryTicks: 10,
       metricsEveryTicks: 4,
+      chronicleWelcome: 100,
     });
     for (let i = 0; i < 12; i++) host.tick();
     expect(store.latestSnapshot(host.id)?.tick).toBe(10);
@@ -122,7 +128,11 @@ describe("WorldHost", () => {
     const short = { ...params, world: { ...params.world, durationSeconds: 5 } };
     const context: HostContext = {
       store: new Store(":memory:"),
-      config: { snapshotEveryTicks: 300, metricsEveryTicks: 60 },
+      config: {
+        snapshotEveryTicks: 300,
+        metricsEveryTicks: 60,
+        chronicleWelcome: 100,
+      },
     };
     const host = WorldHost.create(context, {
       seed: 1,
@@ -146,5 +156,23 @@ describe("WorldHost", () => {
     host.tick();
     host.tick();
     expect(seen).toEqual([1, 2]);
+  });
+
+  test("hands listeners the tick's events and keeps each team's latest", () => {
+    const { host } = setup([0, 1], {
+      snapshotEveryTicks: 300,
+      metricsEveryTicks: 60,
+      chronicleWelcome: 3,
+    });
+    const all: SimEvent[] = [];
+    host.onTick((events) => all.push(...events));
+    while (all.filter((e) => e.teams.includes(1)).length < 5) host.tick();
+    for (const team of [0, 1]) {
+      expect(host.chronicle(team)).toEqual(eventsFor(all, team).slice(-3));
+    }
+    expect(host.chronicle(1)).toHaveLength(3);
+    // A copy: changing it does not change what the host keeps.
+    host.chronicle(1).pop();
+    expect(host.chronicle(1)).toHaveLength(3);
   });
 });

@@ -76,6 +76,14 @@ describe("measureNet", () => {
     expect(result.windowSeconds).toBe(3600);
   });
 
+  test("the deltas carry the teams' events (births, in this hour)", () => {
+    expect(result.events.sent).toBeGreaterThan(0);
+    expect(result.events.deltas).toBeGreaterThan(0);
+    expect(result.events.maxPerDelta).toBeGreaterThanOrEqual(1);
+    expect(result.chronicleBytes).toBeGreaterThan(2);
+    expect(renderNet(result)).toContain("Eventos enviados (2 times)");
+  });
+
   test("the criteria follow the spec targets", () => {
     const at = (bytes: number, cpu: number, mismatches = 0): NetResult => ({
       ...result,

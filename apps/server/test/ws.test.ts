@@ -5,6 +5,7 @@ import {
   type ServerMessage,
   type WelcomeMessage,
 } from "@geometrix/protocol";
+import type { TeamEvent } from "@geometrix/sim";
 import { view, type TeamView } from "@geometrix/sim";
 import { afterEach, describe, expect, test } from "vitest";
 import { WebSocket } from "ws";
@@ -101,6 +102,35 @@ describe("WebSocket", () => {
     );
     expect(JSON.stringify(delta).length).toBeLessThan(2_000);
     client.socket.close();
+  });
+
+  test("deltas carry the team's events; a welcome, the chronicle up to its view", async () => {
+    const t = await testApp({ broadcastIntervalMs: 0 });
+    close = t.app.close;
+    await t.post("/api/worlds", { seed: 3, botTeams: [0, 1] });
+    const joined = await t.post("/api/worlds/1/join", { name: "Ana", team: 0 });
+    const { token } = joined.body as { token: string };
+    const host = t.app.worlds.get(1)!;
+    const client = await connect(t.base, token);
+    const welcome = await client.next("welcome");
+    expect(welcome.chronicle).toEqual([]);
+    let ticks = 0;
+    while (host.chronicle(0).length < 3) {
+      host.tick();
+      ticks++;
+    }
+    const received: TeamEvent[] = [];
+    for (let seq = 1; seq <= ticks; seq++) {
+      received.push(...((await client.delta(seq)).events ?? []));
+    }
+    expect(received).toEqual(host.chronicle(0));
+    expect(received.every((e) => !("teams" in e))).toBe(true);
+    const late = await connect(t.base, token);
+    const again = await late.next("welcome");
+    expect(again.seq).toBe(ticks);
+    expect(again.chronicle).toEqual(received);
+    client.socket.close();
+    late.socket.close();
   });
 
   test("acks an accepted command with its tick, rejects the rest", async () => {
