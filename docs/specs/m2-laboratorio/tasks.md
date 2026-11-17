@@ -240,7 +240,7 @@ próprio: estourou os 5 s duas vezes seguidas com a suíte inteira e outra sess�
       (spec L-8, plan P8, P9)
 - [x] `input.ts`: o teclado → intenção, *latch*, virar, largar, catar, trocar e soltar o domínio; o atraso medido
       (mediana e p95) (spec L-2, L-4, D13)
-- [ ] `setup-form.tsx`, o reforço, o `gambits-editor.tsx`, a lista de eventos e a tabela de resultado (spec L-1,
+- [x] `setup-form.tsx`, o reforço, o `gambits-editor.tsx`, a lista de eventos e a tabela de resultado (spec L-1,
       L-6, L-7, L-8)
 - [ ] Export do `BattleLog`; um log exportado entra como *fixture* do teste da CLI (`geo battle verify --log`) (spec
       R-3)
