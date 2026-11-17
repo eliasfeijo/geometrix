@@ -1,6 +1,7 @@
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   createBattle,
   createLog,
@@ -115,5 +116,31 @@ describe("geo battle verify (spec R-2, R-3)", () => {
     const bad = capture();
     expect(run(["battle", "verify", "--log", file], bad.out)).toBe(1);
     expect(bad.errors[0]).toMatch(/^FAIL: /);
+  });
+
+  test("a log exported by the lab's page reaches the worker's hash (spec R-3)", () => {
+    // Exported by the lab in Chromium (F4): the worker hashed it with Web
+    // Crypto; here node:crypto hashes the replay. A real session at 300 ms
+    // of RTT: the owner's keys on a dominated square, a reinforcement on a
+    // new side and the circle's gambits swapped for the carrier preset.
+    const file = fileURLToPath(
+      new URL("fixtures/lab-battle.json", import.meta.url),
+    );
+    const { out, lines } = capture();
+    expect(run(["battle", "verify", "--log", file], out)).toBe(0);
+    expect(lines.at(-1)).toBe("OK: the log reaches its hash");
+    const log = JSON.parse(readFileSync(file, "utf8")) as {
+      commands: { commands: { type: string }[] }[];
+    };
+    const kinds = new Set(
+      log.commands.flatMap((c) => c.commands.map((x) => x.type)),
+    );
+    expect([...kinds].sort()).toEqual([
+      "attackOnce",
+      "control",
+      "intent",
+      "join",
+      "setGambits",
+    ]);
   });
 });
