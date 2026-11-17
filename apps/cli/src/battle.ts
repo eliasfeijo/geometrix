@@ -21,8 +21,14 @@ import {
   type ParticipantSetup,
 } from "@geometrix/battle";
 
+/** The lab's arenas: the verdicts and the verify sample use these. */
 export const ARENAS = ["aberta", "pedras", "corredor"] as const;
-export type ArenaName = (typeof ARENAS)[number];
+/**
+ * The sweep also runs the open arena at 3× (F3 checkpoint, plan C2), only to
+ * compare in the report: does more room change the fight?
+ */
+export const REPORT_ARENAS = [...ARENAS, "aberta-3x"] as const;
+export type ArenaName = (typeof REPORT_ARENAS)[number];
 
 const ARENAS_DIR = new URL("../../../params/arenas/", import.meta.url);
 
@@ -55,7 +61,9 @@ export const MAX_BATTLE_SECONDS = 600;
  *   ffa      1 × 1 × 1, three sides: three-way fights end
  *   carry    a square with a full bag against a circle, with the carrier
  *            preset (drops the bag when the enemy is near, then runs) and
- *            with the same square only running: does dropping save it?
+ *            with the same square only running: does dropping save it? It
+ *            spawns in its zone, a quarter of the way in, so it has to cross
+ *            to the exit with the brake of the load
  */
 export const GROUPS = [
   "duel",
@@ -73,13 +81,6 @@ export type Scenario = {
   /** Report label, in Portuguese. */
   label: string;
   sides: ParticipantSetup[][];
-  /**
-   * Where side 0 starts: its entry stretch, as the setup places it, or the
-   * floor cell nearest the arena's centre, moved there by the harness after
-   * the setup (the carry scenarios: from the stretch, the exit is one step
-   * away, and nobody is caught).
-   */
-  start?: "center";
 };
 
 const DNA_LABELS: Record<Dna, string> = {
@@ -192,19 +193,16 @@ export function scenarios(params: BattleParams): Scenario[] {
     ["drop", "larga a bolsa e foge", presetGambits("carrier")],
     ["keep", "só foge", runOnly],
   ];
-  for (const center of [false, true]) {
-    for (const [key, text, gambits] of carriers) {
-      list.push({
-        id: `carry ${key}${center ? " center" : ""}`,
-        group: "carry",
-        label: `quadrado cheio ${center ? "no centro" : "no trecho"}, ${text} × círculo`,
-        sides: [
-          [fighter(params, "square", { carry: full, gambits })],
-          [fighter(params, "circle")],
-        ],
-        ...(center ? { start: "center" as const } : {}),
-      });
-    }
+  for (const [key, text, gambits] of carriers) {
+    list.push({
+      id: `carry ${key}`,
+      group: "carry",
+      label: `quadrado cheio, ${text} × círculo`,
+      sides: [
+        [fighter(params, "square", { carry: full, gambits })],
+        [fighter(params, "circle")],
+      ],
+    });
   }
   return list;
 }
@@ -228,28 +226,6 @@ export type BattleRecord = {
   firstEscaped: boolean;
 };
 
-/**
- * Moves `side`'s participants to the free floor cells nearest the arena's
- * centre (by |dx| + |dy|, then cell index): a harness start, not a rule.
- */
-export function moveToCenter(state: BattleState, side: number): void {
-  const { arena } = state;
-  const cx = Math.floor(arena.width / 2);
-  const cy = Math.floor(arena.height / 2);
-  const distance = (cell: number) =>
-    Math.abs((cell % arena.width) - cx) +
-    Math.abs(Math.floor(cell / arena.width) - cy);
-  const floor = arena.rock
-    .map((rock, cell) => (rock === 0 ? cell : -1))
-    .filter((cell) => cell >= 0)
-    .sort((a, b) => distance(a) - distance(b) || a - b);
-  for (const participant of state.participants) {
-    if (participant.side !== side) continue;
-    const taken = new Set(state.participants.map((p) => p.cell));
-    participant.cell = floor.find((cell) => !taken.has(cell))!;
-  }
-}
-
 /** Resolves one battle with the gambits only, to its end (spec D16). */
 export function resolve(
   scenario: Scenario,
@@ -267,7 +243,6 @@ export function resolve(
     sides: scenario.sides,
   };
   const state = createBattle(setup, params);
-  if (scenario.start === "center") moveToCenter(state, 0);
   const maxTicks = MAX_BATTLE_SECONDS * params.tick.ticksPerSecond;
   let ended: Extract<BattleEvent, { type: "ended" }> | null = null;
   while (state.ended === null && state.tick < maxTicks) {
@@ -319,9 +294,9 @@ export function battleSweep(
 ): BattleSweepResult {
   const start = clock();
   const cells: SweepCell[] = [];
-  const rows = Object.fromEntries(ARENAS.map((a) => [a, readArena(a)]));
+  const rows = Object.fromEntries(REPORT_ARENAS.map((a) => [a, readArena(a)]));
   for (const scenario of scenarios(options.params)) {
-    for (const arena of ARENAS) {
+    for (const arena of REPORT_ARENAS) {
       const records = options.seeds.map((seed) =>
         resolve(scenario, arena, rows[arena]!, seed, options.params, clock),
       );
@@ -422,8 +397,12 @@ export type Verdicts = {
   msPer2400: number;
 };
 
+/** The cells of the lab's arenas (not the 3× one) whose scenario passes. */
 function cellsOf(result: BattleSweepResult, filter: (s: Scenario) => boolean) {
-  return result.cells.filter((c) => filter(c.scenario));
+  const lab: readonly string[] = ARENAS;
+  return result.cells.filter(
+    (c) => lab.includes(c.arena) && filter(c.scenario),
+  );
 }
 
 /** Pooled seconds and ms per 2 400 ticks of some cells. */
@@ -506,7 +485,7 @@ export function renderBattleReport(result: BattleSweepResult): string {
   );
   out.push("");
   out.push(
-    "Todos os participantes pela IA, com o preset do DNA (quadrado: linha de frente; triângulo: escaramuçador; círculo: atirador), salvo onde o cenário diz outro. O lado A é o primeiro do confronto (trecho de entrada 1). Os alvos são os chutes da spec §7; desde o checkpoint da F3, vitórias e duração são só informativos (o combate cru não se balanceia antes de skills, nível e stats), e só o custo reprova.",
+    "Todos os participantes pela IA, com o preset do DNA (quadrado: linha de frente; triângulo: escaramuçador; círculo: atirador), salvo onde o cenário diz outro. O lado A é o primeiro do confronto (zona de nascimento 1). Cada lado nasce na sua zona, a 1/4 da largura a partir da borda (checkpoint da F3). A `aberta-3x` (63 × 39) só serve para comparar: os vereditos contam as três arenas do laboratório. Os alvos são os chutes da spec §7; desde o checkpoint da F3, vitórias e duração são só informativos (o combate cru não se balanceia antes de skills, nível e stats), e só o custo reprova.",
   );
   out.push("");
 
@@ -553,7 +532,7 @@ export function renderBattleReport(result: BattleSweepResult): string {
   out.push("");
 
   const winRow = (s: Scenario) =>
-    ARENAS.map((arena) => {
+    REPORT_ARENAS.map((arena) => {
       const st = at(s, arena);
       const parts = st.wins.map((w) => pct(w, st.battles));
       return `${parts.join(" / ")} (− ${pct(st.none, st.battles)})`;
@@ -567,7 +546,7 @@ export function renderBattleReport(result: BattleSweepResult): string {
   out.push("");
   out.push(
     table(
-      ["Confronto (A × B)", ...ARENAS],
+      ["Confronto (A × B)", ...REPORT_ARENAS],
       group("duel").map((s) => [s.label, ...winRow(s)]),
     ),
   );
@@ -579,7 +558,7 @@ export function renderBattleReport(result: BattleSweepResult): string {
   out.push("");
   out.push(
     table(
-      ["Espelho", ...ARENAS],
+      ["Espelho", ...REPORT_ARENAS],
       group("mirror").map((s) => [s.label, ...winRow(s)]),
     ),
   );
@@ -602,7 +581,7 @@ export function renderBattleReport(result: BattleSweepResult): string {
       }
     }
   }
-  out.push(table(["Confronto", ...ARENAS], woundedRows));
+  out.push(table(["Confronto", ...REPORT_ARENAS], woundedRows));
   out.push("");
 
   out.push("## Lutas maiores");
@@ -611,7 +590,7 @@ export function renderBattleReport(result: BattleSweepResult): string {
   out.push("");
   out.push(
     table(
-      ["Cenário", ...ARENAS],
+      ["Cenário", ...REPORT_ARENAS],
       [...group("team"), ...group("ffa")].map((s) => [s.label, ...winRow(s)]),
     ),
   );
@@ -623,10 +602,10 @@ export function renderBattleReport(result: BattleSweepResult): string {
   out.push("");
   out.push(
     table(
-      ["Cenário", ...ARENAS],
+      ["Cenário", ...REPORT_ARENAS],
       all.map((s) => [
         s.label,
-        ...ARENAS.map((arena) => {
+        ...REPORT_ARENAS.map((arena) => {
           const [p10, p50, p90, max] = at(s, arena).seconds;
           return `${p10.toFixed(1)} · **${p50.toFixed(1)}** · ${p90.toFixed(1)} · ${max.toFixed(1)}`;
         }),
@@ -643,10 +622,10 @@ export function renderBattleReport(result: BattleSweepResult): string {
   out.push("");
   out.push(
     table(
-      ["Cenário", ...ARENAS],
+      ["Cenário", ...REPORT_ARENAS],
       all.map((s) => [
         s.label,
-        ...ARENAS.map((arena) => {
+        ...REPORT_ARENAS.map((arena) => {
           const st = at(s, arena);
           return `${pct(st.idle, st.battles)} / ${pct(st.edge, st.battles)}`;
         }),
@@ -658,15 +637,15 @@ export function renderBattleReport(result: BattleSweepResult): string {
   out.push("## Fuga carregada");
   out.push("");
   out.push(
-    `Um quadrado com a bolsa cheia (${params.dna.square.capacity} de matéria) contra um círculo: a taxa com que o quadrado sai pela borda, com o preset portador (larga a bolsa com o inimigo a 4 células, depois foge) e só fugindo, com a bolsa. No trecho de entrada, a saída está a um passo; no centro (o harness o põe lá depois do setup), ele precisa atravessar meia arena com o freio da carga.`,
+    `Um quadrado com a bolsa cheia (${params.dna.square.capacity} de matéria) contra um círculo: a taxa com que o quadrado sai pela borda, com o preset portador (larga a bolsa com o inimigo a 4 células, depois foge) e só fugindo, com a bolsa. Ele nasce na zona do seu lado e precisa chegar à borda com o freio da carga.`,
   );
   out.push("");
   out.push(
     table(
-      ["Cenário", ...ARENAS],
+      ["Cenário", ...REPORT_ARENAS],
       group("carry").map((s) => [
         s.label,
-        ...ARENAS.map((arena) => {
+        ...REPORT_ARENAS.map((arena) => {
           const st = at(s, arena);
           return `${pct(st.firstEscaped, st.battles)} escapa`;
         }),
@@ -683,10 +662,10 @@ export function renderBattleReport(result: BattleSweepResult): string {
   out.push("");
   out.push(
     table(
-      ["Cenário", ...ARENAS],
+      ["Cenário", ...REPORT_ARENAS],
       [...group("duel"), ...group("team"), ...group("ffa")].map((s) => [
         s.label,
-        ...ARENAS.map((arena) => {
+        ...REPORT_ARENAS.map((arena) => {
           const st = at(s, arena);
           return `${msText(st.ms[0])} · ${msText(st.ms[1])} · ${msText(st.msPer2400)}/2400`;
         }),
