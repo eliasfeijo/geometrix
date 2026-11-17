@@ -31,7 +31,7 @@ export function stepBattle(
   if (state.ended !== null) return [];
   const log = createEventLog(state.tick);
   const hits: Hit[] = [];
-  applyCommands(state, commands);
+  applyCommands(state, log, commands);
   turnToIntent(state);
   attack(state, log, hits);
   moveParticipants(state);

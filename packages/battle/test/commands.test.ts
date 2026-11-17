@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { applyCommands, validateCommand } from "../src/commands.ts";
+import { createEventLog } from "../src/events.ts";
 import { battleOn, FIELD } from "./helpers.ts";
 
 function battle() {
@@ -53,7 +54,7 @@ describe("validateCommand", () => {
 describe("applyCommands", () => {
   test("intent, latch and face change the participant, in arrival order", () => {
     const state = battle();
-    applyCommands(state, [
+    applyCommands(state, createEventLog(0), [
       { type: "intent", id: 1, move: "up", attack: true },
       { type: "attackOnce", id: 1 },
       { type: "face", id: 1, dir: "down" },
@@ -73,7 +74,7 @@ describe("applyCommands", () => {
   test("a refused command has no effect, and the rest still apply", () => {
     const state = battle();
     const before = structuredClone(state.participants[1]);
-    applyCommands(state, [
+    applyCommands(state, createEventLog(0), [
       { type: "intent", id: 2, move: "up", attack: true },
       { type: "face", id: 2, dir: "up" },
       { type: "face", id: 1, dir: "up" },
