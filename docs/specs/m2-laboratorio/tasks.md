@@ -279,10 +279,57 @@ Quadrado × triângulo continua 100/0 nas três. Na fuga carregada, largar a bol
 3. **A fuga carregada sai da zona:** o harness não move mais o quadrado para o centro (a zona já fica longe da saída).
 4. **A dificuldade** fica no setup de cada participante (`reaction`, também no `join`) e no estado; a visão a mostra.
    O sweep usa o normal, salvo os espelhos difícil × fácil (grupo novo, "a dificuldade pesa").
-5. **`BATTLE_VERSION` continua 1:** o setup mudou de formato (`reaction`), mas nenhum log foi exportado ainda.
+5. **`BATTLE_VERSION` continua 1:** o setup mudou de formato (`reaction`) antes do primeiro log exportado. **Daqui em
+   diante, ele sobe** quando o mesmo log passar a dar outro resultado: a *fixture* do laboratório
+   (`apps/cli/test/fixtures/lab-battle.json`) é o primeiro log guardado, e o teste dela falha se a regra mudar sem a
+   versão subir.
 
 **Pendente de confirmação do dono:** o *jitter* de cada nível (fácil 600 ± 250 ms, normal 250 ± 100, difícil
 100 ± 50). A spec só dá o período; usei a proporção do normal (40%).
+
+**O laboratório** (`npm run lab`, ou `npm run build` + `npm run server` e `/lab`). Medido no Chromium headless,
+dirigido pelo CDP (o 1 × 1 padrão nas pedras, dominando o quadrado com as setas e o espaço, 43–45 teclas por
+batalha, a interpolação ligada):
+
+| RTT | Tecla → tela, mediana | p95 | Esperado (RTT + 1 tick de interpolação + até 1 tick de espera) |
+|---|---|---|---|
+| 0 ms | 77 ms | 97 ms | 50–100 ms |
+| 100 ms | 188 ms | 211 ms | 150–200 ms, ± 20% de *jitter* do RTT |
+| 300 ms | 396 ms | 439 ms | 350–400 ms, ± 60 ms de *jitter* |
+
+Sem acúmulo ao longo da batalha (o p95 fica a ~20–40 ms da mediana). A visão de cada tick tem ~0,6 KB (2 ou 3
+participantes; o plan P6 estimava 2–4 KB para uma dúzia). O build: o worker sai com 26 KB, a página com 37 KB. O log
+exportado dessa sessão (com domínio, reforço num lado novo e a troca de gambits) dá na CLI o hash que o worker
+calculou com o Web Crypto (R-3). **Custo do 3 × 3 por reação** (mediana por 2 400 ticks, 120 batalhas): fácil 30 ms,
+normal 38 ms, **difícil 65 ms** (acima dos 50 ms; o critério da spec mede o auto-resolve com o normal). Testes: 2 664
+no total (eram 2 618 no começo da fase), 41 deles do laboratório.
+
+**Interpretações a validar (o laboratório):**
+
+6. **O canal mora na página:** as duas pernas são simuladas na *thread* principal, entre a página e o worker. Só os
+   comandos de batalha (os do teclado, `control`, `join`, `setGambits`) e os quadros atravessam; os controles do
+   laboratório (começar, pausar, velocidade, exportar) e o pedido da lista de gambits para o editor vão direto.
+7. **O atraso medido** vai da tecla até a chegada do quadro do tick que aplicou o comando, mais um tick quando a
+   interpolação está ligada (o creep chega à célula no fim do deslize).
+8. **A interpolação** desliza por um tick na velocidade atual (50 ms a ×1, 12,5 ms a ×4); quem entra, ou pula mais de
+   duas células, aparece direto na célula.
+9. **O teclado só vale com a arena em foco** (um clique nela): fora dela, o Tab navega pela página como sempre. Perder
+   o foco solta as teclas. Dominar alguém no modo instantâneo volta a velocidade para ×1; o instantâneo fica
+   desligado enquanto alguém está dominado.
+10. **O relógio do worker** recupera até 40 ticks atrasados de uma vez (uma aba em segundo plano, um *debugger*); além
+    disso, recomeça a contar de agora em vez de correr.
+11. **O formulário:** o HP inicial em 100, 75, 50 ou 25%; a carga só de matéria (o cristal fica de fora); vinte nomes
+    próprios do laboratório (Ária, Brasa, Cobre…), na ordem do setup e depois para os reforços. O reforço escolhe entre
+    os lados com alguém na arena ou um lado novo (C, D).
+12. **As cores dos lados C e D:** verde-limão e magenta, depois do azul e do laranja dos times do mundo.
+13. **O relógio de inatividade** aparece perto do creep depois de 2/3 do tempo (10 s de 15 s), como um arco vermelho
+    que encolhe.
+14. **O servidor serve a página também em `/lab`**, além de `/lab.html`.
+
+**Pontos de atenção para o merge:** `apps/client/vite.config.ts` (a 2ª entrada), `package.json` (o `npm run lab`),
+`apps/client/package.json` e `package-lock.json` (o cliente depende do `@geometrix/battle`),
+`apps/server/src/http.ts` (o `/lab`). O `params/arenas/` mudou (as três arenas 2× e a aberta 3×), e o hash de
+referência do `serialize.test.ts` da batalha também.
 
 ## F5 — Às cegas e o playtest (`m2/laboratorio-f5-playtest`)
 
