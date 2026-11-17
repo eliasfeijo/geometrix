@@ -1,0 +1,352 @@
+{
+  "battleVersion": 1,
+  "setup": {
+    "rule": "grid",
+    "arena": [
+      ".............................................",
+      ".............................................",
+      ".............................................",
+      ".............................................",
+      ".............................................",
+      ".............................................",
+      "....................33333....................",
+      "....................33333....................",
+      "................##..33333..##................",
+      "................##.........##................",
+      "................#####...#####................",
+      ".............................................",
+      "..........111........###........222..........",
+      "..........111........###........222..........",
+      "..........111........###........222..........",
+      "..........111........###........222..........",
+      "..........111........###........222..........",
+      ".............................................",
+      "................#####...#####................",
+      "................##.........##................",
+      "................##..44444..##................",
+      "....................44444....................",
+      "....................44444....................",
+      ".............................................",
+      ".............................................",
+      ".............................................",
+      ".............................................",
+      ".............................................",
+      "............................................."
+    ],
+    "seed": 1,
+    "sides": [
+      [
+        {
+          "name": "Ária",
+          "dna": "square",
+          "hp": 300,
+          "carry": { "materia": 0, "cristal": 0 },
+          "gambits": [
+            {
+              "when": { "type": "allyHpBelow", "permille": 500, "cells": 4 },
+              "then": { "type": "protect" }
+            },
+            {
+              "when": { "type": "always" },
+              "then": { "type": "attack", "target": { "by": "nearest" } }
+            }
+          ],
+          "reaction": "normal"
+        }
+      ],
+      [
+        {
+          "name": "Brasa",
+          "dna": "circle",
+          "hp": 120,
+          "carry": { "materia": 0, "cristal": 0 },
+          "gambits": [
+            {
+              "when": { "type": "hpBelow", "permille": 250 },
+              "then": { "type": "flee" }
+            },
+            {
+              "when": { "type": "projectileIncoming" },
+              "then": { "type": "dodge" }
+            },
+            {
+              "when": { "type": "enemyWithin", "cells": 3 },
+              "then": { "type": "keepDistance", "target": { "by": "nearest" } }
+            },
+            {
+              "when": { "type": "always" },
+              "then": { "type": "attack", "target": { "by": "weakest" } }
+            }
+          ],
+          "reaction": "normal"
+        }
+      ]
+    ]
+  },
+  "params": {
+    "tick": { "ticksPerSecond": 20 },
+    "dna": {
+      "square": {
+        "hp": 300,
+        "damage": 30,
+        "range": 1,
+        "cooldownMs": 1000,
+        "cellsPerSecond": 3,
+        "projectileCellsPerSecond": 0,
+        "capacity": 30
+      },
+      "triangle": {
+        "hp": 200,
+        "damage": 20,
+        "range": 4,
+        "cooldownMs": 800,
+        "cellsPerSecond": 4,
+        "projectileCellsPerSecond": 10,
+        "capacity": 20
+      },
+      "circle": {
+        "hp": 120,
+        "damage": 24,
+        "range": 6,
+        "cooldownMs": 800,
+        "cellsPerSecond": 5,
+        "projectileCellsPerSecond": 12,
+        "capacity": 10
+      }
+    },
+    "carry": { "fullBrakePermille": 500 },
+    "exit": { "dwellMs": 2000 },
+    "inactivity": { "timeoutMs": 15000 },
+    "ai": {
+      "easy": { "decisionMs": 600, "decisionJitterMs": 250 },
+      "normal": { "decisionMs": 250, "decisionJitterMs": 100 },
+      "hard": { "decisionMs": 100, "decisionJitterMs": 50 }
+    },
+    "gambits": { "maxRules": 8 },
+    "limits": { "maxSides": 4, "maxPerSide": 5 }
+  },
+  "ticks": 370,
+  "commands": [
+    {
+      "tick": 35,
+      "commands": [{ "type": "control", "id": 1, "controller": "human" }]
+    },
+    {
+      "tick": 42,
+      "commands": [
+        { "type": "intent", "id": 1, "move": "right", "attack": false }
+      ]
+    },
+    {
+      "tick": 57,
+      "commands": [{ "type": "intent", "id": 1, "move": null, "attack": false }]
+    },
+    {
+      "tick": 60,
+      "commands": [
+        { "type": "attackOnce", "id": 1 },
+        { "type": "intent", "id": 1, "move": null, "attack": true }
+      ]
+    },
+    {
+      "tick": 62,
+      "commands": [{ "type": "intent", "id": 1, "move": null, "attack": false }]
+    },
+    {
+      "tick": 67,
+      "commands": [{ "type": "intent", "id": 1, "move": "up", "attack": false }]
+    },
+    {
+      "tick": 72,
+      "commands": [{ "type": "intent", "id": 1, "move": null, "attack": false }]
+    },
+    {
+      "tick": 76,
+      "commands": [
+        { "type": "intent", "id": 1, "move": "right", "attack": false }
+      ]
+    },
+    {
+      "tick": 91,
+      "commands": [{ "type": "intent", "id": 1, "move": null, "attack": false }]
+    },
+    { "tick": 93, "commands": [{ "type": "attackOnce", "id": 1 }] },
+    {
+      "tick": 94,
+      "commands": [{ "type": "intent", "id": 1, "move": null, "attack": true }]
+    },
+    {
+      "tick": 96,
+      "commands": [{ "type": "intent", "id": 1, "move": null, "attack": false }]
+    },
+    {
+      "tick": 100,
+      "commands": [{ "type": "intent", "id": 1, "move": "up", "attack": false }]
+    },
+    {
+      "tick": 106,
+      "commands": [{ "type": "intent", "id": 1, "move": null, "attack": false }]
+    },
+    {
+      "tick": 110,
+      "commands": [
+        { "type": "intent", "id": 1, "move": "right", "attack": false }
+      ]
+    },
+    {
+      "tick": 125,
+      "commands": [{ "type": "intent", "id": 1, "move": null, "attack": false }]
+    },
+    {
+      "tick": 128,
+      "commands": [
+        { "type": "attackOnce", "id": 1 },
+        { "type": "intent", "id": 1, "move": null, "attack": true }
+      ]
+    },
+    {
+      "tick": 129,
+      "commands": [{ "type": "intent", "id": 1, "move": null, "attack": false }]
+    },
+    {
+      "tick": 134,
+      "commands": [{ "type": "intent", "id": 1, "move": "up", "attack": false }]
+    },
+    {
+      "tick": 139,
+      "commands": [{ "type": "intent", "id": 1, "move": null, "attack": false }]
+    },
+    {
+      "tick": 144,
+      "commands": [
+        { "type": "intent", "id": 1, "move": "right", "attack": false }
+      ]
+    },
+    {
+      "tick": 158,
+      "commands": [{ "type": "intent", "id": 1, "move": null, "attack": false }]
+    },
+    { "tick": 161, "commands": [{ "type": "attackOnce", "id": 1 }] },
+    {
+      "tick": 162,
+      "commands": [{ "type": "intent", "id": 1, "move": null, "attack": true }]
+    },
+    {
+      "tick": 164,
+      "commands": [{ "type": "intent", "id": 1, "move": null, "attack": false }]
+    },
+    {
+      "tick": 168,
+      "commands": [{ "type": "intent", "id": 1, "move": "up", "attack": false }]
+    },
+    {
+      "tick": 174,
+      "commands": [{ "type": "intent", "id": 1, "move": null, "attack": false }]
+    },
+    {
+      "tick": 178,
+      "commands": [
+        { "type": "intent", "id": 1, "move": "right", "attack": false }
+      ]
+    },
+    {
+      "tick": 192,
+      "commands": [{ "type": "intent", "id": 1, "move": null, "attack": false }]
+    },
+    {
+      "tick": 196,
+      "commands": [
+        { "type": "attackOnce", "id": 1 },
+        { "type": "intent", "id": 1, "move": null, "attack": true }
+      ]
+    },
+    {
+      "tick": 197,
+      "commands": [{ "type": "intent", "id": 1, "move": null, "attack": false }]
+    },
+    {
+      "tick": 202,
+      "commands": [{ "type": "intent", "id": 1, "move": "up", "attack": false }]
+    },
+    {
+      "tick": 208,
+      "commands": [{ "type": "intent", "id": 1, "move": null, "attack": false }]
+    },
+    {
+      "tick": 212,
+      "commands": [
+        { "type": "intent", "id": 1, "move": "right", "attack": false }
+      ]
+    },
+    {
+      "tick": 226,
+      "commands": [{ "type": "intent", "id": 1, "move": null, "attack": false }]
+    },
+    {
+      "tick": 229,
+      "commands": [
+        { "type": "attackOnce", "id": 1 },
+        { "type": "intent", "id": 1, "move": null, "attack": true }
+      ]
+    },
+    {
+      "tick": 231,
+      "commands": [{ "type": "intent", "id": 1, "move": null, "attack": false }]
+    },
+    {
+      "tick": 235,
+      "commands": [{ "type": "intent", "id": 1, "move": "up", "attack": false }]
+    },
+    {
+      "tick": 242,
+      "commands": [{ "type": "intent", "id": 1, "move": null, "attack": false }]
+    },
+    {
+      "tick": 245,
+      "commands": [
+        {
+          "type": "join",
+          "side": 2,
+          "participant": {
+            "name": "Cobre",
+            "dna": "triangle",
+            "hp": 200,
+            "carry": { "materia": 0, "cristal": 0 },
+            "gambits": [
+              {
+                "when": { "type": "hpBelow", "permille": 250 },
+                "then": { "type": "flee" }
+              },
+              {
+                "when": { "type": "projectileIncoming" },
+                "then": { "type": "dodge" }
+              },
+              {
+                "when": { "type": "always" },
+                "then": { "type": "attack", "target": { "by": "nearest" } }
+              }
+            ],
+            "reaction": "normal"
+          }
+        }
+      ]
+    },
+    {
+      "tick": 282,
+      "commands": [
+        {
+          "type": "setGambits",
+          "id": 2,
+          "gambits": [
+            {
+              "when": { "type": "enemyWithin", "cells": 4 },
+              "then": { "type": "drop" }
+            },
+            { "when": { "type": "always" }, "then": { "type": "flee" } }
+          ]
+        }
+      ]
+    }
+  ],
+  "finalHash": "76a5fcf49c91a0d48fb115c8f34df806b8db79a1cc60175d6ecdd1c030e68241"
+}
