@@ -339,7 +339,7 @@ arena para o teclado valer, e o aliado já está morrendo. A nota às cegas medi
 Decidido: a **contagem de 3 s** no começo é regra da batalha (spec D21, S-4; GDD 06) e a sessão às cegas usa **um
 setup único** (spec §8). O resto do pacote abaixo é do laboratório (sem gameplay).
 
-- [ ] A contagem do começo (spec D21, S-4): um parâmetro em `params/battle.json` (e nos params de teste), em que só
+- [x] A contagem do começo (spec D21, S-4): um parâmetro em `params/battle.json` (e nos params de teste), em que só
       o `face` vale, do humano e da IA; o evento ou o campo da visão que a página precisa para mostrá-la; a
       `BATTLE_VERSION` sobe para 2 (o mesmo log passa a dar outro resultado), o hash de referência e a *fixture* do
       laboratório refeitos (um log novo exportado da página). **Interpretações a validar:** o relógio de inatividade

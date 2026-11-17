@@ -80,6 +80,7 @@ apps/client/
 ```json
 {
   "tick": { "ticksPerSecond": 20 },
+  "start": { "countdownMs": 3000 },
   "dna": {
     "square":   { "hp": 300, "damage": 30, "range": 1, "cooldownMs": 1000, "cellsPerSecond": 3,
                   "projectileCellsPerSecond": 0, "capacity": 30 },
@@ -97,7 +98,9 @@ apps/client/
 }
 ```
 
-O `test/params.json` do pacote fixa os mesmos números e não acompanha o balanceamento, como no `sim`.
+O `test/params.json` do pacote fixa os mesmos números e não acompanha o balanceamento, como no `sim`. A exceção é a
+contagem do começo (spec D21, F5): 0 nos params de teste, para as regras serem testadas desde o primeiro tick; os
+testes da contagem a ligam.
 
 ## 4. A arena
 
