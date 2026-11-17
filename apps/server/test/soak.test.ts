@@ -1,3 +1,4 @@
+import { eventsFor, type SimEvent } from "@geometrix/sim";
 import { describe, expect, test } from "vitest";
 import {
   interruptions,
@@ -90,7 +91,7 @@ describe("interruptions", () => {
 });
 
 describe("rebuild", () => {
-  test("a hosted world's log rebuilds its state", () => {
+  test("a hosted world's log rebuilds its state and its events", () => {
     const store = new Store(":memory:");
     const host = WorldHost.create(
       {
@@ -110,16 +111,27 @@ describe("rebuild", () => {
       },
     );
     for (let i = 0; i < 400; i++) host.tick();
-    const state = rebuild({
-      simVersion: 2,
-      seed: 3,
-      params: testParams(),
-      ticks: 400,
-      finalHash: stateHash(host.state),
-      commands: store.commandsFrom(host.id, 0),
-    });
-    expect(state.tick).toBe(400);
+    while (host.chronicle(0).length < 2) host.tick();
+    const ticks = host.state.tick;
+    const events: SimEvent[] = [];
+    const state = rebuild(
+      {
+        simVersion: 2,
+        seed: 3,
+        params: testParams(),
+        ticks,
+        finalHash: stateHash(host.state),
+        commands: store.commandsFrom(host.id, 0),
+      },
+      (tick) => events.push(...tick),
+    );
+    expect(state.tick).toBe(ticks);
     expect(stateHash(state)).toBe(stateHash(host.state));
+    for (const team of [0, 1]) {
+      expect(eventsFor(events, team)).toEqual(
+        store.recentChronicle(host.id, team, 1000),
+      );
+    }
   });
 });
 
