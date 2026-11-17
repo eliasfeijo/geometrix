@@ -11,6 +11,8 @@ import {
   type Params,
   type StrategistId,
 } from "@geometrix/sim";
+import { parseBattleParams } from "@geometrix/battle";
+import { BATTLE_FILES, battleSweep, writeBattleSweep } from "./battle.ts";
 import { measureNet, NET_FILES, netVerdicts, writeNet } from "./net.ts";
 import { renderReport } from "./report.ts";
 import { readRun, RUN_FILES, runId, simulate, writeRun } from "./sim.ts";
@@ -18,6 +20,7 @@ import { parseSeeds, parseSet, runSweep, SweepError } from "./sweep.ts";
 import { verify } from "./verify.ts";
 
 const DEFAULT_PARAMS = new URL("../../../params/default.json", import.meta.url);
+const BATTLE_PARAMS = new URL("../../../params/battle.json", import.meta.url);
 
 const USAGE = `usage: geo <command> [options]
 
@@ -56,7 +59,15 @@ commands:
            runs/<id>/net.md and net.json. Exit 1 if a target fails
            --seed, --params, --days | --hours, --strategist, --out, --id
                                  as in sim
-           --hash-every <n>      ticks between view hashes (default 60)`;
+           --hash-every <n>      ticks between view hashes (default 60)
+  battle   the battle lab without a page (M2 laboratório):
+           geo battle sweep: the preset matchups on every arena and seed,
+           all under the gambits; writes runs/<id>/battle.md and battle.csv
+             --seeds <list>      default 1-100
+             --quick             a slice for CI: seeds 1-10
+             --params <file>     default params/battle.json
+             --out, --id         as in sim
+             --max-seconds <n>   fail (exit 1) if the sweep takes longer`;
 
 export type Output = {
   log(line: string): void;
@@ -312,6 +323,63 @@ function runNet(args: string[], out: Output): number {
   return failed.length === 0 ? 0 : 1;
 }
 
+function battleParamsSource(file: string | undefined): string {
+  return file ?? relative(process.cwd(), fileURLToPath(BATTLE_PARAMS));
+}
+
+function runBattleSweep(args: string[], out: Output): number {
+  const { values } = parseArgs({
+    args,
+    options: {
+      seeds: { type: "string" },
+      quick: { type: "boolean", default: false },
+      params: { type: "string" },
+      out: { type: "string", default: "runs" },
+      id: { type: "string" },
+      "max-seconds": { type: "string" },
+    },
+    strict: true,
+  });
+  const seeds = parseSeeds(values.seeds ?? (values.quick ? "1-10" : "1-100"));
+  const params = parseBattleParams(
+    JSON.parse(readFileSync(values.params ?? BATTLE_PARAMS, "utf8")),
+  );
+  const maxSeconds =
+    values["max-seconds"] === undefined
+      ? null
+      : parseUint("max-seconds", values["max-seconds"], 1);
+  const id = values.id ?? `${runId(seeds[0]!).replace(/-s\d+$/, "")}-battle`;
+  const dir = join(values.out, id);
+  if (existsSync(dir)) throw new UsageError(`run already exists: ${dir}`);
+
+  out.log(`geo battle sweep: seeds ${seeds[0]}-${seeds.at(-1)}`);
+  const result = battleSweep(
+    { id, params, paramsSource: battleParamsSource(values.params), seeds },
+    out.clock,
+  );
+  writeBattleSweep(dir, result);
+  const battles = result.cells.reduce((n, c) => n + c.records.length, 0);
+  out.log(`  ${battles} battles in ${result.wallSeconds.toFixed(1)} s`);
+  out.log(`  ${join(dir, BATTLE_FILES.report)}`);
+  if (maxSeconds !== null && result.wallSeconds > maxSeconds) {
+    out.error(
+      `FAIL: ${result.wallSeconds.toFixed(1)} s is over the ${maxSeconds} s budget`,
+    );
+    return 1;
+  }
+  return 0;
+}
+
+function runBattle(args: string[], out: Output): number {
+  const [sub, ...rest] = args;
+  switch (sub) {
+    case "sweep":
+      return runBattleSweep(rest, out);
+    default:
+      throw new UsageError(`unknown battle command: ${String(sub)}`);
+  }
+}
+
 /** Runs the CLI and returns the exit code: 0 ok, 1 check failed, 2 usage. */
 export function run(argv: string[], out: Output = console): number {
   const [command, ...args] = argv;
@@ -327,6 +395,8 @@ export function run(argv: string[], out: Output = console): number {
         return runVerify(args, out);
       case "net":
         return runNet(args, out);
+      case "battle":
+        return runBattle(args, out);
       case undefined:
       case "help":
       case "--help":
