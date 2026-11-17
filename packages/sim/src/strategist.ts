@@ -9,6 +9,7 @@
 // runs it for every team; a server world may give each team one bot (spec
 // section 5, F6 details). Its commands go into the log like a human's.
 
+import { isReaction, type Rule } from "./autopilot.ts";
 import { canAfford } from "./economy.ts";
 import type { Command, CommandInput } from "./commands.ts";
 import { nearestUnseen } from "./known.ts";
@@ -20,7 +21,7 @@ import {
   type GameMap,
 } from "./map.ts";
 import { DNAS, type Dna, type Params } from "./params.ts";
-import { collectorRules, roadBuilderRules } from "./presets.ts";
+import { collectorRules, raiderRules, roadBuilderRules } from "./presets.ts";
 import { productionRefusal } from "./production.ts";
 import { nextSegment, type RoadContext } from "./roads.ts";
 import { canonicalJson } from "./serialize.ts";
@@ -42,6 +43,17 @@ export const BALANCED = {
   cristalShare: { numerator: 1, denominator: 3 },
   /** Creeps building roads while some deposit still lacks one. */
   builders: 1,
+  /**
+   * Share of the team's creeps raiding, rounded down (M2 encontro spec D15,
+   * plan P8): they extort loaded enemies in sight. Only while the team can
+   * still reach a cell never seen (F3 checkpoint, C1).
+   */
+  raiderShare: { numerator: 1, denominator: 6 },
+  /**
+   * The gatherers' posture when approached, by DNA (F3 checkpoint, C2; see
+   * postureRules): below this HP share the square flees.
+   */
+  posture: { fleeBelowPermille: 400 },
 } as const;
 
 /** One bot player per team; player ids are team + 1. */
@@ -147,7 +159,10 @@ export function strategistActs(tick: number): boolean {
 }
 
 type Role =
-  { kind: "materia" } | { kind: "cristal" } | { kind: "builder"; target: Cell };
+  | { kind: "materia" }
+  | { kind: "cristal" }
+  | { kind: "builder"; target: Cell }
+  | { kind: "raider" };
 
 function balanced(known: Knowledge): Command[] {
   const commands: Command[] = [];
@@ -182,12 +197,63 @@ function scarcestDna(seen: TeamView, team: Team): Dna {
   return DNAS[counts.indexOf(Math.min(...counts))]!;
 }
 
-/** The role a creep's rules match; anything else counts as materia. */
+/**
+ * The reaction rules the bot puts before a gatherer's rules (F3 checkpoint,
+ * C2): the square refuses an extortion and fights, fleeing below
+ * BALANCED.posture.fleeBelowPermille of its HP; the triangle pays any
+ * extortion and flees an attack (2nd round); the circle always flees. The
+ * rules cannot tell the dialogue from the fight: a triangle or a circle tries
+ * to flee in every round too. Human players' gatherers keep the defaults
+ * (D13).
+ */
+export function postureRules(dna: Dna): Rule[] {
+  const always = { type: "always" } as const;
+  switch (dna) {
+    case "square":
+      return [
+        {
+          when: {
+            type: "hpBelow",
+            permille: BALANCED.posture.fleeBelowPermille,
+          },
+          then: { type: "flee" },
+        },
+        { when: always, then: { type: "fight" } },
+      ];
+    case "triangle":
+      return [
+        { when: always, then: { type: "pay" } },
+        { when: always, then: { type: "flee" } },
+      ];
+    case "circle":
+      return [{ when: always, then: { type: "flee" } }];
+  }
+}
+
+/**
+ * The rules of the presets without a target, without their reaction rules,
+ * as canonical JSON: built once, since roleOf compares every creep with them
+ * every minute.
+ */
+let presetJson: { cristal: string; raider: string } | null = null;
+
+const actionsOf = (rules: readonly Rule[]) =>
+  rules.filter((rule) => !isReaction(rule.then));
+
+/**
+ * The role a creep's rules match, leaving out the reaction rules; anything
+ * else counts as materia.
+ */
 function roleOf(creep: Pick<Creep, "rules">): Role {
-  const rules = canonicalJson(creep.rules);
-  if (rules === canonicalJson(collectorRules("cristal")))
-    return { kind: "cristal" };
-  const build = creep.rules[1]?.then;
+  presetJson ??= {
+    cristal: canonicalJson(collectorRules("cristal")),
+    raider: canonicalJson(actionsOf(raiderRules())),
+  };
+  const actions = actionsOf(creep.rules);
+  const rules = canonicalJson(actions);
+  if (rules === presetJson.cristal) return { kind: "cristal" };
+  if (rules === presetJson.raider) return { kind: "raider" };
+  const build = actions[1]?.then;
   if (
     build?.type === "buildRoad" &&
     rules === canonicalJson(roadBuilderRules(build))
@@ -197,21 +263,42 @@ function roleOf(creep: Pick<Creep, "rules">): Role {
   return { kind: "materia" };
 }
 
+/** The rules the bot gives a creep of `dna` in `role`. */
+function rulesFor(role: Role, dna: Dna): Rule[] {
+  switch (role.kind) {
+    case "raider":
+      return raiderRules();
+    case "materia":
+      return [...postureRules(dna), ...collectorRules("materia")];
+    case "cristal":
+      return [...postureRules(dna), ...collectorRules("cristal")];
+    case "builder":
+      return [...postureRules(dna), ...roadBuilderRules(role.target)];
+  }
+}
+
 /**
  * The road target: the non-empty deposit nearest to the core (Manhattan, ties
- * to the lower id) without a road on its cell and with a segment that can be
- * built toward it. null when there is none.
+ * to the first cell in the team's frame, as explore: the deposit ids are not
+ * mirrored between the teams) without a road on its cell and with a segment
+ * that can be built toward it. null when there is none.
  */
 export function roadTarget(
   state: RoadContext & { deposits: readonly Deposit[] },
   team: Pick<Team, "id" | "core">,
 ): Cell | null {
   const { map } = state;
+  const { width, height } = map;
+  const frameIndex = (c: Cell) =>
+    isRotatedSide(team.id)
+      ? (height - 1 - c.y) * width + (width - 1 - c.x)
+      : c.y * width + c.x;
   const candidates = state.deposits
     .filter((d) => d.amount > 0 && map.road[d.y * map.width + d.x] === 0)
     .sort(
       (a, b) =>
-        manhattan(team.core, a) - manhattan(team.core, b) || a.id - b.id,
+        manhattan(team.core, a) - manhattan(team.core, b) ||
+        frameIndex(a) - frameIndex(b),
     );
   for (const deposit of candidates) {
     if (nextSegment(state, team, deposit) !== null) {
@@ -224,16 +311,20 @@ export function roadTarget(
 /**
  * Moves creeps between roles to reach the balanced split. Creeps leaving a
  * role that has too many are taken lowest id first, and so are the materia
- * creeps that fill a role short of creeps.
+ * creeps that fill a role short of creeps: cristal, then the road builder,
+ * then the raiders.
  */
 function assignRoles(known: Knowledge): Command[] {
   const { seen, team, map, explored, params } = known;
   const creeps = seen.creeps
     .filter(isOwnCreep)
     .filter((c) => c.team === team.id);
+  // Some cell never seen is within the team's reach.
+  const canExplore =
+    nearestUnseen(map, explored, team.core, isRotatedSide(team.id)) !== null;
   const hasCristal =
     seen.deposits.some((d) => d.kind === "cristal" && d.amount > 0) ||
-    nearestUnseen(map, explored, team.core, isRotatedSide(team.id)) !== null;
+    canExplore;
   const { numerator, denominator } = BALANCED.cristalShare;
   const wantCristal = hasCristal
     ? Math.floor((creeps.length * numerator + denominator - 1) / denominator)
@@ -247,6 +338,12 @@ function assignRoles(known: Knowledge): Command[] {
     team,
   );
   const wantBuilders = target === null ? 0 : BALANCED.builders;
+  // With nothing left to explore, a raider would only wait at its core
+  // (encontro F3 checkpoint, C1): it goes back to gathering.
+  const raiders = BALANCED.raiderShare;
+  const wantRaiders = canExplore
+    ? Math.floor((creeps.length * raiders.numerator) / raiders.denominator)
+    : 0;
 
   const roles = new Map(creeps.map((c) => [c, roleOf(c)]));
   const next = new Map(roles);
@@ -267,41 +364,27 @@ function assignRoles(known: Knowledge): Command[] {
   };
   trim("builder", wantBuilders);
   trim("cristal", wantCristal);
+  trim("raider", wantRaiders);
   fill({ kind: "cristal" }, wantCristal);
   if (target !== null) {
     for (const creep of inRole("builder"))
       next.set(creep, { kind: "builder", target });
     fill({ kind: "builder", target }, wantBuilders);
   }
+  fill({ kind: "raider" }, wantRaiders);
 
+  // A raider gets its preset; a gatherer, its role's preset behind its
+  // posture (setRules), also when only the posture is missing (a newborn).
   const commands: Command[] = [];
   for (const creep of creeps) {
     const role = next.get(creep)!;
-    if (canonicalJson(role) === canonicalJson(roles.get(creep))) continue;
-    switch (role.kind) {
-      case "materia":
-        commands.push({
-          type: "applyPreset",
-          creepId: creep.id,
-          preset: "materiaCollector",
-        });
-        break;
-      case "cristal":
-        commands.push({
-          type: "applyPreset",
-          creepId: creep.id,
-          preset: "cristalCollector",
-        });
-        break;
-      case "builder":
-        commands.push({
-          type: "applyPreset",
-          creepId: creep.id,
-          preset: "roadBuilder",
-          target: role.target,
-        });
-        break;
-    }
+    const rules = rulesFor(role, creep.dna);
+    if (canonicalJson(creep.rules) === canonicalJson(rules)) continue;
+    commands.push(
+      role.kind === "raider"
+        ? { type: "applyPreset", creepId: creep.id, preset: "raider" }
+        : { type: "setRules", creepId: creep.id, rules },
+    );
   }
   return commands;
 }

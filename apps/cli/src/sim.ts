@@ -17,6 +17,7 @@ import {
   type StrategistId,
   type WorldState,
 } from "@geometrix/sim";
+import { EncounterTracker, type EncounterTally } from "./encounters.ts";
 import { runBots, type LoggedCommand } from "./harness.ts";
 import { stateHash } from "./hash.ts";
 import { renderReport } from "./report.ts";
@@ -47,6 +48,7 @@ export type SimResult = {
   meta: RunMeta;
   params: Params;
   samples: MetricsSample[];
+  encounters: EncounterTally;
   log: LoggedCommand[];
   state: WorldState;
 };
@@ -67,19 +69,23 @@ export function simulate(
 ): SimResult {
   const { seed, params, ticks, strategists } = options;
   const samples: MetricsSample[] = [];
+  const tracker = new EncounterTracker(strategists.length);
   const started = clock();
   const { state, log } = runBots(
     seed,
     params,
     ticks,
     botsFor(strategists),
-    (s) => {
+    (s, events) => {
+      tracker.record(s, events);
       if (s.tick % SAMPLE_EVERY_TICKS === 0 || s.tick === ticks) {
         samples.push(sampleMetrics(s));
+        tracker.mark(s);
       }
     },
   );
   const wallSeconds = (clock() - started) / 1000;
+  const encounters = tracker.finish(state);
   return {
     meta: {
       id: options.id,
@@ -106,6 +112,7 @@ export function simulate(
     },
     params,
     samples,
+    encounters,
     log,
     state,
   };
@@ -124,6 +131,7 @@ export function runId(seed: number, now: Date = new Date()): string {
 export const RUN_FILES = {
   meta: "run.json",
   samples: "samples.jsonl",
+  encounters: "encounters.json",
   csv: "metrics.csv",
   replay: "replay.json",
   report: "report.md",
@@ -133,7 +141,7 @@ export const RUN_FILES = {
 export function writeRun(dir: string, result: SimResult): void {
   mkdirSync(dirname(dir), { recursive: true });
   mkdirSync(dir);
-  const { meta, params, samples, log } = result;
+  const { meta, params, samples, encounters, log } = result;
   const write = (file: string, text: string) =>
     writeFileSync(join(dir, file), text);
   write(RUN_FILES.meta, metaJson(result));
@@ -141,6 +149,7 @@ export function writeRun(dir: string, result: SimResult): void {
     RUN_FILES.samples,
     samples.map((s) => `${canonicalJson(s)}\n`).join(""),
   );
+  write(RUN_FILES.encounters, `${JSON.stringify(encounters)}\n`);
   write(RUN_FILES.csv, metricsCsv(samples, meta.tickSeconds));
   write(
     RUN_FILES.replay,
@@ -153,7 +162,7 @@ export function writeRun(dir: string, result: SimResult): void {
       commands: log,
     })}\n`,
   );
-  write(RUN_FILES.report, renderReport({ meta, params, samples }));
+  write(RUN_FILES.report, renderReport({ meta, params, samples, encounters }));
 }
 
 /** run.json: the run's meta with its params. */
@@ -166,6 +175,7 @@ export type RunData = {
   meta: RunMeta;
   params: Params;
   samples: MetricsSample[];
+  encounters: EncounterTally;
 };
 
 export function readRun(dir: string): RunData {
@@ -176,7 +186,10 @@ export function readRun(dir: string): RunData {
     .split("\n")
     .filter((line) => line !== "")
     .map((line) => JSON.parse(line) as MetricsSample);
-  return { meta, params, samples };
+  const encounters = JSON.parse(
+    readFileSync(join(dir, RUN_FILES.encounters), "utf8"),
+  ) as EncounterTally;
+  return { meta, params, samples, encounters };
 }
 
 /** Flattens nested numbers into dotted columns: stock.materia, ... */

@@ -1,8 +1,9 @@
 import { describe, expect, test } from "vitest";
 import type { Rule } from "../src/autopilot.ts";
-import { exploreTarget } from "../src/known.ts";
+import { exploreTarget, nearestUnseen } from "../src/known.ts";
 import { mirrorCell, Terrain } from "../src/map.ts";
 import { collectorRules, scoutRules } from "../src/presets.ts";
+import { createRng, nextInt } from "../src/rng.ts";
 import { step } from "../src/step.ts";
 import { updateVision } from "../src/vision.ts";
 import { createWorld, type WorldState } from "../src/world.ts";
@@ -71,6 +72,67 @@ describe("exploreTarget", () => {
     expect(exploreTarget(world, creep)).toEqual({ x: 8, y: 2 });
     knownAs(world, ["...#?#....", "...###....", ".........."]);
     expect(exploreTarget(world, creep)).toBeNull();
+  });
+
+  test("finds a cell never seen whenever one can be reached, on random maps", () => {
+    // Reference: any cell never seen reachable through passable or unseen
+    // cells (the whole-map search the shortcut skips).
+    const reachable = (
+      width: number,
+      terrain: number[],
+      explored: number[],
+      start: number,
+    ) => {
+      const seen = new Set([start]);
+      const queue = [start];
+      while (queue.length > 0) {
+        const i = queue.shift()!;
+        if (explored[i] === 0) return true;
+        const x = i % width;
+        for (const j of [
+          x > 0 ? i - 1 : -1,
+          x < width - 1 ? i + 1 : -1,
+          i - width,
+          i + width,
+        ]) {
+          if (j < 0 || j >= terrain.length || seen.has(j)) continue;
+          if (explored[j] === 1 && terrain[j] === Terrain.rock) continue;
+          seen.add(j);
+          queue.push(j);
+        }
+      }
+      return false;
+    };
+    const rng = createRng(7);
+    let found = 0;
+    for (let n = 0; n < 400; n++) {
+      const width = 6 + nextInt(rng, 6);
+      const height = 3 + nextInt(rng, 6);
+      const size = width * height;
+      const terrain = Array.from({ length: size }, () =>
+        nextInt(rng, 3) === 0 ? Terrain.rock : Terrain.jungle,
+      );
+      // Mostly seen, as late in a world; never seen as passable jungle.
+      const explored = Array.from({ length: size }, () =>
+        nextInt(rng, 8) === 0 ? 0 : 1,
+      );
+      for (let i = 0; i < size; i++) {
+        if (explored[i] === 0) terrain[i] = Terrain.jungle;
+      }
+      const start = nextInt(rng, size);
+      explored[start] = 1;
+      terrain[start] = Terrain.jungle;
+      const map = { width, height, terrain };
+      const from = { x: start % width, y: Math.floor(start / width) };
+      const target = nearestUnseen(map, explored, from, false);
+      expect(target !== null, `case ${n}`).toBe(
+        reachable(width, terrain, explored, start),
+      );
+      if (target !== null) found++;
+    }
+    // Both answers come up.
+    expect(found).toBeGreaterThan(50);
+    expect(400 - found).toBeGreaterThan(20);
   });
 
   test("skips the targets teammates already explore toward", () => {
