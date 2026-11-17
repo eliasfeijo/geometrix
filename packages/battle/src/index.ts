@@ -14,6 +14,7 @@ export * from "./log.ts";
 export * from "./mind.ts";
 export * from "./movement.ts";
 export * from "./params.ts";
+export * from "./presets.ts";
 export * from "./rng.ts";
 export * from "./serialize.ts";
 export * from "./setup.ts";

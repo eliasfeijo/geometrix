@@ -7,10 +7,12 @@
 // there; a pile on the ring is still picked up).
 //
 //   attack        go until the target is aligned within range, then face it
-//                 and fire; melee: until next to it
+//                 and fire; melee: until next to it; one step short of the
+//                 line, wait half the time (see lineUp)
 //   approach      go next to the target, then stand facing it
 //   keepDistance  stand aligned with the target between range − 1 and range,
-//                 and fire from there; back off when it comes closer
+//                 and fire from there; back off when it comes closer; lines
+//                 up as attack does
 //   dodge         step to a free cell off every incoming projectile's line
 //   protect       stand next to the most wounded ally, on the side of the
 //                 enemy nearest to it; there, fire at that enemy if aligned
@@ -72,6 +74,27 @@ function reach(
 }
 
 /**
+ * Line up a shot at `target` from `goals`, and fire from there. One step
+ * short of the line, it waits instead half the time (one rng call): two
+ * shooters that both step into the other's row swap rows forever when the
+ * gap is odd, and the one that waits lets the other walk into its line.
+ */
+function lineUp(
+  mind: Mind,
+  target: ViewParticipant,
+  goals: readonly number[],
+): Commands {
+  const way = towards(mind, goals);
+  if (way === null) return null;
+  if (way === "here") return fireAt(mind, target);
+  const next = neighbor(mind.state.arena, mind.self.cell, way);
+  if (goals.includes(next) && nextInt(mind.state.rng, 2) === 0) {
+    return still(mind);
+  }
+  return go(mind, way);
+}
+
+/**
  * The cells an action may stop on: in the grid and off the exit ring, where
  * standing a while would escape (spec D7). Only flee aims at the ring.
  */
@@ -97,7 +120,7 @@ function attack(mind: Mind, by: Target): Commands {
     mind,
     alignedCells(mind, target.cell, mind.kit.range),
   );
-  return reach(mind, goals, () => fireAt(mind, target));
+  return lineUp(mind, target, goals);
 }
 
 function approach(mind: Mind, by: Target): Commands {
@@ -124,7 +147,7 @@ function keepDistance(mind: Mind, by: Target): Commands {
   if (goals.length === 0) {
     goals = standable(mind, alignedCells(mind, target.cell, range));
   }
-  return reach(mind, goals, () => fireAt(mind, target));
+  return lineUp(mind, target, goals);
 }
 
 function dodge(mind: Mind): Commands {
