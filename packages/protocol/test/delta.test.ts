@@ -279,6 +279,65 @@ describe("diffView / applyDelta", () => {
     expectApplies(world, seen, forgotten);
   });
 
+  test("an encounter opens, changes stage and closes; its demand by value", () => {
+    const { world, client, next } = setup();
+    const mine = world.creeps.find((c) => c.team === 0)!;
+    const enemy = world.creeps.find((c) => c.team === 1)!;
+    const encounter = {
+      id: world.nextId++,
+      aggressor: mine.id,
+      victim: enemy.id,
+      intent: "extort" as const,
+      stage: "dialogue" as "dialogue" | "fight",
+      demand: { materia: 3, cristal: 0 },
+      deadlineTick: null,
+      reply: null,
+      aggressorReply: null,
+      nextRoundTick: null as number | null,
+      rounds: 0,
+      x: mine.x,
+      y: mine.y,
+    };
+    world.encounters.push(encounter);
+    const opened = next();
+    expect(opened.encounters).toEqual({ upsert: [encounter] });
+    let seen = expectApplies(world, client, opened);
+    // The demand recreated with the same value is no change.
+    encounter.demand = { materia: 3, cristal: 0 };
+    expect(next().encounters).toBeUndefined();
+    encounter.stage = "fight";
+    encounter.nextRoundTick = 10;
+    const fight = next();
+    expect(fight.encounters).toEqual({
+      upsert: [{ id: encounter.id, stage: "fight", nextRoundTick: 10 }],
+    });
+    seen = expectApplies(world, seen, fight);
+    world.encounters = [];
+    const closed = next();
+    expect(closed.encounters).toEqual({ remove: [encounter.id] });
+    expectApplies(world, seen, closed);
+  });
+
+  test("a remembered spoil's cargo changing in place is caught", () => {
+    const { world, client, next } = setup();
+    const spoil = {
+      id: world.nextId++,
+      cargo: { materia: 4, cristal: 1 },
+      x: 2,
+      y: 2,
+    };
+    world.memory[0]!.spoils.push(spoil);
+    const dropped = next();
+    expect(dropped.spoils).toEqual({ upsert: [spoil] });
+    const seen = expectApplies(world, client, dropped);
+    spoil.cargo.materia = 1;
+    const taken = next();
+    expect(taken.spoils).toEqual({
+      upsert: [{ id: spoil.id, cargo: { materia: 1, cristal: 1 } }],
+    });
+    expectApplies(world, seen, taken);
+  });
+
   test("applyDelta shares what did not change and leaves the base alone", () => {
     const { world, client, next } = setup();
     world.creeps[0]!.x += 1;

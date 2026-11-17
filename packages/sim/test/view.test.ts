@@ -1,17 +1,24 @@
 import { describe, expect, test } from "vitest";
 import { collectorRules } from "../src/presets.ts";
 import { serialize } from "../src/serialize.ts";
+import { dropSpoil } from "../src/spoils.ts";
 import { step } from "../src/step.ts";
 import {
   fullView,
   isOwnCreep,
+  isOwnEncounter,
   isOwnPlayer,
   isOwnTeam,
   ownTeam,
   view,
 } from "../src/view.ts";
 import { updateVision } from "../src/vision.ts";
-import { createWorld, type Creep, type WorldState } from "../src/world.ts";
+import {
+  createWorld,
+  type Creep,
+  type Encounter,
+  type WorldState,
+} from "../src/world.ts";
 import { creepOf, loadTestParams, run, textWorld } from "./helpers.ts";
 
 const params = loadTestParams();
@@ -264,6 +271,93 @@ describe("view", () => {
   });
 });
 
+/** An encounter between two creeps, opened by hand on the victim's cell. */
+function encounterOf(
+  world: WorldState,
+  aggressor: Creep,
+  victim: Creep,
+): Encounter {
+  const encounter: Encounter = {
+    id: world.nextId++,
+    aggressor: aggressor.id,
+    victim: victim.id,
+    intent: "extort",
+    stage: "fight",
+    demand: { materia: 0, cristal: 4 },
+    deadlineTick: null,
+    reply: "flee",
+    aggressorReply: "flee",
+    nextRoundTick: world.tick + 10,
+    rounds: 2,
+    x: victim.x,
+    y: victim.y,
+  };
+  world.encounters.push(encounter);
+  aggressor.engagement = encounter.id;
+  victim.engagement = encounter.id;
+  return encounter;
+}
+
+describe("encounters and spoils in the view (M2 encontro plan section 8)", () => {
+  test("an encounter of the team is whole, but the other side's pending reply", () => {
+    const { world, enemy } = leakyWorld();
+    const mine = creepOf(world, 0, "triangle");
+    Object.assign(mine, { x: 2, y: 1 });
+    const encounter = encounterOf(world, mine, enemy);
+    // Team 0 is the aggressor: it sees its own reply, not the victim's.
+    expect(view(world, 0).encounters).toEqual([{ ...encounter, reply: null }]);
+    expect(view(world, 1).encounters).toEqual([
+      { ...encounter, aggressorReply: null },
+    ]);
+    // Wherever the encounter is: the team's creep is in it.
+    Object.assign(encounter, { x: 20, y: 1 });
+    expect(view(world, 0).encounters.map((e) => e.id)).toEqual([encounter.id]);
+    expect(view(world, 0).encounters.every(isOwnEncounter)).toBe(true);
+  });
+
+  test("other teams' encounters only on a cell in sight, with the public fields", () => {
+    const { world, enemy, hidden } = leakyWorld();
+    const encounter = encounterOf(world, hidden, enemy);
+    expect(view(world, 0).encounters).toEqual([
+      {
+        id: encounter.id,
+        aggressor: hidden.id,
+        victim: enemy.id,
+        intent: "extort",
+        stage: "fight",
+        x: 3,
+        y: 1,
+      },
+    ]);
+    expect(view(world, 0).encounters.some(isOwnEncounter)).toBe(false);
+    Object.assign(encounter, { x: 20, y: 1 });
+    expect(view(world, 0).encounters).toEqual([]);
+  });
+
+  test("spoils come from the team's memory, with the last cargo seen", () => {
+    const { world } = leakyWorld();
+    const near = dropSpoil(world, { x: 4, y: 1 }, { materia: 2, cristal: 1 });
+    const far = dropSpoil(world, { x: 14, y: 1 }, { materia: 5, cristal: 0 });
+    updateVision(world);
+    expect(view(world, 0).spoils).toEqual([
+      { id: near, cargo: { materia: 2, cristal: 1 }, x: 4, y: 1 },
+    ]);
+    // A scout sees the far one, leaves, and the pile changes in the dark.
+    const scout = creepOf(world, 0, "circle");
+    Object.assign(scout, { x: 14, y: 1 });
+    updateVision(world);
+    Object.assign(scout, { x: 0, y: 1 });
+    updateVision(world);
+    world.spoils.find((s) => s.id === far)!.cargo.materia = 9;
+    const seen = view(world, 0);
+    expect(seen.spoils.map((s) => [s.id, s.cargo.materia])).toEqual([
+      [near, 2],
+      [far, 5],
+    ]);
+    expect(seen.spoils).toEqual(world.memory[0]!.spoils);
+  });
+});
+
 describe("fullView", () => {
   test("is the whole world, with every entity whole and no fog", () => {
     const world = busyWorld();
@@ -274,6 +368,8 @@ describe("fullView", () => {
     expect(all.deposits).toEqual(world.deposits);
     expect(all.roadJobs).toEqual(world.roadJobs);
     expect(all.players).toEqual(world.players);
+    expect(all.encounters).toEqual(world.encounters);
+    expect(all.spoils).toEqual(world.spoils);
     expect(all.roads).toEqual(
       world.map.road.flatMap((r, i) => (r === 1 ? [i] : [])),
     );
@@ -281,5 +377,16 @@ describe("fullView", () => {
     expect(all.visible).toEqual(world.map.terrain.map((_, i) => i));
     expect(all.creeps.every(isOwnCreep)).toBe(true);
     expect(all.teams.every(isOwnTeam)).toBe(true);
+  });
+
+  test("has every encounter and spoil whole", () => {
+    const { world, enemy, hidden } = leakyWorld();
+    const encounter = encounterOf(world, hidden, enemy);
+    const spoil = dropSpoil(world, { x: 20, y: 1 }, { materia: 1, cristal: 0 });
+    const all = fullView(world);
+    expect(all.encounters).toEqual([encounter]);
+    expect(all.encounters[0]).not.toBe(encounter);
+    expect(all.spoils.map((s) => s.id)).toEqual([spoil]);
+    expect(all.spoils[0]!.cargo).not.toBe(world.spoils[0]!.cargo);
   });
 });
