@@ -16,7 +16,7 @@ cada merge, conferir os pontos de contato do plan §16.
 
 - [x] `packages/battle`: `package.json`, tsconfig (o do `sim`), projeto do Vitest; as guardas do `eslint.config.js`
       valendo para `packages/battle/src` (ADR-0008, plan §11)
-- [ ] `rng.ts` e `canonical.ts` copiados do `sim`, com o teste de igualdade contra o `@geometrix/sim`
+- [x] `rng.ts` e `canonical.ts` copiados do `sim`, com o teste de igualdade contra o `@geometrix/sim`
       (devDependency de teste) (plan P1)
 - [ ] `params.ts` (schema, `parseBattleParams`, `checkConsistency`: durações múltiplas do tick, `CELL_COST`
       divisível pelo tick), `params/battle.json` e o `test/params.json` do pacote (spec §6, plan §3)
