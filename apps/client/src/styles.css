@@ -541,16 +541,31 @@ h3 {
 
 /* Panels */
 
-.side-panel {
+/* The inspector over the chronicle (M2 encontro C-4), on the right. */
+.right-column {
   position: absolute;
   top: 10px;
   right: 10px;
+  bottom: 10px;
   width: 380px;
   max-width: calc(100% - 20px);
-  max-height: calc(100% - 20px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.right-column > * {
+  pointer-events: auto;
+}
+
+.side-panel {
+  position: relative;
+  flex: 0 1 auto;
+  min-height: 0;
   overflow-y: auto;
   box-shadow: 0 6px 24px rgb(0 0 0 / 0.45);
-  z-index: 2;
 }
 
 .close {
@@ -963,4 +978,188 @@ h3 {
   stroke-linejoin: round;
   pointer-events: none;
   user-select: none;
+}
+
+/* M2 encontro: the approach menu (C-6) and the reaction panel (C-5). */
+button.danger {
+  background: #4a2226;
+  border-color: var(--danger);
+}
+
+.approach-menu {
+  position: absolute;
+  z-index: 4;
+  padding: 8px;
+  box-shadow: 0 6px 24px rgb(0 0 0 / 0.5);
+}
+
+.approach-menu ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.approach-row {
+  padding: 6px 4px;
+  border-top: 1px solid var(--line);
+}
+
+.approach-target {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.approach-buttons {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.reaction-panel {
+  position: absolute;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  width: 420px;
+  max-width: calc(100% - 20px);
+  z-index: 3;
+  padding: 10px 12px;
+  border-width: 2px;
+  box-shadow: 0 6px 24px rgb(0 0 0 / 0.55);
+}
+
+.reaction-panel.is-dialogue {
+  border-color: #ffd166;
+}
+
+.reaction-panel.is-fight {
+  border-color: var(--danger);
+}
+
+.reaction-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.reaction-timer {
+  margin-left: auto;
+  font-family: var(--font-game);
+  font-variant-numeric: tabular-nums;
+  color: #ffd166;
+  font-size: 18px;
+}
+
+.reaction-detail {
+  margin: 6px 0 8px;
+}
+
+.reaction-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+/* The chronicle (M2 encontro C-4). */
+.chronicle {
+  margin-top: auto;
+  flex: 0 0 auto;
+  max-height: 38%;
+  display: flex;
+  flex-direction: column;
+  padding: 6px 8px;
+  box-shadow: 0 6px 24px rgb(0 0 0 / 0.45);
+}
+
+.chronicle.collapsed {
+  align-self: flex-end;
+}
+
+.chronicle-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 4px;
+  width: 100%;
+  text-align: left;
+}
+
+.chronicle-toggle {
+  margin-left: auto;
+}
+
+.chronicle-list {
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+  overflow-y: auto;
+  min-height: 0;
+  font-size: 13px;
+}
+
+.chronicle-entry {
+  display: grid;
+  grid-template-columns: 3.2em 1fr;
+  gap: 6px;
+  padding: 3px 0;
+  border-top: 1px solid var(--line);
+}
+
+.chronicle-time {
+  font-variant-numeric: tabular-nums;
+  padding-top: 1px;
+}
+
+.creep-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.creep-link:hover {
+  text-decoration: underline;
+}
+
+/* Rules editor groups and enemy filter (M2 encontro C-7). */
+.rule-group h4 {
+  margin: 10px 0 4px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.add-rule {
+  margin-top: 4px;
+}
+
+.dna-filter {
+  display: inline-flex;
+}
+
+.dna-filter button {
+  padding: 2px;
+}
+
+.dna-filter .dna-off {
+  opacity: 0.25;
+}
+
+.percent {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.percent input[type="number"] {
+  width: 4em;
+}
+
+.facts .engaged {
+  color: #ffd166;
 }

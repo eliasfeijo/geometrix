@@ -2,7 +2,9 @@
 // createWorld(seed, params) and the logged commands of each tick, exactly as
 // the server and the harness ran it. A checkpoint (the serialized state) is
 // kept every world hour; going back restores the nearest one at or before the
-// target and simulates again from there.
+// target and simulates again from there. The events of every tick simulated
+// are kept once, for the replay's chronicle (M2 encontro plan section 9: all
+// of them, as fullView shows the whole world).
 
 import type { Replay } from "@geometrix/protocol";
 import {
@@ -11,6 +13,7 @@ import {
   serialize,
   step,
   type CommandInput,
+  type TeamEvent,
   type WorldState,
 } from "@geometrix/sim";
 
@@ -27,6 +30,10 @@ export class ReplayPlayer {
   private readonly checkpoints = new Map<number, string>();
   /** The latest checkpoint taken; all the earlier ones exist too. */
   private lastCheckpoint = 0;
+  /** The events of the ticks simulated so far, in order, with no audience. */
+  private readonly events: TeamEvent[] = [];
+  /** The first tick whose events are not in `events` yet. */
+  private loggedUntil = 0;
 
   /** `checkpointSeconds` is a world hour; tests use less. */
   constructor(replay: Replay, checkpointSeconds = CHECKPOINT_SECONDS) {
@@ -70,7 +77,17 @@ export class ReplayPlayer {
     const end = Math.min(target, this.replay.ticks);
     let stepped = 0;
     while (this.current.tick < end && more()) {
-      step(this.current, this.byTick.get(this.current.tick) ?? []);
+      const at = this.current.tick;
+      const events = step(this.current, this.byTick.get(at) ?? []);
+      // Going back simulates the same ticks again, with the same events.
+      if (at >= this.loggedUntil) {
+        for (const event of events) {
+          const copy: Partial<typeof event> = { ...event };
+          delete copy.teams;
+          this.events.push(copy as TeamEvent);
+        }
+        this.loggedUntil = at + 1;
+      }
       stepped++;
       const tick = this.current.tick;
       if (tick % this.checkpointEvery === 0 && tick > this.lastCheckpoint) {
@@ -79,6 +96,14 @@ export class ReplayPlayer {
       }
     }
     return stepped;
+  }
+
+  /**
+   * The events of the ticks in [from, to), oldest first: what happened
+   * between the views of tick `from` and tick `to`.
+   */
+  eventsBetween(from: number, to: number): TeamEvent[] {
+    return this.events.filter((e) => e.tick >= from && e.tick < to);
   }
 
   /**

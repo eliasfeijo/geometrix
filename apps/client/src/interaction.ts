@@ -5,7 +5,7 @@
 import { markersNow } from "./map/creep-layer.tsx";
 import type { ClientCommand } from "@geometrix/protocol";
 import { CURSORS, cursorKind, type CursorKind } from "./map/cursor.ts";
-import { orderAt, pickAt } from "./map/pick.ts";
+import { enemiesIn, orderAt, pickAt } from "./map/pick.ts";
 import { roadPreview } from "./map/road-plan.ts";
 import { cellAt, centerOn, type Point } from "./map/view.ts";
 import type { GameStore } from "./store.ts";
@@ -36,6 +36,7 @@ export function select(
     return;
   }
   store.stack.value = null;
+  store.approach.value = null;
   store.hovered.value = null;
   store.selection.value = pick;
 }
@@ -82,12 +83,14 @@ export function cursorAt(
     pick:
       pick === null
         ? null
-        : pick.kind === "creep" || pick.kind === "stack"
-          ? "creep"
-          : "other",
+        : enemiesIn(pick, state.creeps, team).length > 0
+          ? "enemy"
+          : pick.kind === "creep" || pick.kind === "stack"
+            ? "creep"
+            : "other",
     order:
       dominated && core !== undefined && core !== null
-        ? orderAt(point, state.deposits, core, false).type
+        ? orderAt(point, state.deposits, state.spoils, core, false).type
         : null,
     roadShort,
   });
@@ -98,12 +101,16 @@ export const cursorStyle = (kind: CursorKind) => `cursor: ${CURSORS[kind]}`;
 
 let pings = 0;
 
-/** Right click: an order for the creep this player dominates. */
+/**
+ * Right click: an order for the creep this player dominates; over enemies in
+ * sight, the menu to attack or extort them (M2 encontro C-6), at `px`.
+ */
 export function order(
   store: GameStore,
   point: Point,
   send: (command: ClientCommand) => Promise<boolean>,
   now: number,
+  px: Point,
 ): void {
   const state = store.current.value?.state;
   const me = store.me.value;
@@ -114,10 +121,26 @@ export function order(
     return;
   }
   const roadMode = store.mode.value.type === "road";
+  store.approach.value = null;
+  if (!roadMode) {
+    const pick = pickAt(
+      point,
+      markersNow(store, now),
+      state.deposits,
+      store.cores.value,
+      store.view.value?.scale ?? 1,
+    );
+    const enemies = enemiesIn(pick, state.creeps, me.team);
+    if (enemies.length > 0) {
+      store.stack.value = null;
+      store.approach.value = { ids: enemies, at: px };
+      return;
+    }
+  }
   if (roadMode) store.mode.value = { type: "select" };
   const core = state.teams[me.team]?.core;
   if (core === undefined || core === null) return;
-  const input = orderAt(point, state.deposits, core, roadMode);
+  const input = orderAt(point, state.deposits, state.spoils, core, roadMode);
   store.ping.value = { cell: cellAt(point), id: ++pings };
   void send({ type: "order", creepId: creep.id, order: input });
 }
@@ -158,7 +181,9 @@ export function handleKey(
   if (event.ctrlKey || event.metaKey || event.altKey) return false;
   switch (event.key) {
     case "Escape":
-      if (store.stack.value !== null) {
+      if (store.approach.value !== null) {
+        store.approach.value = null;
+      } else if (store.stack.value !== null) {
         store.stack.value = null;
         store.hovered.value = null;
       } else if (store.mode.value.type !== "select") {

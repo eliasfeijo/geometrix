@@ -7,6 +7,7 @@ import {
   type ForeignTeam,
   type Params,
   type RoadJob,
+  type Spoil,
   type Team,
   type TeamView,
 } from "@geometrix/sim";
@@ -19,6 +20,7 @@ import {
 import { COLORS, teamColor } from "./colors.ts";
 import { roadJoinsDown, roadRuns } from "./terrain.ts";
 import { DnaShape } from "./creep-shape.tsx";
+import { spoilKind } from "./combat-marks.ts";
 
 type Props = {
   state: TeamView;
@@ -42,6 +44,9 @@ export function WorldLayer({ state, params, width, zoom }: Props) {
           params={params}
           zoom={zoom}
         />
+      ))}
+      {state.spoils.map((spoil) => (
+        <SpoilMark key={spoil.id} spoil={spoil} zoom={zoom} />
       ))}
       {state.teams.map((team) => (
         <CoreMark key={team.id} team={team} params={params} />
@@ -164,6 +169,32 @@ function DepositMark({
           points={shape(cx, cy, radius * Math.sqrt(ratio) * 0.85)}
           fill={color}
         />
+      )}
+    </g>
+  );
+}
+
+/**
+ * A spoil (spec C-2, plan section 9): a small diamond in the color of what it
+ * holds most, with a dot of the other resource when it has both. Below the
+ * fog, so a remembered one shows under the veil, like a deposit.
+ */
+function SpoilMark({ spoil, zoom }: { spoil: Spoil; zoom: number }) {
+  const cx = spoil.x + 0.5;
+  const cy = spoil.y + 0.5;
+  const r = 0.2 * Math.min(zoom, 1.4);
+  const kind = spoilKind(spoil);
+  const other = kind === "materia" ? "cristal" : "materia";
+  return (
+    <g class="spoil">
+      <polygon
+        points={diamondPoints(cx, cy, r)}
+        fill={COLORS[kind]}
+        stroke={COLORS.background}
+        stroke-width={0.05 * zoom}
+      />
+      {spoil.cargo[other] > 0 && (
+        <circle cx={cx} cy={cy} r={r * 0.3} fill={COLORS[other]} />
       )}
     </g>
   );

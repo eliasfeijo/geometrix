@@ -32,7 +32,16 @@ const nondeterministicMath = [
 ];
 
 export default defineConfig(
-  { ignores: ["**/node_modules/", "**/dist/", "**/coverage/", "runs/"] },
+  {
+    // The parallel sessions' worktrees are other checkouts (.gitignore).
+    ignores: [
+      "**/node_modules/",
+      "**/dist/",
+      "**/coverage/",
+      "runs/",
+      ".claude/worktrees/",
+    ],
+  },
   js.configs.recommended,
   tseslint.configs.recommended,
   {

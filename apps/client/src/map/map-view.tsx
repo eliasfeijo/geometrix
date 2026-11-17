@@ -30,7 +30,8 @@ const KEY_PAN = 80;
 type Props = {
   /** `px` is the pointer within the map element. */
   onSelect?(point: Point, px: Point): void;
-  onOrder?(point: Point, event: MouseEvent): void;
+  /** `px` is the pointer within the map element. */
+  onOrder?(point: Point, px: Point): void;
   /** Layers drawn above the world (creeps, selection). */
   children?: ComponentChildren;
   /** The CSS cursor over the map; the mode's when absent (a replay). */
@@ -181,7 +182,9 @@ export function MapView({ onSelect, onOrder, children, cursor }: Props) {
   const onContextMenu = (e: MouseEvent) => {
     e.preventDefault();
     const point = mapPoint(e);
-    if (point !== null) onOrder?.(point, e);
+    if (point !== null && element.current !== null) {
+      onOrder?.(point, local(element.current, e));
+    }
   };
 
   const onKeyDown = (e: KeyboardEvent) => {

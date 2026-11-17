@@ -5,16 +5,22 @@ import {
   capacity,
   isOwnCreep,
   isOwnTeam,
+  maxHp,
   type Deposit,
+  type Dna,
   type ForeignCreepView,
+  type Params,
 } from "@geometrix/sim";
 import { useGame } from "../context.ts";
 import { toggleRoadMode } from "../interaction.ts";
 import { inSight } from "../map/fog.ts";
 import { cellmates } from "../map/pick.ts";
 import { creepStatus, STATUS_TEXTS, viewCapacity } from "../creep-status.ts";
+import { engagementText, safeConductLeft } from "../encounter-actions.ts";
+import { hpBand, hpPoints } from "../map/combat-marks.ts";
 import {
   DNA_NAMES,
+  duration,
   durationWords,
   orderText,
   RESOURCE_NAMES,
@@ -54,11 +60,12 @@ function CreepInspector({ id }: { id: number }) {
   const params = store.info.value?.params;
   const creep = state?.creeps.find((c) => c.id === id);
   if (state === undefined || params === undefined || creep === undefined) {
-    // No creep dies in M1.5: one the view lost left the team's sight.
+    // An own creep the view lost died; another team's may also have left
+    // the team's sight (the view cannot tell which).
     return (
       <p class="muted">
         {state !== undefined && state.team >= 0
-          ? "Esse creep saiu da visão do seu time."
+          ? "Esse creep morreu ou saiu da visão do seu time."
           : "Esse creep não existe mais."}
       </p>
     );
@@ -73,6 +80,8 @@ function CreepInspector({ id }: { id: number }) {
   const canAct = store.canAct.value;
   const status = creepStatus(creep, state.deposits) ?? "idle";
   const roadMode = store.mode.value.type === "road";
+  const engagement = engagementText(state, creep);
+  const safeConduct = safeConductLeft(creep.safeConduct, state.tick, params);
   return (
     <div class={`inspector team-${creep.team}`}>
       <h2 class="title creep-title">
@@ -87,9 +96,25 @@ function CreepInspector({ id }: { id: number }) {
       </h2>
       <Cellmates id={creep.id} />
       <dl class="facts">
+        <dt>HP</dt>
+        <dd>
+          <HpBar hp={creep.hp} dna={creep.dna} params={params} />
+        </dd>
         <dt>Estado</dt>
         <dd class={status === "waiting" ? "waiting" : undefined}>
           {STATUS_TEXTS[status]}
+        </dd>
+        {engagement !== null && (
+          <>
+            <dt>Encontro</dt>
+            <dd class="engaged">{engagement}</dd>
+          </>
+        )}
+        <dt>Salvo-conduto</dt>
+        <dd>
+          {safeConduct === null
+            ? "nenhum"
+            : `contra o ${teamName(safeConduct.team)} por mais ${duration(safeConduct.seconds)}`}
         </dd>
         <dt>Ordem</dt>
         <dd>{orderText(creep.order, state.deposits)}</dd>
@@ -196,6 +221,7 @@ function ForeignCreepInspector({ creep }: { creep: ForeignCreepView }) {
   const params = store.info.value?.params;
   if (state === undefined || params === undefined) return null;
   const max = viewCapacity(creep, state.teams[creep.team], params);
+  const engagement = engagementText(state, creep);
   return (
     <div class={`inspector team-${creep.team}`}>
       <h2 class="title creep-title">
@@ -210,6 +236,16 @@ function ForeignCreepInspector({ creep }: { creep: ForeignCreepView }) {
       </h2>
       <Cellmates id={creep.id} />
       <dl class="facts">
+        <dt>HP</dt>
+        <dd>
+          <HpBar hp={creep.hp} dna={creep.dna} params={params} />
+        </dd>
+        {engagement !== null && (
+          <>
+            <dt>Encontro</dt>
+            <dd class="engaged">{engagement}</dd>
+          </>
+        )}
         <dt>Carga</dt>
         <dd>
           <CargoBar
@@ -225,6 +261,8 @@ function ForeignCreepInspector({ creep }: { creep: ForeignCreepView }) {
       </dl>
       <p class="hint muted">
         Ordem, regras e domínio de um creep de outro time ficam escondidos.
+        {store.myCreep.value !== null &&
+          " Botão direito nele: atacar ou extorquir."}
       </p>
     </div>
   );
@@ -254,6 +292,27 @@ function Cellmates({ id }: { id: number }) {
         ▶
       </button>
     </div>
+  );
+}
+
+/** HP in whole points over the DNA's maximum, as a bar (spec C-7). */
+function HpBar(props: { hp: number; dna: Dna; params: Params }) {
+  const full = maxHp(props.params, props.dna);
+  const share = Math.max(0, props.hp) / full;
+  return (
+    <span class="cargo hp">
+      <span class="bar">
+        <span
+          style={{
+            width: `${Math.min(100 * share, 100)}%`,
+            background: COLORS.hp[hpBand(share)],
+          }}
+        />
+      </span>
+      <span class="cargo-text">
+        {hpPoints(props.hp)}/{hpPoints(full)}
+      </span>
+    </span>
   );
 }
 
