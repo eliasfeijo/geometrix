@@ -9,11 +9,14 @@ import {
 import { afterAll, describe, expect, test } from "vitest";
 import {
   ARENAS,
+  battleVerdicts,
   GROUPS,
   moveToCenter,
   quantile,
   readArena,
   scenarios,
+  type BattleRecord,
+  type BattleSweepResult,
 } from "../src/battle.ts";
 import { run, type Output } from "../src/main.ts";
 
@@ -106,6 +109,39 @@ describe("the matrix (spec sections 7, 8)", () => {
     const y = Math.floor(square.cell / state.arena.width);
     expect(state.arena.rock[square.cell]).toBe(0);
     expect(Math.abs(x - 11) + Math.abs(y - 7)).toBe(1);
+  });
+
+  test("a pair fails only when the same DNA wins above 75% on every arena", () => {
+    /** Ten battles per cell; side 0 wins `wins[scenario][arena]` of them. */
+    function result(wins: (id: string, arena: number) => number) {
+      const cells = scenarios(params).flatMap((scenario) =>
+        ARENAS.map((arena, a) => ({
+          scenario,
+          arena,
+          records: Array.from({ length: 10 }, (_, i): BattleRecord => ({
+            scenario: scenario.id,
+            arena,
+            seed: i,
+            winnerSide: i < wins(scenario.id, a) ? 0 : 1,
+            ticks: 300,
+            ms: 1,
+            idle: false,
+            edge: false,
+            cut: false,
+            firstEscaped: false,
+          })),
+        })),
+      );
+      const options = { id: "t", params, paramsSource: "", seeds: [1] };
+      return { options, cells, wallSeconds: 1 } as BattleSweepResult;
+    }
+    // Side 0 wins 8 of 10 everywhere: every pair is decided by the DNA.
+    expect(battleVerdicts(result(() => 8)).decidedPairs).toHaveLength(3);
+    // The winner flips with the arena: the arena decides, not the DNA.
+    const flip = battleVerdicts(result((_, a) => (a === 0 ? 2 : 8)));
+    expect(flip.decidedPairs).toEqual([]);
+    // 7 of 10 is not above 75%.
+    expect(battleVerdicts(result(() => 7)).decidedPairs).toEqual([]);
   });
 
   test("quantile by nearest rank", () => {

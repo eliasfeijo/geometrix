@@ -433,15 +433,19 @@ export function battleVerdicts(result: BattleSweepResult): Verdicts {
   const { params } = result.options;
   const decidedPairs: string[] = [];
   for (const scenario of scenarios(params).filter((s) => s.group === "duel")) {
-    const decided = ARENAS.every((arena) => {
-      const cell = result.cells.find(
-        (c) => c.scenario.id === scenario.id && c.arena === arena,
-      )!;
-      const stats = cellStats(cell, params);
-      return stats.wins.some(
-        (w) => w * 1000 > TARGETS.maxWinPermille * stats.battles,
-      );
-    });
+    // The same side above the limit on every arena: the DNA decides. A pair
+    // whose winner flips with the arena is decided by the arena instead.
+    const decided = scenario.sides.some((_, side) =>
+      ARENAS.every((arena) => {
+        const cell = result.cells.find(
+          (c) => c.scenario.id === scenario.id && c.arena === arena,
+        )!;
+        const stats = cellStats(cell, params);
+        return (
+          stats.wins[side]! * 1000 > TARGETS.maxWinPermille * stats.battles
+        );
+      }),
+    );
     if (decided) decidedPairs.push(scenario.label);
   }
   const duels = pooled(
@@ -506,7 +510,7 @@ export function renderBattleReport(result: BattleSweepResult): string {
       [
         [
           "O DNA não decide sozinho (1 × 1)",
-          `nenhum par acima de ${TARGETS.maxWinPermille / 10}% nas três arenas`,
+          `nenhum DNA acima de ${TARGETS.maxWinPermille / 10}% no mesmo par nas três arenas`,
           verdicts.decidedPairs.length === 0
             ? "nenhum"
             : verdicts.decidedPairs.join("; "),
@@ -550,7 +554,7 @@ export function renderBattleReport(result: BattleSweepResult): string {
   out.push("## Vitórias no 1 × 1, por arena");
   out.push("");
   out.push(
-    "A / B (− sem vencedor: os dois morreram ou fugiram). Um par reprova se passa do alvo nas três arenas; numa só, é a arena que importa.",
+    "A / B (− sem vencedor: os dois morreram ou fugiram). Um par reprova se o mesmo lado passa do alvo nas três arenas; se o vencedor muda com a arena, é a arena que decide.",
   );
   out.push("");
   out.push(
@@ -616,7 +620,7 @@ export function renderBattleReport(result: BattleSweepResult): string {
         s.label,
         ...ARENAS.map((arena) => {
           const [p10, p50, p90, max] = at(s, arena).seconds;
-          return `${p10.toFixed(0)} · **${p50.toFixed(1)}** · ${p90.toFixed(0)} · ${max.toFixed(0)}`;
+          return `${p10.toFixed(1)} · **${p50.toFixed(1)}** · ${p90.toFixed(1)} · ${max.toFixed(1)}`;
         }),
       ]),
     ),
