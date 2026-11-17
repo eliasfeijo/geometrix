@@ -9,7 +9,9 @@ import { beforeAll, describe, expect, test } from "vitest";
 
 const battleDir = fileURLToPath(new URL("..", import.meta.url));
 const repoRoot = path.resolve(battleDir, "../..");
-const SETUP_TIMEOUT_MS = 60_000;
+// Loading TypeScript and the ESLint config takes ~10 s on /mnt/c, and much more
+// while the whole suite (and the sim's own guard test) runs in parallel.
+const SETUP_TIMEOUT_MS = 180_000;
 
 describe("battle tsconfig", () => {
   const probes: Record<string, string> = {
