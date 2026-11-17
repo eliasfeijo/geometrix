@@ -205,8 +205,7 @@ describe("balanced", () => {
       "fight",
     ]);
     expect(postureRules("triangle")).toEqual([
-      { when: { type: "hpBelow", permille: 400 }, then: { type: "flee" } },
-      { when: { type: "demandAtMost", permille: 500 }, then: { type: "pay" } },
+      { when: { type: "always" }, then: { type: "pay" } },
       { when: { type: "always" }, then: { type: "flee" } },
     ]);
     expect(postureRules("circle")).toEqual([
