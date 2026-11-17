@@ -15,6 +15,8 @@ export function ChroniclePanel() {
   const { store } = useGame();
   const [open, setOpen] = useState(true);
   const events = store.chronicle.value;
+  // fullView (the replay, team -1) sees the whole world.
+  const whole = (store.current.value?.state.team ?? 0) < 0;
   const tickSeconds = store.info.value?.params.world.tickSeconds ?? 1;
   return (
     <section
@@ -34,7 +36,11 @@ export function ChroniclePanel() {
       {open && (
         <ol class="chronicle-list">
           {events.length === 0 && (
-            <li class="muted">Nada aconteceu à vista do seu time ainda.</li>
+            <li class="muted">
+              {whole
+                ? "Nada aconteceu ainda."
+                : "Nada aconteceu à vista do seu time ainda."}
+            </li>
           )}
           {[...events].reverse().map((event) => (
             <Entry
