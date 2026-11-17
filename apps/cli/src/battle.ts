@@ -392,7 +392,12 @@ export function cellStats(cell: SweepCell, params: BattleParams): CellStats {
 
 // The report ---------------------------------------------------------------
 
-/** Spec section 7 targets (chutes): the report shows them next to the numbers. */
+/**
+ * Spec section 7 targets (chutes): the report shows them next to the numbers.
+ * The win share and the durations are informative since the F3 checkpoint
+ * (owner, 2026-11-17: raw combat, without skills, levels or stats, is not
+ * balanced); only the cost fails.
+ */
 export const TARGETS = {
   /** No DNA pair above this share of wins in all three arenas. */
   maxWinPermille: 750,
@@ -400,6 +405,9 @@ export const TARGETS = {
   teamMedianSeconds: 120,
   msPer2400: 50,
 };
+
+/** Outside a target that no longer fails (see TARGETS). */
+const INFORMATIVE = "fora do chute (informativo)";
 
 const pct = (part: number, whole: number) =>
   whole === 0 ? "—" : `${Math.round((part * 100) / whole)}%`;
@@ -498,7 +506,7 @@ export function renderBattleReport(result: BattleSweepResult): string {
   );
   out.push("");
   out.push(
-    "Todos os participantes pela IA, com o preset do DNA (quadrado: linha de frente; triângulo: escaramuçador; círculo: atirador), salvo onde o cenário diz outro. O lado A é o primeiro do confronto (trecho de entrada 1). Os alvos são os chutes da spec §7.",
+    "Todos os participantes pela IA, com o preset do DNA (quadrado: linha de frente; triângulo: escaramuçador; círculo: atirador), salvo onde o cenário diz outro. O lado A é o primeiro do confronto (trecho de entrada 1). Os alvos são os chutes da spec §7; desde o checkpoint da F3, vitórias e duração são só informativos (o combate cru não se balanceia antes de skills, nível e stats), e só o custo reprova.",
   );
   out.push("");
 
@@ -514,7 +522,7 @@ export function renderBattleReport(result: BattleSweepResult): string {
           verdicts.decidedPairs.length === 0
             ? "nenhum"
             : verdicts.decidedPairs.join("; "),
-          verdicts.decidedPairs.length === 0 ? "ok" : "**reprovado**",
+          verdicts.decidedPairs.length === 0 ? "ok" : INFORMATIVE,
         ],
         [
           "Duração do 1 × 1 (mediana)",
@@ -523,7 +531,7 @@ export function renderBattleReport(result: BattleSweepResult): string {
           verdicts.duelMedianSeconds >= TARGETS.duelMedianSeconds[0] &&
           verdicts.duelMedianSeconds <= TARGETS.duelMedianSeconds[1]
             ? "ok"
-            : "**reprovado**",
+            : INFORMATIVE,
         ],
         [
           "Duração do 3 × 3 (mediana)",
@@ -531,7 +539,7 @@ export function renderBattleReport(result: BattleSweepResult): string {
           secs(verdicts.teamMedianSeconds),
           verdicts.teamMedianSeconds <= TARGETS.teamMedianSeconds
             ? "ok"
-            : "**reprovado**",
+            : INFORMATIVE,
         ],
         [
           "Custo do 3 × 3 (mediana, por 2 400 ticks)",
