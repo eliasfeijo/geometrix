@@ -72,7 +72,7 @@ na sua branch (plan §12, skill `commit`), com merge `--no-ff` em `main`.
 
 - [x] Barra de HP (próprio e inimigo à vista); despojo no mapa, lembrado sob o véu (spec C-1, C-2)
 - [x] Marcas de perseguição, diálogo, luta e fuga; cursor de abordar (spec C-3)
-- [ ] Menu do clique direito (atacar / extorquir com a exigência) e painel de reação com o tempo restante e o botão
+- [x] Menu do clique direito (atacar / extorquir com a exigência) e painel de reação com o tempo restante e o botão
       de fugir na luta (spec C-5, C-6)
 - [ ] Crônica: `templates.ts` com o banco inicial de frases (voz pelo DNA), `narrate.ts`, painel com nomes
       clicáveis; a mesma frase em todo cliente e no replay (spec C-4, K-3, D17)

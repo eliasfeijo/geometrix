@@ -8,8 +8,10 @@ import type {
   Deposit,
   Dna,
   Order,
+  Reply,
   Resource,
   Rule,
+  Stock,
 } from "@geometrix/sim";
 
 /** "dia 2 · 03:15": world time from tick 0 (day 1 starts at 00:00). */
@@ -41,6 +43,22 @@ export const DNA_NAMES: Record<Dna, string> = {
 export const RESOURCE_NAMES: Record<Resource, string> = {
   materia: "matéria",
   cristal: "cristal",
+};
+
+/** "12 matéria e 4 cristal", "4 cristal", "nada": an amount of each resource. */
+export function stockText(stock: Stock): string {
+  const parts: string[] = [];
+  if (stock.materia > 0) parts.push(`${stock.materia} matéria`);
+  if (stock.cristal > 0) parts.push(`${stock.cristal} cristal`);
+  return parts.length === 0 ? "nada" : parts.join(" e ");
+}
+
+/** The answers to an encounter (M2 encontro C-5), as buttons. */
+export const REPLY_TEXTS: Record<Reply, string> = {
+  pay: "Pagar",
+  refuse: "Recusar e lutar",
+  fight: "Lutar",
+  flee: "Tentar fugir",
 };
 
 export const TEAM_NAMES = ["Azul", "Laranja"];

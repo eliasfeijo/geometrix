@@ -5,6 +5,9 @@ import { GameStore } from "../src/store.ts";
 import { order, toggleRoadMode } from "../src/interaction.ts";
 import { viewOf, testWorld, welcomeOf } from "./helpers.ts";
 
+/** Where on the map element a right click lands: only places the menu. */
+const PX = { x: 100, y: 100 };
+
 describe("orderAt", () => {
   const deposits = [{ id: 4, kind: "cristal" as const, amount: 0, x: 2, y: 2 }];
   const core = { x: 10, y: 10 };
@@ -69,7 +72,7 @@ describe("right click", () => {
 
   it("asks to dominate first", () => {
     const { store, sent, send } = connected();
-    order(store, { x: 3, y: 3 }, send, 0);
+    order(store, { x: 3, y: 3 }, send, 0, PX);
     expect(sent).toEqual([]);
     expect(store.notices.value).toHaveLength(1);
   });
@@ -82,8 +85,8 @@ describe("right click", () => {
     store.show(viewOf(world), 1);
     toggleRoadMode(store);
     expect(store.mode.value.type).toBe("road");
-    order(store, { x: 3.5, y: 4.5 }, send, 1);
-    order(store, { x: 3.5, y: 4.5 }, send, 2);
+    order(store, { x: 3.5, y: 4.5 }, send, 1, PX);
+    order(store, { x: 3.5, y: 4.5 }, send, 2, PX);
     expect(sent).toEqual([
       {
         type: "order",
