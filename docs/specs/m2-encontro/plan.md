@@ -325,6 +325,16 @@ Números no [dashboard](../../dashboard/current-status.md), "Registro das fases"
 | C4 | Custo do tick (1,47–1,55× o da F6): decidir depois de medir com C1 |
 | C5 | Interpretações da F3 mantidas: o salteador é escolhido depois dos coletores de cristal e do construtor; os desempates por id do alvo de estrada e do depósito alcançado com o mesmo custo viram desempates pela célula no referencial do time; as definições das métricas |
 
+2ª rodada (dono, 2026-11-17), medida com C1 e C2:
+
+| # | Decisão |
+|---|---|
+| C6 | **Depósito lembrado como vazio que o piloto nunca revisita** (a causa da diferença de 20–25% na matéria entregue entre os times no seed 42, 3 dias): fica para a rodada de balanceamento, fora da F3. Pergunta aberta no [GDD 07](../../gdd/07-piloto-automatico.md) |
+| C7 | **Encontros só nas primeiras ~8 h** (efeito do C1): aceito por agora; observar no playtest da F6. A patrulha fica para depois |
+| C8 | **O ▲ do bot paga qualquer extorsão** e foge do ataque (substitui o ▲ do C2, que quase nunca pagava: a exigência costuma ser a carga inteira). Cada DNA exercita um caminho: ■ luta, ▲ paga, ● foge |
+| C9 | **Custo do tick aceito:** 3 dias do seed 42 em 12,5–12,9 s, contra 12,2–12,4 s da F6 (~1,04×) |
+| C10 | Interpretação mantida: as regras de reação não distinguem o diálogo da luta, então o ▲ e o ● tentam fugir a cada rodada da luta |
+
 ## 12. Ordem de implementação
 
 Cada fase na sua branch `m2/encontro-f<n>-<slug>`, com merge `--no-ff` em `main` (skill `commit`).
