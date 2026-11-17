@@ -3,7 +3,10 @@
 // serializes it once for all the team's sockets. Teams with no socket advance
 // too (plan R7), so whoever connects next starts from a right base: the last
 // view sent, rebuilt from the sent record (spec S-1). The deltas of the last
-// bufferMs stay for a client that drops and comes back (spec S-5).
+// bufferMs stay for a client that drops and comes back (spec S-5). The team's
+// events of the ticks a delta covers go in it (M2 encontro plan section 8),
+// and the latest ones make the chronicle a welcome carries, as of the last
+// view sent: the next delta has the events after them.
 
 import { randomUUID } from "node:crypto";
 import {
@@ -14,7 +17,14 @@ import {
   type Sent,
   type WorldStatus,
 } from "@geometrix/protocol";
-import { view, type TeamView, type WorldState } from "@geometrix/sim";
+import {
+  eventsFor,
+  view,
+  type SimEvent,
+  type TeamEvent,
+  type TeamView,
+  type WorldState,
+} from "@geometrix/sim";
 import { viewHash } from "./hash.ts";
 
 export type StreamOptions = {
@@ -22,6 +32,8 @@ export type StreamOptions = {
   hashEveryTicks: number;
   /** Real milliseconds a delta stays available for resuming. */
   bufferMs: number;
+  /** The team's latest events a welcome carries. */
+  chronicleSize: number;
 };
 
 type Buffered = { seq: number; json: string; at: number };
@@ -36,18 +48,30 @@ export class TeamStream {
   private status: WorldStatus;
   /** The latest deltas, by seq, sent at most bufferMs ago. */
   private buffer: Buffered[] = [];
+  /** The team's events of the ticks after the last view sent. */
+  private events: TeamEvent[] = [];
+  /** The team's latest events up to the last view sent, oldest first. */
+  private chronicle: TeamEvent[];
 
+  /**
+   * `chronicle`: the team's latest events up to the state now (the host
+   * keeps them).
+   */
   constructor(
     state: WorldState,
     team: number,
     status: WorldStatus,
     options: StreamOptions,
+    chronicle: readonly TeamEvent[] = [],
     id: string = randomUUID(),
   ) {
     this.id = id;
     this.team = team;
     this.status = status;
     this.options = options;
+    this.chronicle = chronicle.slice(
+      Math.max(0, chronicle.length - options.chronicleSize),
+    );
     // The base: what a welcome carries before the first delta.
     diffView(this.sent, view(state, team));
   }
@@ -55,6 +79,11 @@ export class TeamStream {
   /** Seq of the last view sent; 0 for the base. */
   get seq(): number {
     return this.seqNow;
+  }
+
+  /** Keeps the team's share of a tick's events for the next delta. */
+  record(events: readonly SimEvent[]): void {
+    for (const event of eventsFor(events, this.team)) this.events.push(event);
   }
 
   /**
@@ -73,6 +102,14 @@ export class TeamStream {
     if (status !== this.status) {
       message.status = status;
       this.status = status;
+    }
+    if (this.events.length > 0) {
+      message.events = this.events;
+      const kept = [...this.chronicle, ...this.events];
+      this.chronicle = kept.slice(
+        Math.max(0, kept.length - this.options.chronicleSize),
+      );
+      this.events = [];
     }
     if (
       Math.floor(seen.tick / hashEveryTicks) >
@@ -103,8 +140,21 @@ export class TeamStream {
     return this.buffer.filter((b) => b.seq > seq).map((b) => b.json);
   }
 
-  /** The last view sent, with its seq and status: a welcome's content. */
-  lastView(): { seq: number; view: TeamView; status: WorldStatus } {
-    return { seq: this.seqNow, view: sentView(this.sent), status: this.status };
+  /**
+   * The last view sent, with its seq, status and the chronicle up to it: a
+   * welcome's content.
+   */
+  lastView(): {
+    seq: number;
+    view: TeamView;
+    status: WorldStatus;
+    chronicle: TeamEvent[];
+  } {
+    return {
+      seq: this.seqNow,
+      view: sentView(this.sent),
+      status: this.status,
+      chronicle: [...this.chronicle],
+    };
   }
 }

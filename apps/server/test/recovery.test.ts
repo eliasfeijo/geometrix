@@ -12,7 +12,11 @@ import {
 } from "../src/world-host.ts";
 import { testApp, testParams } from "./helpers.ts";
 
-const config = { snapshotEveryTicks: 300, metricsEveryTicks: 60 };
+const config = {
+  snapshotEveryTicks: 300,
+  metricsEveryTicks: 60,
+  chronicleWelcome: 100,
+};
 const TICKS = 1_000;
 
 const dbFile = () => join(mkdtempSync(join(tmpdir(), "geo-db-")), "geo.db");

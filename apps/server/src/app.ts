@@ -49,6 +49,7 @@ export async function startApp(options: AppOptions): Promise<App> {
     broadcastIntervalMs: config.broadcastIntervalMs,
     viewHashEveryTicks: config.viewHashEveryTicks,
     deltaBufferMs: config.deltaBufferMs,
+    chronicleWelcome: config.chronicleWelcome,
     presence,
     log,
   });
