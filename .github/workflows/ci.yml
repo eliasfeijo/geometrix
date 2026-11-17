@@ -32,3 +32,8 @@ jobs:
       - name: Performance budget (6 h of bot x bot world in at most 60 s)
         # Plan section 10: proportional to 3 days in 10 min, with some slack.
         run: npm run -s geo -- sim --seed 42 --hours 6 --out "$RUNNER_TEMP/runs" --max-seconds 60
+      - name: Battle determinism (geo battle verify)
+        run: npm run -s geo -- battle verify --seeds 1,42,649
+      - name: Battle auto-resolve budget (the quick matrix in at most 60 s)
+        # M2 laboratório plan section 12: a slice of the matrix, seeds 1-10.
+        run: npm run -s geo -- battle sweep --quick --out "$RUNNER_TEMP/runs" --max-seconds 60

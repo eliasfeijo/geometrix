@@ -104,6 +104,8 @@ describe("WebSocket", () => {
     client.socket.close();
   });
 
+  // 1.5 s alone; past the 5 s default with the whole suite and another
+  // session running tests (twice in a row in the lab F3).
   test("deltas carry the team's events; a welcome, the chronicle up to its view", async () => {
     const t = await testApp({ broadcastIntervalMs: 0 });
     close = t.app.close;
@@ -131,7 +133,7 @@ describe("WebSocket", () => {
     expect(again.chronicle).toEqual(received);
     client.socket.close();
     late.socket.close();
-  });
+  }, 20_000);
 
   test("acks an accepted command with its tick, rejects the rest", async () => {
     const { base, token, host } = await setup();

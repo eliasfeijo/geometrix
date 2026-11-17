@@ -63,6 +63,15 @@
     - **lados** (D10, D11): de 2 a 4, hostis entre si; dá para entrar no meio da luta, sem diálogo;
     - **IA de gambits** (D14, D15): lista ordenada condição → ação por creep, com presets por DNA, editável no
       laboratório; é o adversário do laboratório e o auto-resolve.
+  - **Checkpoint da F3 do laboratório** (dono, 2026-11-17, depois de ver replays da IA;
+    [tasks do laboratório](../specs/m2-laboratorio/tasks.md)):
+    - **não se balanceia combate cru** (só o ataque básico) antes de skills, nível e stats. O laboratório serve
+      para experimentar e validar as regras de combate candidatas, cada uma evoluindo conforme entram as mecânicas
+      em comum. O quadrado vencer o triângulo que não o *kita* é justo; lutas curtas estão boas;
+    - **arenas maiores e zonas de nascimento:** a arena da grade fica 2× maior (provisório), e cada lado nasce numa
+      zona a meio caminho entre a borda e o centro, longe da saída, parecido com o Mount & Blade, sem a mesma escala;
+    - **a borda sob fogo:** um golpe zerar a contagem da fuga não é problema, desde que a **dificuldade do bot seja
+      configurável** (no laboratório, a reação de cada participante da IA).
   - **Chefão disputado** (M2.5): quando dois lados ferem o mesmo chefão, leva o buff ou o item quem dá o último
     golpe ([05](05-tribos-e-diplomacia.md)).
 
@@ -86,6 +95,11 @@ sequenceDiagram
     B->>W: eventos de resultado
     W->>W: aplica os eventos e libera os participantes
 ```
+
+- **IA que aprende** (ideia do dono, 2026-11-17, **sem marco**): o bot começa burro e vai ficando mais esperto, até
+  um "modo pesadelo". Um caminho concreto (agente): uma busca offline por listas de gambits que vençam a melhor
+  lista anterior, com o auto-resolve (centenas de lutas por segundo), gerando níveis de bot. Aumenta o escopo do
+  M2: só entra com um marco escolhido pelo dono.
 
 ### Brainstorm de 2026-11-15 (não aprovado)
 Detalhes e análise no [brainstorm M2–M3](../brainstorm/2026-11-15-m2-m3.md) §2 e §6.
