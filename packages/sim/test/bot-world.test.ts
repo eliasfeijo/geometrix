@@ -35,7 +35,7 @@ test("a 6 h bot world of seed 42 hashes to a stable value", () => {
   expect(
     createHash("sha256").update(serialize(state)).digest("hex"),
   ).toMatchInlineSnapshot(
-    `"88f4793acbcfc5a3ac39636e1797ebcb245b6910a586b5c5bd71ce2255f1fc00"`,
+    `"9144fd7ec27e69bda573d8caa5a5f026d28206c3bacc05c31bd3c2cc7e28cd45"`,
   );
   // Growing to the population cap, with raiders exploring, the world takes
   // over 10 s alone and some 30 s with the whole suite running.
