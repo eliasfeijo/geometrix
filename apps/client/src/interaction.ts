@@ -5,7 +5,7 @@
 import { markersNow } from "./map/creep-layer.tsx";
 import type { ClientCommand } from "@geometrix/protocol";
 import { CURSORS, cursorKind, type CursorKind } from "./map/cursor.ts";
-import { orderAt, pickAt } from "./map/pick.ts";
+import { enemiesIn, orderAt, pickAt } from "./map/pick.ts";
 import { roadPreview } from "./map/road-plan.ts";
 import { cellAt, centerOn, type Point } from "./map/view.ts";
 import type { GameStore } from "./store.ts";
@@ -82,12 +82,14 @@ export function cursorAt(
     pick:
       pick === null
         ? null
-        : pick.kind === "creep" || pick.kind === "stack"
-          ? "creep"
-          : "other",
+        : enemiesIn(pick, state.creeps, team).length > 0
+          ? "enemy"
+          : pick.kind === "creep" || pick.kind === "stack"
+            ? "creep"
+            : "other",
     order:
       dominated && core !== undefined && core !== null
-        ? orderAt(point, state.deposits, core, false).type
+        ? orderAt(point, state.deposits, state.spoils, core, false).type
         : null,
     roadShort,
   });
@@ -117,7 +119,7 @@ export function order(
   if (roadMode) store.mode.value = { type: "select" };
   const core = state.teams[me.team]?.core;
   if (core === undefined || core === null) return;
-  const input = orderAt(point, state.deposits, core, roadMode);
+  const input = orderAt(point, state.deposits, state.spoils, core, roadMode);
   store.ping.value = { cell: cellAt(point), id: ++pings };
   void send({ type: "order", creepId: creep.id, order: input });
 }

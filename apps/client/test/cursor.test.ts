@@ -1,4 +1,4 @@
-import { dominate, join, step } from "@geometrix/sim";
+import { dominate, join, step, updateVision } from "@geometrix/sim";
 import { describe, expect, it } from "vitest";
 import {
   cursorAt,
@@ -29,6 +29,11 @@ describe("cursorKind", () => {
     [{ order: "gather", pick: "other" }, "gather"],
     [{ order: "moveTo", pick: "creep" }, "select"],
     [{ mode: "road", pick: "creep" }, "road"],
+    // An enemy in sight: approach with a dominated creep, else select.
+    [{ order: "moveTo", pick: "enemy" }, "approach"],
+    [{ pick: "enemy" }, "select"],
+    [{ mode: "road", pick: "enemy" }, "road"],
+    [{ order: "pickup" }, "pickup"],
     [{ mode: "road", roadShort: true }, "roadShort"],
     [{ mode: "pickCell", order: "moveTo" }, "pick"],
   ] as const)("%o shows %s", (input, kind) => {
@@ -92,6 +97,27 @@ describe("cursorAt", () => {
     expect(at(core.x + 0.5, core.y + 0.5)).toBe("select");
     // A replay gives no orders.
     expect(at(deposit.x + 0.5, deposit.y + 0.5, false)).toBe("select");
+  });
+
+  it("approaches an enemy in sight and picks up a spoil (M2 encontro)", () => {
+    const { world, store, creep, core, at } = connected();
+    dominate(world, 7, creep.id);
+    const enemy = world.creeps.find((c) => c.team === 1)!;
+    Object.assign(enemy, { x: core.x + 4, y: core.y });
+    updateVision(world);
+    step(world, []);
+    const seen = viewOf(world);
+    seen.spoils.push({
+      id: 999,
+      x: core.x,
+      y: core.y + 4,
+      cargo: { materia: 3, cristal: 0 },
+    });
+    store.show(seen, 1);
+    expect(at(enemy.x + 0.5, enemy.y + 0.5)).toBe("approach");
+    expect(at(core.x + 0.5, core.y + 4.5)).toBe("pickup");
+    // Without orders (a replay), the enemy is just selectable.
+    expect(at(enemy.x + 0.5, enemy.y + 0.5, false)).toBe("select");
   });
 
   it("turns the road icon red when the stock is short", () => {
