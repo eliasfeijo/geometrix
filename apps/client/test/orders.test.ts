@@ -5,19 +5,22 @@ import { GameStore } from "../src/store.ts";
 import { order, toggleRoadMode } from "../src/interaction.ts";
 import { viewOf, testWorld, welcomeOf } from "./helpers.ts";
 
+/** Where on the map element a right click lands: only places the menu. */
+const PX = { x: 100, y: 100 };
+
 describe("orderAt", () => {
   const deposits = [{ id: 4, kind: "cristal" as const, amount: 0, x: 2, y: 2 }];
   const core = { x: 10, y: 10 };
 
   it("gathers at a deposit, delivers at the own core, moves elsewhere", () => {
-    expect(orderAt({ x: 2.9, y: 2.1 }, deposits, core, false)).toEqual({
+    expect(orderAt({ x: 2.9, y: 2.1 }, deposits, [], core, false)).toEqual({
       type: "gather",
       depositId: 4,
     });
-    expect(orderAt({ x: 11.2, y: 10.5 }, deposits, core, false)).toEqual({
+    expect(orderAt({ x: 11.2, y: 10.5 }, deposits, [], core, false)).toEqual({
       type: "deliver",
     });
-    expect(orderAt({ x: 5.5, y: 7.2 }, deposits, core, false)).toEqual({
+    expect(orderAt({ x: 5.5, y: 7.2 }, deposits, [], core, false)).toEqual({
       type: "moveTo",
       x: 5,
       y: 7,
@@ -25,7 +28,7 @@ describe("orderAt", () => {
   });
 
   it("builds road anywhere in road mode", () => {
-    expect(orderAt({ x: 2.5, y: 2.5 }, deposits, core, true)).toEqual({
+    expect(orderAt({ x: 2.5, y: 2.5 }, deposits, [], core, true)).toEqual({
       type: "buildRoad",
       x: 2,
       y: 2,
@@ -45,7 +48,7 @@ describe("orderAt", () => {
       { x: core.x + 3.5, y: core.y + 3.5 },
     ]) {
       for (const road of [false, true]) {
-        const input = orderAt(point, world.deposits, core, road);
+        const input = orderAt(point, world.deposits, [], core, road);
         expect(orderRefusal(world, 50, creep.id, input)).toBeNull();
       }
     }
@@ -69,7 +72,7 @@ describe("right click", () => {
 
   it("asks to dominate first", () => {
     const { store, sent, send } = connected();
-    order(store, { x: 3, y: 3 }, send, 0);
+    order(store, { x: 3, y: 3 }, send, 0, PX);
     expect(sent).toEqual([]);
     expect(store.notices.value).toHaveLength(1);
   });
@@ -82,8 +85,8 @@ describe("right click", () => {
     store.show(viewOf(world), 1);
     toggleRoadMode(store);
     expect(store.mode.value.type).toBe("road");
-    order(store, { x: 3.5, y: 4.5 }, send, 1);
-    order(store, { x: 3.5, y: 4.5 }, send, 2);
+    order(store, { x: 3.5, y: 4.5 }, send, 1, PX);
+    order(store, { x: 3.5, y: 4.5 }, send, 2, PX);
     expect(sent).toEqual([
       {
         type: "order",

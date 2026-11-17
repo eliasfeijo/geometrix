@@ -44,6 +44,8 @@ export class ReplayController {
   private lastFrame: number | null = null;
   /** Bumped by every seek: a hash computed before it is stale. */
   private generation = 0;
+  /** The tick of the view last handed over: the chronicle reaches it. */
+  private published = 0;
 
   constructor(
     replay: Replay,
@@ -164,8 +166,13 @@ export class ReplayController {
     const seen = structuredClone(fullView(state));
     if (kind === "state") {
       this.store.show(seen, now);
+      this.store.chronicled(
+        this.player.eventsBetween(this.published, state.tick),
+      );
+      this.published = state.tick;
       return;
     }
+    this.published = state.tick;
     this.store.receive(
       {
         type: "welcome",
@@ -180,8 +187,8 @@ export class ReplayController {
         stream: "replay",
         seq: 0,
         view: seen,
-        // The replay's chronicle comes with F5 (plan section 9).
-        chronicle: [],
+        // Every event up to here (fullView); the store keeps the latest.
+        chronicle: this.player.eventsBetween(0, state.tick),
       },
       now,
     );

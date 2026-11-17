@@ -28,6 +28,10 @@ export const COLORS = {
   veil: "#0d0f12",
   /** What a team pays, rising from its core (F9). */
   paid: "#ff9b9b",
+  /** HP bar by band (M2 encontro C-1). */
+  hp: { high: "#7fdba0", mid: "#ffd166", low: "#ff5d5d" },
+  /** A fight between two creeps (C-3). */
+  fight: "#ff5d5d",
 } as const;
 
 export const teamColor = (team: number): string =>

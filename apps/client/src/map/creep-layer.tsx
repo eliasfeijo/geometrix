@@ -20,9 +20,11 @@ import { creepStatus, viewCapacity, type Creep } from "../creep-status.ts";
 import type { GameStore } from "../store.ts";
 import { COLORS, teamColor, teamTextColor } from "./colors.ts";
 import { DnaShape } from "./creep-shape.tsx";
+import { EncounterLayer } from "./encounter-layer.tsx";
 import { creepPositions, glideProgress } from "./interpolate.ts";
 import { nameFontSize } from "./labels.ts";
 import { layoutCreeps, markerOf, type Marker } from "./layout.ts";
+import { hpBand, hpShare } from "./combat-marks.ts";
 import { arcDash } from "./shapes.ts";
 import type { Point } from "./view.ts";
 
@@ -30,6 +32,10 @@ const SHAPE_RADIUS = 0.3;
 const CARGO_RADIUS = 0.43;
 const CARGO_WIDTH = 0.1;
 const CARGO_FULL_WIDTH = 0.17;
+/** The HP bar under the ring (spec C-1), in cells at scale 1. */
+const HP_BAR_WIDTH = 0.7;
+const HP_BAR_HEIGHT = 0.09;
+const HP_BAR_GAP = 0.08;
 
 /**
  * Re-renders on each animation frame while a glide is under way, and stays
@@ -125,6 +131,7 @@ export function CreepLayer() {
       creep={creep}
       center={center}
       name={creep.name}
+      belowBar={hpShare(creep, info.params) !== null}
       fontSize={nameFontSize(
         inCell.get(`${creep.x},${creep.y}`) ?? 1,
         viewScale,
@@ -143,6 +150,12 @@ export function CreepLayer() {
   );
   return (
     <g class="creep-layer">
+      <EncounterLayer
+        state={state}
+        params={info.params}
+        markers={markers}
+        viewScale={viewScale}
+      />
       {selected !== undefined &&
         isOwnCreep(selected) &&
         selectedMarker !== undefined && (
@@ -436,6 +449,40 @@ function CreepMark({ creep, center, team, params, mine, waiting }: MarkProps) {
       {waiting && (
         <Hourglass x={cx + ring * 0.75} y={cy - ring * 0.75} size={scale} />
       )}
+      <HpBar creep={creep} center={center} params={params} />
+    </g>
+  );
+}
+
+/** A bar under the ring while the creep is not at full HP (spec C-1). */
+function HpBar(props: {
+  creep: Creep;
+  center: Point & { scale: number };
+  params: Params;
+}) {
+  const share = hpShare(props.creep, props.params);
+  if (share === null) return null;
+  const { x, y, scale } = props.center;
+  const width = HP_BAR_WIDTH * scale;
+  const height = HP_BAR_HEIGHT * scale;
+  const left = x - width / 2;
+  const top = y + (CARGO_RADIUS + HP_BAR_GAP) * scale;
+  return (
+    <g class="hp-bar">
+      <rect
+        x={left - 0.02 * scale}
+        y={top - 0.02 * scale}
+        width={width + 0.04 * scale}
+        height={height + 0.04 * scale}
+        fill={COLORS.background}
+      />
+      <rect
+        x={left}
+        y={top}
+        width={width * share}
+        height={height}
+        fill={COLORS.hp[hpBand(share)]}
+      />
     </g>
   );
 }
@@ -446,14 +493,17 @@ function CreepName(props: {
   center: Point & { scale: number };
   name: string;
   fontSize: number | null;
+  /** Whether the HP bar sits between the ring and the name. */
+  belowBar: boolean;
 }) {
   const { center, fontSize } = props;
   if (fontSize === null) return null;
+  const bar = props.belowBar ? HP_BAR_GAP + HP_BAR_HEIGHT : 0;
   return (
     <text
       class="map-text creep-name"
       x={center.x}
-      y={center.y + (CARGO_RADIUS + 0.16) * center.scale}
+      y={center.y + (CARGO_RADIUS + 0.16 + bar) * center.scale}
       font-size={fontSize}
       stroke-width={fontSize * 0.28}
       fill={teamTextColor(props.creep.team)}

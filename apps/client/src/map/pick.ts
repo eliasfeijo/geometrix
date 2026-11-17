@@ -3,7 +3,7 @@
 // that hits several markers with none clearly lists all their creeps (fog
 // F6, E3).
 
-import type { Cell, Deposit, OrderInput } from "@geometrix/sim";
+import type { Cell, Deposit, OrderInput, Spoil } from "@geometrix/sim";
 import { markerAt, markersAt, type Marker } from "./layout.ts";
 import { cellAt, type Point } from "./view.ts";
 
@@ -63,22 +63,44 @@ export function cellmates(
     .sort((a, b) => a - b);
 }
 
+/**
+ * The enemy creeps a pick hits (M2 encontro C-6): the creep, or those of a
+ * stack, of another team than `team`, by id. Empty for anything else.
+ */
+export function enemiesIn(
+  pick: Pick | null,
+  creeps: readonly { id: number; team: number }[],
+  team: number,
+): number[] {
+  if (pick === null) return [];
+  const ids =
+    pick.kind === "creep" ? [pick.id] : pick.kind === "stack" ? pick.ids : [];
+  return ids.filter((id) => {
+    const creep = creeps.find((c) => c.id === id);
+    return creep !== undefined && creep.team !== team;
+  });
+}
+
 export const sameSelection = (a: Selection | null, b: Selection | null) =>
   JSON.stringify(a) === JSON.stringify(b);
 
 /**
  * The order a right click gives the dominated creep (plan section 8, owner
- * decision F7): build road in road mode; else gather at a deposit, deliver
- * at the own core, move anywhere else.
+ * decision F7): build road in road mode; else pick up a spoil the team knows
+ * (M2 encontro D11), gather at a deposit, deliver at the own core, move
+ * anywhere else. An enemy creep opens a menu instead (approachTargets).
  */
 export function orderAt(
   point: Point,
   deposits: readonly Deposit[],
+  spoils: readonly Spoil[],
   ownCore: Cell,
   roadMode: boolean,
 ): OrderInput {
   const cell = cellAt(point);
   if (roadMode) return { type: "buildRoad", ...cell };
+  const spoil = spoils.find((s) => s.x === cell.x && s.y === cell.y);
+  if (spoil !== undefined) return { type: "pickup", spoilId: spoil.id };
   const deposit = deposits.find((d) => d.x === cell.x && d.y === cell.y);
   if (deposit !== undefined) return { type: "gather", depositId: deposit.id };
   if (
