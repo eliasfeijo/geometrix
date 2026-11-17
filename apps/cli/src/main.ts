@@ -13,6 +13,7 @@ import {
 } from "@geometrix/sim";
 import { parseBattleParams } from "@geometrix/battle";
 import { BATTLE_FILES, battleSweep, writeBattleSweep } from "./battle.ts";
+import { battleVerify, verifyLogFile } from "./battle-verify.ts";
 import { measureNet, NET_FILES, netVerdicts, writeNet } from "./net.ts";
 import { renderReport } from "./report.ts";
 import { readRun, RUN_FILES, runId, simulate, writeRun } from "./sim.ts";
@@ -67,7 +68,14 @@ commands:
              --quick             a slice for CI: seeds 1-10
              --params <file>     default params/battle.json
              --out, --id         as in sim
-             --max-seconds <n>   fail (exit 1) if the sweep takes longer`;
+             --max-seconds <n>   fail (exit 1) if the sweep takes longer
+           geo battle verify: two runs, a snapshot -> restore halfway and
+           a replay of the log must reach the same hash (a sample of the
+           matrix on every arena, and a scripted human with lab commands)
+             --seeds <list>      default 1,42,649
+             --params <file>     default params/battle.json
+             --log <file>        instead, replay a log exported by the lab
+                                 and compare with its finalHash`;
 
 export type Output = {
   log(line: string): void;
@@ -370,11 +378,53 @@ function runBattleSweep(args: string[], out: Output): number {
   return 0;
 }
 
+function runBattleVerify(args: string[], out: Output): number {
+  const { values } = parseArgs({
+    args,
+    options: {
+      seeds: { type: "string", default: "1,42,649" },
+      params: { type: "string" },
+      log: { type: "string" },
+    },
+    strict: true,
+  });
+  if (values.log !== undefined) {
+    const result = verifyLogFile(readFileSync(values.log, "utf8"));
+    out.log(`geo battle verify --log ${values.log}: ${result.ticks} ticks`);
+    out.log(`  ${result.actual}  replay`);
+    out.log(`  ${result.expected ?? "(none)"}  finalHash`);
+    if (!result.ok) {
+      out.error("FAIL: the replay does not reach the log's finalHash");
+      return 1;
+    }
+    out.log("OK: the log reaches its hash");
+    return 0;
+  }
+  const seeds = parseSeeds(values.seeds);
+  const params = parseBattleParams(
+    JSON.parse(readFileSync(values.params ?? BATTLE_PARAMS, "utf8")),
+  );
+  const result = battleVerify(params, seeds);
+  out.log(`geo battle verify --seeds ${values.seeds}`);
+  for (const c of result.cases) {
+    out.log(
+      `  seed ${c.seed} ${c.name}: ${c.ticks} ticks ${c.ok ? "ok" : "DIFFER"}`,
+    );
+    if (!c.ok) {
+      for (const r of c.runs) out.log(`    ${r.hash}  ${r.name}`);
+    }
+  }
+  out.log(result.ok ? "OK: deterministic" : "FAIL: hashes differ");
+  return result.ok ? 0 : 1;
+}
+
 function runBattle(args: string[], out: Output): number {
   const [sub, ...rest] = args;
   switch (sub) {
     case "sweep":
       return runBattleSweep(rest, out);
+    case "verify":
+      return runBattleVerify(rest, out);
     default:
       throw new UsageError(`unknown battle command: ${String(sub)}`);
   }
