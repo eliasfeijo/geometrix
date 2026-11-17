@@ -5,7 +5,7 @@ Jogo multiplayer de navegador: **mundo persistente de estratégia/economia (RTS 
 
 **Fase atual: M2 (A emboscada), fatia A (o encontro) em implementação** (`docs/specs/m2-encontro/`; F1 a F4
 concluídas, a próxima fase no dashboard). A fatia B (laboratório de batalha,
-`docs/specs/m2-laboratorio/`) tem spec e plan aprovados e pode ser implementada em paralelo. O deploy e o playtest com pessoas novas não
+`docs/specs/m2-laboratorio/`, `packages/battle`) anda em paralelo, numa outra sessão (F1 concluída). O deploy e o playtest com pessoas novas não
 bloqueiam mais o M2 nem o M3: a diversão é julgada pelo dono nos playtests locais (ROADMAP, 2026-11-15). O M1.5 está em `docs/specs/m1.5-rede/` e
 `docs/specs/m1.5-fog/`; o M1, em `docs/specs/m1-ciclo-da-riqueza/` (o histórico fica nos `tasks.md`; a estrutura do
 repositório, no `plan.md` §1 do M1).
