@@ -23,14 +23,26 @@
 
 As fatias do M2 seguem o grafo de dependências do [ROADMAP](../ROADMAP.md), não uma fila.
 
-1. **A F6** (soak e a sessão do dono a ×6), que fecha a fatia A.
-2. **A implementação da B** (F3 a F5) em paralelo, numa outra sessão.
+1. **A F6** (`/implement-phase M2 A F6`, na branch `m2/encontro-f6-soak`, que já existe com os commits de docs
+   do merge da B F2 e da decisão C11): primeiro o preset salteador (C11), depois o soak e o PLAYTEST, e por fim a
+   sessão do dono a ×6, que fecha a fatia A.
+2. **A B F3** (`/implement-phase M2 B F3`), em paralelo numa outra sessão com worktree próprio, branch
+   `m2/laboratorio-f3-gambits` a partir de `main`. O contexto dela está no [tasks.md da B](../specs/m2-laboratorio/tasks.md)
+   (os registros da F1 e da F2) e no plan da B; ela não edita este dashboard.
 3. **Já liberadas pelo checkpoint da A F3:** as rodadas de design do **papel do cristal** e da **fatia E** (se o
    cerco passa pela instância de batalha, a E depende da D; senão, pode vir antes dela).
 4. **Depois da A:** a D (com a B pronta) ou a E, e a C em paralelo à D.
 
 ### O que a próxima fase precisa saber
 
+- **decisão do dono depois da F5** (2026-11-17; plan §11.1, **C11**; GDD 07): subir a carga mínima do alvo no
+  preset salteador (`raiderRules` em `sim/presets.ts`, a ação `approach` com `minCargo: 1`), para o bot só emboscar
+  quem vale a pena; vale também para o botão "Salteador" do jogador. **O número é a primeira lacuna da abertura da
+  F6:** a proposta é 10 (a capacidade do círculo; o quadrado leva 30, o triângulo 20), provisório, dado da regra e
+  não param. Muda o comportamento do `sim`: `SIM_VERSION` 9 e os hashes fixos (skill `implement-phase`). Meça antes
+  e depois com o `geo sim` de 3 dias do seed 42 (encontros por desfecho; o relatório já os tem). A alternativa de
+  bloquear o par também depois de uma fuga ficou de fora (seria regra nova). O motivo: num mundo com bots a ×360,
+  a crônica do Azul tinha 27 encontros e 1 pagamento em 3,5 h, com extorsões de 1 ou 2 de matéria repetidas;
 - **a crônica no cliente** (F5): `GameStore.chronicle` (eventos do time, do mais velho ao mais novo) começa do
   `welcome.chronicle` (o servidor manda 100) e recebe os `events` de cada delta (`chronicled`); um `welcome` novo
   (resync) recomeça. O cliente guarda as últimas `CHRONICLE_KEEP` (300). O texto sai de
