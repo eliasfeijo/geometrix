@@ -35,6 +35,17 @@ import { DNA_GLYPHS, REACTION_LABELS, sideLetter } from "./labels.ts";
 import { LatencyPanel } from "./latency-panel.tsx";
 import type { Ended, Speed } from "./protocol.ts";
 import { ResultTable } from "./result-table.tsx";
+import { RTT_CHOICES } from "./channel.ts";
+import { SessionPanel } from "./session-panel.tsx";
+import {
+  loadLabSession,
+  matchupOf,
+  pageStorage,
+  saveLabSession,
+  sessionExport,
+  type BattleRecord,
+  type LabSession,
+} from "./session.ts";
 import { ReinforceForm, SetupForm } from "./setup-form.tsx";
 
 const params = LAB_PARAMS;
@@ -66,15 +77,32 @@ function isFormField(target: EventTarget | null): boolean {
   return false;
 }
 
-function download(log: BattleLog): void {
-  const blob = new Blob([JSON.stringify(log)], { type: "application/json" });
+function downloadJson(data: unknown, name: string): void {
+  const blob = new Blob([JSON.stringify(data)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `batalha-seed${log.setup.seed}-t${log.ticks}.json`;
+  a.download = name;
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
+
+function download(log: BattleLog): void {
+  downloadJson(log, `batalha-seed${log.setup.seed}-t${log.ticks}.json`);
+}
+
+/** What the record of a battle needs from its start (plan P14). */
+type BattleInfo = {
+  setup: BattleSetup;
+  arena: string;
+  you: number | null;
+  rttMs: number;
+  blind: boolean;
+  /** The owner took or let go of a participant during the battle. */
+  switched: boolean;
+};
+
+const storage = pageStorage();
 
 export function Lab() {
   const [draft, setDraft] = useState(defaultDraft);
@@ -97,12 +125,18 @@ export function Lab() {
   const [reinforceSide, setReinforceSide] = useState(0);
   const [dominated, setDominated] = useState<number | null>(null);
   const [, setMeasured] = useState(0);
+  const [session, setSession] = useState<LabSession>(() =>
+    loadLabSession(storage),
+  );
 
   const conn = useRef<LabConnection | null>(null);
   const input = useRef(new KeyboardInput());
   const lastSetup = useRef<BattleSetup | null>(null);
   /** Whom the last start dominated (its place in the setup), for a restart. */
   const lastYou = useRef<number | null>(null);
+  const lastArena = useRef("");
+  const info = useRef<BattleInfo | null>(null);
+  const lastEnded = useRef<EndedEvent | null>(null);
   const names = useRef(0);
   const sides = useRef(0);
   // The callbacks read these, not the state of the render that made them.
@@ -126,7 +160,10 @@ export function Lab() {
           if (frame.events.length > 0) {
             setEvents((old) => [...old, ...frame.events].slice(-MAX_EVENTS));
             for (const event of frame.events) {
-              if (event.type === "ended") setEndedEvent(event);
+              if (event.type === "ended") {
+                setEndedEvent(event);
+                lastEnded.current = event;
+              }
               if (event.type === "joined") {
                 sides.current = Math.max(
                   sides.current,
@@ -147,7 +184,10 @@ export function Lab() {
             setDominated(null);
           }
         },
-        ended: setEnded,
+        ended(message) {
+          setEnded(message);
+          endedHandler.current(message);
+        },
         log: download,
         gambits(id, gambits) {
           if (id !== live.current.selected) return;
@@ -163,7 +203,72 @@ export function Lab() {
 
   const send = (command: BattleCommand) => conn.current?.send(command);
 
-  function start(setup: BattleSetup, you: number | null) {
+  function updateSession(change: (old: LabSession) => LabSession) {
+    setSession((old) => {
+      const next = change(old);
+      saveLabSession(storage, next);
+      return next;
+    });
+  }
+
+  /** The record of the battle that just ended (spec L-5). */
+  function recordOf(message: Ended): BattleRecord | null {
+    const battle = info.current;
+    const result = lastEnded.current;
+    if (battle === null || result === null || conn.current === null) {
+      return null;
+    }
+    let played: BattleRecord["played"] = null;
+    if (battle.you !== null) {
+      const id = idOfPlace(battle.you);
+      const mine = result.results.find((r) => r.participant.id === id);
+      if (mine !== undefined) {
+        played = {
+          name: mine.participant.name,
+          side: mine.participant.side,
+          outcome: mine.outcome,
+        };
+      }
+    }
+    return {
+      at: new Date().toISOString(),
+      blind: battle.blind,
+      rttMs: battle.rttMs,
+      arena: battle.arena,
+      matchup: matchupOf(battle.setup, battle.arena, params),
+      setup: battle.setup,
+      played,
+      switched: battle.switched,
+      winnerSide: result.winnerSide,
+      ticks: message.ticks,
+      measured: conn.current.latency.summary(),
+      grade: null,
+      hash: message.hash,
+    };
+  }
+
+  function onEnded(message: Ended) {
+    const record = recordOf(message);
+    if (record === null) return;
+    updateSession((old) => ({ ...old, records: [...old.records, record] }));
+  }
+  const endedHandler = useRef(onEnded);
+  endedHandler.current = onEnded;
+
+  function exportSession() {
+    const stamp = new Date().toISOString();
+    downloadJson(
+      sessionExport(session, RTT_CHOICES, stamp),
+      `sessao-lab-${stamp.slice(0, 16).replace(/[:T]/g, "-")}.json`,
+    );
+  }
+
+  function clearSession() {
+    if (!window.confirm("Apagar o registro da sessão?")) return;
+    updateSession(() => ({ records: [], blind: null }));
+  }
+
+  function start(setup: BattleSetup, you: number | null, arenaName: string) {
     const connection = conn.current;
     if (connection === null) return;
     // The keys go to the battle, not to the button that started it.
@@ -183,6 +288,16 @@ export function Lab() {
     input.current = new KeyboardInput();
     lastSetup.current = setup;
     lastYou.current = you;
+    lastArena.current = arenaName;
+    lastEnded.current = null;
+    info.current = {
+      setup,
+      arena: arenaName,
+      you,
+      rttMs: rtt,
+      blind: false,
+      switched: false,
+    };
     sides.current = setup.sides.length;
     setArena(parseArena(setup.arena));
     connection.rttMs = rtt;
@@ -201,11 +316,21 @@ export function Lab() {
 
   function startDraft() {
     names.current = namesUsed(draft);
-    start(setupOf(draft, params, LAB_ARENAS[draft.arena]), youOf(draft));
+    start(
+      setupOf(draft, params, LAB_ARENAS[draft.arena]),
+      youOf(draft),
+      draft.arena,
+    );
   }
 
   function restart() {
-    if (lastSetup.current !== null) start(lastSetup.current, lastYou.current);
+    if (lastSetup.current === null) return;
+    start(lastSetup.current, lastYou.current, lastArena.current);
+  }
+
+  /** The owner took or let go of someone: the battle is neither's to count. */
+  function switched() {
+    if (info.current !== null) info.current.switched = true;
   }
 
   function togglePause() {
@@ -216,6 +341,7 @@ export function Lab() {
   }
 
   function dominate(id: number) {
+    switched();
     send({ type: "control", id, controller: "human" });
     setDominated(id);
     for (const command of input.current.retarget(id)) send(command);
@@ -227,6 +353,7 @@ export function Lab() {
 
   function release() {
     if (dominated === null) return;
+    switched();
     send({ type: "control", id: dominated, controller: "gambits" });
     setDominated(null);
   }
@@ -493,6 +620,12 @@ export function Lab() {
               send({ type: "setGambits", id: selected, gambits: gambitsDraft });
               setGambitsRunning(gambitsDraft);
             }}
+          />
+          <SessionPanel
+            session={session}
+            rtts={RTT_CHOICES}
+            onExport={exportSession}
+            onClear={clearSession}
           />
           <EventsList lines={lines} />
         </aside>
