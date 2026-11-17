@@ -71,16 +71,22 @@ export function memoryStorage(): KeyValueStore & { data: Map<string, string> } {
 
 /**
  * A replay of a balanced bot on each team for `ticks` ticks, logged as the
- * harness logs it, with the final state's serialization (for the hash).
+ * harness logs it, with the final state's serialization (for the hash) and
+ * every event of the run.
  */
 export function botReplay(
   ticks: number,
   seed = 42,
-): { replay: Omit<Replay, "finalHash">; finalJson: string } {
+): {
+  replay: Omit<Replay, "finalHash">;
+  finalJson: string;
+  events: SimEvent[];
+} {
   const state = testWorld(seed);
   const params = state.params;
   const commands: LoggedCommand[] = [];
   const bots = botsFor(["balanced", "balanced"]);
+  const events: SimEvent[] = [];
   while (state.tick < ticks) {
     const inputs = botCommands(state, bots);
     const accepted = inputs.filter(
@@ -89,11 +95,12 @@ export function botReplay(
     accepted.forEach(({ playerId, command }, seq) =>
       commands.push({ tick: state.tick, seq, playerId, command }),
     );
-    step(state, accepted);
+    events.push(...step(state, accepted));
   }
   return {
     replay: { simVersion: SIM_VERSION, seed, params, ticks, commands },
     finalJson: serialize(state),
+    events,
   };
 }
 
