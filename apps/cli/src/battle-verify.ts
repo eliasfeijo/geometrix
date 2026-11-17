@@ -67,6 +67,7 @@ export function scriptedCommands(seed: number, ticks: number): unknown[][] {
           hp: 200,
           carry: { materia: 0, cristal: 0 },
           gambits: defaultGambits("triangle"),
+          reaction: "hard",
         },
       });
     }

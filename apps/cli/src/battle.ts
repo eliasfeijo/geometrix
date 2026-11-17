@@ -19,6 +19,7 @@ import {
   type Dna,
   type Gambit,
   type ParticipantSetup,
+  type Reaction,
 } from "@geometrix/battle";
 
 /** The lab's arenas: the verdicts and the verify sample use these. */
@@ -57,6 +58,8 @@ export const MAX_BATTLE_SECONDS = 600;
  *   duel     1 × 1 of two DNAs at full HP: does the DNA decide alone?
  *   mirror   1 × 1 of a DNA against itself: does the side decide (~50%)?
  *   wounded  a duel or mirror with one side at 500‰ HP: does a wound weigh?
+ *   reaction a mirror with side A hard and side B easy (spec D20): does the
+ *            difficulty weigh, the way the lab offers it?
  *   team     2 × 2 and 3 × 3: duration and cost of a bigger fight
  *   ffa      1 × 1 × 1, three sides: three-way fights end
  *   carry    a square with a full bag against a circle, with the carrier
@@ -69,6 +72,7 @@ export const GROUPS = [
   "duel",
   "mirror",
   "wounded",
+  "reaction",
   "team",
   "ffa",
   "carry",
@@ -95,6 +99,7 @@ type FighterOptions = {
   hpPermille?: number;
   carry?: number;
   gambits?: Gambit[];
+  reaction?: Reaction;
 };
 
 function fighter(
@@ -109,6 +114,7 @@ function fighter(
     hp: Math.floor((hp * (options.hpPermille ?? 1000)) / 1000),
     carry: { materia: options.carry ?? 0, cristal: 0 },
     gambits: options.gambits ?? defaultGambits(dna),
+    reaction: options.reaction ?? "normal",
   };
 }
 
@@ -161,6 +167,17 @@ export function scenarios(params: BattleParams): Scenario[] {
       group: "wounded",
       label: `${DNA_LABELS[dna]} ferido × ${DNA_LABELS[dna]}`,
       sides: duel(dna, dna, 0),
+    });
+  }
+  for (const dna of MIRRORS) {
+    list.push({
+      id: `1x1 ${dna}!hard-${dna}!easy`,
+      group: "reaction",
+      label: `${DNA_LABELS[dna]} difícil × ${DNA_LABELS[dna]} fácil`,
+      sides: [
+        [fighter(params, dna, { reaction: "hard" })],
+        [fighter(params, dna, { reaction: "easy" })],
+      ],
     });
   }
   const team = (dnas: Dna[]) => dnas.map((dna) => fighter(params, dna));
@@ -582,6 +599,21 @@ export function renderBattleReport(result: BattleSweepResult): string {
     }
   }
   out.push(table(["Confronto", ...REPORT_ARENAS], woundedRows));
+  out.push("");
+
+  out.push("## A dificuldade pesa");
+  out.push("");
+  const { easy, normal, hard } = params.ai;
+  out.push(
+    `Vitórias de A / B num espelho com o lado A difícil (reação de ${hard.decisionMs} ± ${hard.decisionJitterMs} ms) e o lado B fácil (${easy.decisionMs} ± ${easy.decisionJitterMs} ms). O resto da matriz usa o normal (${normal.decisionMs} ± ${normal.decisionJitterMs} ms).`,
+  );
+  out.push("");
+  out.push(
+    table(
+      ["Espelho", ...REPORT_ARENAS],
+      group("reaction").map((s) => [s.label, ...winRow(s)]),
+    ),
+  );
   out.push("");
 
   out.push("## Lutas maiores");

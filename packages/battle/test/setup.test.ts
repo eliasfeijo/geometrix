@@ -190,6 +190,14 @@ describe("invalid setups (spec S-2)", () => {
       "unknown DNA hexagon",
     ],
     [
+      "unknown reaction",
+      setupOf(tiny, [
+        [member("square", { reaction: "instant" as "hard" })],
+        [member("square")],
+      ]),
+      "reaction must be easy, normal, hard",
+    ],
+    [
       "no name",
       setupOf(tiny, [[member("square", { name: "" })], [member("square")]]),
       "name must be",

@@ -103,9 +103,15 @@ describe("parseBattleParams", () => {
     }
   });
 
-  test("the AI jitter is smaller than its period", () => {
-    expect(issuesOf(withLeaf("ai.decisionJitterMs", 250))).toEqual([
-      "ai.decisionJitterMs: must be smaller than ai.decisionMs",
+  test("the AI jitter is smaller than its period, at every reaction", () => {
+    expect(issuesOf(withLeaf("ai.normal.decisionJitterMs", 250))).toEqual([
+      "ai.normal.decisionJitterMs: must be smaller than ai.normal.decisionMs",
+    ]);
+    expect(issuesOf(withLeaf("ai.hard.decisionMs", 50))).toEqual([
+      "ai.hard.decisionJitterMs: must be smaller than ai.hard.decisionMs",
+    ]);
+    expect(issuesOf(withLeaf("ai.easy.decisionMs", 610))).toEqual([
+      "ai.easy.decisionMs: must be a multiple of one tick (50 ms)",
     ]);
   });
 
