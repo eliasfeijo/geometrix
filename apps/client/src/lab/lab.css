@@ -381,3 +381,10 @@
   stroke-width: 0.3px;
   pointer-events: none;
 }
+
+/* The blind mode's grade (spec D17). */
+.lab-grade-button {
+  min-width: 2.5rem;
+  font-size: 1.1rem;
+  font-family: var(--font-game);
+}

@@ -36,14 +36,18 @@ import { LatencyPanel } from "./latency-panel.tsx";
 import type { Ended, Speed } from "./protocol.ts";
 import { ResultTable } from "./result-table.tsx";
 import { RTT_CHOICES } from "./channel.ts";
+import { GradePanel } from "./grade-panel.tsx";
 import { SessionPanel } from "./session-panel.tsx";
 import {
+  BLIND_PER_RTT,
   loadLabSession,
   matchupOf,
   pageStorage,
   saveLabSession,
   sessionExport,
+  shuffledBag,
   type BattleRecord,
+  type Grade,
   type LabSession,
 } from "./session.ts";
 import { ReinforceForm, SetupForm } from "./setup-form.tsx";
@@ -128,6 +132,13 @@ export function Lab() {
   const [session, setSession] = useState<LabSession>(() =>
     loadLabSession(storage),
   );
+  /** The blind mode's RTT of the battle on screen, or null outside it. */
+  const [blindRtt, setBlindRtt] = useState<number | null>(null);
+  /** A blind battle that ended: its record, waiting for the grade. */
+  const [blindEnd, setBlindEnd] = useState<{
+    record: BattleRecord;
+    grade: Grade | null;
+  } | null>(null);
 
   const conn = useRef<LabConnection | null>(null);
   const input = useRef(new KeyboardInput());
@@ -250,7 +261,53 @@ export function Lab() {
   function onEnded(message: Ended) {
     const record = recordOf(message);
     if (record === null) return;
+    // A blind battle waits for its grade before it goes into the record.
+    if (record.blind) {
+      setBlindEnd({ record, grade: null });
+      return;
+    }
     updateSession((old) => ({ ...old, records: [...old.records, record] }));
+  }
+
+  /** The grade of the blind battle that ended: then the RTT shows (D17). */
+  function grade(value: Grade) {
+    if (blindEnd === null || blindEnd.grade !== null) return;
+    const record = { ...blindEnd.record, grade: value };
+    updateSession((old) => ({ ...old, records: [...old.records, record] }));
+    setBlindEnd({ record, grade: value });
+  }
+
+  /** The blind mode's next battle: the same setup, the next RTT of the bag. */
+  function nextBlind(blind = session.blind) {
+    if (blind === null || blind.bag.length === 0) return;
+    const [rttMs, ...rest] = blind.bag as [number, ...number[]];
+    updateSession((old) => ({ ...old, blind: { ...blind, bag: rest } }));
+    names.current = blind.setup.sides.flat().length;
+    start(blind.setup, blind.you, blind.arena, rttMs);
+  }
+
+  /** One setup for the whole blind session (spec section 8): the form's. */
+  function startBlind() {
+    const you = youOf(draft);
+    if (you === null || session.blind !== null) return;
+    const setup = setupOf(draft, params, LAB_ARENAS[draft.arena]);
+    const bag = shuffledBag(RTT_CHOICES, BLIND_PER_RTT, Math.random);
+    const blind = {
+      setup,
+      arena: draft.arena,
+      matchup: matchupOf(setup, draft.arena, params),
+      you,
+      bag,
+      total: bag.length,
+    };
+    nextBlind(blind);
+  }
+
+  function endBlind() {
+    updateSession((old) => ({ ...old, blind: null }));
+    setBlindEnd(null);
+    setBlindRtt(null);
+    if (conn.current !== null) conn.current.rttMs = rtt;
   }
   const endedHandler = useRef(onEnded);
   endedHandler.current = onEnded;
@@ -266,9 +323,16 @@ export function Lab() {
   function clearSession() {
     if (!window.confirm("Apagar o registro da sessão?")) return;
     updateSession(() => ({ records: [], blind: null }));
+    setBlindEnd(null);
+    setBlindRtt(null);
   }
 
-  function start(setup: BattleSetup, you: number | null, arenaName: string) {
+  function start(
+    setup: BattleSetup,
+    you: number | null,
+    arenaName: string,
+    blindRttMs: number | null = null,
+  ) {
     const connection = conn.current;
     if (connection === null) return;
     // The keys go to the battle, not to the button that started it.
@@ -290,17 +354,20 @@ export function Lab() {
     lastYou.current = you;
     lastArena.current = arenaName;
     lastEnded.current = null;
+    const rttMs = blindRttMs ?? rtt;
     info.current = {
       setup,
       arena: arenaName,
       you,
-      rttMs: rtt,
-      blind: false,
+      rttMs,
+      blind: blindRttMs !== null,
       switched: false,
     };
+    setBlindRtt(blindRttMs);
+    setBlindEnd(null);
     sides.current = setup.sides.length;
     setArena(parseArena(setup.arena));
-    connection.rttMs = rtt;
+    connection.rttMs = rttMs;
     // Dominating someone plays in real time: instant goes back to ×1.
     const startSpeed = you !== null && speed === "instant" ? 1 : speed;
     if (startSpeed !== speed) setSpeed(startSpeed);
@@ -315,6 +382,7 @@ export function Lab() {
   }
 
   function startDraft() {
+    if (session.blind !== null) return;
     names.current = namesUsed(draft);
     start(
       setupOf(draft, params, LAB_ARENAS[draft.arena]),
@@ -325,6 +393,19 @@ export function Lab() {
 
   function restart() {
     if (lastSetup.current === null) return;
+    const battle = info.current;
+    if (battle?.blind === true) {
+      // A blind battle restarts on the same hidden RTT, but one that ended
+      // waits for its grade and the next one.
+      if (blindEnd !== null) return;
+      start(
+        lastSetup.current,
+        lastYou.current,
+        lastArena.current,
+        battle.rttMs,
+      );
+      return;
+    }
     start(lastSetup.current, lastYou.current, lastArena.current);
   }
 
@@ -376,6 +457,21 @@ export function Lab() {
     // The battle has the page's keyboard once there is one, except in a
     // field of the forms (F5: no click on the arena first).
     if (lastSetup.current === null || isFormField(event.target)) return;
+    // The blind mode's grade (1 to 5), then the next battle (Enter or N).
+    if (down && blindEnd !== null && !event.repeat) {
+      const digit = /^(?:Digit|Numpad)([1-5])$/.exec(event.code);
+      if (digit !== null && blindEnd.grade === null) {
+        event.preventDefault();
+        grade(Number(digit[1]) as Grade);
+        return;
+      }
+      const next = ["Enter", "NumpadEnter", "KeyN"].includes(event.code);
+      if (next && blindEnd.grade !== null) {
+        event.preventDefault();
+        nextBlind();
+        return;
+      }
+    }
     const result = down
       ? input.current.down(event, dominated)
       : input.current.up(event, dominated);
@@ -447,6 +543,7 @@ export function Lab() {
             params={params}
             onChange={setDraft}
             onStart={startDraft}
+            locked={session.blind !== null}
           />
           {running && (
             <ReinforceForm
@@ -542,6 +639,17 @@ export function Lab() {
               </p>
             )}
           </div>
+          {blindEnd !== null && (
+            <GradePanel
+              grade={blindEnd.grade}
+              rttMs={blindEnd.record.rttMs}
+              measured={blindEnd.record.measured}
+              left={session.blind?.bag.length ?? 0}
+              total={session.blind?.total ?? 0}
+              onGrade={grade}
+              onNext={() => nextBlind()}
+            />
+          )}
           {endedEvent !== null && current !== null && (
             <ResultTable
               ended={endedEvent}
@@ -563,6 +671,8 @@ export function Lab() {
             interpolate={interpolate}
             onInterpolate={setInterpolate}
             frameBytes={conn.current?.sizes.averageBytes ?? Number.NaN}
+            blindRttMs={blindRtt}
+            hidden={blindRtt !== null && blindEnd?.grade == null}
           />
           <section class="lab-panel">
             <h2>Na arena</h2>
@@ -626,6 +736,15 @@ export function Lab() {
             rtts={RTT_CHOICES}
             onExport={exportSession}
             onClear={clearSession}
+            canStartBlind={youOf(draft) !== null}
+            onStartBlind={startBlind}
+            onEndBlind={endBlind}
+            canNextBlind={
+              session.blind !== null &&
+              session.blind.bag.length > 0 &&
+              (blindRtt === null || blindEnd?.grade != null)
+            }
+            onNextBlind={() => nextBlind()}
           />
           <EventsList lines={lines} />
         </aside>
