@@ -4,7 +4,9 @@
 // the view hash every hashEveryTicks), timing each part; then it applies the
 // delta, through JSON, to a client view and checks it against the server's
 // (the property of plan section 7). At ×1 a tick is a world second and one
-// send, so bytes per delta are bytes per second for a client.
+// send, so bytes per delta are bytes per second for a client. Since M2
+// (encontro plan section 8) the delta carries the team's events of the tick,
+// filtered as the server does (eventsFor), and that filter is timed too.
 
 import { createHash } from "node:crypto";
 import { mkdirSync, writeFileSync } from "node:fs";
@@ -20,9 +22,11 @@ import {
 import {
   botsFor,
   createWorld,
+  eventsFor,
   view,
   type Params,
   type StrategistId,
+  type TeamEvent,
   type TeamView,
 } from "@geometrix/sim";
 import { stepWithBots, type LoggedCommand } from "./harness.ts";
@@ -74,10 +78,14 @@ export type NetResult = {
   /** Same, only over the ticks at the world's largest population. */
   cpuAtMaxCreeps: Spread;
   /** Medians per send, both teams. */
-  parts: { view: number; diff: number; stringify: number };
+  parts: { view: number; diff: number; events: number; stringify: number };
+  /** Events sent, both teams, and the deltas that carried any. */
+  events: { sent: number; deltas: number; maxPerDelta: number };
   hash: { count: number; meanMicros: number; amortizedMicros: number };
   /** The full view a welcome carries, at the end. */
   welcomeBytes: number;
+  /** The chronicle a welcome carries at the end (team 0's latest 100). */
+  chronicleBytes: number;
   windows: NetWindow[];
   property: {
     checks: number;
@@ -131,6 +139,9 @@ export function measureNet(
   const tickAt = new Uint32Array(ticks);
   const viewTimes = new Float64Array(ticks);
   const diffTimes = new Float64Array(ticks);
+  const eventTimes = new Float64Array(ticks);
+  const chronicle: TeamEvent[] = [];
+  const events = { sent: 0, deltas: 0, maxPerDelta: 0 };
   const stringifyTimes = new Float64Array(ticks);
   let hashMicros = 0;
   let hashes = 0;
@@ -141,12 +152,13 @@ export function measureNet(
   };
 
   for (let i = 0; i < ticks; i++) {
-    stepWithBots(state, bots, log);
+    const tickEvents = stepWithBots(state, bots, log);
     const hashed = state.tick % hashEveryTicks === 0;
     const messages: string[] = [];
     const views: TeamView[] = [];
     let viewT = 0;
     let diffT = 0;
+    let eventsT = 0;
     let stringifyT = 0;
     for (const team of teams) {
       const t0 = clock();
@@ -154,6 +166,8 @@ export function measureNet(
       const t1 = clock();
       const delta = diffView(sent[team]!, seen);
       const t2 = clock();
+      const seenEvents = eventsFor(tickEvents, team);
+      const t2e = clock();
       seq[team]! += 1;
       let hash: string | undefined;
       if (hashed) {
@@ -168,19 +182,28 @@ export function measureNet(
         seq: seq[team],
         delta,
         ...(hash === undefined ? {} : { hash }),
+        ...(seenEvents.length === 0 ? {} : { events: seenEvents }),
       });
       const t4 = clock();
       viewT += t1 - t0;
       diffT += t2 - t1;
+      eventsT += t2e - t2;
       stringifyT += t4 - t3;
+      if (seenEvents.length > 0) {
+        events.sent += seenEvents.length;
+        events.deltas++;
+        events.maxPerDelta = Math.max(events.maxPerDelta, seenEvents.length);
+        if (team === 0) chronicle.push(...seenEvents);
+      }
       bytes[i * teams.length + team] = Buffer.byteLength(message);
       messages.push(message);
       views.push(seen);
     }
     viewTimes[i] = viewT * 1000;
     diffTimes[i] = diffT * 1000;
+    eventTimes[i] = eventsT * 1000;
     stringifyTimes[i] = stringifyT * 1000;
-    cpu[i] = (viewT + diffT + stringifyT) * 1000;
+    cpu[i] = (viewT + diffT + eventsT + stringifyT) * 1000;
     creepsAt[i] = state.creeps.length;
     tickAt[i] = state.tick;
 
@@ -245,14 +268,17 @@ export function measureNet(
     parts: {
       view: spread(viewTimes).median,
       diff: spread(diffTimes).median,
+      events: spread(eventTimes).median,
       stringify: spread(stringifyTimes).median,
     },
+    events,
     hash: {
       count: hashes,
       meanMicros: hashes === 0 ? 0 : hashMicros / hashes,
       amortizedMicros: ticks === 0 ? 0 : hashMicros / ticks,
     },
     welcomeBytes: Buffer.byteLength(viewJson(view(state, 0))),
+    chronicleBytes: Buffer.byteLength(JSON.stringify(chronicle.slice(-100))),
     windows,
     property,
   };
@@ -348,9 +374,10 @@ export function renderNet(result: NetResult): string {
       ],
     ),
     "",
-    `- Partes do envio (medianas, 2 times): visão ${micros(result.parts.view)}, diff ${micros(result.parts.diff)}, \`JSON.stringify\` ${micros(result.parts.stringify)}.`,
+    `- Partes do envio (medianas, 2 times): visão ${micros(result.parts.view)}, diff ${micros(result.parts.diff)}, eventos do time ${micros(result.parts.events)}, \`JSON.stringify\` ${micros(result.parts.stringify)}.`,
+    `- Eventos enviados (2 times): ${number(result.events.sent)}, em ${number(result.events.deltas)} deltas (no máximo ${number(result.events.maxPerDelta)} num delta).`,
     `- Hash da visão (\`viewJson\` + SHA-256): ${micros(result.hash.meanMicros)} por hash, ${number(result.hash.count)} hashes; ${micros(result.hash.amortizedMicros)} por envio, amortizado.`,
-    `- Visão completa de um \`welcome\` no fim do mundo: ${number(result.welcomeBytes)} bytes.`,
+    `- Visão completa de um \`welcome\` no fim do mundo: ${number(result.welcomeBytes)} bytes; a crônica dele (as últimas 100 entradas do time 0): ${number(result.chronicleBytes)} bytes.`,
     `- Tempo real da execução, com a verificação do cliente: ${number(result.wallSeconds, 1)} s.`,
     "",
     "## Ao longo do mundo",
