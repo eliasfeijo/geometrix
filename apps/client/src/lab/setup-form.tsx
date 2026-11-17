@@ -123,9 +123,17 @@ type SetupProps = {
   params: BattleParams;
   onChange(draft: SetupDraft): void;
   onStart(): void;
+  /** A blind session is on: its setup is fixed (spec section 8). */
+  locked: boolean;
 };
 
-export function SetupForm({ draft, params, onChange, onStart }: SetupProps) {
+export function SetupForm({
+  draft,
+  params,
+  onChange,
+  onStart,
+  locked,
+}: SetupProps) {
   const { maxSides, maxPerSide } = params.limits;
   const setSide = (side: number, members: MemberDraft[]) =>
     onChange({
@@ -281,7 +289,12 @@ export function SetupForm({ draft, params, onChange, onStart }: SetupProps) {
             + lado
           </button>
         )}
-        <button type="submit" class="lab-primary">
+        <button
+          type="submit"
+          class="lab-primary"
+          disabled={locked}
+          title={locked ? "A sessão às cegas usa um setup só" : undefined}
+        >
           Começar
         </button>
       </div>

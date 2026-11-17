@@ -350,7 +350,7 @@ setup único** (spec §8). O resto do pacote abaixo é do laboratório (sem game
       formulário (sem clicar na arena); atalhos para reiniciar (R) e pausar (Esc ou P); a contagem visível na arena
 - [x] `session.ts`: o registro de cada batalha (setup, domínio, desfecho, RTT, nota) no `localStorage` com
       `try/catch`, o export em JSON, o resumo nota × RTT e vitórias dominando × IA (spec L-5, plan P14)
-- [ ] O modo às cegas: o RTT sorteado pela página e escondido, a nota de 1 a 5 antes de revelar (spec D17). Um
+- [x] O modo às cegas: o RTT sorteado pela página e escondido, a nota de 1 a 5 antes de revelar (spec D17). Um
       setup único na sessão (dono); o sorteio sem repetição (5 de cada RTT embaralhados, com quantas faltam); o
       atraso medido escondido até a nota (ele entregaria o RTT); "próxima batalha" num toque, com o mesmo setup e o
       próximo RTT
