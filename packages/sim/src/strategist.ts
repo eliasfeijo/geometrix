@@ -51,10 +51,9 @@ export const BALANCED = {
   raiderShare: { numerator: 1, denominator: 6 },
   /**
    * The gatherers' posture when approached, by DNA (F3 checkpoint, C2; see
-   * postureRules): below this HP share any of them flees, and the triangle
-   * pays a demand up to this share of its cargo.
+   * postureRules): below this HP share the square flees.
    */
-  posture: { fleeBelowPermille: 400, triangleMaxDemandPermille: 500 },
+  posture: { fleeBelowPermille: 400 },
 } as const;
 
 /** One bot player per team; player ids are team + 1. */
@@ -200,29 +199,30 @@ function scarcestDna(seen: TeamView, team: Team): Dna {
 
 /**
  * The reaction rules the bot puts before a gatherer's rules (F3 checkpoint,
- * C2): the square refuses an extortion and fights, the triangle pays a
- * small demand and flees otherwise, the circle always flees. Below
- * BALANCED.posture.fleeBelowPermille of its HP any of them flees. The rules
- * cannot tell the dialogue from the fight: a triangle or a circle tries to
- * flee in every round too. Human players' gatherers keep the defaults (D13).
+ * C2): the square refuses an extortion and fights, fleeing below
+ * BALANCED.posture.fleeBelowPermille of its HP; the triangle pays any
+ * extortion and flees an attack (2nd round); the circle always flees. The
+ * rules cannot tell the dialogue from the fight: a triangle or a circle tries
+ * to flee in every round too. Human players' gatherers keep the defaults
+ * (D13).
  */
 export function postureRules(dna: Dna): Rule[] {
-  const { fleeBelowPermille, triangleMaxDemandPermille } = BALANCED.posture;
   const always = { type: "always" } as const;
-  const fleeBelow: Rule = {
-    when: { type: "hpBelow", permille: fleeBelowPermille },
-    then: { type: "flee" },
-  };
   switch (dna) {
     case "square":
-      return [fleeBelow, { when: always, then: { type: "fight" } }];
+      return [
+        {
+          when: {
+            type: "hpBelow",
+            permille: BALANCED.posture.fleeBelowPermille,
+          },
+          then: { type: "flee" },
+        },
+        { when: always, then: { type: "fight" } },
+      ];
     case "triangle":
       return [
-        fleeBelow,
-        {
-          when: { type: "demandAtMost", permille: triangleMaxDemandPermille },
-          then: { type: "pay" },
-        },
+        { when: always, then: { type: "pay" } },
         { when: always, then: { type: "flee" } },
       ];
     case "circle":
