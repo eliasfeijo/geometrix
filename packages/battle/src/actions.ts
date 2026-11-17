@@ -26,7 +26,7 @@ import {
   exitCells,
   isExit,
   neighbor,
-  stepsFrom,
+  rockStepsFrom,
   type Dir,
 } from "./arena.ts";
 import type { BattleCommand } from "./commands.ts";
@@ -215,12 +215,12 @@ function protect(mind: Mind, when: Condition): Commands {
   const ward = wardOf(mind, when);
   if (ward === undefined) return null;
   const { arena } = mind.state;
-  const fromWard = stepsFrom(arena, [ward.cell]);
+  const fromWard = rockStepsFrom(arena, ward.cell);
   const reachable = mind.enemies.filter((e) => fromWard[e.cell]! >= 0);
   const enemy = drawSmallest(mind, reachable, (e) => fromWard[e.cell]!);
   if (enemy === undefined) return null;
   // The ward's neighbours nearest to the enemy: the cells that stand between.
-  const fromEnemy = stepsFrom(arena, [enemy.cell]);
+  const fromEnemy = rockStepsFrom(arena, enemy.cell);
   const around = DIRS.map((dir) => neighbor(arena, ward.cell, dir));
   const sides = standable(mind, around).filter(
     (cell) =>

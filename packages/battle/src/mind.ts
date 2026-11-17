@@ -6,7 +6,14 @@
 // shortest paths that tie on the first step ask the rng too, so the 180°
 // mirror of an arena plays the same in distribution.
 
-import { clearLine, DIRS, neighbor, stepsFrom, type Dir } from "./arena.ts";
+import {
+  clearLine,
+  DIRS,
+  neighbor,
+  rockStepsFrom,
+  stepsFrom,
+  type Dir,
+} from "./arena.ts";
 import type { Target } from "./gambits.ts";
 import type { DnaParams } from "./params.ts";
 import { nextInt } from "./rng.ts";
@@ -27,7 +34,7 @@ export type Mind = {
   /** Cells of everyone else: one cell, one creep (spec D5). */
   occupied: Set<number>;
   /** Steps from self around rock, bodies ignored (they move); lazy. */
-  stepsCache: number[] | null;
+  stepsCache: Int32Array | null;
 };
 
 export function createMind(
@@ -60,7 +67,7 @@ export function createMind(
 
 /** Steps from self to `cell` around rock (bodies ignored), or -1. */
 export function stepsTo(mind: Mind, cell: number): number {
-  mind.stepsCache ??= stepsFrom(mind.state.arena, [mind.self.cell]);
+  mind.stepsCache ??= rockStepsFrom(mind.state.arena, mind.self.cell);
   return mind.stepsCache[cell]!;
 }
 
