@@ -1,7 +1,7 @@
 // The battle tick (plan section 7). The pipeline, in order:
 //
 //   1. commands of the human and the lab, validated and applied
-//   2. gambits of the participants whose decision is due           (F3)
+//   2. gambits of the participants whose decision is due
 //   3. turn to the intent, then attack: attack before walking (P3)
 //   4. movement: points, carry brake, rng disputes
 //   5. projectiles, after the creeps
@@ -14,6 +14,7 @@
 // arrival order (plan P5): the lab's worker queues them, the log keeps them
 // under the tick they were applied in, and a replay applies them there.
 
+import { runGambits } from "./ai.ts";
 import { dropAndPickUp } from "./carry.ts";
 import { applyHits, attack, moveProjectiles, type Hit } from "./combat.ts";
 import { applyCommands } from "./commands.ts";
@@ -32,6 +33,7 @@ export function stepBattle(
   const log = createEventLog(state.tick);
   const hits: Hit[] = [];
   applyCommands(state, log, commands);
+  runGambits(state, log);
   turnToIntent(state);
   attack(state, log, hits);
   moveParticipants(state);

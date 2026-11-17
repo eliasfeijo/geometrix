@@ -61,9 +61,12 @@ describe("control (spec D12)", () => {
       "gambits",
       "human",
     ]);
-    // The released one stops, and the gambits decide on this very tick.
-    expect(byId(state, 1).intent.move).toBeNull();
-    expect(byId(state, 1).ai.nextDecisionTick).toBe(2);
+    // The released one stops, and the gambits decided on this very tick (an
+    // empty list: stand still); the next decision is a reaction time away.
+    expect(byId(state, 1).intent).toMatchObject({ move: null, attack: false });
+    const next = byId(state, 1).ai.nextDecisionTick;
+    expect(next).toBeGreaterThanOrEqual(1 + 3);
+    expect(next).toBeLessThanOrEqual(1 + 7);
   });
 
   test("giving it back to the gambits; the same controller is a no-op", () => {

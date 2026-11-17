@@ -9,6 +9,8 @@ import {
   neighbor,
   parseArena,
   type Arena,
+  rockStepsFrom,
+  stepsFrom,
 } from "../src/arena.ts";
 import { ARENA_NAMES, readArenaRows } from "./helpers.ts";
 
@@ -142,4 +144,35 @@ describe("the arenas in params/arenas", () => {
       expect(rotated).toEqual(rows);
     },
   );
+});
+
+describe("steps around rock (plan section 9)", () => {
+  const arena = parseArena([
+    ".........",
+    ".........",
+    ".1..#..2.",
+    ".1..#..2.",
+    ".1..#..2.",
+    ".........",
+    ".........",
+  ]);
+  const at = (x: number, y: number) => y * arena.width + x;
+
+  test("go around rock and blocked cells; -1 where unreached", () => {
+    const steps = stepsFrom(arena, [at(3, 3)]);
+    expect(steps[at(5, 3)]).toBe(6);
+    expect(steps[at(4, 3)]).toBe(-1);
+    const blocked = stepsFrom(arena, [at(3, 3)], new Set([at(3, 2), at(3, 4)]));
+    expect(blocked[at(3, 1)]).toBe(4);
+    expect(blocked[at(3, 2)]).toBe(-1);
+  });
+
+  test("the rock-only steps are memoized per arena, equal to the search", () => {
+    const first = rockStepsFrom(arena, at(2, 2));
+    expect([...first]).toEqual([...stepsFrom(arena, [at(2, 2)])]);
+    expect(rockStepsFrom(arena, at(2, 2))).toBe(first);
+    // A restored battle has another arena object: it fills its own cache.
+    const copy = structuredClone(arena);
+    expect(rockStepsFrom(copy, at(2, 2))).not.toBe(first);
+  });
 });

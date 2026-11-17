@@ -185,3 +185,118 @@ export function opposite(dir: Dir): Dir {
       return "left";
   }
 }
+
+/**
+ * Steps from the nearest of `sources` to every cell, walking around rock
+ * (plan section 9): a breadth-first search over floor. Cells in `blocked`
+ * are not entered (sources too are skipped if blocked); -1 where no source
+ * reaches. With `stopAt`, it stops as soon as that cell is reached: every
+ * cell one step nearer to the sources already has its distance then. The
+ * AI's hot path: it walks the grid by index, without neighbor().
+ */
+export function stepsFrom(
+  arena: Arena,
+  sources: readonly number[],
+  blocked: ReadonlySet<number> | null = null,
+  stopAt = -1,
+): Int32Array {
+  const { width, rock } = arena;
+  const size = rock.length;
+  const steps = new Int32Array(size).fill(-1);
+  // -2 marks what cannot be entered: rock and blocked cells.
+  for (let cell = 0; cell < size; cell++)
+    if (rock[cell] === 1) steps[cell] = -2;
+  if (blocked !== null) for (const cell of blocked) steps[cell] = -2;
+  const queue = new Int32Array(size);
+  let tail = 0;
+  for (const cell of sources) {
+    if (cell < 0 || cell >= size || steps[cell] !== -1) continue;
+    steps[cell] = 0;
+    queue[tail++] = cell;
+  }
+  if (stopAt >= 0 && steps[stopAt] === 0) return clean(steps);
+  for (let head = 0; head < tail; head++) {
+    const cell = queue[head]!;
+    const next = steps[cell]! + 1;
+    const x = cell % width;
+    for (let k = 0; k < 4; k++) {
+      let there: number;
+      if (k === 0) there = cell >= width ? cell - width : -1;
+      else if (k === 1) there = x < width - 1 ? cell + 1 : -1;
+      else if (k === 2) there = cell < size - width ? cell + width : -1;
+      else there = x > 0 ? cell - 1 : -1;
+      if (there < 0 || steps[there] !== -1) continue;
+      steps[there] = next;
+      if (there === stopAt) return clean(steps);
+      queue[tail++] = there;
+    }
+  }
+  return clean(steps);
+}
+
+/** Turns the "cannot enter" marks back into "unreached". */
+function clean(steps: Int32Array): Int32Array {
+  for (let cell = 0; cell < steps.length; cell++) {
+    if (steps[cell] === -2) steps[cell] = -1;
+  }
+  return steps;
+}
+
+const rockSteps = new WeakMap<Arena, (Int32Array | undefined)[]>();
+
+/**
+ * stepsFrom(arena, [cell]), around rock only, memoized per arena: it depends
+ * on nothing else, and the AI asks for it on every decision. A pure cache
+ * outside the state (a restored battle has a new arena object and fills its
+ * own). The result is shared: never write to it.
+ */
+export function rockStepsFrom(arena: Arena, cell: number): Int32Array {
+  let byCell = rockSteps.get(arena);
+  if (byCell === undefined) {
+    byCell = [];
+    rockSteps.set(arena, byCell);
+  }
+  let steps = byCell[cell];
+  if (steps === undefined) {
+    steps = stepsFrom(arena, [cell]);
+    byCell[cell] = steps;
+  }
+  return steps;
+}
+
+/**
+ * The direction from `from` in which `to` is on the clear line within
+ * `range` (aligned, with no rock between), or null.
+ */
+export function alignedDir(
+  arena: Arena,
+  from: number,
+  to: number,
+  range: number,
+): Dir | null {
+  const dx = cellX(arena, to) - cellX(arena, from);
+  const dy = cellY(arena, to) - cellY(arena, from);
+  let dir: Dir;
+  let distance: number;
+  if (dx === 0 && dy !== 0) {
+    dir = dy < 0 ? "up" : "down";
+    distance = dy < 0 ? -dy : dy;
+  } else if (dy === 0 && dx !== 0) {
+    dir = dx < 0 ? "left" : "right";
+    distance = dx < 0 ? -dx : dx;
+  } else {
+    return null;
+  }
+  if (distance > range) return null;
+  const line = clearLine(arena, from, dir, distance);
+  return line.length === distance ? dir : null;
+}
+
+/** The floor cells of the exit ring, in index order (spec D7). */
+export function exitCells(arena: Arena): number[] {
+  const cells: number[] = [];
+  for (let cell = 0; cell < arena.width * arena.height; cell++) {
+    if (isExit(arena, cell)) cells.push(cell);
+  }
+  return cells;
+}

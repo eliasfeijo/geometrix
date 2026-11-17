@@ -60,6 +60,7 @@ export function member(
     dna,
     hp,
     carry: { materia: 0, cristal: 0 },
+    gambits: [],
     ...overrides,
   };
 }
