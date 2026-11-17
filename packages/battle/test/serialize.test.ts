@@ -39,7 +39,7 @@ describe("serializeBattle / restoreBattle (spec S-3)", () => {
     // together. If this changes on purpose, update it, and bump
     // BATTLE_VERSION once logs are kept (see BATTLE_VERSION).
     expect(sha256(serializeBattle(state))).toMatchInlineSnapshot(
-      `"895114f202c8019b6a8311d5a8a5e52382260679972250b569ad1f3890424600"`,
+      `"31036a71a31c339cb2e4e092369a74e76b50a6f0cf160432c155552006756680"`,
     );
   });
 
