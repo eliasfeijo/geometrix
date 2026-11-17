@@ -63,7 +63,7 @@ na sua branch (plan §12, skill `commit`), com merge `--no-ff` em `main`.
       `DeltaMessage.events`; `WelcomeMessage.chronicle`; `PROTOCOL_VERSION` 4 (plan §8)
 - [x] Propriedade do diff com encontros, mortes e despojos (6 h × 3 seeds), com piso de mortes (spec N-3)
 - [x] Servidor: eventos por time no stream e no buffer de retomada; crônica no `welcome` (spec N-1)
-- [ ] Tabela `chronicle`, gravação na transação do tick, recuperação que apaga a partir do snapshot e refaz;
+- [x] Tabela `chronicle`, gravação na transação do tick, recuperação que apaga a partir do snapshot e refaz;
       teste de restart com a crônica igual (spec N-2, plan P7)
 - [ ] **Checkpoint `geo net`:** banda e CPU dentro dos alvos da spec da rede, com os eventos
 
