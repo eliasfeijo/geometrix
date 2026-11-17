@@ -313,6 +313,28 @@ type CreepRef = { id: number; team: number; dna: Dna; name: string };
 | P10 | Reação do salteador à extorsão | Luta (a mesma regra `always → fight` serve para o ataque e para a extorsão) | Paga a extorsão e luta só quando atacado (duas regras) |
 | P11 | Velocidade para a chance de fuga | A célula onde o creep está, no mapa real, com a carga atual, sem o bônus de fuga | A próxima célula do caminho para o Núcleo (pega o vau logo à frente, mas pede um A* no meio da luta) |
 
+## 11.1 Checkpoint da F3 (dono, 2026-11-15)
+
+Números no [dashboard](../../dashboard/current-status.md), "Registro das fases", M2 A F3.
+
+| # | Decisão |
+|---|---|
+| C1 | **Salteador sem nada para explorar volta à coleta:** o estrategista só mantém salteadores enquanto o time alcança alguma célula nunca vista (do Núcleo, no mapa que conhece); depois, todos voltam a coletar matéria. Só o bot muda; o preset salteador continua igual |
+| C2 | **Postura de reação dos coletores do bot, pelo DNA** (regras de reação na frente das regras do papel; o salteador mantém as dele). ■: fugir abaixo de 400‰ de HP, senão lutar (recusa a extorsão). ▲: fugir abaixo de 400‰, pagar se a exigência for até 500‰ da carga, senão fugir. ●: fugir sempre. Os coletores do jogador continuam com os padrões de D13 |
+| C3 | A frequência e o peso dos encontros, com o bot da F3 (0,4–0,8 por time por hora, quase todos pagos, 0,24% da matéria), ainda não importam para a hipótese 3: o dono concorda. Medir de novo com C1 e C2 |
+| C4 | Custo do tick (1,47–1,55× o da F6): decidir depois de medir com C1 |
+| C5 | Interpretações da F3 mantidas: o salteador é escolhido depois dos coletores de cristal e do construtor; os desempates por id do alvo de estrada e do depósito alcançado com o mesmo custo viram desempates pela célula no referencial do time; as definições das métricas |
+
+2ª rodada (dono, 2026-11-17), medida com C1 e C2:
+
+| # | Decisão |
+|---|---|
+| C6 | **Depósito lembrado como vazio que o piloto nunca revisita** (a causa da diferença de 20–25% na matéria entregue entre os times no seed 42, 3 dias): fica para a rodada de balanceamento, fora da F3. Pergunta aberta no [GDD 07](../../gdd/07-piloto-automatico.md) |
+| C7 | **Encontros só nas primeiras ~8 h** (efeito do C1): aceito por agora; observar no playtest da F6. A patrulha fica para depois |
+| C8 | **O ▲ do bot paga qualquer extorsão** e foge do ataque (substitui o ▲ do C2, que quase nunca pagava: a exigência costuma ser a carga inteira). Cada DNA exercita um caminho: ■ luta, ▲ paga, ● foge |
+| C9 | **Custo do tick aceito:** 3 dias do seed 42 em 12,5–12,9 s, contra 12,2–12,4 s da F6 (~1,04×) |
+| C10 | Interpretação mantida: as regras de reação não distinguem o diálogo da luta, então o ▲ e o ● tentam fugir a cada rodada da luta |
+
 ## 12. Ordem de implementação
 
 Cada fase na sua branch `m2/encontro-f<n>-<slug>`, com merge `--no-ff` em `main` (skill `commit`).

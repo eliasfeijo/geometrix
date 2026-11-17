@@ -62,3 +62,8 @@
 - Onde fica o piloto automático: por creep, por grupo de creeps, ou por jogador?
 - A complexidade permitida (número de regras, CPU do script) é uma mecânica de progressão?
 - Qual é a diferença entre uma macro de cliente (só quando você está online) e o piloto automático (no servidor)?
+- **Depósito lembrado como vazio** (M2 encontro, checkpoint da F3, 2026-11-17): o piloto só escolhe um depósito
+  com quantidade lembrada acima de zero, e um depósito visto esgotado fora da visão do time regenera sem que o time
+  saiba. Os coletores esperam em depósitos secos enquanto o outro time coleta ali: no seed 42, 3 dias, o time
+  prejudicado entrega 20–25% menos matéria. Revisitar o depósito lembrado vazio depois de um tempo? Mandar um
+  creep olhar? O dono decidiu tratar na rodada de balanceamento, fora da F3.

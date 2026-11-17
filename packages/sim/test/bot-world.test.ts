@@ -1,7 +1,8 @@
 // Behavior lock for the strategist (M1.5 rede plan section 7, spec D4): a
 // seed-42 world with one balanced bot per team, run for 6 world hours the way
 // the harness and the server run it. A changed hash means a bot decided
-// something different; it changes on purpose with the fog (fog spec D12).
+// something different; it changes on purpose with the fog (fog spec D12)
+// and with the raiders (M2 encontro spec D15, D20).
 
 import { createHash } from "node:crypto";
 import { expect, test } from "vitest";
@@ -34,18 +35,21 @@ test("a 6 h bot world of seed 42 hashes to a stable value", () => {
   expect(
     createHash("sha256").update(serialize(state)).digest("hex"),
   ).toMatchInlineSnapshot(
-    `"733c78e25f7fed0d5c036161469c817aa385e27ef49bdde5b9a49291c52de8eb"`,
+    `"9144fd7ec27e69bda573d8caa5a5f026d28206c3bacc05c31bd3c2cc7e28cd45"`,
   );
-  // Growing to the population cap, the world takes a few seconds.
-}, 30_000);
+  // Growing to the population cap, with raiders exploring, the world takes
+  // over 10 s alone and some 30 s with the whole suite running.
+}, 60_000);
 
 /**
  * The mirrored teams play the same world: the first hours, before contested
- * deposits split them by creep id (fog F2 checkpoint, accepted), each creep
- * of team 1 is the mirror of the one born in the same place of team 0.
+ * deposits split them by creep id (fog F2 checkpoint, accepted) and before
+ * the first draw of the rng in an encounter (M2 encontro plan section 4,
+ * accepted), each creep of team 1 is the mirror of the one born in the same
+ * place of team 0.
  */
 test.each([3, 42])(
-  "seed %i: the teams stay mirrored for the first 2 h",
+  "seed %i: the teams stay mirrored for the first 2 h, until the rng draws",
   (seed) => {
     const state = createWorld(seed, loadTestParams());
     const bots = botsFor(["balanced", "balanced"]);
@@ -63,8 +67,11 @@ test.each([3, 42])(
       const accepted = botCommands(state, bots).filter(
         ({ playerId, command }) => validate(state, command, playerId) === null,
       );
+      const rng = JSON.stringify(state.rng);
       step(state, accepted);
+      if (JSON.stringify(state.rng) !== rng) break;
     }
+    expect(state.tick).toBeGreaterThan(3600);
     expect(of(0).length).toBeGreaterThan(6);
   },
   30_000,

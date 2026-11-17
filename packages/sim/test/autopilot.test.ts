@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { nearestDeposit, type Rule } from "../src/autopilot.ts";
+import { mirrorCell } from "../src/map.ts";
 import { step } from "../src/step.ts";
 import { updateVision } from "../src/vision.ts";
 import type { WorldState } from "../src/world.ts";
@@ -259,6 +260,25 @@ describe("actions", () => {
     expect(nearestDeposit(world.deposits, { x: 2, y: 0 }, "materia")!.x).toBe(
       0,
     );
+  });
+
+  test("gather breaks a tie by the cell in the team's frame, so the teams mirror", () => {
+    // Two materia deposits 2 steps from each core, ids in map order.
+    const world = textWorld(["......", "m.A.m.", ".m.B.m", "......"]);
+    const [a, b] = [0, 1].map((team) => {
+      const creep = creepOf(world, team, "circle");
+      creep.rules = [
+        { when: always, then: { type: "gather", resource: "materia" } },
+      ];
+      return creep;
+    });
+    step(world, []);
+    const target = (c: typeof a) =>
+      world.deposits.find(
+        (d) => c!.order.type === "gather" && d.id === c!.order.depositId,
+      )!;
+    expect(target(a)).toMatchObject({ x: 0, y: 1 });
+    expect(target(b)).toMatchObject(mirrorCell({ x: 0, y: 1 }, world.map));
   });
 
   test("gather is impossible with a full cargo", () => {

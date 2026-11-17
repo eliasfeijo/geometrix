@@ -128,6 +128,7 @@ describe("runs/<id>/", () => {
   test("samples.jsonl and run.json read back into the same report", () => {
     const data = readRun(dir);
     expect(data.samples).toEqual(result.samples);
+    expect(data.encounters).toEqual(result.encounters);
     expect(renderReport(data)).toBe(file(RUN_FILES.report));
   });
 
@@ -136,6 +137,7 @@ describe("runs/<id>/", () => {
     for (const heading of [
       "# Relatório de simulação — two-hours",
       "## Resumo por time",
+      "## Encontros",
       "## Linha do tempo",
       "## Depósitos",
       "## Fatos para a revisão",
@@ -160,6 +162,20 @@ describe("runs/<id>/", () => {
       "Núcleo inimigo visto em",
       "Mapa explorado no fim",
       "| Explorado | Explorando |",
+      // Encounters (M2 encontro spec §7).
+      "Encontros por hora",
+      "Abordado na zona do próprio Núcleo",
+      "Reação da vítima: pagou",
+      "Desfecho como vítima: escapou na luta",
+      "Fugas que escaparam: vau",
+      "Mortes (■ / ▲ / ●)",
+      "Extorsão paga / recebida",
+      "Saque perdido / tomado",
+      "Catado de despojos",
+      "Despojos:",
+      "HP médio dos creeps no fim",
+      "| Abordou / abordado | Mortes | HP médio |",
+      "- Diferença entre os times no fim:",
     ]) {
       expect(report).toContain(metric);
     }

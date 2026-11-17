@@ -2,7 +2,25 @@
 // AI discussing balance. Facts only: totals, rates, shares of time and when
 // things happened. Judging them is the reviewer's job.
 
-import { ACTIVITIES, type Activity, type MetricsSample } from "@geometrix/sim";
+import {
+  ACTIVITIES,
+  type Activity,
+  type MetricsSample,
+  type Stock,
+} from "@geometrix/sim";
+import {
+  DECIDERS,
+  FLEE_GROUNDS,
+  OUTCOMES,
+  REACTIONS,
+  type Decider,
+  type EncounterTally,
+  type FleeGround,
+  type Outcome,
+  type Reaction,
+  type TeamEncounters,
+  type Tries,
+} from "./encounters.ts";
 import type { RunData } from "./sim.ts";
 
 export const HOUR = 3600;
@@ -17,6 +35,35 @@ const ACTIVITY_LABELS: Record<Activity, string> = {
   idle: "parado",
 };
 const DNA_ORDER = ["square", "triangle", "circle"] as const;
+const OUTCOME_LABELS: Record<Outcome, string> = {
+  paid: "pagou",
+  escapedDialogue: "escapou no diálogo",
+  escapedFight: "escapou na luta",
+  victimDied: "vítima morreu",
+  aggressorDied: "agressor morreu",
+  open: "em aberto no fim",
+};
+const REACTION_LABELS: Record<Reaction, string> = {
+  pay: "pagou",
+  refuse: "recusou",
+  fight: "lutou",
+  flee: "tentou fugir",
+};
+const DECIDER_LABELS: Record<Decider, string> = {
+  rule: "regra",
+  player: "jogador",
+  default: "padrão",
+};
+const GROUND_LABELS: Record<FleeGround, string> = {
+  road: "estrada",
+  jungle: "selva",
+  crossing: "vau",
+  river: "rio",
+};
+
+/** The team's creeps' mean HP share in a sample, or "—" with no creep. */
+export const meanHp = (t: { hp: number; hpMax: number }) =>
+  t.hpMax === 0 ? "—" : percent(t.hp, t.hpMax);
 
 export const number = (value: number, digits = 0) =>
   value.toLocaleString("pt-BR", {
@@ -127,6 +174,7 @@ export function renderReport(run: RunData): string {
           ),
         ),
       ],
+      ["HP médio dos creeps no fim", ...perTeam((t) => meanHp(stat(t)))],
       [
         "Upgrade de capacidade comprado em",
         ...perTeam((t) => firstTime(t, (s) => s.capacityUpgrade)),
@@ -234,13 +282,15 @@ export function renderReport(run: RunData): string {
     "",
   );
 
+  out(...encounterSection(run.encounters, teamIds, total, params));
+
   // Timeline.
   const window = windowSeconds(total);
   const marks = samples.filter((s) => seconds(s) % window === 0 || s === last);
   out(
     "## Linha do tempo",
     "",
-    `Janelas de ${hours(window)}. Estoque, creeps, mapa explorado e creeps com ordem de explorar no fim da janela; vazão e tempo dos creeps dentro dela.`,
+    `Janelas de ${hours(window)}. Estoque, creeps, mapa explorado, creeps com ordem de explorar e HP médio no fim da janela; vazão, tempo dos creeps, encontros abertos e mortes dentro dela.`,
     "",
   );
   for (const team of teamIds) {
@@ -274,6 +324,8 @@ export function renderReport(run: RunData): string {
         String(to.roadCells),
         percent(b.exploredCells, mapCells),
         String(b.exploring),
+        ...encounterWindow(run.encounters, from.tick, to.tick, team),
+        meanHp(b),
       ]);
     }
     out(
@@ -293,6 +345,9 @@ export function renderReport(run: RunData): string {
           "Estradas no mapa",
           "Explorado",
           "Explorando",
+          "Abordou / abordado",
+          "Mortes",
+          "HP médio",
         ],
         rows,
       ),
@@ -358,6 +413,7 @@ export function renderReport(run: RunData): string {
       const s = stat(t);
       return `- Time ${t}: o estoque parado no fim é ${percent(s.stock.materia, s.delivered.materia)} da matéria e ${percent(s.stock.cristal, s.delivered.cristal)} do cristal entregues.`;
     }),
+    ...gapFacts(last),
     "",
     "## Configuração",
     "",
@@ -377,4 +433,176 @@ export function renderReport(run: RunData): string {
     "",
   );
   return `${lines.join("\n")}\n`;
+}
+
+/** "a / b" of a stock. */
+const stockPair = (s: Stock) => `${number(s.materia)} / ${number(s.cristal)}`;
+const tries = (t: Tries) =>
+  t.tries === 0
+    ? "0"
+    : `${number(t.escaped)} de ${number(t.tries)} (${percent(t.escaped, t.tries)})`;
+const encountersOf = (r: Record<"attack" | "extort", number>) =>
+  r.attack + r.extort;
+
+/**
+ * Encounters (M2 encontro spec §7): how often, how they ended, who fled and
+ * where, deaths, and what changed hands. Facts, as the rest of the report.
+ */
+function encounterSection(
+  tally: EncounterTally,
+  teamIds: number[],
+  totalSeconds: number,
+  params: RunData["params"],
+): string[] {
+  const team = (t: number) => tally.teams[t]!;
+  const perTeam = (cell: (t: TeamEncounters) => string) =>
+    teamIds.map((t) => cell(team(t)));
+  const perHour = (n: number) => number((n * HOUR) / totalSeconds, 1);
+  const victimTotal = (t: TeamEncounters) => encountersOf(t.asVictim);
+  const reactionTotal = (t: TeamEncounters) =>
+    REACTIONS.reduce((sum, r) => sum + t.reactions[r], 0);
+  const deaths = (t: TeamEncounters) =>
+    DNA_ORDER.reduce((sum, dna) => sum + t.deaths[dna], 0);
+  const net = (t: TeamEncounters) => {
+    const gained = (k: keyof Stock) =>
+      t.extortionReceived[k] +
+      t.lootTaken[k] +
+      t.pickedUp[k] -
+      t.extortionPaid[k] -
+      t.lootLost[k] -
+      t.droppedFleeing[k] -
+      t.droppedDying[k];
+    return `${number(gained("materia"))} / ${number(gained("cristal"))}`;
+  };
+  const { spoils } = tally;
+  return [
+    "## Encontros",
+    "",
+    `Zona do Núcleo: até ${params.hp.coreZoneRadius} células (Manhattan) do Núcleo da vítima. Recursos em matéria / cristal.`,
+    "",
+    table(
+      ["Métrica", ...teamIds.map((t) => `Time ${t}`)],
+      [
+        [
+          "Abordou (atacar / extorquir)",
+          ...perTeam(
+            (t) =>
+              `${encountersOf(t.asAggressor)} (${t.asAggressor.attack} / ${t.asAggressor.extort})`,
+          ),
+        ],
+        [
+          "Foi abordado (atacar / extorquir)",
+          ...perTeam(
+            (t) =>
+              `${victimTotal(t)} (${t.asVictim.attack} / ${t.asVictim.extort})`,
+          ),
+        ],
+        [
+          "Encontros por hora (abordou / foi abordado)",
+          ...perTeam(
+            (t) =>
+              `${perHour(encountersOf(t.asAggressor))} / ${perHour(victimTotal(t))}`,
+          ),
+        ],
+        [
+          "Abordado na zona do próprio Núcleo",
+          ...perTeam(
+            (t) =>
+              `${t.victimInOwnCoreZone} (${percent(t.victimInOwnCoreZone, victimTotal(t))})`,
+          ),
+        ],
+        ...REACTIONS.map((r) => [
+          `Reação da vítima: ${REACTION_LABELS[r]}`,
+          ...perTeam(
+            (t) =>
+              `${t.reactions[r]} (${percent(t.reactions[r], reactionTotal(t))})`,
+          ),
+        ]),
+        [
+          `Reação decidida por (${DECIDERS.map((d) => DECIDER_LABELS[d]).join(" / ")})`,
+          ...perTeam((t) => DECIDERS.map((d) => t.reactionsBy[d]).join(" / ")),
+        ],
+        ...OUTCOMES.map((o) => [
+          `Desfecho como vítima: ${OUTCOME_LABELS[o]}`,
+          ...perTeam((t) => String(t.outcomesAsVictim[o])),
+        ]),
+        ...OUTCOMES.map((o) => [
+          `Desfecho como agressor: ${OUTCOME_LABELS[o]}`,
+          ...perTeam((t) => String(t.outcomesAsAggressor[o])),
+        ]),
+        ...DNA_ORDER.map((dna) => [
+          `Fugas que escaparam: ${{ square: "■", triangle: "▲", circle: "●" }[dna]}`,
+          ...perTeam((t) => tries(t.fleeByDna[dna])),
+        ]),
+        ...FLEE_GROUNDS.map((g) => [
+          `Fugas que escaparam: ${GROUND_LABELS[g]}`,
+          ...perTeam((t) => tries(t.fleeByGround[g])),
+        ]),
+        [
+          "Mortes (■ / ▲ / ●)",
+          ...perTeam(
+            (t) =>
+              `${deaths(t)} (${DNA_ORDER.map((dna) => t.deaths[dna]).join(" / ")})`,
+          ),
+        ],
+        ["Inimigos mortos", ...perTeam((t) => String(t.kills))],
+        [
+          "Extorsão paga / recebida",
+          ...perTeam(
+            (t) =>
+              `${stockPair(t.extortionPaid)} · ${stockPair(t.extortionReceived)}`,
+          ),
+        ],
+        [
+          "Saque perdido / tomado",
+          ...perTeam(
+            (t) => `${stockPair(t.lootLost)} · ${stockPair(t.lootTaken)}`,
+          ),
+        ],
+        [
+          "Largado em despojo, fugindo / morrendo",
+          ...perTeam(
+            (t) =>
+              `${stockPair(t.droppedFleeing)} · ${stockPair(t.droppedDying)}`,
+          ),
+        ],
+        ["Catado de despojos", ...perTeam((t) => stockPair(t.pickedUp))],
+        ["Saldo dos encontros", ...perTeam(net)],
+      ],
+    ),
+    "",
+    `Despojos: ${number(spoils.created)} pilhas criadas, ${number(spoils.pickups)} catadas; no fim, ${number(spoils.left)} no mapa com ${stockPair(spoils.leftCargo)}.`,
+    "",
+  ];
+}
+
+/** Encounters opened (as aggressor / as victim) and deaths between two ticks. */
+function encounterWindow(
+  tally: EncounterTally,
+  from: number,
+  to: number,
+  team: number,
+): string[] {
+  const at = (tick: number) =>
+    tally.timeline.find((m) => m.tick === tick)?.teams[team];
+  const a = at(from);
+  const b = at(to);
+  if (a === undefined || b === undefined) return ["—", "—"];
+  return [
+    `${b.asAggressor - a.asAggressor} / ${b.asVictim - a.asVictim}`,
+    String(b.deaths - a.deaths),
+  ];
+}
+
+/** Between the teams at the end: population and materia delivered (B-2). */
+function gapFacts(last: MetricsSample): string[] {
+  const creeps = last.teams.map(
+    (t) => t.creeps.square + t.creeps.triangle + t.creeps.circle,
+  );
+  const materia = last.teams.map((t) => t.delivered.materia);
+  const spread = (values: number[]) =>
+    Math.max(...values) - Math.min(...values);
+  return [
+    `- Diferença entre os times no fim: ${number(spread(creeps))} creeps (${creeps.join(" / ")}) e ${number(spread(materia))} de matéria entregue (${percent(spread(materia), Math.max(...materia))} do maior).`,
+  ];
 }

@@ -133,7 +133,15 @@ describe("geo sweep", () => {
       "| Diferença entre os times na matéria entregue |",
       "| Núcleo inimigo visto (h) |",
       "| Mapa explorado no fim (%) |",
-      "| Valor | Seed | 1ª matéria (min) | Matéria entregue |",
+      "| Valor | Seed | 1ª matéria (min) | Matéria entregue | Encontros | Mortes |",
+      // Encounters (M2 encontro spec §7).
+      "| Encontros abertos por time por hora |",
+      "| Encontros pagos (%) |",
+      "| Fugas que escaparam (%) |",
+      "| Encontros na zona do Núcleo da vítima (%) |",
+      "| Mortes por time |",
+      "| Diferença entre os times em creeps |",
+      "| Cristal parado no estoque, do entregue (%) |",
     ]) {
       expect(report).toContain(label);
     }
@@ -167,6 +175,7 @@ describe("geo sweep", () => {
     expect(
       readdirSync(join(out, "k", "gather.materia.units=2-s3")).sort(),
     ).toEqual([
+      "encounters.json",
       "metrics.csv",
       "replay.json",
       "report.md",

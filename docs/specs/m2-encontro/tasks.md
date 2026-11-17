@@ -49,12 +49,13 @@ na sua branch (plan §12, skill `commit`), com merge `--no-ff` em `main`.
 
 ## F3 — Bots e harness (`m2/encontro-f3-harness`)
 
-- [ ] Papel de salteador no estrategista, `floor(creeps ÷ 6)` (spec D15, B-1, plan P8)
-- [ ] Métricas dos eventos no harness; `report.md` do `geo sim` e do `geo sweep` com as métricas da spec §7, lado a
+- [x] Papel de salteador no estrategista, `floor(creeps ÷ 6)` (spec D15, B-1, plan P8)
+- [x] Métricas dos eventos no harness; `report.md` do `geo sim` e do `geo sweep` com as métricas da spec §7, lado a
       lado com a F6 do fog (plan §10, P6)
-- [ ] `geo verify` com o hash da lista de eventos
-- [ ] **Checkpoint (dono):** `geo sweep` seeds 1–20 × 6 h e `geo sim` de 3 dias do seed 42: frequência dos
+- [x] `geo verify` com o hash da lista de eventos
+- [x] **Checkpoint (dono):** `geo sweep` seeds 1–20 × 6 h e `geo sim` de 3 dias do seed 42: frequência dos
       encontros, desfechos, mortes, economia, diferença entre os times, cristal, acampamento na saída do Núcleo
+      (duas rodadas, decisões C1–C10 no plan §11.1, 2026-11-17)
 
 ## F4 — Rede e servidor (`m2/encontro-f4-network`)
 

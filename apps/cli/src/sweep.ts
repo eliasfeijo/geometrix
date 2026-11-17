@@ -104,9 +104,31 @@ export type RunSummary = {
   /** Hours until a team first saw an enemy core, mean of the teams. */
   enemyCoreSeenHours: number | null;
   exploredPercent: number;
+  /** Encounters (M2 encontro spec §7), means of the teams unless noted. */
+  encountersPerHour: number;
+  /** Shares of all encounters, by outcome; null with no encounter. */
+  paidPercent: number | null;
+  escapedPercent: number | null;
+  deathOutcomePercent: number | null;
+  /** Escaped of the tries to flee, all teams; null with no try. */
+  fleeEscapedPercent: number | null;
+  /** Encounters in the victim's own core zone, of all (D21). */
+  campingPercent: number | null;
+  deaths: number;
+  /** Units that changed hands by extortion and loot, and were picked up. */
+  changedHands: number;
+  /** Units left in spoils on the map, all teams. */
+  spoilsLeft: number;
+  /** Between the teams at the end. */
+  creepsGap: number;
+  /** Cristal in stock at the end, of the cristal delivered (fog F6: 68%). */
+  cristalStockPercent: number | null;
+  hpPercent: number | null;
   /** Per team, in team order. */
   firstMateriaMinutesByTeam: (number | null)[];
   deliveredMateriaByTeam: number[];
+  encountersByTeam: number[];
+  deathsByTeam: number[];
 };
 
 const mean = (values: number[]) =>
@@ -155,6 +177,34 @@ export function summarize(result: SimResult, value: number): RunSummary {
     Math.max(...values) - Math.min(...values);
   const coreSeen = last.teams.map((t) => t.enemyCoreSeenTick);
   const delivered = last.teams.map((t) => t.delivered.materia);
+  const tally = result.encounters.teams;
+  const sumOf = (values: number[]) => values.reduce((a, b) => a + b, 0);
+  const asAggressor = tally.map(
+    (t) => t.asAggressor.attack + t.asAggressor.extort,
+  );
+  const encounters = sumOf(asAggressor);
+  const outcome = (
+    ...keys: (keyof (typeof tally)[number]["outcomesAsVictim"])[]
+  ) =>
+    encounters === 0
+      ? null
+      : share(
+          sumOf(tally.flatMap((t) => keys.map((k) => t.outcomesAsVictim[k]))),
+          encounters,
+        );
+  const fleeTries = sumOf(
+    tally.flatMap((t) => Object.values(t.fleeByDna).map((f) => f.tries)),
+  );
+  const fleeEscaped = sumOf(
+    tally.flatMap((t) => Object.values(t.fleeByDna).map((f) => f.escaped)),
+  );
+  const deathsByTeam = tally.map(
+    (t) => t.deaths.square + t.deaths.triangle + t.deaths.circle,
+  );
+  const units = (x: { materia: number; cristal: number }) =>
+    x.materia + x.cristal;
+  const hpMax = sumOf(last.teams.map((t) => t.hpMax));
+  const cristalDelivered = sumOf(last.teams.map((t) => t.delivered.cristal));
   return {
     value,
     seed: meta.seed,
@@ -189,8 +239,37 @@ export function summarize(result: SimResult, value: number): RunSummary {
     exploredPercent: perTeam((t) =>
       share(t.exploredCells, params.map.width * params.map.height),
     ),
+    encountersPerHour: encounters / last.teams.length / (totalSeconds / HOUR),
+    paidPercent: outcome("paid"),
+    escapedPercent: outcome("escapedDialogue", "escapedFight"),
+    deathOutcomePercent: outcome("victimDied", "aggressorDied"),
+    fleeEscapedPercent: fleeTries === 0 ? null : share(fleeEscaped, fleeTries),
+    campingPercent:
+      encounters === 0
+        ? null
+        : share(sumOf(tally.map((t) => t.victimInOwnCoreZone)), encounters),
+    deaths: mean(deathsByTeam),
+    changedHands: mean(
+      tally.map(
+        (t) =>
+          units(t.extortionReceived) + units(t.lootTaken) + units(t.pickedUp),
+      ),
+    ),
+    spoilsLeft: units(result.encounters.spoils.leftCargo),
+    creepsGap: spread(last.teams.map(creepsOf)),
+    cristalStockPercent:
+      cristalDelivered === 0
+        ? null
+        : share(
+            sumOf(last.teams.map((t) => t.stock.cristal)),
+            cristalDelivered,
+          ),
+    hpPercent:
+      hpMax === 0 ? null : share(sumOf(last.teams.map((t) => t.hp)), hpMax),
     firstMateriaMinutesByTeam: firstMateria,
     deliveredMateriaByTeam: delivered,
+    encountersByTeam: asAggressor,
+    deathsByTeam,
   };
 }
 
@@ -234,6 +313,34 @@ const COLUMNS: { key: ScalarKey; label: string; digits: number }[] = [
   },
   { key: "enemyCoreSeenHours", label: "Núcleo inimigo visto (h)", digits: 1 },
   { key: "exploredPercent", label: "Mapa explorado no fim (%)", digits: 0 },
+  {
+    key: "cristalStockPercent",
+    label: "Cristal parado no estoque, do entregue (%)",
+    digits: 0,
+  },
+  {
+    key: "encountersPerHour",
+    label: "Encontros abertos por time por hora",
+    digits: 1,
+  },
+  { key: "paidPercent", label: "Encontros pagos (%)", digits: 0 },
+  { key: "escapedPercent", label: "Encontros com fuga (%)", digits: 0 },
+  { key: "deathOutcomePercent", label: "Encontros com morte (%)", digits: 0 },
+  { key: "fleeEscapedPercent", label: "Fugas que escaparam (%)", digits: 0 },
+  {
+    key: "campingPercent",
+    label: "Encontros na zona do Núcleo da vítima (%)",
+    digits: 0,
+  },
+  { key: "deaths", label: "Mortes por time", digits: 1 },
+  {
+    key: "changedHands",
+    label: "Recursos tomados por time (extorsão, saque, despojo)",
+    digits: 0,
+  },
+  { key: "spoilsLeft", label: "Recursos em despojos no fim", digits: 0 },
+  { key: "creepsGap", label: "Diferença entre os times em creeps", digits: 0 },
+  { key: "hpPercent", label: "HP médio no fim (%)", digits: 0 },
 ];
 
 /** "mean (min–max)" over the runs that have the value; "—" for none. */
@@ -337,7 +444,7 @@ export function renderSweepReport({ options, runs }: SweepResult): string {
     "",
     "## Runs",
     "",
-    "Por time, na ordem dos times: minuto da 1ª entrega de matéria e matéria entregue.",
+    "Por time, na ordem dos times: minuto da 1ª entrega de matéria, matéria entregue, encontros abertos (como agressor) e mortes.",
     "",
     table(
       [
@@ -345,6 +452,8 @@ export function renderSweepReport({ options, runs }: SweepResult): string {
         "Seed",
         "1ª matéria (min)",
         "Matéria entregue",
+        "Encontros",
+        "Mortes",
         "Tempo (s)",
         "Hash final",
       ],
@@ -355,6 +464,8 @@ export function renderSweepReport({ options, runs }: SweepResult): string {
           .map((m) => (m === null ? "nunca" : number(m)))
           .join(" / "),
         r.deliveredMateriaByTeam.map((m) => number(m)).join(" / "),
+        r.encountersByTeam.map((m) => number(m)).join(" / "),
+        r.deathsByTeam.map((m) => number(m)).join(" / "),
         number(r.wallSeconds, 1),
         `\`${r.finalHash.slice(0, 16)}\``,
       ]),
