@@ -7,7 +7,14 @@
 
 import type { Dir } from "./arena.ts";
 import type { Dna } from "./params.ts";
-import type { Carry, Controller, Outcome, Participant, Pile } from "./state.ts";
+import type {
+  BattleState,
+  Carry,
+  Controller,
+  Outcome,
+  Participant,
+  Pile,
+} from "./state.ts";
 
 /** A participant as events name it: those who leave the arena leave the state. */
 export type ParticipantRef = {
@@ -79,11 +86,25 @@ export function emit(log: BattleEventLog, body: BattleEventBody): void {
   log.events.push({ ...body, tick: log.tick, index: log.events.length });
 }
 
-export function participantRef(participant: Participant): ParticipantRef {
+export function participantRef(
+  participant: Pick<Participant, "id" | "side" | "dna" | "name">,
+): ParticipantRef {
   return {
     id: participant.id,
     side: participant.side,
     dna: participant.dna,
     name: participant.name,
   };
+}
+
+/**
+ * Who participant `id` is, in the arena or gone: a projectile outlives its
+ * owner, and its hit still names it.
+ */
+export function refById(state: BattleState, id: number): ParticipantRef {
+  const who =
+    state.participants.find((p) => p.id === id) ??
+    state.departed.find((d) => d.id === id);
+  if (who === undefined) throw new Error(`no participant ${id} ever`);
+  return participantRef(who);
 }

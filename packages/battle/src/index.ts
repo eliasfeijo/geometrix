@@ -3,6 +3,7 @@
 export * from "./arena.ts";
 export * from "./canonical.ts";
 export * from "./carry.ts";
+export * from "./combat.ts";
 export * from "./commands.ts";
 export * from "./events.ts";
 export * from "./gambits.ts";
