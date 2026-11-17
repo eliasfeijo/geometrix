@@ -14,7 +14,7 @@ cada merge, conferir os pontos de contato do plan §16.
 
 ## F1 — O pacote e o movimento (`m2/laboratorio-f1-package`)
 
-- [ ] `packages/battle`: `package.json`, tsconfig (o do `sim`), projeto do Vitest; as guardas do `eslint.config.js`
+- [x] `packages/battle`: `package.json`, tsconfig (o do `sim`), projeto do Vitest; as guardas do `eslint.config.js`
       valendo para `packages/battle/src` (ADR-0008, plan §11)
 - [ ] `rng.ts` e `canonical.ts` copiados do `sim`, com o teste de igualdade contra o `@geometrix/sim`
       (devDependency de teste) (plan P1)
