@@ -175,6 +175,13 @@ describe("geo battle sweep (spec R-1)", () => {
       `${scenarios(params).length * ARENAS.length * 2} battles`,
     );
     const report = readFileSync(join(scratch, "two", "battle.md"), "utf8");
+    // Win share and duration are informative (F3 checkpoint): only the
+    // cost can fail.
+    const informative = report
+      .split("\n")
+      .filter((l) => /^\| (O DNA não decide|Duração do)/.test(l));
+    expect(informative).toHaveLength(3);
+    for (const line of informative) expect(line).not.toContain("reprovado");
     for (const heading of [
       "## Resumo",
       "## Vitórias no 1 × 1, por arena",
