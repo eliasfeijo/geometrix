@@ -20,10 +20,12 @@ import { LAB_ARENAS, LAB_PARAMS } from "./assets.ts";
 import { LabConnection, type WorkerLike } from "./connection.ts";
 import {
   defaultDraft,
+  idOfPlace,
   member,
   namesUsed,
   participantOf,
   setupOf,
+  youOf,
   type MemberDraft,
 } from "./draft.ts";
 import { eventLines, EventsList } from "./events-list.tsx";
@@ -46,6 +48,23 @@ type EndedEvent = Extract<BattleEvent, { type: "ended" }>;
 const speedFactor = (speed: Speed) => (speed === "instant" ? 0 : speed);
 const tickMsAt = (speed: Speed) =>
   speed === "instant" ? 0 : 1000 / (TPS * speed);
+
+/**
+ * Where the keys stay with the page's own controls: a text or number field,
+ * a select, a text area. Anywhere else the battle has the keyboard (F5).
+ */
+function isFormField(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  if (target.isContentEditable) return true;
+  if (target instanceof HTMLSelectElement) return true;
+  if (target instanceof HTMLTextAreaElement) return true;
+  if (target instanceof HTMLInputElement) {
+    return !["checkbox", "radio", "button", "submit", "range"].includes(
+      target.type,
+    );
+  }
+  return false;
+}
 
 function download(log: BattleLog): void {
   const blob = new Blob([JSON.stringify(log)], { type: "application/json" });
@@ -82,6 +101,8 @@ export function Lab() {
   const conn = useRef<LabConnection | null>(null);
   const input = useRef(new KeyboardInput());
   const lastSetup = useRef<BattleSetup | null>(null);
+  /** Whom the last start dominated (its place in the setup), for a restart. */
+  const lastYou = useRef<number | null>(null);
   const names = useRef(0);
   const sides = useRef(0);
   // The callbacks read these, not the state of the render that made them.
@@ -142,9 +163,13 @@ export function Lab() {
 
   const send = (command: BattleCommand) => conn.current?.send(command);
 
-  function start(setup: BattleSetup) {
+  function start(setup: BattleSetup, you: number | null) {
     const connection = conn.current;
     if (connection === null) return;
+    // The keys go to the battle, not to the button that started it.
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
     setError(null);
     setFrames(null);
     setEvents([]);
@@ -157,15 +182,37 @@ export function Lab() {
     setGambitsRunning(null);
     input.current = new KeyboardInput();
     lastSetup.current = setup;
+    lastYou.current = you;
     sides.current = setup.sides.length;
     setArena(parseArena(setup.arena));
     connection.rttMs = rtt;
-    connection.start(setup, params, speed);
+    // Dominating someone plays in real time: instant goes back to ×1.
+    const startSpeed = you !== null && speed === "instant" ? 1 : speed;
+    if (startSpeed !== speed) setSpeed(startSpeed);
+    connection.start(setup, params, startSpeed);
+    // The owner takes the creep at once: the control crosses the network
+    // during the start countdown (spec D21).
+    if (you !== null) {
+      const id = idOfPlace(you);
+      send({ type: "control", id, controller: "human" });
+      setDominated(id);
+    }
   }
 
   function startDraft() {
     names.current = namesUsed(draft);
-    start(setupOf(draft, params, LAB_ARENAS[draft.arena]));
+    start(setupOf(draft, params, LAB_ARENAS[draft.arena]), youOf(draft));
+  }
+
+  function restart() {
+    if (lastSetup.current !== null) start(lastSetup.current, lastYou.current);
+  }
+
+  function togglePause() {
+    if (frames === null || frames.current.ended !== null) return;
+    if (paused) conn.current?.resume();
+    else conn.current?.pause();
+    setPaused(!paused);
   }
 
   function dominate(id: number) {
@@ -199,6 +246,9 @@ export function Lab() {
   }
 
   function onKey(event: KeyboardEvent, down: boolean) {
+    // The battle has the page's keyboard once there is one, except in a
+    // field of the forms (F5: no click on the arena first).
+    if (lastSetup.current === null || isFormField(event.target)) return;
     const result = down
       ? input.current.down(event, dominated)
       : input.current.up(event, dominated);
@@ -206,7 +256,30 @@ export function Lab() {
     for (const command of result.commands) send(command);
     if (result.cycle) cycle();
     if (result.release) release();
+    if (result.restart) restart();
+    if (result.pause) togglePause();
   }
+
+  // The listeners are added once and call the handler of the latest render.
+  const keyHandler = useRef(onKey);
+  keyHandler.current = onKey;
+  const blurHandler = useRef(() => {});
+  blurHandler.current = () => {
+    for (const c of input.current.releaseAll(dominated)) send(c);
+  };
+  useEffect(() => {
+    const down = (e: KeyboardEvent) => keyHandler.current(e, true);
+    const up = (e: KeyboardEvent) => keyHandler.current(e, false);
+    const blur = () => blurHandler.current();
+    window.addEventListener("keydown", down);
+    window.addEventListener("keyup", up);
+    window.addEventListener("blur", blur);
+    return () => {
+      window.removeEventListener("keydown", down);
+      window.removeEventListener("keyup", up);
+      window.removeEventListener("blur", blur);
+    };
+  }, []);
 
   const current = frames?.current ?? null;
   const running = current !== null && current.ended === null;
@@ -236,8 +309,8 @@ export function Lab() {
         <h1>Laboratório de batalha</h1>
         <p class="lab-hint">
           Setas ou WASD andam · Shift + seta vira · espaço ataca · Q larga a
-          bolsa · E cata · Tab domina o próximo · 0 solta. Clique na arena para
-          jogar.
+          bolsa · E cata · Tab domina o próximo · 0 solta · R reinicia · P ou
+          Esc pausa.
         </p>
       </header>
       <div class="lab-columns">
@@ -276,18 +349,16 @@ export function Lab() {
             <button
               type="button"
               disabled={lastSetup.current === null}
-              onClick={() => lastSetup.current && start(lastSetup.current)}
+              title="R"
+              onClick={restart}
             >
               Reiniciar
             </button>
             <button
               type="button"
               disabled={!running}
-              onClick={() => {
-                if (paused) conn.current?.resume();
-                else conn.current?.pause();
-                setPaused(!paused);
-              }}
+              title="P ou Esc"
+              onClick={togglePause}
             >
               {paused ? "Continuar" : "Pausar"}
             </button>
@@ -324,15 +395,7 @@ export function Lab() {
             </span>
           </div>
           {error !== null && <p class="lab-error">Setup recusado: {error}</p>}
-          <div
-            class="lab-stage"
-            tabIndex={0}
-            onKeyDown={(e) => onKey(e, true)}
-            onKeyUp={(e) => onKey(e, false)}
-            onBlur={() => {
-              for (const c of input.current.releaseAll(dominated)) send(c);
-            }}
-          >
+          <div class="lab-stage">
             {arena !== null && current !== null ? (
               <ArenaView
                 arena={arena}

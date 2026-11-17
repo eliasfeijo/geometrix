@@ -41,7 +41,7 @@ function host(speed: Speed = 1) {
   const clock = new FakeClock();
   const out: FromWorker[] = [];
   const lab = new LabHost((m) => out.push(m), clock, webSha256);
-  lab.handle({ type: "start", setup, params, speed });
+  lab.handle({ type: "start", battle: 1, setup, params, speed });
   const frames = () => out.filter((m): m is Frame => m.type === "frame");
   return { clock, out, lab, frames };
 }
@@ -110,6 +110,7 @@ describe("inputs (plan P5)", () => {
     clock.advance(120); // ticks 0 and 1 stepped; the clock is mid tick 2
     lab.handle({
       type: "input",
+      battle: 1,
       seq: 9,
       command: { type: "control", id: 1, controller: "human" },
     });
@@ -124,12 +125,39 @@ describe("inputs (plan P5)", () => {
   test("a paused battle keeps the input for the tick after it resumes", () => {
     const { clock, frames, lab } = host();
     lab.handle({ type: "pause" });
-    lab.handle({ type: "input", seq: 1, command: { type: "drop", id: 1 } });
+    lab.handle({
+      type: "input",
+      battle: 1,
+      seq: 1,
+      command: { type: "drop", id: 1 },
+    });
     clock.advance(1000);
     expect(frames()).toHaveLength(1);
     lab.handle({ type: "resume" });
     clock.advance(50);
     expect(frames().at(-1)!.applied).toEqual([1]);
+  });
+
+  test("an input of the previous battle, still on the network, is dropped", () => {
+    const { clock, frames, lab } = host();
+    lab.handle({ type: "start", battle: 2, setup, params, speed: 1 });
+    // A key held across the restart: sent in battle 1, arriving in battle 2.
+    lab.handle({
+      type: "input",
+      battle: 1,
+      seq: 4,
+      command: { type: "control", id: 1, controller: "human" },
+    });
+    lab.handle({
+      type: "input",
+      battle: 2,
+      seq: 5,
+      command: { type: "face", id: 2, dir: "up" },
+    });
+    clock.advance(50);
+    const frame = frames().at(-1)!;
+    expect(frame.applied).toEqual([5]);
+    expect(frame.view.participants[0]!.controller).toBe("gambits");
   });
 });
 
@@ -138,12 +166,14 @@ describe("the end, the log and the hash (spec R-3)", () => {
     const { clock, out, lab } = host(4);
     lab.handle({
       type: "input",
+      battle: 1,
       seq: 1,
       command: { type: "control", id: 2, controller: "human" },
     });
     clock.advance(400);
     lab.handle({
       type: "input",
+      battle: 1,
       seq: 2,
       command: { type: "intent", id: 2, move: "left", attack: true },
     });
@@ -196,7 +226,12 @@ describe("the end, the log and the hash (spec R-3)", () => {
     await vi.waitFor(() =>
       expect(out.some((m) => m.type === "ended")).toBe(true),
     );
-    lab.handle({ type: "input", seq: 1, command: { type: "drop", id: 1 } });
+    lab.handle({
+      type: "input",
+      battle: 1,
+      seq: 1,
+      command: { type: "drop", id: 1 },
+    });
     lab.handle({ type: "speed", speed: 1 });
     clock.advance(1000);
     expect(frames()).toHaveLength(2);
@@ -208,6 +243,7 @@ describe("the end, the log and the hash (spec R-3)", () => {
     const lab = new LabHost((m) => out.push(m), clock);
     lab.handle({
       type: "start",
+      battle: 1,
       setup: { ...setup, sides: [[fighter("square")]] },
       params,
       speed: 1,
