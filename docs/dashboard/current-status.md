@@ -12,55 +12,47 @@
 | | |
 |---|---|
 | **Marco** | **M2 — A emboscada** ([ROADMAP](../ROADMAP.md)). M0, M1 e M1.5 ✅ |
-| **Fatia** | **A — O encontro** ([spec](../specs/m2-encontro/spec.md) · [plan](../specs/m2-encontro/plan.md) · [tasks](../specs/m2-encontro/tasks.md)): F0 a F4 ✅ (a F4: rede e servidor) · **B — O laboratório de batalha** ([spec](../specs/m2-laboratorio/spec.md) · [plan](../specs/m2-laboratorio/plan.md) · [tasks](../specs/m2-laboratorio/tasks.md)): F0 e F1 ✅ (a F1: o pacote `battle` e o movimento) |
+| **Fatia** | **A — O encontro** ([spec](../specs/m2-encontro/spec.md) · [plan](../specs/m2-encontro/plan.md) · [tasks](../specs/m2-encontro/tasks.md)): F0 a F5 ✅ (a F5: o cliente) · **B — O laboratório de batalha** ([spec](../specs/m2-laboratorio/spec.md) · [plan](../specs/m2-laboratorio/plan.md) · [tasks](../specs/m2-laboratorio/tasks.md)): F0 e F1 ✅ em `main`; a F2 pronta na branch `m2/laboratorio-f2-combat`, sem merge |
 | **Em execução** | Nenhuma fase |
-| **Próxima fase** | **A F5 — Cliente**, branch `m2/encontro-f5-client` (skill `implement-phase`) |
-| **Pode andar em paralelo** | **B F2 — O combate**, branch `m2/laboratorio-f2-combat` (criada a partir de `main`, que já tem a B F1), numa outra sessão com worktree próprio em `.claude/worktrees/` (fora do Git); a B mexe no pacote `battle`, não no `sim`. Ela não edita o dashboard nem o `CLAUDE.md` (o registro dela fica no `tasks.md` da B e entra aqui no merge); o merge em `main` acontece entre duas fases da A. **A A F5 e a B F4 mexem no cliente e na config do Vite: uma entra em `main` antes de a outra começar.** Medições de tempo com a outra sessão rodando testes saem distorcidas (na A F4, um teste de 1,7 s passou dos 5 s do Vitest) |
-| **Aguardando o dono** | Nada |
+| **Próxima fase** | **A F6 — Soak e playtest**, branch `m2/encontro-f6-soak` (skill `implement-phase`); o checkpoint é do dono |
+| **Pode andar em paralelo** | **B F3** numa outra sessão, com worktree próprio em `.claude/worktrees/` (fora do Git; o ESLint o ignora desde a A F5). A B não edita o dashboard nem o `CLAUDE.md`; o merge dela em `main` acontece entre duas fases da A. **A B F4 mexe no cliente e na config do Vite:** começa depois de a A F5 estar em `main` (já está). Medições de tempo com a outra sessão rodando testes saem distorcidas |
+| **Aguardando o dono** | 1. **Merge da B F2** em `main`: todas as tasks `[x]` e o registro escrito na branch; o agente da A F5 tentou trazê-la pela branch da A (como a B F1 entrou pela A F4) e a permissão foi negada. Fazer o merge (`git merge --no-ff m2/laboratorio-f2-combat` em `main`, depois `npm run check`) ou dizer quem faz |
 | **Bloqueios** | Nenhum |
 
 ### Próximos passos
 
 As fatias do M2 seguem o grafo de dependências do [ROADMAP](../ROADMAP.md), não uma fila.
 
-1. **A F5 e a F6**, em sequência.
-2. **A implementação da B** (F2 a F5) em paralelo à A, numa outra sessão.
+1. **A F6** (soak e a sessão do dono a ×6), que fecha a fatia A.
+2. **A implementação da B** (F3 a F5) em paralelo, numa outra sessão; o merge da B F2 antes.
 3. **Já liberadas pelo checkpoint da A F3:** as rodadas de design do **papel do cristal** e da **fatia E** (se o
    cerco passa pela instância de batalha, a E depende da D; senão, pode vir antes dela).
 4. **Depois da A:** a D (com a B pronta) ou a E, e a C em paralelo à D.
 
 ### O que a próxima fase precisa saber
 
-- **a visão** (`sim/view.ts`): `encounters` e `spoils` entraram na F4. O encontro com um creep do time vem inteiro
-  (`EncounterView`), menos a resposta pendente do outro lado (`reply` para o time do agressor, `aggressorReply`
-  para o da vítima, sempre `null`); o de outros times numa célula visível só com `id`, `aggressor`, `victim`,
-  `intent`, `stage`, `x`, `y` (`ForeignEncounterView`; com 2 times não acontece). `isOwnEncounter` distingue. Os
-  despojos são a memória do time (o último valor visto), como os depósitos. O creep inimigo à vista mostra `name`,
-  `hp` (milésimos: mostre `floor(hp / 1000)`; o máximo é `params.hp.max[dna]`) e `engagement`;
-- **os eventos no cliente:** `DeltaMessage.events` traz os eventos do time (`TeamEvent`, sem `teams`, em ordem de
-  `(tick, index)`) dos ticks que o delta cobre; o `WelcomeMessage.chronicle`, as últimas 100 do time **até a visão
-  do `welcome`**: o delta seguinte traz as que vêm depois, sem repetir. O cliente ainda ignora os dois. O replay
-  monta um `welcome` com `chronicle: []` (`replay/controller.ts`): na F5, o `step` devolve os eventos e o replay
-  mostra todos (`fullView`). `PROTOCOL_VERSION` 4;
-- **o encontro no `sim`** (F2): `sim/encounter.ts` (estágio 4 do `step`); `demandFor` e os critérios de abordagem
-  em `sim/approach.ts` (a exigência do menu "Extorquir"); despojos em `sim/spoils.ts`; o comando `react` e as
-  ordens `approach { targetId, intent }` e `pickup { spoilId }` (`domination.ts`, `orders.ts`), com as recusas
-  `notEngaged`, `invalidReaction`, `engaged`, `fleeing`; a janela do dominado é `deadlineTick` (em ticks), a
-  rodada `nextRoundTick`. Atividades: `talking`, `fighting`, `fleeing`; a ordem de fuga é
-  `{ type: "flee", untilTick }`. O evento leva o `CreepRef` (id, time, DNA, nome) porque o morto sai do estado;
-- **o vocabulário do piloto** (para o editor de regras): condições `enemyInSight`, `hpBelow`, `demandAtMost`;
-  ações `approach`, `pickup`, `pay`, `fight`, `flee` (as três últimas são regras de reação); preset `raider`. O
-  cliente da F2 só ganhou rótulos e o botão "Salteador";
-- **o servidor** (F4): `WorldHost.onTick` entrega os eventos do tick; `TeamStream.record`/`advance` os põem no
-  delta (e no buffer de retomada); a tabela `chronicle` (uma linha por evento e time do público, sem poda) com
-  `Store.recentChronicle` e `Store.chronicleCount` (para o relatório do soak da F6); a recuperação apaga a partir
-  do tick do snapshot e refaz;
-- **cliente:** a névoa é a `FogLayer` (`map/fog-layer.tsx`); seleção por área (`map/layout.ts`); cursor da ação
-  (`map/cursor.ts`);
-- o replay de um mundo só abre depois que ele acaba: para uma sessão, `--mult` alto ou o mundo do soak;
-- screenshot sem navegador: o Chromium headless do cache do Playwright
-  (`~/.cache/ms-playwright/chromium_headless_shell-*/*/chrome-headless-shell --screenshot … --virtual-time-budget=10000 <URL do dev:multi>`).
-  O cursor não aparece no screenshot: os ícones se conferem renderizando os SVG numa página.
+- **a crônica no cliente** (F5): `GameStore.chronicle` (eventos do time, do mais velho ao mais novo) começa do
+  `welcome.chronicle` (o servidor manda 100) e recebe os `events` de cada delta (`chronicled`); um `welcome` novo
+  (resync) recomeça. O cliente guarda as últimas `CHRONICLE_KEEP` (300). O texto sai de
+  `chronicle/narrate.ts` + `templates.ts` (variante `(tick × 7919 + index) mod n`); `plainText(narrate(e))` dá a
+  frase em texto. **Para o soak** (crônica final de cada cliente igual à do servidor): o `SoakClient`
+  (`apps/server/src/soak*.ts`) ainda não guarda os eventos; compare os `(tick, index)` das últimas entradas com
+  `Store.recentChronicle` do servidor, e o tamanho da tabela com `Store.chronicleCount`;
+- **o replay** guarda os eventos de cada tick simulado uma vez (`ReplayPlayer.eventsBetween`) e mostra a crônica do
+  mundo inteiro;
+- **no mapa** (F5): barra de HP, despojo, perseguição, diálogo com a janela, luta com as rodadas e o rastro da fuga
+  (`map/combat-marks.ts`, `map/encounter-layer.tsx`); o clique direito num inimigo abre o menu de abordar
+  (`panels/approach-menu.tsx`), o creep dominado num encontro abre o painel de reação (`panels/reaction-panel.tsx`);
+  a lógica pura dos dois está em `encounter-actions.ts`;
+- **a sessão contra o bot:** o `dev:multi` cria o mundo **sem bots**. Para jogar contra o bot, crie o mundo pelo
+  lobby com "Bot no Laranja" (ou `POST /api/worlds` com `botTeams: [1]`) e entre no Azul;
+- **screenshot com cliques:** o Chromium headless do cache do Playwright aceita o CDP
+  (`--remote-debugging-port`), e o WebSocket nativo do Node 26 basta para navegar, clicar
+  (`Input.dispatchMouseEvent`), carregar um arquivo no replay (`DOM.setFileInputFiles`) e capturar
+  (`Page.captureScreenshot`). Mudar o `value` da barra do replay e disparar `change` não faz o seek: toque a
+  ×3600 e mude a velocidade perto do tick;
+- o replay de um mundo do servidor só abre depois que ele acaba; o `geo sim` grava um `replay.json` que a tela de
+  replay abre.
 
 **Push:** o Git do WSL não tem credencial do GitHub; o dono faz o push pelo PowerShell (`git push origin main`).
 
@@ -84,9 +76,9 @@ Só o que ainda está aberto. Ao resolver, tire daqui e registre no Histórico.
   travam num mundo só de humanos, em que ninguém explora sem ordem (regra D3).
 - **`SIM_VERSION` (hoje 8, desde a F3 do encontro):** mundos persistidos guardam a versão. Mudou o comportamento do
   `sim`? Suba a versão; um mundo de outra versão não é recuperado (o servidor loga e o pula).
-- **Testes sensíveis a tempo com duas sessões rodando** (registro da B F1): o `geo net` de 1 h do `net.test.ts`
-  confere o alvo de CPU e já estourou sob carga. Os de `geo verify` de 2 h ganharam timeout na A F4; se o de CPU
-  voltar a falhar, separar a medição do critério (ou relaxar o teste) num commit próprio.
+- **Testes sensíveis a tempo com duas sessões rodando:** o alvo de CPU saiu do teste do `geo net` na A F5 (falhou
+  de novo sob carga; o checkpoint do `geo net` o julga). Com load alto, testes do servidor ainda passam dos 5 s do
+  Vitest (3 na A F5, verdes sozinhos e na rodada seguinte). Se virar rotina, dar timeout explícito a eles.
 - **Servidor no `/mnt/c`:** subir o `npm run server` às vezes leva mais de 5 s (WSL). Scripts que sobem o
   servidor devem esperar a porta responder, não um `sleep` fixo.
 - **`npm audit`:** aviso moderado (ReDoS no `minimatch`, dentro do typescript-eslint, só em dev). Sem correção
@@ -100,7 +92,7 @@ Só o que ainda está aberto. Ao resolver, tire daqui e registre no Histórico.
 | M0 — Design | ✅ |
 | M1 — O ciclo da riqueza | ✅ 2026-11-14 |
 | M1.5 — A névoa | ✅ 2026-11-14 (rede e fog of war) |
-| M2 — A emboscada | 🟡 Fatia A: F0–F4 ✅, F5–F6 ⬜ · Fatia B: F0–F1 ✅, F2–F5 ⬜ · Fatias C, D, E ⬜ |
+| M2 — A emboscada | 🟡 Fatia A: F0–F5 ✅, F6 ⬜ · Fatia B: F0–F1 ✅, F2 pronta (sem merge), F3–F5 ⬜ · Fatias C, D, E ⬜ |
 | M2.5 — A jungle hostil e o fim do mundo | ⬜ (fim do mundo decidido no GDD, 2026-11-15) |
 | M3 — O time · M4 — O mundo vivo · M5 — As lendas | ⬜ |
 
@@ -159,6 +151,7 @@ Só o que ainda está aberto. Ao resolver, tire daqui e registre no Histórico.
 | M2 B (laboratório) — spec e plan | ✅ Aprovados (2026-11-15), escritos numa sessão paralela (worktree `../geometrix-lab`); ADR-0008 (pacote de batalha) ✅ `Accepted`. Fases F1–F5 no tasks.md | [spec.md](../specs/m2-laboratorio/spec.md) · [plan.md](../specs/m2-laboratorio/plan.md) · [tasks.md](../specs/m2-laboratorio/tasks.md) |
 | M2 B — F1 O pacote e o movimento | ✅ Concluída numa sessão paralela, merge em `main` pela branch da A F4. `packages/battle` com as guardas de determinismo do `sim`, `rng` e JSON canônico copiados (com teste de igualdade), params de batalha, as três arenas em texto, estado e setup (`BATTLE_VERSION` 1), serialize/restore, comandos `intent`/`attackOnce`/`face` e o movimento em grade, eventos e o esqueleto do `stepBattle`; 141 testes | [tasks.md](../specs/m2-laboratorio/tasks.md) (registro da F1) · `packages/battle/` · `params/arenas/` |
 | M2 A — F4 Rede e servidor | ✅ Concluída, merge em `main`. `encounters` e `spoils` na visão e no delta, os eventos do time no delta, a crônica no `welcome`, `PROTOCOL_VERSION` 4; tabela `chronicle` com a recuperação que refaz; propriedade do diff com piso de mortes. **Checkpoint `geo net`** ✅: 196 B/s, 172,8 µs por envio (o `main` antes da F4: 177,1 µs), 0 divergências | [tasks.md](../specs/m2-encontro/tasks.md) · `apps/server/src/{stream,world-host,persistence}.ts` · `runs/m2-encontro-f4-net/` |
+| M2 A — F5 Cliente | ✅ Concluída, merge em `main`. Barra de HP e despojo no mapa; perseguição, diálogo com a janela, luta com as rodadas e fuga; cursor de abordar; menu atacar / extorquir com a exigência; painel de reação; crônica com o banco de frases (voz pelo DNA) e nomes clicáveis; inspetor com HP, encontro e salvo-conduto; editor com as reações agrupadas; replay com a crônica | [tasks.md](../specs/m2-encontro/tasks.md) · `apps/client/src/{chronicle,encounter-actions.ts}` · `apps/client/src/map/{combat-marks.ts,encounter-layer.tsx}` · `apps/client/src/panels/{approach-menu,reaction-panel}.tsx` |
 | M2 A — F3 Bots e harness | ✅ Concluída, merge em `main`. O bot com salteadores (`floor(creeps ÷ 6)`, só enquanto há o que explorar) e coletores com postura pelo DNA; métricas de encontro no `geo sim` e no `geo sweep`; `geo verify` com o hash dos eventos; desempates de alvo pelo referencial do time; `SIM_VERSION` 8. **Checkpoint** (dono, 2 rodadas, 2026-11-17): decisões C1–C10; custo do tick ~1,04× o da F6 | [tasks.md](../specs/m2-encontro/tasks.md) · [plan §11.1](../specs/m2-encontro/plan.md) · `apps/cli/src/{encounters,hash}.ts` |
 | M2 A — F2 O encontro no `sim` | ✅ Concluída, merge em `main`. Ordens `approach`/`pickup`/`flee`, o estágio de encontros (abrir, diálogo, rodadas, fechar), extorsão com salvo-conduto e bloqueio, fuga pela velocidade, sorteio pelo HP × DNA, morte, saque e despojo, o vocabulário de encontro e as regras de reação, o preset salteador, o comando `react`, todos os eventos; `SIM_VERSION` 7 | [tasks.md](../specs/m2-encontro/tasks.md) · `packages/sim/src/{encounter,approach,spoils}.ts` |
 | M2 A — F1 Identidade, HP e eventos | ✅ Concluída, merge em `main`. Params do encontro, nomes no `sim` pelo contador de nascimentos, HP em milésimos com regeneração e `kill`, `step` devolve os eventos (`born`) com o público e `eventsFor`, nome/HP/encontro do inimigo na visão, `SIM_VERSION` 6 | [tasks.md](../specs/m2-encontro/tasks.md) · `packages/sim/src/{names,hp,events}.ts` |
@@ -193,6 +186,35 @@ Um item por problema: o que a pessoa não entendeu ou não conseguiu, a tarefa o
 ## Registro das fases
 
 Medições, interpretações e decisões de cada fase, da mais recente para a mais antiga.
+
+- **M2 A F5 — Cliente** ✅ (2026-11-17). 2 467 testes, `npm run check` verde (o cliente: 174 testes, eram 152).
+  Conferido no navegador (Chromium headless pelo CDP): um mundo com bots a ×360 e o replay de um `geo sim` de 10 h
+  parado no meio de uma luta (inspetor, crônica, reações agrupadas). O menu de abordar e o painel de reação só nos
+  testes (pedem um inimigo à vista de um creep dominado na hora certa).
+
+  **Interpretações a validar no playtest:**
+  1. **O banco de frases** (D17) é do agente: ~3 variantes por evento, desfecho e voz. Quadrado de poucas palavras e
+     grave; triângulo negociante, fazendo contas; círculo debochado. Os eventos sem voz (pagou, fuga, fim de luta,
+     morte, saque, catada) têm a voz do narrador. O dono revisa o tom no checkpoint da F6.
+  2. **A morte numa luta** vira três frases (fim da luta, morte, saque), uma por evento, que se completam.
+  3. **O despojo** tem a cor do recurso de que tem mais (empate: cristal) e um ponto da outra cor quando tem os dois.
+  4. **O clique direito** num despojo conhecido dá a ordem `pickup`; num inimigo à vista abre o menu (numa pilha,
+     uma linha por inimigo). O clique direito num inimigo sem creep dominado continua pedindo para dominar.
+  5. **O painel de reação** também abre para o agressor, só informativo ("esperando a resposta"), e na luta para os
+     dois lados (o botão de fugir). A resposta enviada fica marcada até a rodada seguinte.
+  6. **O editor:** as reações ficam num grupo à parte, com a ordem só dentro do grupo (a ordem entre os grupos não
+     muda nada, A-2); cada grupo oferece as suas ações; a condição "exigência até" só nas reações; os ‰ aparecem
+     em % inteiro; o filtro de DNA não deixa desligar os três.
+  7. **A crônica** fica à direita, sob o inspetor, aberta de início; o clique num nome seleciona o creep e centra o
+     mapa nele, ou avisa que ele não está à vista. O cliente guarda 300 entradas.
+
+  **Para o checkpoint da F6** (comportamento do bot, não do cliente): num mundo com bots a ×360, a crônica do Azul
+  chegou a 300 entradas antes das 8 h de mundo; numa janela de 3,5 h, 27 encontros, 46 reações, 45 tentativas de
+  fuga e 1 pagamento. Os salteadores extorquem 1 ou 2 de matéria e repetem com a mesma vítima depois da fuga (o
+  bloqueio do par só vem depois de pagar). Os círculos coletores sempre fogem (decisão C2 da F3).
+
+  **Fora do cliente:** o alvo de CPU saiu do teste do `geo net` (`test(cli)`), e o ESLint passou a ignorar
+  `.claude/worktrees/` (um arquivo pela metade da sessão da B quebrava o lint desta branch).
 
 - **M2 B F1 — O pacote e o movimento** ✅ (2026-11-17), numa sessão paralela; merge em `main` pela branch da A F4,
   com o `.claude/worktrees/` no `.gitignore`. As medições e as 7 interpretações a validar (as três arenas, os
