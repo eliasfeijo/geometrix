@@ -18,7 +18,7 @@ cada merge, conferir os pontos de contato do plan §16.
       valendo para `packages/battle/src` (ADR-0008, plan §11)
 - [x] `rng.ts` e `canonical.ts` copiados do `sim`, com o teste de igualdade contra o `@geometrix/sim`
       (devDependency de teste) (plan P1)
-- [ ] `params.ts` (schema, `parseBattleParams`, `checkConsistency`: durações múltiplas do tick, `CELL_COST`
+- [x] `params.ts` (schema, `parseBattleParams`, `checkConsistency`: durações múltiplas do tick, `CELL_COST`
       divisível pelo tick), `params/battle.json` e o `test/params.json` do pacote (spec §6, plan §3)
 - [ ] `arena.ts`: parser do texto, anel de saída, trechos de entrada, vizinhos, linha livre; as três arenas em
       `params/arenas/`, simétricas por rotação de 180°, com um teste da simetria (plan §4)
