@@ -15,6 +15,7 @@ import {
   validate,
   view,
   type Creep,
+  type SimEvent,
   type TeamView,
   type WorldState,
 } from "@geometrix/sim";
@@ -105,7 +106,7 @@ export function botReplay(
 export function encounterWorld(
   intent: "attack" | "extort",
   dominated = false,
-): { world: WorldState; hunter: Creep; prey: Creep } {
+): { world: WorldState; hunter: Creep; prey: Creep; events: SimEvent[] } {
   const world = testWorld();
   for (const creep of world.creeps) creep.rules = [];
   const hunter = world.creeps.find((c) => c.team === 0 && c.dna === "circle")!;
@@ -124,7 +125,10 @@ export function encounterWorld(
     ]);
   }
   hunter.order = { type: "approach", targetId: prey.id, intent };
-  for (let i = 0; i < 5 && world.encounters.length === 0; i++) step(world, []);
+  const events: SimEvent[] = [];
+  for (let i = 0; i < 5 && world.encounters.length === 0; i++) {
+    events.push(...step(world, []));
+  }
   if (world.encounters.length === 0) throw new Error("no encounter opened");
-  return { world, hunter, prey };
+  return { world, hunter, prey, events };
 }

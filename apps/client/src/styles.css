@@ -541,16 +541,31 @@ h3 {
 
 /* Panels */
 
-.side-panel {
+/* The inspector over the chronicle (M2 encontro C-4), on the right. */
+.right-column {
   position: absolute;
   top: 10px;
   right: 10px;
+  bottom: 10px;
   width: 380px;
   max-width: calc(100% - 20px);
-  max-height: calc(100% - 20px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.right-column > * {
+  pointer-events: auto;
+}
+
+.side-panel {
+  position: relative;
+  flex: 0 1 auto;
+  min-height: 0;
   overflow-y: auto;
   box-shadow: 0 6px 24px rgb(0 0 0 / 0.45);
-  z-index: 2;
 }
 
 .close {
@@ -1045,4 +1060,67 @@ button.danger {
 .reaction-buttons {
   display: flex;
   gap: 8px;
+}
+
+/* The chronicle (M2 encontro C-4). */
+.chronicle {
+  margin-top: auto;
+  flex: 0 0 auto;
+  max-height: 38%;
+  display: flex;
+  flex-direction: column;
+  padding: 6px 8px;
+  box-shadow: 0 6px 24px rgb(0 0 0 / 0.45);
+}
+
+.chronicle.collapsed {
+  align-self: flex-end;
+}
+
+.chronicle-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 4px;
+  width: 100%;
+  text-align: left;
+}
+
+.chronicle-toggle {
+  margin-left: auto;
+}
+
+.chronicle-list {
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+  overflow-y: auto;
+  min-height: 0;
+  font-size: 13px;
+}
+
+.chronicle-entry {
+  display: grid;
+  grid-template-columns: 3.2em 1fr;
+  gap: 6px;
+  padding: 3px 0;
+  border-top: 1px solid var(--line);
+}
+
+.chronicle-time {
+  font-variant-numeric: tabular-nums;
+  padding-top: 1px;
+}
+
+.creep-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.creep-link:hover {
+  text-decoration: underline;
 }

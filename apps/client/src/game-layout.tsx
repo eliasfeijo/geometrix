@@ -14,6 +14,7 @@ import {
   roadShortAt,
   select,
 } from "./interaction.ts";
+import { ChroniclePanel } from "./chronicle/chronicle-panel.tsx";
 import { CreepLayer } from "./map/creep-layer.tsx";
 import { MapView } from "./map/map-view.tsx";
 import { RoadJobTimeLayer } from "./map/road-job-time-layer.tsx";
@@ -88,7 +89,10 @@ export function GameLayout({ game, header, orders }: Props) {
             <RoadPreviewLayer />
           </MapView>
           <CoreDock />
-          <Inspector />
+          <div class="right-column">
+            <Inspector />
+            <ChroniclePanel />
+          </div>
           <ModeBanner />
           <StackList />
           {orders && <ApproachMenu />}
