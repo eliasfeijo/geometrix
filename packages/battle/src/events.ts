@@ -2,8 +2,10 @@
 // a tick, as structured data, outside the state and its hash. stepBattle
 // returns them; the same state and commands give the same list in the same
 // order. They are the battle side of the internal contract v0 (ADR-0008 rule
-// 8), versioned by BATTLE_VERSION. F1 defines them and the collector; the
-// combat stages that emit them come with F2.
+// 8), versioned by BATTLE_VERSION. Who emits each: attacked, hit and died the
+// combat (combat.ts); dropped and picked the bag (carry.ts); joined and
+// controlChanged the lab's commands (commands.ts); escaped and ended the
+// exits (exits.ts).
 
 import type { Dir } from "./arena.ts";
 import type { Dna } from "./params.ts";
