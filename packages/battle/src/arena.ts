@@ -185,3 +185,77 @@ export function opposite(dir: Dir): Dir {
       return "left";
   }
 }
+
+/**
+ * Steps from the nearest of `sources` to every cell, walking around rock
+ * (plan section 9): a breadth-first search over floor, in DIRS order. Cells
+ * in `blocked` are not entered (sources too are skipped if blocked); -1 where
+ * no source reaches. With `stopAt`, it stops as soon as that cell is reached:
+ * every cell one step nearer to the sources already has its distance then.
+ */
+export function stepsFrom(
+  arena: Arena,
+  sources: readonly number[],
+  blocked: ReadonlySet<number> | null = null,
+  stopAt = -1,
+): number[] {
+  const steps = new Array<number>(arena.width * arena.height).fill(-1);
+  const queue: number[] = [];
+  for (const cell of sources) {
+    if (steps[cell] !== -1 || isRock(arena, cell)) continue;
+    if (blocked?.has(cell) === true) continue;
+    steps[cell] = 0;
+    queue.push(cell);
+  }
+  if (stopAt >= 0 && steps[stopAt] === 0) return steps;
+  for (let head = 0; head < queue.length; head++) {
+    const cell = queue[head]!;
+    const next = steps[cell]! + 1;
+    for (const dir of DIRS) {
+      const there = neighbor(arena, cell, dir);
+      if (there < 0 || steps[there] !== -1 || isRock(arena, there)) continue;
+      if (blocked?.has(there) === true) continue;
+      steps[there] = next;
+      if (there === stopAt) return steps;
+      queue.push(there);
+    }
+  }
+  return steps;
+}
+
+/**
+ * The direction from `from` in which `to` is on the clear line within
+ * `range` (aligned, with no rock between), or null.
+ */
+export function alignedDir(
+  arena: Arena,
+  from: number,
+  to: number,
+  range: number,
+): Dir | null {
+  const dx = cellX(arena, to) - cellX(arena, from);
+  const dy = cellY(arena, to) - cellY(arena, from);
+  let dir: Dir;
+  let distance: number;
+  if (dx === 0 && dy !== 0) {
+    dir = dy < 0 ? "up" : "down";
+    distance = dy < 0 ? -dy : dy;
+  } else if (dy === 0 && dx !== 0) {
+    dir = dx < 0 ? "left" : "right";
+    distance = dx < 0 ? -dx : dx;
+  } else {
+    return null;
+  }
+  if (distance > range) return null;
+  const line = clearLine(arena, from, dir, distance);
+  return line.length === distance ? dir : null;
+}
+
+/** The floor cells of the exit ring, in index order (spec D7). */
+export function exitCells(arena: Arena): number[] {
+  const cells: number[] = [];
+  for (let cell = 0; cell < arena.width * arena.height; cell++) {
+    if (isExit(arena, cell)) cells.push(cell);
+  }
+  return cells;
+}

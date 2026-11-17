@@ -3,6 +3,7 @@
 // what the lab (and, at the junction, the world) hands to the battle.
 
 import { ArenaError, parseArena, type Arena } from "./arena.ts";
+import { copyGambits, type Gambit } from "./gambits.ts";
 import { DNAS, type BattleParams, type Dna } from "./params.ts";
 import { createRng, nextInt } from "./rng.ts";
 import {
@@ -19,6 +20,12 @@ export type ParticipantSetup = {
   /** HP to start with, 1..the DNA's maximum: the wounded fight wounded (D6). */
   hp: number;
   carry: Carry;
+  /**
+   * The participant's gambits, copied field by field (spec D14). The setup
+   * carries the list itself, so a log replays the same whatever the presets
+   * become; the presets are only what the lab and the CLI start from (G-3).
+   */
+  gambits: Gambit[];
 };
 
 export type BattleSetup = {
@@ -56,7 +63,7 @@ export function participantIssue(
   params: BattleParams,
 ): string | null {
   if (!isRecord(input)) return "expected an object";
-  const { name, dna, hp, carry } = input;
+  const { name, dna, hp, carry, gambits } = input;
   if (typeof name !== "string" || name.length === 0) {
     return "name must be a non-empty string";
   }
@@ -75,6 +82,8 @@ export function participantIssue(
   if (carryTotal(carry as Carry) > kit.capacity) {
     return `${name}: carry above the capacity of ${kit.capacity}`;
   }
+  const list = copyGambits(gambits, params.gambits.maxRules);
+  if (typeof list === "string") return `${name}: ${list}`;
   return null;
 }
 
@@ -168,7 +177,7 @@ export function freeStretch(state: BattleState): number | null {
 
 /**
  * A participant entering on `side` (spec S-1): a free cell of the side's
- * stretch, facing inward, idle clock at zero, under the gambits. Returns null
+ * stretch, facing inward, idle clock at zero, under its gambits. Returns null
  * when the stretch is full.
  */
 export function placeParticipant(
@@ -189,7 +198,10 @@ export function placeParticipant(
     hp: setup.hp,
     carry: { materia: setup.carry.materia, cristal: setup.carry.cristal },
     controller: "gambits",
-    gambits: [],
+    gambits: copyGambits(
+      setup.gambits,
+      state.params.gambits.maxRules,
+    ) as Gambit[],
     intent: {
       move: null,
       attack: false,
