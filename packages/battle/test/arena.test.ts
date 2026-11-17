@@ -42,6 +42,31 @@ describe("parseArena", () => {
     expect(arena.entries.map((e) => e.facing)).toEqual(["down", "up"]);
   });
 
+  test("a zone inside the arena faces away from the edge nearest to it", () => {
+    const arena = parseArena([
+      "...........",
+      "...........",
+      "......3....",
+      "..11.......",
+      "..11....22.",
+      "...........",
+      "..4........",
+      "...........",
+    ]);
+    expect(arena.entries.map((e) => e.facing)).toEqual([
+      "right",
+      "left",
+      "down",
+      "up",
+    ]);
+    expect(arena.entries[0]!.cells).toEqual([
+      at(arena, 2, 3),
+      at(arena, 3, 3),
+      at(arena, 2, 4),
+      at(arena, 3, 4),
+    ]);
+  });
+
   test.each<[string, string[], string]>([
     ["too small", ["....", "....", "...."], "at least 5 × 5"],
     ["ragged", [".....", "..1..", "....", "..2..", "....."], "row 2 has 4"],
@@ -52,14 +77,22 @@ describe("parseArena", () => {
       "on the exit ring",
     ],
     [
-      "entry in a corner of the lap",
+      "a zone as near to two edges",
       [".....", ".1...", ".....", "..2..", "....."],
-      "off its corners",
+      "as near to two edges",
     ],
     [
-      "stretch on two edges",
-      [".......", ".1.....", ".1.....", ".1.....", "..1..2.", "......."],
-      "one edge",
+      "a zone in the middle of a square arena",
+      [
+        ".......",
+        ".2.....",
+        ".......",
+        "...1...",
+        ".......",
+        ".......",
+        ".......",
+      ],
+      "zone 1 is as near",
     ],
     ["one side only", [".....", "..1..", ".....", ".....", "....."], "1 and 2"],
     [
@@ -117,13 +150,45 @@ describe("cells", () => {
 });
 
 describe("the arenas in params/arenas", () => {
-  test.each(ARENA_NAMES)("%s is 23 × 15 with four 7-cell stretches", (name) => {
-    const arena = parseArena(readArenaRows(name));
-    expect([arena.width, arena.height]).toEqual([23, 15]);
-    expect(arena.entries.map((e) => e.cells.length)).toEqual([7, 7, 7, 7]);
+  test.each(ARENA_NAMES)(
+    "%s is 45 × 29 with four 15-cell zones a quarter of the way in",
+    (name) => {
+      const arena = parseArena(readArenaRows(name));
+      expect([arena.width, arena.height]).toEqual([45, 29]);
+      expect(arena.entries.map((e) => e.cells.length)).toEqual([
+        15, 15, 15, 15,
+      ]);
+      expect(arena.entries.map((e) => e.facing)).toEqual([
+        "right",
+        "left",
+        "down",
+        "up",
+      ]);
+      // Zones 1 and 2 sit a quarter of the inner width from the left and
+      // right edges (spec D3, section 6): no zone touches the exit ring's
+      // neighbourhood, so nobody spawns one step from escaping.
+      const xs = (side: number) =>
+        arena.entries[side]!.cells.map((c) => cellX(arena, c));
+      expect(Math.min(...xs(0))).toBe(10);
+      expect(Math.max(...xs(1))).toBe(34);
+      for (const entry of arena.entries) {
+        for (const cell of entry.cells) {
+          const x = cellX(arena, cell);
+          const y = cellY(arena, cell);
+          expect(Math.min(x, y, 44 - x, 28 - y)).toBeGreaterThanOrEqual(6);
+        }
+      }
+    },
+  );
+
+  test("aberta-3x is 65 × 41, for the report only", () => {
+    const arena = parseArena(readArenaRows("aberta-3x"));
+    expect([arena.width, arena.height]).toEqual([65, 41]);
+    expect(arena.rock.every((r) => r === 0)).toBe(true);
+    expect(arena.entries.map((e) => e.cells.length)).toEqual([15, 15, 15, 15]);
   });
 
-  test.each(ARENA_NAMES)(
+  test.each([...ARENA_NAMES, "aberta-3x"])(
     "%s is symmetric by a 180° rotation, swapping stretches 1↔2 and 3↔4",
     (name) => {
       const rows = readArenaRows(name);

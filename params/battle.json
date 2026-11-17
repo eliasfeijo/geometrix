@@ -32,7 +32,11 @@
   "carry": { "fullBrakePermille": 500 },
   "exit": { "dwellMs": 2000 },
   "inactivity": { "timeoutMs": 15000 },
-  "ai": { "decisionMs": 250, "decisionJitterMs": 100 },
+  "ai": {
+    "easy": { "decisionMs": 600, "decisionJitterMs": 250 },
+    "normal": { "decisionMs": 250, "decisionJitterMs": 100 },
+    "hard": { "decisionMs": 100, "decisionJitterMs": 50 }
+  },
   "gambits": { "maxRules": 8 },
   "limits": { "maxSides": 4, "maxPerSide": 5 }
 }

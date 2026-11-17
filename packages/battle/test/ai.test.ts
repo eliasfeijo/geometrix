@@ -8,6 +8,7 @@ import {
   type Action,
   type BattleState,
   type Gambit,
+  type Reaction,
 } from "@geometrix/battle";
 import { battleOn, FIELD, member, put } from "./helpers.ts";
 
@@ -78,6 +79,40 @@ describe("evaluation (spec G-1)", () => {
 });
 
 describe("reaction time (plan P12)", () => {
+  /** The gaps between the decisions of participant 1, over 250 ticks. */
+  function decisionGaps(reaction: Reaction): number[] {
+    const state = battleOn(FIELD, [
+      [member("circle", { reaction })],
+      ["square"],
+    ]);
+    byId(state, 2).controller = "human";
+    give(state, 1, [{ when: { type: "always" }, then: { type: "dodge" } }]);
+    const decisions: number[] = [];
+    for (let i = 0; i < 250; i++) {
+      if (byId(state, 1).ai.nextDecisionTick === state.tick) {
+        decisions.push(state.tick);
+      }
+      stepBattle(state, []);
+    }
+    return decisions.slice(1).map((t, i) => t - decisions[i]!);
+  }
+
+  test.each<[Reaction, number, number]>([
+    // 600 ms ± 250 ms at 20 ticks per second: 7 to 17 ticks.
+    ["easy", 7, 17],
+    // 250 ms ± 100 ms: 3 to 7 ticks.
+    ["normal", 3, 7],
+    // 100 ms ± 50 ms: 1 to 3 ticks.
+    ["hard", 1, 3],
+  ])(
+    "a %s participant decides every %i to %i ticks (spec D20)",
+    (reaction, min, max) => {
+      const gaps = decisionGaps(reaction);
+      expect(Math.min(...gaps)).toBe(min);
+      expect(Math.max(...gaps)).toBe(max);
+    },
+  );
+
   test("decides every decisionMs ± jitter, keeping the intent in between", () => {
     const state = battleOn(FIELD, [["circle"], ["square"]]);
     byId(state, 2).controller = "human";
@@ -226,6 +261,7 @@ describe("the view", () => {
       "id",
       "idleTicks",
       "name",
+      "reaction",
       "side",
     ]);
   });

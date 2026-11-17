@@ -6,7 +6,7 @@
 // decision never sees another's turn, and the worker can post it as is.
 
 import type { Dir } from "./arena.ts";
-import type { Dna } from "./params.ts";
+import type { Dna, Reaction } from "./params.ts";
 import type { BattleState, Carry, Controller, Pile } from "./state.ts";
 
 export type ViewParticipant = {
@@ -19,6 +19,8 @@ export type ViewParticipant = {
   hp: number;
   carry: Carry;
   controller: Controller;
+  /** How fast the gambits react for it (spec D20). */
+  reaction: Reaction;
   cooldownTicks: number;
   /** Ticks on an exit cell without being hit (the escape count, spec L-8). */
   exitTicks: number;
@@ -56,6 +58,7 @@ export function battleView(state: BattleState): BattleView {
       hp: p.hp,
       carry: { materia: p.carry.materia, cristal: p.carry.cristal },
       controller: p.controller,
+      reaction: p.reaction,
       cooldownTicks: p.cooldownTicks,
       exitTicks: p.exitTicks,
       idleTicks: p.idleTicks,
