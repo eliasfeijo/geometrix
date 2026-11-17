@@ -1,6 +1,6 @@
 # Spec M2 — O laboratório de batalha
 
-**Status:** Aprovada (2026-11-15) · **Data:** 2026-11-15 · **Marco:** M2 — A emboscada ([ROADMAP](../../ROADMAP.md)), fatia B de 5
+**Status:** Aprovada (2026-11-15); revista no checkpoint da F3 (2026-11-17: D3, D11, D20, §6, §7) · **Data:** 2026-11-15 · **Marco:** M2 — A emboscada ([ROADMAP](../../ROADMAP.md)), fatia B de 5
 **GDD relacionado:** [02](../../gdd/02-creeps-e-dominio.md) (stats base por DNA, domínio),
 [06](../../gdd/06-batalhas.md) (combate experimental e configurável, lados, fuga, fim da batalha),
 [07](../../gdd/07-piloto-automatico.md) (gambits) ·
@@ -51,7 +51,7 @@ chutes.
 |---|---|---|---|
 | D1 | O pacote | A batalha mora num pacote próprio, `@geometrix/battle`, puro, determinístico e inteiro, com params, versão e hash próprios. Não importa o `sim` (ADR-0008) | Anda em paralelo à fatia A sem tocar nos arquivos dela; na junção, o mundo chama a batalha |
 | D2 | O laboratório | Uma página local do cliente, **sem mundo e sem servidor de jogo**: monta uma batalha, joga, assiste, mede. A batalha roda num *worker* que faz o papel do servidor autoritativo (ADR-0008, regra 9) | O brainstorm (§6): itera a diversão em minutos, sem esperar o mundo, e mede a latência sem gastar com servidor |
-| D3 | A arena **(gameplay)** | Uma grade pequena, desenhada em texto, com **chão** e **pedra** (bloqueia o movimento e os projéteis). O anel de células de chão da borda é a **saída** (D9). Três arenas fixas na fatia: campo aberto, campo com pedras e um corredor (o gargalo de um vau). Todos veem a arena inteira: **sem fog na batalha** | O mínimo para a posição importar (cobertura, gargalo). O terreno pelo entorno (rio, árvores, estruturas) é ideia do dono sem marco (GDD 06) |
+| D3 | A arena **(gameplay)** | Uma grade desenhada em texto, com **chão** e **pedra** (bloqueia o movimento e os projéteis). O anel de células de chão da borda é a **saída** (D9). Três arenas fixas na fatia: campo aberto, campo com pedras e um corredor (o gargalo de um vau). Todos veem a arena inteira: **sem fog na batalha**. **Checkpoint da F3 (dono, 2026-11-17):** a arena fica 2× maior, e cada lado nasce numa **zona de nascimento**, um bloco de chão a meio caminho entre a borda e o centro, longe da saída (como no Mount & Blade, sem a mesma escala) | O mínimo para a posição importar (cobertura, gargalo). O terreno pelo entorno (rio, árvores, estruturas) é ideia do dono sem marco (GDD 06). Nascer colado à saída deixava qualquer um fugir em 2,6 s, antes de o inimigo chegar |
 | D4 | Ataque direcional **(gameplay; dono)** | O creep olha para uma de 4 direções. O **quadrado** bate na célula da frente. O **círculo** e o **triângulo** disparam um **projétil** que anda célula a célula até o alcance e acerta o **primeiro inimigo** no caminho, ou para numa pedra. Os aliados não bloqueiam nem levam o tiro (sem fogo amigo). Cada DNA tem dano, alcance e recarga próprios. **Dá para desviar** do projétil saindo da linha | Dono, 2026-11-15: estilo BYOND. A micro é mirar e esquivar, e é a que mais sente latência, o que o laboratório quer medir |
 | D5 | Movimento e corpo **(gameplay)** | Célula a célula, em 4 direções, com a velocidade de batalha do DNA. **Uma célula, um creep:** ninguém atravessa ninguém, e o quadrado bloqueia a passagem (o tank segura a linha). Quando dois querem a mesma célula no mesmo tick, o `rng` da batalha decide, nunca o id. Virar sem andar é possível (para mirar) | Grade com corpo dá o papel do tank sem skill. O id quebra o espelho entre os lados (F6 do fog) |
 | D6 | Stats base por DNA **(gameplay)** | Nos params da batalha: **HP máximo, dano, alcance, recarga do ataque, velocidade de batalha, velocidade do projétil e capacidade de carga**. O participante entra com o **HP atual** que o setup der (o ferido luta ferido) | GDD 02. O HP máximo e a capacidade repetem os números do `sim` até a junção, que escolhe uma fonte só (ADR-0008) |
@@ -59,7 +59,7 @@ chutes.
 | D8 | Carga, largar e catar **(gameplay)** | A carga **freia** o creep na batalha, em proporção à fração da capacidade ocupada (cheio, a metade da velocidade). O comando **largar a bolsa** deixa toda a carga numa **pilha** na célula e tira o freio. Quem morre deixa a carga numa pilha na própria célula. O comando **catar** pega da pilha da célula até a capacidade livre, cristal primeiro | Dono, 2026-11-15 (fuga): o agressor escolhe entre catar e perseguir, como no mundo. O freio proporcional faz do quadrado carregado até o talo quem quase nunca escapa (GDD 06). O que sobra na arena volta ao mundo na junção (D) |
 | D9 | Fim da batalha e inatividade **(gameplay; dono)** | **Não há relógio da batalha.** Cada participante tem um **relógio de inatividade**, que corre desde o começo ou desde a entrada dele e zera quando ele **dá ou leva dano**. Quando estoura, o creep **foge sozinho** (sai como na D7, com o que carrega). A batalha acaba quando **sobra no máximo um lado** na arena (os outros morreram ou fugiram): esse lado vence; se não sobra ninguém, não há vencedor | Dono, 2026-11-15: aniquilação ou fuga, com o tempo contando só a inatividade. Resolve o impasse entre dois *kiters* e o humano ausente, sem cortar uma luta que está acontecendo |
 | D10 | Lados **(gameplay)** | De 2 a 4 lados, **todos hostis entre si** nesta fatia. Cada lado tem um trecho da borda de entrada | GDD 06 (lados, não grupos). Alianças entre lados (tribos, M4) ficam para quando houver quem se alie |
-| D11 | Entrada no meio da luta **(gameplay; dono)** | O comando **entrar** põe um participante novo num lado (existente ou novo) numa célula livre do trecho de entrada desse lado. Quem entra não passa por diálogo. O laboratório tem um botão para isso | Dono, 2026-11-15: o motor e o laboratório já nascem com isso; o lado do mundo (quem pode entrar, a bolha) é da junção |
+| D11 | Entrada no meio da luta **(gameplay; dono)** | O comando **entrar** põe um participante novo num lado (existente ou novo) numa célula livre do trecho de entrada desse lado. Quem entra não passa por diálogo. O laboratório tem um botão para isso. Com as zonas de nascimento (D3), quem entra nasce na zona do seu lado | Dono, 2026-11-15: o motor e o laboratório já nascem com isso; o lado do mundo (quem pode entrar, a bolha) é da junção |
 | D12 | Domínio no laboratório **(gameplay)** | O humano domina **um** participante de cada vez, ou nenhum (só assiste). No laboratório, ele troca de participante a qualquer momento, sem custo. O dominado não usa os gambits; ao ser liberado, volta a eles | GDD 02. A troca livre é do laboratório: no mundo, o domínio vem da fatia A |
 | D13 | Controles do humano | Teclado: setas ou WASD andam (contra uma pedra ou um creep, só viram); espaço ataca na direção em que o creep olha; uma tecla larga a bolsa e outra cata. O detalhe (mouse para mirar, segurar para repetir) fica para o `plan.md` e para o checkpoint | O mínimo do BYOND. O dono julga o "sentir" no checkpoint |
 | D14 | IA de gambits **(gameplay)** | Uma lista ordenada **condição → ação** por participante; a 1ª regra com condição verdadeira e ação possível vira os comandos do tick, como o piloto do mundo (GDD 07). **Condições:** sempre; HP abaixo de X‰; inimigo a até N células; inimigo alinhado no alcance (linha livre); projétil inimigo vindo na minha direção; carga acima de X‰ da capacidade; aliado com HP abaixo de X‰ a até N células. **Ações:** atacar um alvo (o mais perto, o mais ferido, ou de um DNA), indo até alinhar e atirando; aproximar; manter distância (ficar no alcance máximo do alvo); esquivar (sair da linha do projétil); proteger um aliado (ficar entre ele e o inimigo mais perto); fugir (para a saída mais perto); largar a bolsa; catar a pilha mais perto | O brainstorm (§6): a IA de gambits desde o primeiro dia, porque ela é o adversário do laboratório e o auto-resolve do mundo. Sem esquivar, nenhuma IA aguentaria um humano na regra direcional |
@@ -68,6 +68,7 @@ chutes.
 | D17 | Latência simulada | A página e o *worker* conversam por um canal com **atraso de ida e de volta** (metade do RTT escolhido cada) e ***jitter***. Seletor de RTT: 0, 50, 100, 150, 200 e 300 ms. A página mostra o atraso medido entre a tecla e o efeito na tela. **Modo às cegas:** o laboratório sorteia o RTT a cada batalha sem mostrá-lo, o dono dá uma nota de 1 a 5 ao fim ("dá para jogar?"), e o relatório cruza nota × RTT, exportável | A pergunta 3 da hipótese. Às cegas, o dono não julga o número, julga o jogo |
 | D18 | Determinismo | Mesmo setup + mesmos comandos ⇒ mesmo hash, em qualquer execução e engine. O laboratório **exporta o log** de uma batalha (setup + comandos por tick), e o `geo battle verify` reproduz o hash que o *worker* calculou | ADR-0003 e ADR-0008. É o que garante que o auto-resolve da junção dá o mesmo resultado no servidor e no replay |
 | D19 | Eventos | O passo da batalha devolve eventos estruturados fora do estado (ADR-0007): ataque, golpe, dano, morte, largou, catou, entrou, fugiu (pela borda ou por inatividade), fim. O laboratório mostra uma lista simples, **sem a crônica narrada**, e a tabela de resultado no fim | A crônica é da fatia A; a tradução para os eventos do mundo é da D |
+| D20 | Dificuldade da IA **(gameplay; dono)** | Cada participante da IA tem uma **reação** no setup: fácil (600 ms), normal (250 ms) ou difícil (100 ms), mais a lista de gambits, que o laboratório já deixa editar. Números provisórios em `params/battle.json` | Dono, 2026-11-17, no checkpoint da F3: ficar preso na borda sob fogo é aceitável se a dificuldade do bot for configurável. Uma IA que aprende fica como proposta sem marco (GDD 06) |
 
 ## 4. Escopo
 
@@ -102,7 +103,8 @@ Formato: *Quando [gatilho], o sistema deve [resposta].*
 
 ### Setup e estado (`battle`)
 - **S-1** Quando uma batalha é criada a partir de um setup válido, cada participante deve nascer numa célula livre
-  do trecho de entrada do seu lado, olhando para dentro da arena, com o HP atual e a carga do setup.
+  do trecho de entrada do seu lado (a zona de nascimento, D3), olhando para dentro da arena, com o HP atual e a
+  carga do setup.
 - **S-2** Um setup inválido (menos de dois lados, arena sem chão, lado sem trecho de entrada, HP fora de 1..máximo,
   carga acima da capacidade, mais participantes que células de entrada) deve ser recusado com o motivo, sem criar a
   batalha.
@@ -158,7 +160,7 @@ Formato: *Quando [gatilho], o sistema deve [resposta].*
 
 ### Laboratório (cliente)
 - **L-1** A página deve montar a batalha (D2): arena, de 2 a 4 lados, de 1 a 5 participantes por lado, com DNA, HP
-  inicial, carga, preset e seed.
+  inicial, carga, preset, reação (D20) e seed.
 - **L-2** O humano deve poder dominar um participante, trocar de participante ou não dominar nenhum a qualquer
   momento (D12), e jogar pelo teclado (D13).
 - **L-3** Toda entrada do humano deve atravessar o canal simulado até o *worker*, e a página deve renderizar só o que
@@ -199,15 +201,19 @@ o círculo mata o quadrado em 13 golpes e o quadrado mata o círculo em 4.
 | Freio da carga | linear, até 500‰ da velocidade com a bolsa cheia |
 | Tempo na saída para fugir (D7) | 2 s |
 | Relógio de inatividade (D9) | 15 s |
-| Arena | 21 × 13 células, mais o anel de saída |
-| Trechos de entrada | um por lado, nas bordas opostas para 2 lados e espalhados para 3 ou 4 |
+| Arena | 43 × 27 células, mais o anel de saída (2× a de 21 × 13, dono, 2026-11-17); uma aberta de 63 × 39 (3×) só para comparar no relatório |
+| Zonas de nascimento | uma por lado, a 1/4 da largura (ou da altura) a partir da borda: opostas para 2 lados e espalhadas para 3 ou 4 |
+| Reação da IA (D20) | fácil 600 ms, normal 250 ms, difícil 100 ms |
 | HP baixo nos presets (fugir) | 250‰ (dado da regra, não param) |
 | Inimigo perto, no preset portador | 4 células (dado da regra) |
 | RTT do canal | 0, 50, 100, 150, 200, 300 ms; *jitter* de ±20% do atraso de cada perna (constantes do laboratório) |
 
 ## 7. Harness e critérios de aceite
 
-Os alvos são chutes. Quando um reprovar, o dono decide no checkpoint.
+Os alvos são chutes. Quando um reprovar, o dono decide no checkpoint. **Desde o checkpoint da F3 (dono, 2026-11-17),
+"o DNA não decide sozinho" e "duração" são só informativos:** o combate cru (só o ataque básico, sem skills, nível
+e stats) não se balanceia agora. O laboratório serve para experimentar e validar as regras de combate candidatas,
+cada uma evoluindo conforme entram as mecânicas em comum.
 
 | Critério | Alvo | Como se mede |
 |---|---|---|

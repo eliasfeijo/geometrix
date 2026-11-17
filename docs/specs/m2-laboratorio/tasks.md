@@ -139,7 +139,8 @@ sensíveis a tempo" do dashboard (tirar de lá no merge). Fora isso, a F2 só to
       e arena, espelhos, duração, inatividade, borda, fuga carregada, custo) (spec R-1, §7, plan §12)
 - [x] `geo battle verify` (amostra da matriz, 2 execuções e snapshot → restore; e `--log`) e os passos do CI
       (`verify` nas seeds 1, 42, 649; o orçamento do `sweep --quick`) (spec R-2, R-3, plan §12)
-- [ ] **Checkpoint:** o dono lê a matriz, a duração, a inatividade e a fuga carregada no relatório, antes da página
+- [x] **Checkpoint:** o dono lê a matriz, a duração, a inatividade e a fuga carregada no relatório, antes da página
+      (dono, 2026-11-17, depois de ver os replays: decisões no fim do registro abaixo e no plan §15, C1–C3)
 
 ### Registro da F3 (2026-11-17)
 
@@ -201,6 +202,22 @@ da fase).
    que chega à borda com um círculo atirando nele morre lá. Por isso largar a bolsa quase não muda a fuga carregada.
    É o que você quer?
 
+**Decisões do checkpoint (dono, 2026-11-17).** O dono pediu para ver antes de responder: uma página de replays
+(sete batalhas da matriz, geradas pela simulação, uma por pergunta) mostrou cada caso.
+
+1. Quadrado × triângulo a 100% é **justo**: o corpo a corpo vence se não for *kitado*. Não se balanceia combate cru
+   antes de skills, nível e stats; o laboratório serve para experimentar e validar as regras candidatas.
+2. As lutas de ~14 s estão **boas**: prolongar combate cru, sem variedade de mecânicas, seria chato.
+3. **Arenas 2× maiores e zonas de nascimento** a meio caminho entre a borda e o centro (a 1/4 da largura), longe da
+   saída; uma aberta 3× para comparar. Vai para a 1ª task da F4.
+4. Ficar preso na borda sob fogo **não é problema**, desde que a dificuldade do bot seja configurável: reação por
+   participante (fácil 600 ms, normal 250 ms, difícil 100 ms; spec D20). Uma IA que aprende ("começa burra e vai
+   ficando esperta") fica como proposta sem marco no GDD 06.
+5. O 3 × 3 é uma boa luta para o escopo (só o ataque básico).
+
+No relatório, "o DNA não decide sozinho" e "duração" passam a "fora do chute (informativo)"; só o custo reprova
+(commit `fix(cli)` próprio).
+
 **Pontos de atenção para o merge:** `apps/server/test/ws.test.ts` ganhou timeout explícito (commit `test(server)`
 próprio: estourou os 5 s duas vezes seguidas com a suíte inteira e outra sessão rodando); `.github/workflows/ci.yml`
 (dois passos novos no fim); `apps/cli/src/main.ts` (o subcomando `battle` e o texto do `USAGE`);
@@ -208,6 +225,11 @@ próprio: estourou os 5 s duas vezes seguidas com a suíte inteira e outra sess�
 
 ## F4 — O laboratório (`m2/laboratorio-f4-lab`)
 
+- [ ] As arenas 2× (43 × 27) com as zonas de nascimento a 1/4 da largura, e uma aberta 3× (63 × 39) só para o
+      relatório; o teste de simetria de 180°; o `sweep` de novo (duração, inatividade, fuga, custo) e os replays, para
+      o dono ver antes da página (spec D3, §6; plan §4, C2)
+- [ ] A reação por participante: `fácil`/`normal`/`difícil` no setup, os números em `params/battle.json`, o
+      `rng` sorteando a reação de cada decisão (spec D20; plan C3)
 - [ ] `lab.html` como 2ª entrada do Vite, `npm run lab`, servida também pelo `npm run server` (plan §13, P11)
 - [ ] `worker.ts`: o relógio sem deriva, ×1/×4/instantâneo, pausar e reiniciar, a visão e os eventos por tick, o log
       e o hash no fim (Web Crypto) (plan §13, P10)

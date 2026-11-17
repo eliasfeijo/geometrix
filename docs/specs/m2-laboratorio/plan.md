@@ -111,6 +111,10 @@ Texto, uma linha por fileira, com o anel de saída incluído (23 × 15 para a ar
 
 - O **anel de saída** é a fileira e a coluna de fora, e só pode ter chão ou pedra. Os trechos de entrada ficam **na
   primeira volta de dentro**, colados no anel: quem nasce não está na saída e não começa a fugir (spec S-1, D7).
+- **Checkpoint da F3 (dono, 2026-11-17), a fazer na F4:** as três arenas passam a 43 × 27 (45 × 29 com o anel), mais
+  uma aberta de 63 × 39 só para comparar no relatório. Os trechos viram **zonas de nascimento**: blocos de chão a
+  1/4 da largura (ou da altura) a partir da borda, longe da saída (spec D3). O formato do texto não muda: os dígitos
+  1–4 marcam a zona, onde quer que ela esteja.
 - As três arenas são **simétricas por rotação de 180°** entre os trechos 1 e 2 (e entre 3 e 4), para que o lado não
   decida nada; o harness confere isso (o espelho tem de dar ~50%, §12).
 - A arena é dado do setup (um `string[]`), não param: o pacote é puro e não lê arquivo. A CLI lê `params/arenas/`
@@ -357,6 +361,14 @@ contrato interno v0 do ADR-0008, versionado pela `BATTLE_VERSION`.
 | P13 | Gambits na simulação | Dentro do `stepBattle`, como o piloto do mundo: a lista está no estado e o log só tem os comandos do humano e do laboratório | Fora, como o estrategista dos bots, com os comandos da IA no log (o log cresce 20 vezes e o auto-resolve depende de quem roda a IA) |
 | P14 | Registro da sessão | `localStorage` com `try/catch`, mais o export em JSON | Só em memória, com o export (some ao recarregar a página) |
 
+### Decisões do checkpoint da F3 (dono, 2026-11-17)
+
+| # | Decisão |
+|---|---|
+| C1 | O combate cru não se balanceia agora: quadrado × triângulo a 100% é justo (corpo a corpo que não é *kitado* vence), e lutas de ~14 s no 1 × 1 estão boas sem variedade de mecânicas. No relatório, vitórias e duração viram **informativos**; só o custo reprova |
+| C2 | Arenas 2× maiores, com zonas de nascimento a 1/4 da largura (spec D3, §6); uma aberta 3× para comparar. Primeira task da F4, com o `sweep` e os replays de novo antes da página |
+| C3 | A fuga pela borda não muda (um golpe zera a contagem). A dificuldade da IA fica configurável: reação por participante no setup (spec D20); uma IA que aprende é proposta sem marco no GDD 06 |
+
 ## 16. Pontos de contato com a fatia A
 
 A B anda em paralelo e mora num pacote novo. Os arquivos que as duas tocam, e que pedem atenção no merge:
@@ -383,5 +395,5 @@ Cada fase na sua branch `m2/laboratorio-f<n>-<slug>`, com merge `--no-ff` em `ma
 | F1 | **O pacote e o movimento:** `packages/battle` (package, tsconfig, lint, projeto do Vitest), RNG e JSON canônico com o teste de igualdade, params e `params/battle.json`, a arena e as três arenas, setup e `createBattle`, estado, `serialize`/`restore`, os comandos de intenção e virar, o movimento com o freio e a disputa, o esqueleto do `stepBattle` com os eventos, a `BATTLE_VERSION` | — |
 | F2 | **O combate:** ataque corpo a corpo e projéteis, dano, morte e pilhas, largar e catar, a fuga pela borda, a inatividade, o fim, a entrada, `control` e `setGambits`, os eventos e o resultado, o log e o `replayLog` | — |
 | F3 | **A IA e o auto-resolve:** o vocabulário dos gambits, o BFS, a esquiva, o tempo de reação, os presets; `geo battle sweep` e `verify`; os passos do CI | **Dono:** a matriz de confrontos, a duração, a inatividade e a fuga carregada, nos números, antes da página |
-| F4 | **O laboratório:** `lab.html`, o *worker*, o canal com latência, o render, o teclado, o setup, a troca de domínio, o reforço, o editor de gambits, os eventos e o resultado, o atraso medido, o export do log (e a *fixture* da CLI) | — |
+| F4 | **O laboratório:** as arenas 2× e as zonas de nascimento (C2), a reação por participante (C3), `lab.html`, o *worker*, o canal com latência, o render, o teclado, o setup, a troca de domínio, o reforço, o editor de gambits, os eventos e o resultado, o atraso medido, o export do log (e a *fixture* da CLI) | — |
 | F5 | **Às cegas e o playtest:** o modo às cegas, o registro da sessão e o export, as perguntas do PLAYTEST | **Dono:** sessão livre e sessão às cegas; responde às perguntas 1 a 4 da hipótese e decide a próxima regra; fecha a fatia B |
