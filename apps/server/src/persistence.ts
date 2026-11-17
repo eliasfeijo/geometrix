@@ -316,6 +316,17 @@ export class Store {
     return row.n;
   }
 
+  /** Bytes of event JSON in a world's chronicle (the soak report). */
+  chronicleBytes(worldId: number): number {
+    const row = this.db
+      .prepare(
+        `SELECT COALESCE(SUM(LENGTH(event_json)), 0) AS n FROM chronicle
+         WHERE world_id = ?`,
+      )
+      .get(worldId) as { n: number };
+    return row.n;
+  }
+
   putSnapshot(worldId: number, snapshot: Snapshot): void {
     this.db
       .prepare(

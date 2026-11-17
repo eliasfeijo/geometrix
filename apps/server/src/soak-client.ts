@@ -2,7 +2,8 @@
 // that follows its team stream as the browser does (apps/client
 // connection.ts and store.ts): resumes with &stream=…&seq=… after a drop,
 // applies the deltas, checks the view hash and asks for a resync on a seq gap
-// or a hash mismatch. It counts what the soak report needs (spec section 7).
+// or a hash mismatch. It counts what the soak report needs (spec section 7)
+// and keeps the team's chronicle as the browser does (M2 encontro C-4).
 
 import { createHash } from "node:crypto";
 import type {
@@ -15,11 +16,14 @@ import {
   PROTOCOL_VERSION,
   viewJson,
 } from "@geometrix/protocol/stream";
-import type { TeamView } from "@geometrix/sim";
+import type { TeamEvent, TeamView } from "@geometrix/sim";
 import { WebSocket } from "ws";
 
 /** Wait before a reconnect: the soak's restarts take seconds anyway. */
 export const SOAK_RECONNECT_MS = 500;
+
+/** The entries the browser keeps (CHRONICLE_KEEP in apps/client store.ts). */
+export const SOAK_CHRONICLE_KEEP = 300;
 
 export type WelcomeCause = "join" | "reconnect" | "resync";
 
@@ -65,6 +69,7 @@ export class SoakClient {
   private readonly started: number;
   private readonly perSecond = new Map<number, number>();
   private current: TeamView | null = null;
+  private events: TeamEvent[] = [];
   readonly report: SoakClientReport;
 
   constructor(options: SoakClientOptions) {
@@ -91,6 +96,14 @@ export class SoakClient {
   /** The view rebuilt from the stream, or null before the first welcome. */
   get view(): TeamView | null {
     return this.current;
+  }
+
+  /**
+   * The team's latest events, oldest first: the welcome's chronicle plus
+   * each delta's events, capped as in the browser.
+   */
+  get chronicle(): readonly TeamEvent[] {
+    return this.events;
   }
 
   /** A short drop on the client's side: close and reconnect (spec C-4). */
@@ -152,6 +165,7 @@ export class SoakClient {
         this.stream = message.stream;
         this.seq = message.seq;
         this.current = message.view;
+        this.events = message.chronicle.slice(-SOAK_CHRONICLE_KEEP);
         break;
       case "delta": {
         if (!this.synced) return;
@@ -167,6 +181,11 @@ export class SoakClient {
         this.resuming = false;
         this.seq = message.seq;
         this.current = applyDelta(this.current, message.delta);
+        if (message.events !== undefined && message.events.length > 0) {
+          this.events = [...this.events, ...message.events].slice(
+            -SOAK_CHRONICLE_KEEP,
+          );
+        }
         this.report.deltas++;
         if (message.hash !== undefined) {
           const hash = createHash("sha256")
