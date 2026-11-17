@@ -1124,3 +1124,42 @@ button.danger {
 .creep-link:hover {
   text-decoration: underline;
 }
+
+/* Rules editor groups and enemy filter (M2 encontro C-7). */
+.rule-group h4 {
+  margin: 10px 0 4px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.add-rule {
+  margin-top: 4px;
+}
+
+.dna-filter {
+  display: inline-flex;
+}
+
+.dna-filter button {
+  padding: 2px;
+}
+
+.dna-filter .dna-off {
+  opacity: 0.25;
+}
+
+.percent {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.percent input[type="number"] {
+  width: 4em;
+}
+
+.facts .engaged {
+  color: #ffd166;
+}

@@ -76,7 +76,7 @@ na sua branch (plan §12, skill `commit`), com merge `--no-ff` em `main`.
       de fugir na luta (spec C-5, C-6)
 - [x] Crônica: `templates.ts` com o banco inicial de frases (voz pelo DNA), `narrate.ts`, painel com nomes
       clicáveis; a mesma frase em todo cliente e no replay (spec C-4, K-3, D17)
-- [ ] Inspetor (HP, nome, salvo-conduto, encontro) e editor de regras (condições, ações, reações e o preset
+- [x] Inspetor (HP, nome, salvo-conduto, encontro) e editor de regras (condições, ações, reações e o preset
       salteador) (spec C-7)
 - [ ] Replay com a crônica
 

@@ -7,12 +7,20 @@ import {
   CONDITION_LABELS,
   CONDITION_TYPES,
   conditionOf,
+  GROUP_ACTIONS,
+  GROUP_CONDITIONS,
+  groupOf,
+  indicesOf,
   move,
+  moveInGroup,
   newRule,
   parseCount,
+  percentOf,
+  permilleOf,
   removeAt,
   replaceAt,
   sameRules,
+  toggleDna,
 } from "../src/rules-draft.ts";
 import { testWorld } from "./helpers.ts";
 
@@ -103,6 +111,79 @@ describe("rules draft", () => {
       const chunk = rules.slice(i, i + world.params.autopilot.maxRules);
       expect(setRulesRefusal(world, 99, creep.id, chunk)).toBeNull();
     }
+  });
+
+  it("groups the reactions apart and moves rules within their group", () => {
+    const flee: Rule = {
+      when: { type: "hpBelow", permille: 400 },
+      then: { type: "flee" },
+    };
+    const rules = [rule(1), flee, rule(2), newRule("reaction")];
+    expect(rules.map(groupOf)).toEqual([
+      "plain",
+      "reaction",
+      "plain",
+      "reaction",
+    ]);
+    expect(indicesOf(rules, "plain")).toEqual([0, 2]);
+    expect(indicesOf(rules, "reaction")).toEqual([1, 3]);
+    // Rule 0 goes down past rule 2; the reaction between stays at 1.
+    const moved = moveInGroup(rules, 0, 1);
+    expect(moved).toEqual([rule(2), flee, rule(1), rules[3]]);
+    expect(moveInGroup(rules, 3, 1)).toEqual(rules);
+    expect(moveInGroup(rules, 1, -1)).toEqual(rules);
+    // Each group offers its own actions; the demand only in reactions.
+    expect([...GROUP_ACTIONS.reaction].sort()).toEqual([
+      "fight",
+      "flee",
+      "pay",
+    ]);
+    expect(GROUP_ACTIONS.plain).not.toContain("pay");
+    expect(GROUP_CONDITIONS.plain).not.toContain("demandAtMost");
+    expect(GROUP_CONDITIONS.reaction).toContain("demandAtMost");
+  });
+
+  it("filters by DNA, never down to none", () => {
+    expect(toggleDna(undefined, "circle")).toEqual(["square", "triangle"]);
+    expect(toggleDna(["square", "triangle"], "circle")).toBeUndefined();
+    expect(toggleDna(["square"], "square")).toEqual(["square"]);
+    expect(toggleDna(["triangle"], "square")).toEqual(["square", "triangle"]);
+  });
+
+  it("shows per mille as whole percent", () => {
+    expect(percentOf(400)).toBe(40);
+    expect(percentOf(255)).toBe(25);
+    expect(permilleOf(40)).toBe(400);
+    expect(permilleOf(150)).toBe(1000);
+  });
+
+  it("gives the sim filters it accepts", () => {
+    const world = testWorld();
+    join(world, 99, 0, false);
+    const creep = world.creeps.find((c) => c.team === 0)!;
+    const rules: Rule[] = [
+      {
+        when: {
+          type: "enemyInSight",
+          radius: 6,
+          dna: toggleDna(undefined, "square"),
+          minCargo: 0,
+        },
+        then: {
+          type: "approach",
+          intent: "attack",
+          radius: 6,
+          dna: ["circle"],
+          minCargo: 3,
+        },
+      },
+      newRule("reaction"),
+      {
+        when: { type: "demandAtMost", permille: permilleOf(30) },
+        then: { type: "pay" },
+      },
+    ];
+    expect(setRulesRefusal(world, 99, creep.id, rules)).toBeNull();
   });
 
   it("reads non-negative integers only", () => {
