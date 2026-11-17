@@ -342,6 +342,17 @@ Números no [dashboard](../../dashboard/current-status.md), "Registro das fases"
 |---|---|
 | C11 | **Subir a carga mínima do alvo no preset salteador** (a ação `approach` de `raiderRules`, hoje `minCargo: 1`), para o bot só emboscar quem vale a pena. Vale para o preset inteiro (jogador e bot). **Número: 10** (dono, 2026-11-17, na abertura da F6), a capacidade do círculo, um terço da do quadrado; provisório. Medido no seed 42 em 3 dias contra 1, 5, 15 e 20: com 10, 23 encontros (eram 112), 48% na zona do Núcleo da vítima (eram 93%); com 20, quase nenhum. É mudança de comportamento do `sim`: `SIM_VERSION` 9 e os hashes fixos mudam. Rejeitada por agora a alternativa de bloquear o par agressor–vítima também depois de uma fuga (seria regra nova de gameplay) |
 
+## 11.2 Checkpoint da F6 (dono, 2026-11-17)
+
+Sessão do dono contra o bot, `dev:multi --bot` a ×6, seed 42, até 2h38 de mundo (dia 1). Os números da sessão e
+dos critérios da spec §7 estão no [dashboard](../../dashboard/current-status.md), "Registro das fases", M2 A F6.
+
+| # | Decisão |
+|---|---|
+| C12 | **A fatia A cumpre o papel:** o dono testou o ataque e a extorsão, e a crônica ficou boa (o tom de D17 aprovado como está). A fatia fecha |
+| C13 | **Hipótese 1 (conflito e história):** sim. **Hipótese 2 (muda o que o jogador faz):** sim, mas pelo medo: depois de uma luta perdida no sorteio (Bako saiu com 26% do HP), o dono não tentou outra e revezou os círculos entre batedor e salteador. **Hipótese 3 (sem dominar o jogo):** sem dominar, mas também sem peso: o bot não emboscou o jogador em 2h38 |
+| C14 | **Achados que ficam para as rodadas de design seguintes, sem mudança na fatia A:** a luta só com sorteio é arriscada demais para o retorno (o combate de verdade é da B e da D); a extorsão contra o bot é quase de graça (o ▲ do bot paga qualquer exigência, C8); a ×6, depois de explorar o mapa (~2h30), não há o que fazer além de coletar: em 2,6 h nenhum time juntou os 3 000 de matéria de um creep novo |
+
 ## 12. Ordem de implementação
 
 Cada fase na sua branch `m2/encontro-f<n>-<slug>`, com merge `--no-ff` em `main` (skill `commit`).

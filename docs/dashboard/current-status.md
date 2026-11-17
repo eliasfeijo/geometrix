@@ -12,39 +12,32 @@
 | | |
 |---|---|
 | **Marco** | **M2 — A emboscada** ([ROADMAP](../ROADMAP.md)). M0, M1 e M1.5 ✅ |
-| **Fatia** | **A — O encontro** ([spec](../specs/m2-encontro/spec.md) · [plan](../specs/m2-encontro/plan.md) · [tasks](../specs/m2-encontro/tasks.md)): F0 a F5 ✅, F6 🟡 no checkpoint do dono · **B — O laboratório de batalha** ([spec](../specs/m2-laboratorio/spec.md) · [plan](../specs/m2-laboratorio/plan.md) · [tasks](../specs/m2-laboratorio/tasks.md)): F0 a F3 ✅ (a F3: a IA e o auto-resolve) |
-| **Em execução** | **A F6 — Soak e playtest**: tasks do salteador (C11) e do soak ✅; o PLAYTEST pronto. **Já em `main`** (merge antes do checkpoint, a pedido do dono, para testar a partir dela); falta a sessão do dono, que fecha a fatia A. O que sair do checkpoint vai numa branch nova a partir de `main` (`m2/encontro-f6-checkpoint`) |
-| **Próxima fase** | Depois do checkpoint: a fatia A ✅ |
-| **Pode andar em paralelo** | **B F4 — O laboratório**, branch `m2/laboratorio-f4-lab` a partir de `main` (que já tem a B F3), numa outra sessão, com worktree próprio em `.claude/worktrees/` (fora do Git; o ESLint o ignora). A B não edita o dashboard nem o `CLAUDE.md`; o merge dela em `main` acontece entre duas fases da A. **A B F4 mexe no cliente e na config do Vite** (2ª entrada, `lab.html`). Medições de tempo com a outra sessão rodando testes saem distorcidas |
-| **Aguardando o dono** | **A sessão a ×6 contra o bot** (checkpoint da A F6), com as respostas abaixo |
+| **Fatia** | **A — O encontro** ([spec](../specs/m2-encontro/spec.md) · [plan](../specs/m2-encontro/plan.md) · [tasks](../specs/m2-encontro/tasks.md)): ✅ 2026-11-17 (F0 a F6; o checkpoint da F6 no plan §11.2) · **B — O laboratório de batalha** ([spec](../specs/m2-laboratorio/spec.md) · [plan](../specs/m2-laboratorio/plan.md) · [tasks](../specs/m2-laboratorio/tasks.md)): F0 a F3 ✅ (a F3: a IA e o auto-resolve) |
+| **Em execução** | Nenhuma fase nesta sessão |
+| **Próxima frente** | Escolha do dono (abaixo): as fatias do M2 seguem o grafo do [ROADMAP](../ROADMAP.md) |
+| **Pode andar em paralelo** | **B F4 — O laboratório**, branch `m2/laboratorio-f4-lab` a partir de `main` (que já tem a B F3), numa outra sessão, com worktree próprio em `.claude/worktrees/` (fora do Git; o ESLint o ignora). A B não edita o dashboard nem o `CLAUDE.md`. **A B F4 mexe no cliente e na config do Vite** (2ª entrada, `lab.html`). Medições de tempo com a outra sessão rodando testes saem distorcidas |
+| **Aguardando o dono** | Qual frente vem depois da fatia A (abaixo) |
 | **Bloqueios** | Nenhum |
-
-**Aguardando o dono — checkpoint da A F6** (as medições estão no topo de "Registro das fases"):
-
-1. **A sessão:** `npm run dev:multi -- --clients 1 --mult 6 --seed 42 --bot` e a seção "Encontro (M2)" do
-   [PLAYTEST.md](../PLAYTEST.md) (tarefas E1–E9 e o questionário). No bot × bot do seed 42, o 1º encontro sai em
-   ~3,7 h de mundo (~37 min reais a ×6); para ver um antes, aborde um coletor do bot (E4).
-2. **O tom da crônica** (D17): as frases que soaram erradas, com o texto.
-3. **A hipótese** (spec §1): (1) o encontro cria conflito e história? (2) muda o que você faz? (3) sem dominar o
-   jogo?
-4. **Os critérios da spec §7** estão verdes com o `minCargo` 10 (soak, `geo net`, sweep, custo do tick). Algum
-   número do registro pede outra rodada antes de fechar a fatia?
 
 ### Próximos passos
 
-As fatias do M2 seguem o grafo de dependências do [ROADMAP](../ROADMAP.md), não uma fila.
+As fatias do M2 seguem o grafo de dependências do [ROADMAP](../ROADMAP.md), não uma fila. Com a A ✅:
 
-1. **A F6, checkpoint do dono** (acima). Com as respostas: os achados em "Achados do playtest", as decisões no
-   GDD (skill `gdd-decision`), o `[x]` das duas últimas tasks da F6, numa branch `m2/encontro-f6-checkpoint` a
-   partir de `main`, com o merge dela fechando a fatia A.
-2. **A B F4** (`/implement-phase M2 B F4`), em paralelo numa outra sessão com worktree próprio, branch
+1. **A B F4** (`/implement-phase M2 B F4`), em paralelo numa outra sessão com worktree próprio, branch
    `m2/laboratorio-f4-lab` a partir de `main`. O contexto dela está no [tasks.md da B](../specs/m2-laboratorio/tasks.md)
    (os registros da F1 a F3 e as decisões do checkpoint da F3) e no plan da B; ela não edita este dashboard.
-3. **Já liberadas pelo checkpoint da A F3:** as rodadas de design do **papel do cristal** e da **fatia E** (se o
-   cerco passa pela instância de batalha, a E depende da D; senão, pode vir antes dela).
-4. **Depois da A:** a D (com a B pronta) ou a E, e a C em paralelo à D.
+2. **A escolher pelo dono**, nesta sessão:
+   - a rodada de design do **papel do cristal** (liberada pelo checkpoint da A F3). Toca no achado C14 da F6: depois
+     de explorar o mapa, não há o que fazer além de coletar, e em 2,6 h nenhum time juntou um creep novo;
+   - a rodada de design da **fatia E** (cerco e reparo): se o cerco passa pela instância de batalha, a E depende da
+     D; senão, pode vir antes dela;
+   - a **spec da fatia C** (chat, console e macros), que anda em paralelo à D;
+   - a **D** (a junção, com os errantes) depende da B pronta (F4 e F5).
+3. **Achados da sessão da F6** (plan §11.2, C14), para a rodada de design que tocar neles: a luta só com sorteio é
+   arriscada demais para o retorno (o combate de verdade vem da B e da D); a extorsão contra o bot é quase de graça
+   (o ▲ paga qualquer exigência, C8); o bot não emboscou o jogador em 2h38.
 
-### O que a próxima fase precisa saber
+### O que a próxima frente precisa saber do código
 
 - **o salteador** (F6, C11): `raiderRules` aborda só alvos com 10 ou mais de carga, para o jogador e o bot;
   `SIM_VERSION` 9;
@@ -77,9 +70,11 @@ Só o que ainda está aberto. Ao resolver, tire daqui e registre no Histórico.
 - **Rodada de balanceamento** (dono, checkpoint da A F3): o depósito lembrado como vazio que o piloto nunca
   revisita, a causa de 20–25% de diferença na matéria entregue entre os times no seed 42 (pergunta aberta no
   [GDD 07](../gdd/07-piloto-automatico.md); plan §11.1, C6).
-- **Playtest da A F6:** observar os encontros só nas primeiras ~8 h (os salteadores do bot voltam a coletar quando
-  não há o que explorar; C7). A patrulha fica para depois. No seed 42 com o `minCargo` 10, nenhum encontro depois
-  das 8,3 h de mundo.
+- **Encontros só nas primeiras ~8 h** (C7): os salteadores do bot voltam a coletar quando não há o que explorar;
+  no seed 42 com o `minCargo` 10, nenhum encontro depois das 8,3 h de mundo, e na sessão do dono (com um humano no
+  Azul) nenhuma emboscada do bot em 2h38. A patrulha fica para depois.
+- **Achados da sessão da A F6** (C14): a luta só com sorteio não compensa o risco; a extorsão contra o bot é quase
+  de graça; o meio de jogo a ×6 fica vazio depois de explorar. Para as rodadas de design seguintes.
 - **Perguntas abertas do GDD 06 e 08 que a fatia A não cobre** (duração da batalha, tempo do mundo durante a luta,
   canais e sintaxe do chat, macros, reparo): ficam para as fatias B a E.
 - **Deploy** (quando acontecer): quem cria o mundo escolhe a seed no lobby (N9) e criar mundo deixa de ser público;
@@ -107,7 +102,7 @@ Só o que ainda está aberto. Ao resolver, tire daqui e registre no Histórico.
 | M0 — Design | ✅ |
 | M1 — O ciclo da riqueza | ✅ 2026-11-14 |
 | M1.5 — A névoa | ✅ 2026-11-14 (rede e fog of war) |
-| M2 — A emboscada | 🟡 Fatia A: F0–F5 ✅, F6 🟡 (em `main`; checkpoint do dono) · Fatia B: F0–F3 ✅, F4–F5 ⬜ · Fatias C, D, E ⬜ |
+| M2 — A emboscada | 🟡 Fatia A ✅ 2026-11-17 · Fatia B: F0–F3 ✅, F4–F5 ⬜ · Fatias C, D, E ⬜ |
 | M2.5 — A jungle hostil e o fim do mundo | ⬜ (fim do mundo decidido no GDD, 2026-11-15) |
 | M3 — O time · M4 — O mundo vivo · M5 — As lendas | ⬜ |
 
@@ -172,7 +167,7 @@ Só o que ainda está aberto. Ao resolver, tire daqui e registre no Histórico.
 | M2 A — F2 O encontro no `sim` | ✅ Concluída, merge em `main`. Ordens `approach`/`pickup`/`flee`, o estágio de encontros (abrir, diálogo, rodadas, fechar), extorsão com salvo-conduto e bloqueio, fuga pela velocidade, sorteio pelo HP × DNA, morte, saque e despojo, o vocabulário de encontro e as regras de reação, o preset salteador, o comando `react`, todos os eventos; `SIM_VERSION` 7 | [tasks.md](../specs/m2-encontro/tasks.md) · `packages/sim/src/{encounter,approach,spoils}.ts` |
 | M2 A — F1 Identidade, HP e eventos | ✅ Concluída, merge em `main`. Params do encontro, nomes no `sim` pelo contador de nascimentos, HP em milésimos com regeneração e `kill`, `step` devolve os eventos (`born`) com o público e `eventsFor`, nome/HP/encontro do inimigo na visão, `SIM_VERSION` 6 | [tasks.md](../specs/m2-encontro/tasks.md) · `packages/sim/src/{names,hp,events}.ts` |
 | M2 B — F3 A IA e o auto-resolve | ✅ Concluída numa sessão paralela, merge em `main` (2026-11-17). `BattleView` e gambits, as ações (alinhar, manter distância, esquivar, proteger, fugir, largar, catar), os presets por papel e os padrões por DNA, `geo battle sweep` (a matriz) e `geo battle verify` no CI. **Checkpoint** (dono, depois de ver os replays): decisões C1–C3 no plan da B | [tasks.md](../specs/m2-laboratorio/tasks.md) (registro da F3) · `packages/battle/src/{ai,actions,mind,presets,view}.ts` · `apps/cli/src/battle*.ts` |
-| M2 A — F6 Soak e playtest | 🟡 Em `main` antes do checkpoint (a pedido do dono, para testar). Salteador com `minCargo` 10 (C11), `SIM_VERSION` 9; soak com a crônica de cada cliente conferida contra o servidor; `dev:multi --bot`; a seção "Encontro (M2)" do PLAYTEST. Falta a sessão do dono a ×6 | [tasks.md](../specs/m2-encontro/tasks.md) · [PLAYTEST](../PLAYTEST.md) · `apps/server/src/soak*.ts` |
+| M2 A — F6 Soak e playtest | ✅ Concluída, merge em `main` (antes do checkpoint, a pedido do dono, para testar; o checkpoint num 2º merge). Fecha a fatia A. Salteador com `minCargo` 10 (C11), `SIM_VERSION` 9; soak com a crônica de cada cliente conferida contra o servidor; `dev:multi --bot`; a seção "Encontro (M2)" do PLAYTEST. **Checkpoint** (dono, sessão a ×6, 2026-11-17): a fatia cumpre o papel; decisões C12–C14 | [tasks.md](../specs/m2-encontro/tasks.md) · [PLAYTEST](../PLAYTEST.md) · `apps/server/src/soak*.ts` |
 | Fim do mundo — brainstorm | ✅ Respondido pelo dono (2026-11-15, rodada interativa). A duração termina num apocalipse: a corrupção dos depósitos de cristal esgotados, que não pode ser limpa e é vista de longe; só o final feliz das tribos (M4) a detém, e salva o mundo inteiro; vitória pírrica com humor; qualquer creep vivo no fim vira lenda; empate no relógio da fatia E. **ROADMAP:** fatias do M2 como grafo, M2.5 "A jungle hostil e o fim do mundo", M5 novo, "As lendas" | [brainstorm §0](../brainstorm/2026-11-15-fim-do-mundo.md) · [ROADMAP](../ROADMAP.md) |
 | M2.5, M3, M4, M5 | ⬜ Não iniciados | [ROADMAP](../ROADMAP.md) |
 
@@ -201,13 +196,32 @@ Um item por problema: o que a pessoa não entendeu ou não conseguiu, a tarefa o
   entre os depósitos, e a seleção por área (em vez de célula) melhorou bastante a UX de clique e toque.** Nenhum
   problema novo. Fecha o M1.5.
 
+- **Sessão 4 (dono, 2026-11-17), checkpoint da A F6:** `npm run dev:multi -- --clients 1 --mult 6 --seed 42 --bot`,
+  de `main`, até 2h38 de mundo (dia 1). **O encontro cumpre o papel, e a crônica ficou boa.** O dono explorou com
+  dois círculos, pôs um quadrado no cristal e o resto na matéria, revezou os círculos entre batedor e salteador, e
+  às ~2h30 tinha o mapa todo explorado. Achados (plan §11.2, C14), todos para as rodadas de design seguintes:
+  - **a luta só com sorteio é arriscada demais para o retorno:** na única luta, Bako (●, salteador dominado) atacou
+    Kelpi (▲ do bot) às 0:58; Kelpi tentou fugir 5 vezes e não conseguiu, e Bako fugiu na 6ª rodada com 26% do HP
+    (a regra do salteador, abaixo de 40%), contra 85% de Kelpi. Depois disso o dono não tentou outra;
+  - **a extorsão contra o bot é quase de graça:** o ▲ do bot paga qualquer exigência (C8);
+  - **depois de explorar, a ×6 não há o que fazer** além de coletar, e a coleta é lenta: em 2,6 h o Azul entregou
+    2 735 de matéria e o bot, 2 440; nenhum time juntou os 3 000 de um creep novo (os dois terminaram com os 6
+    iniciais). Construir estrada pede dominar um creep de cada vez;
+  - **o bot não emboscou o jogador** em 2h38 (o salteador dele só aborda alvo com 10 ou mais de carga; no bot × bot
+    do seed 42, o 1º encontro sai às 3,7 h).
+
 ## Registro das fases
 
 Medições, interpretações e decisões de cada fase, da mais recente para a mais antiga.
 
-- **M2 A F6 — Soak e playtest** 🟡 checkpoint do dono (2026-11-17); merge em `main` antes do checkpoint, a pedido
-  do dono, para testar a partir dela (depois da B F3). 2 563 testes na branch, `npm run check` verde; `geo verify`
-  OK (seed 42).
+- **M2 A F6 — Soak e playtest** ✅ (2026-11-17); merge em `main` antes do checkpoint, a pedido do dono, para testar a
+  partir dela (depois da B F3), e o checkpoint num 2º merge. Fecha a fatia A. 2 563 testes na branch (2 614 em
+  `main` com a B F3), `npm run check` verde; `geo verify` OK (seed 42).
+
+  **Checkpoint (dono, 2026-11-17; plan §11.2, C12–C14):** a sessão a ×6 contra o bot (os achados em "Achados do
+  playtest", sessão 4). A fatia cumpre o papel e a crônica ficou boa. Hipótese 1, conflito e história: sim. Hipótese
+  2, muda o que o jogador faz: sim, pelo medo do sorteio. Hipótese 3, sem dominar o jogo: sim, e também sem peso
+  (nenhuma emboscada do bot na sessão). Os critérios da spec §7 ficaram verdes (abaixo).
 
   **Salteador (C11), decidido pelo dono na abertura: `minCargo` 10.** `geo sim` de 3 dias do seed 42 com cada
   candidato (a mesma regra; só o número muda):

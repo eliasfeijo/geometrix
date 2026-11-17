@@ -87,6 +87,6 @@ na sua branch (plan §12, skill `commit`), com merge `--no-ff` em `main`.
       desfecho antes e depois, no "Registro das fases"
 - [x] `npm run soak` com a crônica final de cada cliente igual à do servidor; tamanho da tabela `chronicle` no
       relatório
-- [ ] Perguntas de encontro no [PLAYTEST.md](../../PLAYTEST.md) e a sessão a ×6 (spec §8)
-- [ ] **Checkpoint (dono):** sessão contra o bot a ×6; tom da crônica; respostas às perguntas 1–3 da hipótese;
-      fecha a fatia A
+- [x] Perguntas de encontro no [PLAYTEST.md](../../PLAYTEST.md) e a sessão a ×6 (spec §8)
+- [x] **Checkpoint (dono):** sessão contra o bot a ×6; tom da crônica; respostas às perguntas 1–3 da hipótese;
+      fecha a fatia A (dono, 2026-11-17: decisões C12–C14 no plan §11.2)

@@ -3,8 +3,8 @@
 Jogo multiplayer de navegador: **mundo persistente de estratégia/economia (RTS + sandbox + construção)** com
 **batalhas em tempo real estilo MOBA** como tempero. Visual 100% geométrico (SVG/Canvas, formas como linguagem).
 
-**Fase atual: M2 (A emboscada), fatia A (o encontro) em implementação** (`docs/specs/m2-encontro/`; F1 a F5
-concluídas; a F6 em `main`, esperando a sessão do dono; detalhes no dashboard). A fatia B (laboratório de batalha,
+**Fase atual: M2 (A emboscada), fatia A (o encontro) concluída** (`docs/specs/m2-encontro/`; a próxima frente,
+escolhida pelo dono, no dashboard). A fatia B (laboratório de batalha,
 `docs/specs/m2-laboratorio/`, `packages/battle`) anda em paralelo, numa outra sessão (F1 a F3 concluídas). O deploy e o playtest com pessoas novas não
 bloqueiam mais o M2 nem o M3: a diversão é julgada pelo dono nos playtests locais (ROADMAP, 2026-11-15). O M1.5 está em `docs/specs/m1.5-rede/` e
 `docs/specs/m1.5-fog/`; o M1, em `docs/specs/m1-ciclo-da-riqueza/` (o histórico fica nos `tasks.md`; a estrutura do
