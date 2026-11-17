@@ -145,19 +145,21 @@ export function run(
 }
 
 /**
- * A 3 × 3 on `rows`, wounded and with some carry, every participant (ids 1
- * to 6) under the human. On the small FIELD (the default) the sides meet
- * fast, and random commands also kill.
+ * A 3 × 3 on `rows` (ids 1 to 6), wounded and with some carry. On the small
+ * FIELD (the default) the sides meet fast, and random commands also kill.
  */
-export function brawl(seed: number, rows: string[] = FIELD): BattleState {
+export function brawlSetup(seed: number, rows: string[] = FIELD): BattleSetup {
   const side = () => [
     member("square", { hp: 90, carry: { materia: 10, cristal: 5 } }),
     member("triangle", { hp: 60 }),
     member("circle", { hp: 48, carry: { materia: 0, cristal: 4 } }),
   ];
-  return humans(
-    createBattle(setupOf(rows, [side(), side()], seed), loadTestParams()),
-  );
+  return setupOf(rows, [side(), side()], seed);
+}
+
+/** The brawl of `brawlSetup`, every participant under the human. */
+export function brawl(seed: number, rows: string[] = FIELD): BattleState {
+  return humans(createBattle(brawlSetup(seed, rows), loadTestParams()));
 }
 
 /**
