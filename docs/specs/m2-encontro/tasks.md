@@ -65,7 +65,8 @@ na sua branch (plan §12, skill `commit`), com merge `--no-ff` em `main`.
 - [x] Servidor: eventos por time no stream e no buffer de retomada; crônica no `welcome` (spec N-1)
 - [x] Tabela `chronicle`, gravação na transação do tick, recuperação que apaga a partir do snapshot e refaz;
       teste de restart com a crônica igual (spec N-2, plan P7)
-- [ ] **Checkpoint `geo net`:** banda e CPU dentro dos alvos da spec da rede, com os eventos
+- [x] **Checkpoint `geo net`:** banda e CPU dentro dos alvos da spec da rede, com os eventos (196 B/s, 172,8 µs por
+      envio, 0 divergências; 2026-11-17)
 
 ## F5 — Cliente (`m2/encontro-f5-client`)
 
