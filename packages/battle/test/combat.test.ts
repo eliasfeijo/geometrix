@@ -1,6 +1,8 @@
 import { describe, expect, test } from "vitest";
+import { applyHits } from "../src/combat.ts";
+import { validateCommand } from "../src/commands.ts";
+import { createEventLog, type BattleEvent } from "../src/events.ts";
 import { CELL_COST } from "../src/params.ts";
-import type { BattleEvent } from "../src/events.ts";
 import type { BattleState } from "../src/state.ts";
 import { battleOn, FIELD, humans, member, put, run, xyOf } from "./helpers.ts";
 
@@ -176,16 +178,23 @@ describe("projectiles (spec A-3)", () => {
   });
 
   test("outlive their owner, and the hit still names it", () => {
-    const state = humans(battleOn(FIELD, [["circle"], ["square", "square"]]));
+    // The ally (2) keeps side 0 in the battle.
+    const state = humans(
+      battleOn(FIELD, [
+        ["circle", "circle"],
+        ["square", "square"],
+      ]),
+    );
     put(state, 1, 1, 3, "right");
-    put(state, 2, 6, 3);
-    put(state, 3, 1, 4, "up");
+    put(state, 2, 3, 5);
+    put(state, 3, 6, 3);
+    put(state, 4, 1, 4, "up");
     byId(state, 1).hp = 30;
-    const events = run(state, 10, [{ type: "attackOnce", id: 1 }, fire(3)]);
+    const events = run(state, 10, [{ type: "attackOnce", id: 1 }, fire(4)]);
     expect(state.departed.map((d) => d.id)).toEqual([1]);
     expect(hits(events)).toMatchObject([
-      { tick: 0, by: { id: 3 }, target: { id: 1 } },
-      { tick: 6, by: { id: 1, dna: "circle" }, target: { id: 2 } },
+      { tick: 0, by: { id: 4 }, target: { id: 1 } },
+      { tick: 6, by: { id: 1, dna: "circle" }, target: { id: 3 } },
     ]);
     expect(state.totals.find((t) => t.id === 1)).toEqual({
       id: 1,
@@ -204,7 +213,8 @@ describe("damage and death (spec A-4, A-5)", () => {
       p.idleTicks = 100;
       p.exitTicks = 10;
     }
-    run(state, 1, [fire(1)]);
+    // Stage 6 alone: stage 8 of the same tick counts both up again.
+    applyHits(state, createEventLog(0), [{ by: 1, target: 2, damage: 30 }]);
     expect(byId(state, 1)).toMatchObject({ idleTicks: 0, exitTicks: 10 });
     expect(byId(state, 2)).toMatchObject({ idleTicks: 0, exitTicks: 0 });
   });
@@ -236,7 +246,7 @@ describe("damage and death (spec A-4, A-5)", () => {
       },
     ]);
     // The blow counts what it took: 20 of the 30.
-    expect(events.slice(1)).toEqual([
+    expect(events.slice(1, 3)).toEqual([
       {
         type: "hit",
         by: { id: 1, side: 0, dna: "square", name: "square" },
@@ -277,9 +287,11 @@ describe("damage and death (spec A-4, A-5)", () => {
       "hit",
       "died",
       "died",
+      "ended",
     ]);
     expect(state.participants).toEqual([]);
     expect(state.departed.map((d) => d.outcome)).toEqual(["died", "died"]);
+    expect(state.ended).toEqual({ tick: 0, winnerSide: null });
   });
 
   test("a blow on someone already down is lost", () => {
@@ -296,12 +308,14 @@ describe("damage and death (spec A-4, A-5)", () => {
 
   test("the dead take no more commands", () => {
     const state = humans(
-      battleOn(FIELD, [["square"], [member("circle", { hp: 1 })]]),
+      battleOn(FIELD, [["square"], [member("circle", { hp: 1 }), "circle"]]),
     );
     put(state, 1, 3, 3, "right");
     put(state, 2, 4, 3);
     run(state, 1, [fire(1)]);
-    expect(() => run(state, 1, [fire(2)])).not.toThrow();
-    expect(state.participants.map((p) => p.id)).toEqual([1]);
+    expect(validateCommand(state, fire(2))).toBe(
+      "no participant 2 in the arena",
+    );
+    expect(state.participants.map((p) => p.id)).toEqual([1, 3]);
   });
 });

@@ -44,6 +44,7 @@ export function validateCommand(
   issuer: Controller = "human",
 ): string | null {
   if (!isRecord(command)) return "expected an object";
+  if (state.ended !== null) return "the battle is over";
   const { type, id } = command;
   if (!PARTICIPANT_COMMANDS.includes(type as string)) {
     return `unknown command ${String(type)}`;
