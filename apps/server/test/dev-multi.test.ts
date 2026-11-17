@@ -17,6 +17,7 @@ describe("parseDevMultiArgs", () => {
       build: true,
       open: true,
       net: false,
+      bot: false,
     });
   });
 
@@ -32,6 +33,7 @@ describe("parseDevMultiArgs", () => {
         "--no-build",
         "--no-open",
         "--net",
+        "--bot",
       ]),
     ).toEqual({
       clients: 4,
@@ -40,6 +42,7 @@ describe("parseDevMultiArgs", () => {
       build: false,
       open: false,
       net: true,
+      bot: true,
     });
   });
 
@@ -56,11 +59,18 @@ describe("parseDevMultiArgs", () => {
 
 describe("players and tabs", () => {
   test("players alternate Blue and Orange", () => {
-    expect([1, 2, 3, 4].map(playerOf)).toEqual([
+    expect([1, 2, 3, 4].map((i) => playerOf(i))).toEqual([
       { name: "Jogador 1", team: 0 },
       { name: "Jogador 2", team: 1 },
       { name: "Jogador 3", team: 0 },
       { name: "Jogador 4", team: 1 },
+    ]);
+  });
+
+  test("with a bot on Orange, every player is Blue", () => {
+    expect([1, 2].map((i) => playerOf(i, true))).toEqual([
+      { name: "Jogador 1", team: 0 },
+      { name: "Jogador 2", team: 0 },
     ]);
   });
 

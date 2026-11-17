@@ -82,7 +82,10 @@ na sua branch (plan §12, skill `commit`), com merge `--no-ff` em `main`.
 
 ## F6 — Soak e playtest (`m2/encontro-f6-soak`)
 
-- [ ] `npm run soak` com a crônica final de cada cliente igual à do servidor; tamanho da tabela `chronicle` no
+- [x] Preset salteador com a carga mínima do alvo maior (plan §11.1, C11): o número com o dono na abertura
+      (decidido: 10); `SIM_VERSION` 9 e os hashes fixos; `geo sim` de 3 dias do seed 42 com os encontros por
+      desfecho antes e depois, no "Registro das fases"
+- [x] `npm run soak` com a crônica final de cada cliente igual à do servidor; tamanho da tabela `chronicle` no
       relatório
 - [ ] Perguntas de encontro no [PLAYTEST.md](../../PLAYTEST.md) e a sessão a ×6 (spec §8)
 - [ ] **Checkpoint (dono):** sessão contra o bot a ×6; tom da crônica; respostas às perguntas 1–3 da hipótese;

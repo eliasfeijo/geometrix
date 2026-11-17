@@ -2,7 +2,8 @@
 
 Como rodar uma sessão de playtest do geometrix. Hoje cobre o **playtest de legibilidade e mecânica do M1** (F9,
 [spec M1 §8 item 4](specs/m1-ciclo-da-riqueza/spec.md)) e o **da névoa do M1.5** (seção "Névoa (M1.5)", [spec do
-fog §8](specs/m1.5-fog/spec.md)). O playtest de diversão com pessoas novas, com deploy e túnel, não bloqueia mais
+fog §8](specs/m1.5-fog/spec.md)) e o **do encontro do M2** (seção "Encontro (M2)", [spec do encontro
+§8](specs/m2-encontro/spec.md)). O playtest de diversão com pessoas novas, com deploy e túnel, não bloqueia mais
 o M2 nem o M3 (dono, 2026-11-15, no [ROADMAP](ROADMAP.md)): entra aqui quando o dono achar o jogo divertido o
 suficiente.
 
@@ -36,8 +37,8 @@ Faz o build do cliente, sobe o servidor em `http://localhost:8080`, cria um mund
 | `--seed 42` | O mesmo mapa para todas as sessões (compare as respostas) |
 | `--no-open` | Só imprime as URLs (para abrir em outro navegador ou outra máquina) |
 
-Sem bots: quem joga é a pessoa. Para ter o outro time ativo, crie o mundo pelo lobby (`npm run build` e
-`npm run server`, depois "Criar" com "Bot no Laranja") e entre como Azul.
+Sem bots: quem joga é a pessoa. Para ter o outro time ativo, `--bot` põe um bot no Laranja e todos os jogadores
+no Azul (ou crie o mundo pelo lobby com "Bot no Laranja" e entre como Azul).
 
 ### Acesso
 
@@ -118,8 +119,7 @@ com a névoa) ou sozinha, para quem já jogou o M1.
 O outro time precisa estar ativo, senão não há inimigo para achar. Duas formas:
 
 - **Duas pessoas**, uma em cada time: `npm run dev:multi -- --clients 2 --mult 36 --seed 42`.
-- **Uma pessoa contra um bot:** `npm run build` e `npm run server`, depois, no lobby, "Criar" com "Bot no
-  Laranja" e entre como Azul.
+- **Uma pessoa contra um bot:** `npm run dev:multi -- --clients 1 --mult 36 --seed 42 --bot`.
 
 Lembrete para o observador: todo creep nasce coletor de matéria, que só explora quando o time não conhece
 depósito do recurso. Se há matéria à vista do Núcleo, **ninguém explora sem uma ordem do jogador** (o preset
@@ -158,6 +158,68 @@ Perguntas abertas:
 - Não saber o mapa criou alguma decisão para você (para onde ir primeiro, o que proteger)? Qual?
 - Em algum momento a névoa atrapalhou entender o que estava acontecendo? Quando?
 - O que você queria saber do inimigo e não dava?
+
+## Encontro (M2)
+
+Desde a fatia A do M2, creeps de times diferentes se abordam: o agressor ataca ou extorque, a vítima paga, recusa
+(e luta) ou foge, e quem morre larga despojo. A luta ainda é um sorteio descartável. A sessão responde às
+perguntas 1 a 3 da hipótese da [spec do encontro](specs/m2-encontro/spec.md) §1: **o encontro cria conflito e
+história, muda o que o jogador faz, sem dominar o jogo?** Quem joga é o dono (a diversão é julgada nos playtests
+locais, ROADMAP 2026-11-15); a seção serve também para uma pessoa nova, quando chegar a hora.
+
+### Preparação
+
+```sh
+npm run dev:multi -- --clients 1 --mult 6 --seed 42 --bot
+```
+
+Um mundo com o **bot no Laranja** e o jogador no Azul, **a ×6**: a janela de reação de 60 s de mundo dura 10 s
+reais, tempo de ler o painel e decidir (spec §8). Uma hora de mundo leva 10 min reais.
+
+Lembretes para o observador (não conte à pessoa):
+
+- O bot mantém um **salteador** a cada 6 creeps. O salteador só aborda um inimigo à vista (raio 10) com **10 ou
+  mais de carga**: um círculo cheio, um triângulo ou um quadrado a meio caminho. Ele extorque, cata despojo,
+  entrega quando cheio e explora.
+- No mundo bot × bot do seed 42, o 1º encontro sai em ~3,7 h de mundo (**~37 min reais a ×6**), e quase todos
+  caem nas primeiras ~8 h: depois que o mapa está todo explorado, os salteadores do bot voltam a coletar (C7). Com
+  um humano no Azul o ritmo muda; para ver um encontro antes, a pessoa pode abordar um coletor do bot (tarefa E4)
+  ou mandar creeps carregados para perto do Laranja.
+- Os coletores pagam a extorsão e tentam fugir do ataque **por padrão**, sem regra de reação. O creep dominado
+  ganha o painel de reação; sem resposta até o fim da janela, valem as regras dele.
+
+### E. Roteiro do encontro
+
+| # | Tarefa ou pergunta dita à pessoa | O que observar |
+|---|---|---|
+| E1 | "O que aconteceu com aquele creep?" (logo depois do 1º encontro, apontando o creep) | Responde pela crônica, pelo mapa ou pelo inspetor? Entende quem abordou, o que pediu e como acabou? |
+| E2 | "Por que ele pagou?" (ou fugiu, ou lutou) | Sabe que pagar é o padrão do coletor? Acha a regra de reação no editor? |
+| E3 | "Quanto de HP aquele creep tem?" (um creep ferido, seu ou inimigo) | Lê a barra de HP? Sabe que o HP volta com o tempo? |
+| E4 | Domine um creep e extorqua um creep inimigo carregado | Clique direito no inimigo; lê a exigência antes de confirmar? Entende quando a extorsão é impossível (vítima vazia, agressor cheio)? |
+| E5 | Domine um creep e ataque um creep inimigo | Acompanha as rodadas? Usa o botão de fugir? |
+| E6 | Com um creep dominado, espere ser abordado e decida (pagar, recusar, fugir) | Acha o painel de reação a tempo? Lê o tempo restante e a exigência? |
+| E7 | "O que é essa pilha no mapa?" (um despojo) e "pegue-a" | Entende de onde veio? Acha "catar despojo" (ou leva um creep até lá)? Vê o despojo lembrado sob o véu? |
+| E8 | Faça um creep virar salteador, e depois proteja os seus coletores | Acha o preset "Salteador"? Muda rotas, escolta, que DNA carrega o cristal, as regras de reação? |
+| E9 | "O que você mudou depois da primeira emboscada?" (no fim da sessão) | A resposta à pergunta 2 da hipótese: rotas, escolta, DNA do cristal, posturas do piloto |
+
+### Questionário do encontro
+
+Mesma escala de 1 a 5, mais uma frase livre em cada uma.
+
+| # | Pergunta | Nota | Comentário |
+|---|---|---|---|
+| E1 | Dava para entender um encontro (quem abordou, o que pediu, como acabou) só pela crônica? | | |
+| E2 | Dava para ver no mapa quem perseguia quem, o diálogo, a luta e a fuga? | | |
+| E3 | Deu tempo de decidir no painel de reação a ×6? | | |
+| E4 | Ficou claro o que o piloto faria num encontro sem você (pagar, fugir, lutar)? | | |
+| E5 | O tom da crônica combinou com o jogo? (frases que soaram erradas: anote o texto) | | |
+
+Perguntas abertas, que respondem à hipótese:
+
+1. **O encontro criou conflito e história?** Teve um momento que você contaria a alguém? Qual?
+2. **O encontro mudou o que você fez?** Rotas, escolta, que DNA carrega o cristal, as posturas do piloto.
+3. **Sem dominar o jogo:** os encontros vieram com uma frequência que importa, sem atropelar a economia? Algum
+   time desmoronou?
 
 ## Validar o replay (dono)
 

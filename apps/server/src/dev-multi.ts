@@ -16,6 +16,8 @@ one browser tab per player. Ctrl+C stops the server.
   --no-build      serve the client build already in apps/client/dist
   --no-open       only print the URLs
   --net           open the tabs with the network panel (?net=1)
+  --bot           a bot plays Orange; every player joins Blue (the
+                  session against the bot, M2 encontro spec section 8)
 `;
 
 export type DevMultiOptions = {
@@ -26,6 +28,8 @@ export type DevMultiOptions = {
   open: boolean;
   /** Tabs with ?net=1, the network panel (M1.5 spec D8). */
   net: boolean;
+  /** A bot on Orange, the players on Blue. */
+  bot: boolean;
 };
 
 export class DevMultiError extends Error {}
@@ -50,6 +54,7 @@ export function parseDevMultiArgs(args: readonly string[]): DevMultiOptions {
         "no-build": { type: "boolean" },
         "no-open": { type: "boolean" },
         net: { type: "boolean" },
+        bot: { type: "boolean" },
       },
       strict: true,
     }));
@@ -70,12 +75,19 @@ export function parseDevMultiArgs(args: readonly string[]): DevMultiOptions {
     build: values["no-build"] !== true,
     open: values["no-open"] !== true,
     net: values.net === true,
+    bot: values.bot === true,
   };
 }
 
-/** Player i (1-based): name and team, alternating Blue (0) and Orange (1). */
-export function playerOf(i: number): { name: string; team: number } {
-  return { name: `Jogador ${i}`, team: (i - 1) % 2 };
+/**
+ * Player i (1-based): name and team, alternating Blue (0) and Orange (1); all
+ * Blue when a bot plays Orange.
+ */
+export function playerOf(
+  i: number,
+  bot = false,
+): { name: string; team: number } {
+  return { name: `Jogador ${i}`, team: bot ? 0 : (i - 1) % 2 };
 }
 
 /**

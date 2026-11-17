@@ -206,7 +206,7 @@ type Action = /* ...M1.5 */
   ```text
   hpBelow 400‰    → flee        (reação)
   always          → fight       (reação: luta quando atacado ou extorquido)
-  always          → approach extort (radius 10, minCargo 1)
+  always          → approach extort (radius 10, minCargo 10; era 1 até a F5, C11)
   always          → pickup
   cargoFull       → deliver
   always          → explore
@@ -334,6 +334,13 @@ Números no [dashboard](../../dashboard/current-status.md), "Registro das fases"
 | C8 | **O ▲ do bot paga qualquer extorsão** e foge do ataque (substitui o ▲ do C2, que quase nunca pagava: a exigência costuma ser a carga inteira). Cada DNA exercita um caminho: ■ luta, ▲ paga, ● foge |
 | C9 | **Custo do tick aceito:** 3 dias do seed 42 em 12,5–12,9 s, contra 12,2–12,4 s da F6 (~1,04×) |
 | C10 | Interpretação mantida: as regras de reação não distinguem o diálogo da luta, então o ▲ e o ● tentam fugir a cada rodada da luta |
+
+3ª rodada (dono, 2026-11-17), depois da F5 (as observações estão no [dashboard](../../dashboard/current-status.md),
+"Registro das fases", M2 A F5):
+
+| # | Decisão |
+|---|---|
+| C11 | **Subir a carga mínima do alvo no preset salteador** (a ação `approach` de `raiderRules`, hoje `minCargo: 1`), para o bot só emboscar quem vale a pena. Vale para o preset inteiro (jogador e bot). **Número: 10** (dono, 2026-11-17, na abertura da F6), a capacidade do círculo, um terço da do quadrado; provisório. Medido no seed 42 em 3 dias contra 1, 5, 15 e 20: com 10, 23 encontros (eram 112), 48% na zona do Núcleo da vítima (eram 93%); com 20, quase nenhum. É mudança de comportamento do `sim`: `SIM_VERSION` 9 e os hashes fixos mudam. Rejeitada por agora a alternativa de bloquear o par agressor–vítima também depois de uma fuga (seria regra nova de gameplay) |
 
 ## 12. Ordem de implementação
 

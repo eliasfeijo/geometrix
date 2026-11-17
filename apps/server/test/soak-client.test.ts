@@ -20,10 +20,10 @@ async function until(check: () => boolean, ms = 5_000): Promise<void> {
   }
 }
 
-async function setup() {
+async function setup(world: object = { seed: 3 }) {
   const t = await testApp();
   close = t.app.close;
-  await t.post("/api/worlds", { seed: 3 });
+  await t.post("/api/worlds", world);
   const joined = await t.post("/api/worlds/1/join", { name: "Ana", team: 1 });
   const { token } = joined.body as { token: string };
   const host = t.app.worlds.get(1)!;
@@ -78,5 +78,24 @@ describe("SoakClient", () => {
     const report = client.stop();
     expect(report.bytes).toBeGreaterThan(0);
     expect(report.peakBytesPerSecond).toBeGreaterThan(0);
+  });
+
+  test("keeps the team's chronicle, across a drop (M2 encontro C-4)", async () => {
+    const { host, client, advance } = await setup({
+      seed: 3,
+      botTeams: [0, 1],
+    });
+    while (host.chronicle(1).length < 2) host.tick();
+    await advance(1);
+    expect(client.chronicle).toEqual(host.chronicle(1));
+    expect(client.chronicle.every((e) => !("teams" in e))).toBe(true);
+    // The drop resumes from the server's buffer, events included.
+    client.drop();
+    await until(() => client.report.drops === 1);
+    while (host.chronicle(1).length < 4) host.tick();
+    await new Promise((done) => setTimeout(done, 700));
+    await advance(1);
+    expect(client.chronicle).toEqual(host.chronicle(1));
+    expect(client.report.resumes).toBe(1);
   });
 });

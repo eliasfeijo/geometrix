@@ -4,8 +4,8 @@ Jogo multiplayer de navegador: **mundo persistente de estratégia/economia (RTS 
 **batalhas em tempo real estilo MOBA** como tempero. Visual 100% geométrico (SVG/Canvas, formas como linguagem).
 
 **Fase atual: M2 (A emboscada), fatia A (o encontro) em implementação** (`docs/specs/m2-encontro/`; F1 a F5
-concluídas, a próxima fase no dashboard). A fatia B (laboratório de batalha,
-`docs/specs/m2-laboratorio/`, `packages/battle`) anda em paralelo, numa outra sessão (F1 em `main`; F2 pronta, sem merge). O deploy e o playtest com pessoas novas não
+concluídas; a F6 em `main`, esperando a sessão do dono; detalhes no dashboard). A fatia B (laboratório de batalha,
+`docs/specs/m2-laboratorio/`, `packages/battle`) anda em paralelo, numa outra sessão (F1 a F3 concluídas). O deploy e o playtest com pessoas novas não
 bloqueiam mais o M2 nem o M3: a diversão é julgada pelo dono nos playtests locais (ROADMAP, 2026-11-15). O M1.5 está em `docs/specs/m1.5-rede/` e
 `docs/specs/m1.5-fog/`; o M1, em `docs/specs/m1-ciclo-da-riqueza/` (o histórico fica nos `tasks.md`; a estrutura do
 repositório, no `plan.md` §1 do M1).
@@ -42,7 +42,7 @@ Node 26 (`.nvmrc`). O Node roda `.ts` direto; só o cliente tem build (Vite).
 | `npm run server` | Servidor em `http://localhost:8080` (`GEO_PORT`, `GEO_DB`, `GEO_PARAMS`); serve o build do cliente |
 | `npm run build` | Build do cliente (Vite) em `apps/client/dist`, que o servidor serve |
 | `npm run client` | Dev server do Vite (porta 5173) com proxy de `/api` e `/ws` para o servidor no `GEO_PORT` |
-| `npm run dev:multi -- --clients 3` | Build + servidor + um mundo com K jogadores (Azul/Laranja alternados), uma aba por jogador (`--seed`, `--mult`, `--no-build`, `--no-open`, `--net` para o painel de rede `?net=1`) |
+| `npm run dev:multi -- --clients 3` | Build + servidor + um mundo com K jogadores (Azul/Laranja alternados), uma aba por jogador (`--seed`, `--mult`, `--no-build`, `--no-open`, `--net` para o painel de rede `?net=1`, `--bot` para o bot no Laranja com todos no Azul) |
 | `npm run soak` | Teste de resistência: mundo bot × bot inteiro (×360, ~12 min) com `kill -9` e restart, e 2 clientes WebSocket por time seguindo os deltas; o replay exportado tem de dar o hash do servidor e cada cliente, a visão do servidor. Relatório em `runs/soak-<id>/` |
 
 ## Convenções do `sim`
