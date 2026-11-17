@@ -1,5 +1,11 @@
 import type { Replay } from "@geometrix/protocol";
-import { createWorld, isOwnTeam, restore, serialize } from "@geometrix/sim";
+import {
+  createWorld,
+  isOwnTeam,
+  restore,
+  serialize,
+  type TeamEvent,
+} from "@geometrix/sim";
 import { beforeAll, describe, expect, test, vi } from "vitest";
 import { ReplayController } from "../src/replay/controller.ts";
 import { stateHash } from "../src/replay/hash.ts";
@@ -7,19 +13,26 @@ import { sha256Hex } from "../src/hash.ts";
 import { fogPaths } from "../src/map/fog.ts";
 import { dueTicks, MAX_FRAME_MS, RateMeter } from "../src/replay/playback.ts";
 import { ReplayPlayer } from "../src/replay/player.ts";
+import { CHRONICLE_KEEP } from "../src/store.ts";
 import { botReplay } from "./helpers.ts";
 
-/** 25 world minutes with bots, checkpoints every 5 minutes in the tests. */
-const TICKS = 1500;
+/**
+ * 50 world minutes with bots (the first births come at 36 min: the chronicle
+ * has events), checkpoints every 5 minutes in the tests.
+ */
+const TICKS = 3000;
 const CHECKPOINT_SECONDS = 300;
 
 let replay: Replay;
+/** The straight run's events, without their audience. */
+let events: TeamEvent[];
 /** Serialized straight-run states, by tick, to compare seeks against. */
 const straight = new Map<number, string>();
 
 beforeAll(async () => {
   const run = botReplay(TICKS);
   replay = { ...run.replay, finalHash: await sha256Hex(run.finalJson) };
+  events = run.events.map(({ teams, ...event }) => (void teams, event));
   const player = new ReplayPlayer(replay);
   for (const tick of [0, 299, 300, 777, 1200]) {
     player.runTo(tick);
@@ -220,6 +233,41 @@ describe("ReplayController", () => {
     controller.play();
     expect(controller.tick.value).toBe(0);
     expect(controller.playing.value).toBe(true);
+  });
+
+  test("keeps every event once, through a seek back (plan section 9)", () => {
+    expect(events.length).toBeGreaterThan(0);
+    const player = new ReplayPlayer(replay, CHECKPOINT_SECONDS);
+    player.runTo(900);
+    player.seek(400);
+    player.runTo(TICKS);
+    expect(player.eventsBetween(0, TICKS)).toEqual(events);
+    expect(player.eventsBetween(300, 600)).toEqual(
+      events.filter((e) => e.tick >= 300 && e.tick < 600),
+    );
+  });
+
+  test("shows the chronicle of the whole world as it plays and seeks", () => {
+    const controller = new ReplayController(replay, 0, () => 0);
+    expect(controller.store.chronicle.value).toEqual([]);
+    controller.setSpeed(60);
+    controller.play();
+    controller.frame(1000);
+    controller.frame(1000 + 100_000);
+    const tick = controller.tick.value;
+    expect(controller.store.chronicle.value).toEqual(
+      events.filter((e) => e.tick < tick),
+    );
+    controller.seekTo(TICKS);
+    controller.frame(0);
+    expect(controller.store.chronicle.value).toEqual(
+      events.slice(-CHRONICLE_KEEP),
+    );
+    controller.seekTo(777);
+    controller.frame(16);
+    expect(controller.store.chronicle.value).toEqual(
+      events.filter((e) => e.tick < 777).slice(-CHRONICLE_KEEP),
+    );
   });
 
   test("a seek longer than a frame's budget goes on over frames", () => {

@@ -78,7 +78,7 @@ na sua branch (plan §12, skill `commit`), com merge `--no-ff` em `main`.
       clicáveis; a mesma frase em todo cliente e no replay (spec C-4, K-3, D17)
 - [x] Inspetor (HP, nome, salvo-conduto, encontro) e editor de regras (condições, ações, reações e o preset
       salteador) (spec C-7)
-- [ ] Replay com a crônica
+- [x] Replay com a crônica
 
 ## F6 — Soak e playtest (`m2/encontro-f6-soak`)
 
