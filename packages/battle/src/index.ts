@@ -8,6 +8,7 @@ export * from "./commands.ts";
 export * from "./events.ts";
 export * from "./exits.ts";
 export * from "./gambits.ts";
+export * from "./log.ts";
 export * from "./movement.ts";
 export * from "./params.ts";
 export * from "./rng.ts";

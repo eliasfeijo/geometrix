@@ -77,7 +77,7 @@ CPU).
 - [x] Comandos `join`, `control`, `setGambits` (a lista copiada campo a campo); entrada com o `rng` e o lado novo
       (spec E-1, D11, D12, plan §6)
 - [x] Eventos completos e o desfecho no `ended`; `totals` de dano por participante (spec D19, F-3, plan §10)
-- [ ] `log.ts`: `BattleLog` e `replayLog`; teste de 2 execuções e snapshot → restore no meio com o mesmo hash (spec
+- [x] `log.ts`: `BattleLog` e `replayLog`; teste de 2 execuções e snapshot → restore no meio com o mesmo hash (spec
       R-2, plan §11)
 
 ## F3 — A IA e o auto-resolve (`m2/laboratorio-f3-gambits`)
