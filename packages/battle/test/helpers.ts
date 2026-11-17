@@ -1,5 +1,10 @@
 import { readFileSync } from "node:fs";
-import { parseBattleParams, type BattleParams } from "../src/params.ts";
+import {
+  parseBattleParams,
+  type BattleParams,
+  type Dna,
+} from "../src/params.ts";
+import type { BattleSetup, ParticipantSetup } from "../src/setup.ts";
 
 const DEFAULT_PARAMS_URL = new URL(
   "../../../params/battle.json",
@@ -32,6 +37,30 @@ export const ARENA_NAMES = ["aberta", "pedras", "corredor"] as const;
 export function readArenaRows(name: string): string[] {
   const url = new URL(`../../../params/arenas/${name}.txt`, import.meta.url);
   return readFileSync(url, "utf8").trimEnd().split("\n");
+}
+
+/** A participant of the setup, at full HP and with no carry unless given. */
+export function member(
+  dna: Dna,
+  overrides: Partial<ParticipantSetup> = {},
+): ParticipantSetup {
+  // An unknown DNA (to test the refusal) gets HP 1.
+  const hp = (loadTestParams().dna[dna] as { hp: number } | undefined)?.hp ?? 1;
+  return {
+    name: dna,
+    dna,
+    hp,
+    carry: { materia: 0, cristal: 0 },
+    ...overrides,
+  };
+}
+
+export function setupOf(
+  arena: string[],
+  sides: ParticipantSetup[][],
+  seed = 42,
+): BattleSetup {
+  return { rule: "grid", arena, seed, sides };
 }
 
 type Mutable<T> = { -readonly [K in keyof T]: Mutable<T[K]> };

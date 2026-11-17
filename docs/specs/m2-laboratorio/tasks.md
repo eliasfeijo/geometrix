@@ -22,7 +22,7 @@ cada merge, conferir os pontos de contato do plan §16.
       divisível pelo tick), `params/battle.json` e o `test/params.json` do pacote (spec §6, plan §3)
 - [x] `arena.ts`: parser do texto, anel de saída, trechos de entrada, vizinhos, linha livre; as três arenas em
       `params/arenas/`, simétricas por rotação de 180°, com um teste da simetria (plan §4)
-- [ ] `state.ts` e `setup.ts`: `BattleSetup`, a validação com motivo, `createBattle` com o nascimento pelo `rng`,
+- [x] `state.ts` e `setup.ts`: `BattleSetup`, a validação com motivo, `createBattle` com o nascimento pelo `rng`,
       `BATTLE_VERSION` 1 (spec S-1, S-2, plan §5, §8)
 - [ ] `serialize.ts`: `serializeBattle` e `restoreBattle` (recusa a versão errada e o que não é JSON) (spec S-3)
 - [ ] `commands.ts` (`intent`, `attackOnce`, `face`, validação e recusa sem efeito) e `movement.ts` (pontos, freio
