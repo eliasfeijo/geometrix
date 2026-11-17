@@ -59,7 +59,7 @@ na sua branch (plan §12, skill `commit`), com merge `--no-ff` em `main`.
 
 ## F4 — Rede e servidor (`m2/encontro-f4-network`)
 
-- [ ] `protocol`: zod dos comandos, ordens e regras novos; `Delta` e `Sent` com `encounters` e `spoils`;
+- [x] `protocol`: zod dos comandos, ordens e regras novos; `Delta` e `Sent` com `encounters` e `spoils`;
       `DeltaMessage.events`; `WelcomeMessage.chronicle`; `PROTOCOL_VERSION` 4 (plan §8)
 - [ ] Propriedade do diff com encontros, mortes e despojos (6 h × 3 seeds), com piso de mortes (spec N-3)
 - [ ] Servidor: eventos por time no stream e no buffer de retomada; crônica no `welcome` (spec N-1)

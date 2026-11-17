@@ -146,6 +146,7 @@ function welcome(
     stream: stream.id,
     seq,
     view,
+    chronicle: [],
   };
 }
 

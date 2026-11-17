@@ -9,6 +9,7 @@ import type {
   Command,
   Params,
   Refusal,
+  TeamEvent,
   TeamView,
   WorldState,
 } from "@geometrix/sim";
@@ -232,6 +233,12 @@ export type WelcomeMessage = {
   seq: number;
   /** The last view sent to the team (spec S-1), not the state now. */
   view: TeamView;
+  /**
+   * The team's latest events up to `view` (M2 encontro spec N-1), oldest
+   * first: the chronicle a client starts from. The next delta carries the
+   * events after them.
+   */
+  chronicle: TeamEvent[];
 };
 
 /**
@@ -245,6 +252,12 @@ export type DeltaMessage = {
   delta: Delta;
   status?: WorldStatus;
   hash?: string;
+  /**
+   * The team's events since the previous delta (M2 encontro plan section 8),
+   * in (tick, index) order; left out when there are none. A send at high
+   * speed covers several ticks.
+   */
+  events?: TeamEvent[];
 };
 
 export type ServerMessage =
