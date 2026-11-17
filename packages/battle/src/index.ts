@@ -2,6 +2,7 @@
 // deterministic and integer, with no dependency on the sim.
 export * from "./arena.ts";
 export * from "./canonical.ts";
+export * from "./carry.ts";
 export * from "./commands.ts";
 export * from "./events.ts";
 export * from "./gambits.ts";

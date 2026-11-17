@@ -16,6 +16,8 @@ describe("validateCommand", () => {
     { type: "intent", id: 1, move: null, attack: false },
     { type: "attackOnce", id: 1 },
     { type: "face", id: 1, dir: "left" },
+    { type: "drop", id: 1 },
+    { type: "pickup", id: 1 },
   ])("accepts %j for the dominated participant", (command) => {
     expect(validateCommand(state, command)).toBeNull();
   });
