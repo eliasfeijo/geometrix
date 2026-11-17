@@ -1,0 +1,38 @@
+{
+  "tick": { "ticksPerSecond": 20 },
+  "dna": {
+    "square": {
+      "hp": 300,
+      "damage": 30,
+      "range": 1,
+      "cooldownMs": 1000,
+      "cellsPerSecond": 3,
+      "projectileCellsPerSecond": 0,
+      "capacity": 30
+    },
+    "triangle": {
+      "hp": 200,
+      "damage": 20,
+      "range": 4,
+      "cooldownMs": 800,
+      "cellsPerSecond": 4,
+      "projectileCellsPerSecond": 10,
+      "capacity": 20
+    },
+    "circle": {
+      "hp": 120,
+      "damage": 24,
+      "range": 6,
+      "cooldownMs": 800,
+      "cellsPerSecond": 5,
+      "projectileCellsPerSecond": 12,
+      "capacity": 10
+    }
+  },
+  "carry": { "fullBrakePermille": 500 },
+  "exit": { "dwellMs": 2000 },
+  "inactivity": { "timeoutMs": 15000 },
+  "ai": { "decisionMs": 250, "decisionJitterMs": 100 },
+  "gambits": { "maxRules": 8 },
+  "limits": { "maxSides": 4, "maxPerSide": 5 }
+}

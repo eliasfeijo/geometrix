@@ -1,0 +1,221 @@
+// The setup and the creation of a battle (spec S-1, S-2; plan sections 5, 8).
+// The setup is the battle side of the internal contract v0 (ADR-0008 rule 8):
+// what the lab (and, at the junction, the world) hands to the battle.
+
+import { ArenaError, parseArena, type Arena } from "./arena.ts";
+import { DNAS, type BattleParams, type Dna } from "./params.ts";
+import { createRng, nextInt } from "./rng.ts";
+import {
+  BATTLE_VERSION,
+  carryTotal,
+  type BattleState,
+  type Carry,
+  type Participant,
+} from "./state.ts";
+
+export type ParticipantSetup = {
+  name: string;
+  dna: Dna;
+  /** HP to start with, 1..the DNA's maximum: the wounded fight wounded (D6). */
+  hp: number;
+  carry: Carry;
+};
+
+export type BattleSetup = {
+  /** The combat rule (ADR-0008 rule 7); the grid is the only one so far. */
+  rule: "grid";
+  /** The arena drawn in text, one string per row (plan section 4). */
+  arena: string[];
+  seed: number;
+  /** Side i spawns on the arena's entry stretch i. */
+  sides: ParticipantSetup[][];
+};
+
+export class BattleSetupError extends Error {
+  readonly reason: string;
+  constructor(reason: string) {
+    super(`invalid battle setup: ${reason}`);
+    this.name = "BattleSetupError";
+    this.reason = reason;
+  }
+}
+
+const UINT32_RANGE = 0x1_0000_0000;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isCount(value: unknown): value is number {
+  return Number.isSafeInteger(value) && (value as number) >= 0;
+}
+
+/** Checks one participant against its DNA's kit; returns why it is invalid. */
+export function participantIssue(
+  input: unknown,
+  params: BattleParams,
+): string | null {
+  if (!isRecord(input)) return "expected an object";
+  const { name, dna, hp, carry } = input;
+  if (typeof name !== "string" || name.length === 0) {
+    return "name must be a non-empty string";
+  }
+  if (!DNAS.includes(dna as Dna)) return `unknown DNA ${String(dna)}`;
+  const kit = params.dna[dna as Dna];
+  if (
+    !Number.isSafeInteger(hp) ||
+    (hp as number) < 1 ||
+    (hp as number) > kit.hp
+  ) {
+    return `${name}: HP must be an integer in 1..${kit.hp}`;
+  }
+  if (!isRecord(carry) || !isCount(carry.materia) || !isCount(carry.cristal)) {
+    return `${name}: carry must have non-negative integer materia and cristal`;
+  }
+  if (carryTotal(carry as Carry) > kit.capacity) {
+    return `${name}: carry above the capacity of ${kit.capacity}`;
+  }
+  return null;
+}
+
+/**
+ * Why a setup is invalid (spec S-2), or null. It parses the arena, so it also
+ * reports what is wrong with it.
+ */
+export function setupIssue(
+  input: unknown,
+  params: BattleParams,
+): string | null {
+  if (!isRecord(input)) return "expected an object";
+  const { rule, arena: rows, seed, sides } = input;
+  if (rule !== "grid") return `unknown rule ${String(rule)}`;
+  if (
+    !Number.isSafeInteger(seed) ||
+    (seed as number) < 0 ||
+    (seed as number) >= UINT32_RANGE
+  ) {
+    return "seed must be an integer in [0, 2^32)";
+  }
+  if (!Array.isArray(rows) || !rows.every((row) => typeof row === "string")) {
+    return "arena must be a list of rows";
+  }
+  let arena: Arena;
+  try {
+    arena = parseArena(rows as string[]);
+  } catch (error) {
+    if (error instanceof ArenaError) return error.message;
+    throw error;
+  }
+  if (!Array.isArray(sides) || sides.length < 2) {
+    return "needs at least two sides";
+  }
+  if (sides.length > params.limits.maxSides) {
+    return `at most ${params.limits.maxSides} sides`;
+  }
+  for (let side = 0; side < sides.length; side++) {
+    const members: unknown = sides[side];
+    const entry = arena.entries[side];
+    if (entry === undefined) return `side ${side} has no entry stretch`;
+    if (!Array.isArray(members) || members.length === 0) {
+      return `side ${side} has no participants`;
+    }
+    if (members.length > params.limits.maxPerSide) {
+      return `side ${side}: at most ${params.limits.maxPerSide} participants`;
+    }
+    if (members.length > entry.cells.length) {
+      return `side ${side}: ${members.length} participants for ${entry.cells.length} entry cells`;
+    }
+    for (const member of members) {
+      const issue = participantIssue(member, params);
+      if (issue !== null) return `side ${side}: ${issue}`;
+    }
+  }
+  return null;
+}
+
+/**
+ * A free cell of an entry stretch, drawn by the rng (plan section 8), or null
+ * when every cell is taken. One rng call whenever a cell is free.
+ */
+export function drawEntryCell(
+  state: BattleState,
+  entry: number,
+): number | null {
+  const taken = new Set(state.participants.map((p) => p.cell));
+  const free = state.arena.entries[entry]!.cells.filter((c) => !taken.has(c));
+  if (free.length === 0) return null;
+  return free[nextInt(state.rng, free.length)]!;
+}
+
+/**
+ * A participant entering on `side` (spec S-1): a free cell of the side's
+ * stretch, facing inward, idle clock at zero, under the gambits. Returns null
+ * when the stretch is full.
+ */
+export function placeParticipant(
+  state: BattleState,
+  side: number,
+  setup: ParticipantSetup,
+): Participant | null {
+  const entry = state.sides.find((s) => s.id === side)!.entry;
+  const cell = drawEntryCell(state, entry);
+  if (cell === null) return null;
+  const participant: Participant = {
+    id: state.nextId++,
+    side,
+    name: setup.name,
+    dna: setup.dna,
+    cell,
+    facing: state.arena.entries[entry]!.facing,
+    hp: setup.hp,
+    carry: { materia: setup.carry.materia, cristal: setup.carry.cristal },
+    controller: "gambits",
+    gambits: [],
+    intent: {
+      move: null,
+      attack: false,
+      attackLatch: false,
+      drop: false,
+      pickup: false,
+    },
+    movePoints: 0,
+    cooldownTicks: 0,
+    exitTicks: 0,
+    idleTicks: 0,
+    ai: { nextDecisionTick: state.tick, target: null },
+  };
+  state.participants.push(participant);
+  state.totals.push({ id: participant.id, dealt: 0, taken: 0 });
+  return participant;
+}
+
+/**
+ * Creates a battle from a valid setup (spec S-1), or throws BattleSetupError
+ * with the reason (S-2). Participants spawn side by side, in setup order.
+ */
+export function createBattle(
+  setup: BattleSetup,
+  params: BattleParams,
+): BattleState {
+  const issue = setupIssue(setup, params);
+  if (issue !== null) throw new BattleSetupError(issue);
+  const state: BattleState = {
+    battleVersion: BATTLE_VERSION,
+    params,
+    arena: parseArena(setup.arena),
+    rng: createRng(setup.seed),
+    tick: 0,
+    nextId: 1,
+    sides: setup.sides.map((_, id) => ({ id, entry: id })),
+    participants: [],
+    projectiles: [],
+    piles: [],
+    departed: [],
+    totals: [],
+    ended: null,
+  };
+  setup.sides.forEach((members, side) => {
+    for (const member of members) placeParticipant(state, side, member);
+  });
+  return state;
+}
