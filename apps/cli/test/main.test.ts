@@ -64,7 +64,8 @@ describe("verify", () => {
     for (const r of result.runs) expect(r.hash).toBe(stateHash(state));
     const [first] = result.runs;
     for (const r of result.runs) expect(r.eventsHash).toBe(first!.eventsHash);
-  });
+    // Five 2 h worlds: ~1.7 s alone, past 5 s with other suites running.
+  }, 30_000);
 
   test("all four runs emit the same events", () => {
     // The sim tests' params: creeps are cheap, so there are births and
@@ -77,7 +78,7 @@ describe("verify", () => {
       expect(r.eventsHash).toBe(first!.eventsHash);
       expect(r.events).toBe(first!.events);
     }
-  });
+  }, 30_000);
 
   test("the events hash takes every event in order, however the run is split", () => {
     const { events } = withEvents(42, 2 * 3600);
