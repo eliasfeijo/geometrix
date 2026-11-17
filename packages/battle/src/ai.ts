@@ -5,7 +5,7 @@
 // through the same validation as the human's. With no such rule it stands
 // still. Between decisions it keeps its intent; the next decision comes
 // `decisionMs` ± `decisionJitterMs` later, drawn by the rng (the reaction
-// time, P12). Participants decide in id order, each one's rng calls in a
+// time, P12), by the participant's reaction level (spec D20). Participants decide in id order, each one's rng calls in a
 // fixed order: the rule's, then the reaction.
 
 import { alignedDir } from "./arena.ts";
@@ -79,9 +79,13 @@ function decide(
   return [{ type: "intent", id: participant.id, move: null, attack: false }];
 }
 
-/** Ticks until the next decision: decisionMs ± decisionJitterMs (plan P12). */
-function reactionTicks(state: BattleState): number {
-  const { decisionMs, decisionJitterMs } = state.params.ai;
+/**
+ * Ticks until the next decision: decisionMs ± decisionJitterMs of the
+ * participant's reaction (plan P12, spec D20).
+ */
+function reactionTicks(state: BattleState, participant: Participant): number {
+  const { decisionMs, decisionJitterMs } =
+    state.params.ai[participant.reaction];
   const base = msToTicks(state.params, decisionMs);
   const jitter = msToTicks(state.params, decisionJitterMs);
   return nextRange(state.rng, base - jitter, base + jitter);
@@ -99,6 +103,7 @@ export function runGambits(state: BattleState, log: BattleEventLog): void {
         applyCommand(state, log, command);
       }
     }
-    participant.ai.nextDecisionTick = state.tick + reactionTicks(state);
+    participant.ai.nextDecisionTick =
+      state.tick + reactionTicks(state, participant);
   }
 }

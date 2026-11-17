@@ -212,14 +212,20 @@ async function readJson(req: IncomingMessage): Promise<unknown> {
   }
 }
 
-/** The file for `path` under `dir` (index.html for "/"), or null. */
+/**
+ * Short paths of the client's pages: the game at "/", the battle lab
+ * (M2 laboratório, plan section 13) at "/lab".
+ */
+const PAGES: Record<string, string> = { "/": "index.html", "/lab": "lab.html" };
+
+/** The file for `path` under `dir` (a page for its short path), or null. */
 function staticFile(
   dir: string,
   path: string,
 ): { file: Buffer; contentType: string } | null {
   if (!existsSync(dir)) return null;
   const root = resolve(dir);
-  const file = resolve(join(root, path === "/" ? "index.html" : path));
+  const file = resolve(join(root, PAGES[path] ?? path));
   if (!file.startsWith(root + sep)) return null;
   if (!existsSync(file) || !statSync(file).isFile()) return null;
   return {

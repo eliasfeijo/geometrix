@@ -1,0 +1,370 @@
+/* The battle lab (M2 laboratório): the game's dark theme (styles.css), three
+   columns (build, arena, tools) that stack on narrow screens. */
+
+#app {
+  height: auto;
+  min-height: 100%;
+}
+
+.lab {
+  padding: 16px max(16px, env(safe-area-inset-left, 0px)) 32px;
+  display: grid;
+  gap: 12px;
+}
+
+.lab-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 16px;
+}
+
+.lab h1 {
+  font-family: var(--font-game);
+  font-size: 1.4rem;
+  margin: 0;
+}
+
+.lab h2 {
+  font-family: var(--font-game);
+  font-size: 1rem;
+  margin: 0 0 8px;
+}
+
+.lab-columns {
+  display: grid;
+  grid-template-columns: 330px minmax(0, 1fr) 360px;
+  gap: 12px;
+  align-items: start;
+}
+
+@media (max-width: 1280px) {
+  .lab-columns {
+    grid-template-columns: 330px minmax(0, 1fr);
+  }
+  .lab-columns > .lab-side-col:last-child {
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  }
+}
+
+@media (max-width: 820px) {
+  .lab-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.lab-side-col {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  align-items: start;
+}
+
+.lab-main {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.lab-panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 10px 12px;
+  min-width: 0;
+}
+
+.lab-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin: 6px 0;
+}
+
+.lab label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+}
+
+.lab select,
+.lab input[type="number"] {
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 3px 4px;
+}
+
+.lab input[type="number"] {
+  width: 4.5em;
+}
+
+.lab button {
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+
+.lab button:hover:not(:disabled) {
+  border-color: var(--muted);
+}
+
+.lab button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.lab button:focus-visible,
+.lab select:focus-visible,
+.lab input:focus-visible,
+.lab-stage:focus-visible {
+  outline: 2px solid #ffd166;
+  outline-offset: 2px;
+}
+
+.lab button[aria-pressed="true"] {
+  border-color: #ffd166;
+  color: #ffd166;
+}
+
+.lab .lab-primary {
+  border-color: var(--team-0);
+  color: var(--team-0);
+  font-weight: 600;
+}
+
+.lab .lab-icon {
+  padding: 2px 7px;
+}
+
+.lab-hint {
+  color: var(--muted);
+  font-size: 0.86rem;
+  margin: 0;
+}
+
+.lab-error {
+  color: var(--danger);
+  margin: 0;
+}
+
+.lab-side {
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  margin: 8px 0;
+  padding: 4px 8px 6px;
+}
+
+.lab-side legend {
+  font-family: var(--font-game);
+  padding: 0 4px;
+}
+
+.lab-member-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 4px 0;
+}
+
+.lab-member {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.lab-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.lab-segmented {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.lab-clock {
+  margin-left: auto;
+  font-family: var(--font-game);
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+.lab-stage {
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--bg);
+  min-height: 200px;
+  display: grid;
+  place-items: center;
+}
+
+.lab-arena {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.lab-creep {
+  cursor: pointer;
+}
+
+.lab-name {
+  font-family: var(--font-game);
+  font-size: 0.5px;
+  paint-order: stroke;
+  stroke: #0d0f12;
+  stroke-width: 0.12px;
+}
+
+.lab-empty {
+  color: var(--muted);
+  padding: 40px 16px;
+}
+
+.lab-stats {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 10px;
+  margin: 8px 0 0;
+}
+
+.lab-stats dt {
+  color: var(--muted);
+}
+
+.lab-stats dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.lab-roster {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.lab-roster li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+
+.lab-roster li.lab-selected {
+  background: var(--panel-2);
+}
+
+.lab .lab-who {
+  background: none;
+  border: none;
+  padding: 0;
+  text-align: left;
+  font-family: var(--font-game);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lab-num {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.lab-rules {
+  margin: 6px 0;
+  padding-left: 22px;
+  display: grid;
+  gap: 6px;
+}
+
+.lab-rules li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+.lab-rule-part {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+}
+
+.lab-rule-head {
+  color: var(--muted);
+}
+
+.lab-rule-tools {
+  display: inline-flex;
+  gap: 2px;
+  margin-left: auto;
+}
+
+.lab-number input {
+  width: 3.8em;
+}
+
+.lab-events {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 260px;
+  overflow-y: auto;
+  display: grid;
+  gap: 2px;
+  font-size: 0.86rem;
+}
+
+.lab-time {
+  display: inline-block;
+  min-width: 4.2em;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.lab-table-wrap {
+  overflow-x: auto;
+}
+
+.lab-result table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.9rem;
+}
+
+.lab-result th,
+.lab-result td {
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.lab-result th {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.lab-hash {
+  font-family: ui-monospace, monospace;
+  margin-top: 6px;
+}
+
+.lab-check input {
+  margin: 0;
+}

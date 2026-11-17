@@ -8,6 +8,13 @@ export const DNAS = ["square", "triangle", "circle"] as const;
 export type Dna = (typeof DNAS)[number];
 
 /**
+ * How fast a participant under the gambits reacts (spec D20): the difficulty
+ * of the AI, chosen per participant in the setup.
+ */
+export const REACTIONS = ["easy", "normal", "hard"] as const;
+export type Reaction = (typeof REACTIONS)[number];
+
+/**
  * Movement points per cell (plan P2), as the sim's CELL_COST: a creep gains
  * `cellsPerSecond × CELL_COST ÷ ticksPerSecond` points per tick, so it has to
  * be divisible by the tick rate.
@@ -34,6 +41,12 @@ const dna = {
   capacity: positive,
 } as const;
 
+/** One level of the AI's reaction time (spec D20, plan P12). */
+const reaction = {
+  decisionMs: positive,
+  decisionJitterMs: nonNegative,
+} as const;
+
 const schema = {
   tick: { ticksPerSecond: positive },
   dna: { square: dna, triangle: dna, circle: dna },
@@ -43,8 +56,11 @@ const schema = {
   exit: { dwellMs: positive },
   /** Time without dealing or taking damage before fleeing (spec D9). */
   inactivity: { timeoutMs: positive },
-  /** The gambits decide every `decisionMs` ± `decisionJitterMs` (plan P12). */
-  ai: { decisionMs: positive, decisionJitterMs: nonNegative },
+  /**
+   * The gambits decide every `decisionMs` ± `decisionJitterMs` (plan P12),
+   * by the participant's reaction (spec D20).
+   */
+  ai: { easy: reaction, normal: reaction, hard: reaction },
   gambits: { maxRules: positive },
   limits: { maxSides: positive, maxPerSide: positive },
 } as const satisfies Schema;
@@ -124,16 +140,23 @@ function checkConsistency(p: BattleParams, issues: string[]): void {
     ]),
     ["exit.dwellMs", p.exit.dwellMs],
     ["inactivity.timeoutMs", p.inactivity.timeoutMs],
-    ["ai.decisionMs", p.ai.decisionMs],
-    ["ai.decisionJitterMs", p.ai.decisionJitterMs],
+    ...REACTIONS.flatMap((r): [string, number][] => [
+      [`ai.${r}.decisionMs`, p.ai[r].decisionMs],
+      [`ai.${r}.decisionJitterMs`, p.ai[r].decisionJitterMs],
+    ]),
   ];
   for (const [path, ms] of durations) {
     if (ms % tickMs !== 0) {
       issues.push(`${path}: must be a multiple of one tick (${tickMs} ms)`);
     }
   }
-  if (p.ai.decisionJitterMs >= p.ai.decisionMs) {
-    issues.push("ai.decisionJitterMs: must be smaller than ai.decisionMs");
+  // The next decision is at least one tick away.
+  for (const r of REACTIONS) {
+    if (p.ai[r].decisionJitterMs >= p.ai[r].decisionMs) {
+      issues.push(
+        `ai.${r}.decisionJitterMs: must be smaller than ai.${r}.decisionMs`,
+      );
+    }
   }
   // A full bag slows, it never stops the creep (spec D8).
   if (p.carry.fullBrakePermille >= 1000) {

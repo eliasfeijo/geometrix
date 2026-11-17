@@ -1,22 +1,23 @@
-// The arena (spec D3, plan section 4): a small grid drawn in text, with the
-// exit ring included. It is setup data, not a param: the package is pure and
-// never reads files (the CLI reads params/arenas/, the client imports them).
+// The arena (spec D3, plan section 4): a grid drawn in text, with the exit
+// ring included. It is setup data, not a param: the package is pure and never
+// reads files (the CLI reads params/arenas/, the client imports them).
 //
 //   .      floor
 //   #      rock: blocks movement and projectiles
-//   1..4   floor of the entry stretch of side 0..3
+//   1..4   floor of the spawn zone (entry) of side 0..3
 //
 // The outer row and column on each edge are the exit ring (spec D7): floor or
-// rock only. Entry stretches sit on the first inner lap, against the ring and
-// off its corners, so whoever spawns is not on an exit and faces inward.
+// rock only. A spawn zone can be anywhere off the ring; since the F3
+// checkpoint, the arenas put it a quarter of the way in, away from the exit
+// (spec D3). Whoever spawns there faces away from the ring edge nearest to it.
 
 export type Dir = "up" | "right" | "down" | "left";
 export const DIRS: readonly Dir[] = ["up", "right", "down", "left"];
 
 export type Entry = {
-  /** Floor cells of the stretch, in index order. */
+  /** Floor cells of the spawn zone, in index order. */
   cells: number[];
-  /** Inward, away from the ring the stretch is against. */
+  /** Inward: away from the ring edge nearest to the zone. */
   facing: Dir;
 };
 
@@ -44,7 +45,7 @@ export function parseArena(rows: readonly string[]): Arena {
   const height = rows.length;
   const width = rows[0]?.length ?? 0;
   if (width < 5 || height < 5) {
-    throw new ArenaError("must be at least 5 × 5 (ring, entry lap, middle)");
+    throw new ArenaError("must be at least 5 × 5 (ring, spawn lap, middle)");
   }
   const rock: number[] = [];
   const stretches: number[][] = [[], [], [], []];
@@ -78,7 +79,7 @@ export function parseArena(rows: readonly string[]): Arena {
   const sides = stretches.findIndex((cells) => cells.length === 0);
   const count = sides < 0 ? MAX_SIDES : sides;
   if (count < MIN_SIDES) {
-    throw new ArenaError("needs the entry stretches 1 and 2");
+    throw new ArenaError("needs the spawn zones 1 and 2");
   }
   if (stretches.slice(count).some((cells) => cells.length > 0)) {
     throw new ArenaError(`entry ${count + 1} is missing before a later one`);
@@ -90,30 +91,41 @@ export function parseArena(rows: readonly string[]): Arena {
   return { width, height, rock, entries };
 }
 
-/** The inward direction of a stretch, whose cells all touch one ring edge. */
+/**
+ * Where a spawn zone faces (spec S-1): away from the ring edge nearest to it,
+ * by the zone's summed distance to each edge (integers, no centroid). A zone
+ * as near to two edges is refused: inward would be ambiguous.
+ */
 function stretchFacing(
   width: number,
   height: number,
   cells: readonly number[],
   side: number,
 ): Dir {
-  const edgeOf = (cell: number): Dir | null => {
+  // The summed distance to the left, right, top and bottom edges, each with
+  // the direction pointing away from that edge.
+  const sums: [number, Dir][] = [
+    [0, "right"],
+    [0, "left"],
+    [0, "down"],
+    [0, "up"],
+  ];
+  for (const cell of cells) {
     const x = cell % width;
     const y = Math.floor(cell / width);
-    const edges: Dir[] = [];
-    if (x === 1) edges.push("right");
-    if (x === width - 2) edges.push("left");
-    if (y === 1) edges.push("down");
-    if (y === height - 2) edges.push("up");
-    return edges.length === 1 ? edges[0]! : null;
-  };
-  const facing = edgeOf(cells[0]!);
-  if (facing === null || cells.some((cell) => edgeOf(cell) !== facing)) {
+    sums[0]![0] += x;
+    sums[1]![0] += width - 1 - x;
+    sums[2]![0] += y;
+    sums[3]![0] += height - 1 - y;
+  }
+  const nearest = Math.min(...sums.map(([sum]) => sum));
+  const away = sums.filter(([sum]) => sum === nearest);
+  if (away.length !== 1) {
     throw new ArenaError(
-      `entry ${side + 1} must lie along one edge of the first inner lap, off its corners`,
+      `zone ${side + 1} is as near to two edges: no inward direction`,
     );
   }
-  return facing;
+  return away[0]![1];
 }
 
 export function cellX(arena: Arena, cell: number): number {

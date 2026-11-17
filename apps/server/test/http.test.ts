@@ -104,7 +104,11 @@ describe("HTTP", () => {
     const dir = mkdtempSync(join(tmpdir(), "geo-static-"));
     writeFileSync(join(dir, "index.html"), "<p>geo</p>");
     writeFileSync(join(dir, "app.js"), "1");
+    writeFileSync(join(dir, "lab.html"), "<p>lab</p>");
     const { get } = await setup({ staticDir: dir });
+    // The battle lab, by its short path and by its file (plan section 13).
+    expect(await (await get("/lab")).res.text()).toBe("<p>lab</p>");
+    expect(await (await get("/lab.html")).res.text()).toBe("<p>lab</p>");
     const index = await get("/");
     expect(index.status).toBe(200);
     expect(index.res.headers.get("content-type")).toContain("text/html");

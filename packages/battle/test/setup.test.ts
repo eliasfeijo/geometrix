@@ -190,6 +190,14 @@ describe("invalid setups (spec S-2)", () => {
       "unknown DNA hexagon",
     ],
     [
+      "unknown reaction",
+      setupOf(tiny, [
+        [member("square", { reaction: "instant" as "hard" })],
+        [member("square")],
+      ]),
+      "reaction must be easy, normal, hard",
+    ],
+    [
       "no name",
       setupOf(tiny, [[member("square", { name: "" })], [member("square")]]),
       "name must be",
@@ -202,7 +210,7 @@ describe("invalid setups (spec S-2)", () => {
     [
       "an arena with no stretches",
       { ...valid, arena: Array(5).fill(".....") },
-      "needs the entry stretches 1 and 2",
+      "needs the spawn zones 1 and 2",
     ],
     ["a bad seed", { ...valid, seed: -1 }, "seed must be"],
     [

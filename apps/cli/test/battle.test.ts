@@ -11,7 +11,7 @@ import {
   ARENAS,
   battleVerdicts,
   GROUPS,
-  moveToCenter,
+  REPORT_ARENAS,
   quantile,
   readArena,
   scenarios,
@@ -81,34 +81,32 @@ describe("the matrix (spec sections 7, 8)", () => {
     expect(wounded.sides[1]![0]!.hp).toBe(120);
   });
 
-  test("the carry scenarios start a full square on its stretch or at the centre", () => {
+  test("the carry scenarios start a full square in its zone, far from the exit", () => {
     const carry = scenarios(params).filter((s) => s.group === "carry");
-    expect(carry.map((s) => s.id)).toEqual([
-      "carry drop",
-      "carry keep",
-      "carry drop center",
-      "carry keep center",
-    ]);
+    expect(carry.map((s) => s.id)).toEqual(["carry drop", "carry keep"]);
     for (const s of carry) {
       expect(s.sides[0]![0]!.carry.materia).toBe(params.dna.square.capacity);
     }
-    const scenario = carry[2]!;
     const state = createBattle(
       {
         rule: "grid",
         arena: readArena("pedras"),
         seed: 1,
-        sides: scenario.sides,
+        sides: carry[0]!.sides,
       },
       params,
     );
-    moveToCenter(state, 0);
     const square = state.participants[0]!;
-    // The centre of pedras is rock: the nearest floor next to it.
     const x = square.cell % state.arena.width;
-    const y = Math.floor(square.cell / state.arena.width);
-    expect(state.arena.rock[square.cell]).toBe(0);
-    expect(Math.abs(x - 11) + Math.abs(y - 7)).toBe(1);
+    // Zone 1 is columns 10..12: ten steps or more from the ring.
+    expect(x).toBeGreaterThanOrEqual(10);
+    expect(x).toBeLessThanOrEqual(12);
+  });
+
+  test("the sweep adds the 3× open arena only for the report", () => {
+    expect(REPORT_ARENAS).toEqual([...ARENAS, "aberta-3x"]);
+    const rows = readArena("aberta-3x");
+    expect([rows[0]!.length, rows.length]).toEqual([65, 41]);
   });
 
   test("a pair fails only when the same DNA wins above 75% on every arena", () => {
@@ -172,7 +170,7 @@ describe("geo battle sweep (spec R-1)", () => {
     );
     expect(code).toBe(0);
     expect(lines.join("\n")).toContain(
-      `${scenarios(params).length * ARENAS.length * 2} battles`,
+      `${scenarios(params).length * REPORT_ARENAS.length * 2} battles`,
     );
     const report = readFileSync(join(scratch, "two", "battle.md"), "utf8");
     // Win share and duration are informative (F3 checkpoint): only the
@@ -198,7 +196,9 @@ describe("geo battle sweep (spec R-1)", () => {
     const csv = readFileSync(join(scratch, "two", "battle.csv"), "utf8")
       .trimEnd()
       .split("\n");
-    expect(csv).toHaveLength(1 + scenarios(params).length * ARENAS.length);
+    expect(csv).toHaveLength(
+      1 + scenarios(params).length * REPORT_ARENAS.length,
+    );
     expect(csv[1]).toMatch(/^1x1 square-triangle,duel,aberta,2,/);
   });
 
