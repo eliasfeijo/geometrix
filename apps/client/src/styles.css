@@ -964,3 +964,85 @@ h3 {
   pointer-events: none;
   user-select: none;
 }
+
+/* M2 encontro: the approach menu (C-6) and the reaction panel (C-5). */
+button.danger {
+  background: #4a2226;
+  border-color: var(--danger);
+}
+
+.approach-menu {
+  position: absolute;
+  z-index: 4;
+  padding: 8px;
+  box-shadow: 0 6px 24px rgb(0 0 0 / 0.5);
+}
+
+.approach-menu ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.approach-row {
+  padding: 6px 4px;
+  border-top: 1px solid var(--line);
+}
+
+.approach-target {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.approach-buttons {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.reaction-panel {
+  position: absolute;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  width: 420px;
+  max-width: calc(100% - 20px);
+  z-index: 3;
+  padding: 10px 12px;
+  border-width: 2px;
+  box-shadow: 0 6px 24px rgb(0 0 0 / 0.55);
+}
+
+.reaction-panel.is-dialogue {
+  border-color: #ffd166;
+}
+
+.reaction-panel.is-fight {
+  border-color: var(--danger);
+}
+
+.reaction-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.reaction-timer {
+  margin-left: auto;
+  font-family: var(--font-game);
+  font-variant-numeric: tabular-nums;
+  color: #ffd166;
+  font-size: 18px;
+}
+
+.reaction-detail {
+  margin: 6px 0 8px;
+}
+
+.reaction-buttons {
+  display: flex;
+  gap: 8px;
+}

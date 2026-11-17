@@ -20,8 +20,10 @@ import { RoadJobTimeLayer } from "./map/road-job-time-layer.tsx";
 import { RoadPreviewLayer } from "./map/road-preview-layer.tsx";
 import { StockFloatLayer } from "./map/stock-float-layer.tsx";
 import { ModeBanner } from "./mode-banner.tsx";
+import { ApproachMenu } from "./panels/approach-menu.tsx";
 import { CoreDock } from "./panels/core-panel.tsx";
 import { Inspector } from "./panels/inspector.tsx";
+import { ReactionPanel } from "./panels/reaction-panel.tsx";
 import { StackList } from "./panels/stack-list.tsx";
 import { Notices } from "./top-bar.tsx";
 
@@ -75,7 +77,8 @@ export function GameLayout({ game, header, orders }: Props) {
             }
             onOrder={
               orders
-                ? (point) => order(store, point, game.send, performance.now())
+                ? (point, px) =>
+                    order(store, point, game.send, performance.now(), px)
                 : undefined
             }
           >
@@ -88,6 +91,8 @@ export function GameLayout({ game, header, orders }: Props) {
           <Inspector />
           <ModeBanner />
           <StackList />
+          {orders && <ApproachMenu />}
+          {orders && <ReactionPanel />}
         </div>
         <Notices />
       </div>
