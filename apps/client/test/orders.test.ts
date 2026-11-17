@@ -10,14 +10,14 @@ describe("orderAt", () => {
   const core = { x: 10, y: 10 };
 
   it("gathers at a deposit, delivers at the own core, moves elsewhere", () => {
-    expect(orderAt({ x: 2.9, y: 2.1 }, deposits, core, false)).toEqual({
+    expect(orderAt({ x: 2.9, y: 2.1 }, deposits, [], core, false)).toEqual({
       type: "gather",
       depositId: 4,
     });
-    expect(orderAt({ x: 11.2, y: 10.5 }, deposits, core, false)).toEqual({
+    expect(orderAt({ x: 11.2, y: 10.5 }, deposits, [], core, false)).toEqual({
       type: "deliver",
     });
-    expect(orderAt({ x: 5.5, y: 7.2 }, deposits, core, false)).toEqual({
+    expect(orderAt({ x: 5.5, y: 7.2 }, deposits, [], core, false)).toEqual({
       type: "moveTo",
       x: 5,
       y: 7,
@@ -25,7 +25,7 @@ describe("orderAt", () => {
   });
 
   it("builds road anywhere in road mode", () => {
-    expect(orderAt({ x: 2.5, y: 2.5 }, deposits, core, true)).toEqual({
+    expect(orderAt({ x: 2.5, y: 2.5 }, deposits, [], core, true)).toEqual({
       type: "buildRoad",
       x: 2,
       y: 2,
@@ -45,7 +45,7 @@ describe("orderAt", () => {
       { x: core.x + 3.5, y: core.y + 3.5 },
     ]) {
       for (const road of [false, true]) {
-        const input = orderAt(point, world.deposits, core, road);
+        const input = orderAt(point, world.deposits, [], core, road);
         expect(orderRefusal(world, 50, creep.id, input)).toBeNull();
       }
     }

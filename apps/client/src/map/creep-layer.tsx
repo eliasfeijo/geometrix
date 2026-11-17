@@ -20,6 +20,7 @@ import { creepStatus, viewCapacity, type Creep } from "../creep-status.ts";
 import type { GameStore } from "../store.ts";
 import { COLORS, teamColor, teamTextColor } from "./colors.ts";
 import { DnaShape } from "./creep-shape.tsx";
+import { EncounterLayer } from "./encounter-layer.tsx";
 import { creepPositions, glideProgress } from "./interpolate.ts";
 import { nameFontSize } from "./labels.ts";
 import { layoutCreeps, markerOf, type Marker } from "./layout.ts";
@@ -149,6 +150,12 @@ export function CreepLayer() {
   );
   return (
     <g class="creep-layer">
+      <EncounterLayer
+        state={state}
+        params={info.params}
+        markers={markers}
+        viewScale={viewScale}
+      />
       {selected !== undefined &&
         isOwnCreep(selected) &&
         selectedMarker !== undefined && (

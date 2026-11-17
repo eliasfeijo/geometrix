@@ -2,7 +2,9 @@
 // decision): the order a right click gives the dominated creep (gather,
 // deliver, move), road mode (red when the stock is short), select over
 // something selectable, and the crosshair while picking a cell. With a
-// dominated creep the order wins, except over a creep: there, select.
+// dominated creep the order wins, except over a creep: there, select; over
+// an enemy in sight, approach (M2 encontro plan section 9: the right click
+// opens the attack / extort menu).
 
 import type { OrderInput } from "@geometrix/sim";
 import { COLORS } from "./colors.ts";
@@ -15,12 +17,17 @@ export type CursorKind =
   | "roadShort"
   | "gather"
   | "deliver"
-  | "move";
+  | "move"
+  | "approach"
+  | "pickup";
 
 export type CursorInput = {
   mode: "select" | "pickCell" | "road";
-  /** What a left click there picks: a creep (or a list of them), else. */
-  pick: "creep" | "other" | null;
+  /**
+   * What a left click there picks: a creep (or a list of them), an enemy
+   * creep in sight among them, else.
+   */
+  pick: "creep" | "enemy" | "other" | null;
   /** The right click's order for the dominated creep; null without one. */
   order: OrderInput["type"] | null;
   /** In road mode, whether the stock is short for the road there. */
@@ -30,6 +37,9 @@ export type CursorInput = {
 export function cursorKind(input: CursorInput): CursorKind {
   if (input.mode === "pickCell") return "pick";
   if (input.mode === "road") return input.roadShort ? "roadShort" : "road";
+  if (input.pick === "enemy") {
+    return input.order === null ? "select" : "approach";
+  }
   if (input.pick === "creep") return "select";
   switch (input.order) {
     case "gather":
@@ -38,6 +48,8 @@ export function cursorKind(input: CursorInput): CursorKind {
       return "deliver";
     case "moveTo":
       return "move";
+    case "pickup":
+      return "pickup";
     default:
       return input.pick === null ? "default" : "select";
   }
@@ -64,6 +76,10 @@ const BADGES = {
   deliver: `<path d="M19.5 19.5h7v7h-7z M17 23h5M20.5 21.5l1.5 1.5-1.5 1.5" ${INK}/>`,
   // A chevron: go there.
   move: `<path d="M20 19l5 4-5 4" ${INK}/>`,
+  // Two strokes crossing: go after that creep.
+  approach: `<path d="M19 19l8 8M27 19l-8 8" ${INK}/>`,
+  // A small diamond: the spoil.
+  pickup: `<path d="M23 18.5l4.5 4.5-4.5 4.5-4.5-4.5z" ${INK}/>`,
   // Three road segments in a row.
   road: `<path d="M17.5 23h11" stroke="#1b1b24" stroke-width="4" stroke-dasharray="3 1"/>`,
 };
@@ -78,4 +94,6 @@ export const CURSORS: Record<CursorKind, string> = {
   gather: `${badged(BADGES.gather, COLORS.materia)}, pointer`,
   deliver: `${badged(BADGES.deliver, "#ffffff")}, pointer`,
   move: `${badged(BADGES.move, "#ffffff")}, pointer`,
+  approach: `${badged(BADGES.approach, COLORS.fight)}, pointer`,
+  pickup: `${badged(BADGES.pickup, COLORS.selection)}, pointer`,
 };
