@@ -354,6 +354,6 @@ setup único** (spec §8). O resto do pacote abaixo é do laboratório (sem game
       setup único na sessão (dono); o sorteio sem repetição (5 de cada RTT embaralhados, com quantas faltam); o
       atraso medido escondido até a nota (ele entregaria o RTT); "próxima batalha" num toque, com o mesmo setup e o
       próximo RTT
-- [ ] Perguntas do laboratório no [PLAYTEST.md](../../PLAYTEST.md) (spec §8)
+- [x] Perguntas do laboratório no [PLAYTEST.md](../../PLAYTEST.md) (spec §8)
 - [ ] **Checkpoint:** sessão livre e sessão às cegas do dono (pelo menos 5 batalhas por RTT); ele responde às
       perguntas 1 a 4 da hipótese e decide a próxima regra (livre, forja ou nenhuma antes da junção); fecha a fatia B

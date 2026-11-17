@@ -1,11 +1,12 @@
 # Playtest
 
 Como rodar uma sessão de playtest do geometrix. Hoje cobre o **playtest de legibilidade e mecânica do M1** (F9,
-[spec M1 §8 item 4](specs/m1-ciclo-da-riqueza/spec.md)) e o **da névoa do M1.5** (seção "Névoa (M1.5)", [spec do
-fog §8](specs/m1.5-fog/spec.md)) e o **do encontro do M2** (seção "Encontro (M2)", [spec do encontro
-§8](specs/m2-encontro/spec.md)). O playtest de diversão com pessoas novas, com deploy e túnel, não bloqueia mais
-o M2 nem o M3 (dono, 2026-11-15, no [ROADMAP](ROADMAP.md)): entra aqui quando o dono achar o jogo divertido o
-suficiente.
+[spec M1 §8 item 4](specs/m1-ciclo-da-riqueza/spec.md)), o **da névoa do M1.5** (seção "Névoa (M1.5)", [spec do
+fog §8](specs/m1.5-fog/spec.md)), o **do encontro do M2** (seção "Encontro (M2)", [spec do encontro
+§8](specs/m2-encontro/spec.md)) e o **do laboratório de batalha do M2** (seção "Laboratório de batalha (M2)",
+[spec do laboratório §8](specs/m2-laboratorio/spec.md)). O playtest de diversão com pessoas novas, com deploy e
+túnel, não bloqueia mais o M2 nem o M3 (dono, 2026-11-15, no [ROADMAP](ROADMAP.md)): entra aqui quando o dono achar
+o jogo divertido o suficiente.
 
 ## Objetivo
 
@@ -220,6 +221,92 @@ Perguntas abertas, que respondem à hipótese:
 2. **O encontro mudou o que você fez?** Rotas, escolta, que DNA carrega o cristal, as posturas do piloto.
 3. **Sem dominar o jogo:** os encontros vieram com uma frequência que importa, sem atropelar a economia? Algum
    time desmoronou?
+
+## Laboratório de batalha (M2)
+
+Desde a fatia B do M2, a batalha tem uma página própria, sem mundo e sem servidor de jogo: monta-se um confronto
+à mão, joga-se dominando um creep (ou só se assiste), com uma rede simulada entre a página e a batalha. A sessão
+responde às perguntas 1 a 4 da hipótese da [spec do laboratório](specs/m2-laboratorio/spec.md) §1: **a regra de
+grade é divertida, a micro importa, quanta latência ela aguenta sem predição, e a IA de gambits serve de
+adversário?** Quem joga é o dono. São duas sessões (spec §8): a **livre** e a **às cegas**.
+
+### Preparação
+
+```sh
+npm run lab
+```
+
+Abre o laboratório no Vite (`/lab.html`). Sem o Vite: `npm run build` e `npm run server`, e
+`http://localhost:8080/lab`. A página não fala com o servidor do jogo: tudo roda no navegador.
+
+Lembretes para o observador:
+
+- Toda batalha começa com a **contagem de 3 s** (spec D21): todos parados, só dá para virar. O "você joga com"
+  do formulário diz quem o dono domina desde o começo; o **Começar**, o **Reiniciar** e o **R** já dominam.
+- O teclado vale na página inteira, salvo num campo do formulário: setas ou WASD andam, Shift + seta vira, espaço
+  ataca, Q larga a bolsa, E cata, Tab domina o próximo, 0 solta, R reinicia, P ou Esc pausa.
+- Quem fica **15 s** sem dar nem levar dano foge sozinho (inatividade); quem fica **2 s** no anel da borda sem
+  levar golpe foge pela borda. A batalha acaba quando sobra no máximo um lado.
+- A dificuldade da IA é por participante (fácil, normal, difícil); o editor de gambits troca as regras de quem
+  está selecionado, a partir do tick seguinte.
+- **Toda batalha que acaba entra no registro da sessão** (painel "Sessão"), que sobrevive a recarregar a página.
+  No fim, **"Exportar sessão"** baixa o JSON com os dois resumos: guarde-o junto das anotações.
+
+### F. Sessão livre (~30 min)
+
+| # | Tarefa | O que observar |
+|---|---|---|
+| F1 | Jogue cada DNA (■, ▲, ●) contra a IA normal, num 1 × 1, nas três arenas | Qual DNA ele quis jogar de novo? Em qual arena a posição pesou? |
+| F2 | Repita um confronto que perdeu, agora só assistindo (IA × IA, "ninguém" no "você joga com") | O painel "Você × IA" compara as vitórias dele com as da IA no mesmo confronto |
+| F3 | Assista a um 3 × 3 e a um 1 × 1 × 1 | Dá para acompanhar quem atira em quem? A IA parece crível? |
+| F4 | Edite os gambits de um participante (ex.: o atirador sem esquivar) e veja a diferença | Acha o editor? Entende a lista em ordem? |
+| F5 | Solte um reforço num 1 × 1, num lado existente e num lado novo | A entrada no meio muda a luta? |
+| F6 | Jogue uma batalha a 300 ms, com e sem "interpolar" | Qual dos dois sente melhor? |
+
+Questionário da sessão livre: escala de 1 a 5 (1 = discordo totalmente, 5 = concordo totalmente), mais uma frase
+livre em cada uma.
+
+| # | Pergunta | Nota | Comentário |
+|---|---|---|---|
+| F1 | Você sabia por que perdeu? | | |
+| F2 | Dava para ver o tiro chegando (e desviar)? | | |
+| F3 | Dava para ler quem olha para onde, o HP, a contagem da fuga e o relógio de inatividade? | | |
+| F4 | A IA parecia um adversário de verdade (nem boba, nem perfeita)? | | |
+| F5 | Chegar à luta foi rápido (a contagem, o domínio desde o começo, o teclado sem clicar)? | | |
+
+### G. Sessão às cegas (~30 batalhas)
+
+Responde à pergunta 3 da hipótese (latência). **Um setup só na sessão inteira** (dono, 2026-11-17), o 1 × 1
+dominando, para a nota medir o atraso e não o confronto. Sugestão: **▲ (você) × ● (IA normal) nas pedras**, o
+duelo à distância em que mirar e desviar mais sentem o atraso (spec D4); vale qualquer outro, desde que seja o
+mesmo até o fim.
+
+1. Monte o setup no formulário, com "você joga com" no seu creep, e clique em **"Começar sessão às cegas"** no
+   painel da sessão. A página sorteia a ordem de **5 batalhas de cada RTT** (0, 50, 100, 150, 200 e 300 ms), 30 no
+   total, e esconde o RTT e o atraso medido.
+2. Jogue cada batalha até o fim. Errou o começo? **R** reinicia com o mesmo RTT escondido.
+3. No fim, dê a nota (botões ou teclas **1 a 5**) à pergunta **"dá para jogar?"**: 1 = não dá, 5 = nem senti
+   atraso. Só então o RTT e o atraso medido aparecem.
+4. **Enter** (ou N, ou o botão) abre a próxima. Dá para parar e voltar depois: o sorteio fica guardado, e o painel
+   oferece a próxima batalha.
+5. Depois da última, **"Encerrar"** mostra a tabela nota × RTT e o veredito (até onde a nota mediana fica em 4 ou
+   mais; de onde cai abaixo de 3). **Exporte a sessão.**
+
+Não olhe o seletor de RTT nem o export no meio da sessão: a nota tem de julgar o jogo, não o número.
+
+### Perguntas da hipótese (fim das duas sessões)
+
+1. **A regra de grade é divertida?** Jogar e assistir, de 1 × 1 a 3 × 3 e com três lados, prendeu a sua atenção?
+   O que faltou?
+2. **A micro importa e o DNA não decide sozinho?** Dominando, você venceu confrontos que a IA perde no mesmo setup
+   (o painel "Você × IA")? Algum 1 × 1 pareceu decidido de antemão?
+3. **Quanta latência a grade aguenta?** Até que RTT a nota ficou em 4 ou mais, e a partir de qual caiu abaixo
+   de 3 (a tabela da sessão às cegas)? Isso basta para o deploy sem predição?
+4. **A IA de gambits serve?** Como adversário (crível, nem boba nem perfeita) e como auto-resolve (o que ela faria
+   no seu lugar)?
+
+E a decisão que fecha a fatia: **a próxima regra a experimentar é a livre (MOBA-lite), a forja, ou nenhuma antes
+da junção?**
 
 ## Validar o replay (dono)
 
