@@ -4,7 +4,13 @@ import {
   type BattleParams,
   type Dna,
 } from "../src/params.ts";
-import type { BattleSetup, ParticipantSetup } from "../src/setup.ts";
+import type { Dir } from "../src/arena.ts";
+import {
+  createBattle,
+  type BattleSetup,
+  type ParticipantSetup,
+} from "../src/setup.ts";
+import type { BattleState, Participant } from "../src/state.ts";
 
 const DEFAULT_PARAMS_URL = new URL(
   "../../../params/battle.json",
@@ -61,6 +67,56 @@ export function setupOf(
   seed = 42,
 ): BattleSetup {
   return { rule: "grid", arena, seed, sides };
+}
+
+/**
+ * A small arena for rule tests, 9 × 7: stretch 1 on the left lap, stretch 2
+ * on the right, rows 2 to 4.
+ */
+export const FIELD = [
+  ".........",
+  ".........",
+  ".1.....2.",
+  ".1.....2.",
+  ".1.....2.",
+  ".........",
+  ".........",
+];
+
+/** A battle on `rows` with one participant per entry of `dnas`, side by side. */
+export function battleOn(
+  rows: string[],
+  sides: (Dna | ParticipantSetup)[][],
+  seed = 42,
+): BattleState {
+  const setup = setupOf(
+    rows,
+    sides.map((list) =>
+      list.map((m) => (typeof m === "string" ? member(m) : m)),
+    ),
+    seed,
+  );
+  return createBattle(setup, loadTestParams());
+}
+
+/** Moves participant `id` to (x, y), optionally facing `facing`. */
+export function put(
+  state: BattleState,
+  id: number,
+  x: number,
+  y: number,
+  facing?: Dir,
+): Participant {
+  const participant = state.participants.find((p) => p.id === id)!;
+  participant.cell = y * state.arena.width + x;
+  if (facing !== undefined) participant.facing = facing;
+  return participant;
+}
+
+/** The (x, y) of participant `id`. */
+export function xyOf(state: BattleState, id: number): [number, number] {
+  const { cell } = state.participants.find((p) => p.id === id)!;
+  return [cell % state.arena.width, Math.floor(cell / state.arena.width)];
 }
 
 type Mutable<T> = { -readonly [K in keyof T]: Mutable<T[K]> };
