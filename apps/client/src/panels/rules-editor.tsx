@@ -3,30 +3,59 @@
 // creep of the team (plan P4); edits stay a local draft until applied.
 
 import {
+  DNAS,
   RESOURCES,
   type Action,
   type Cell,
   type Condition,
+  type Dna,
   type Rule,
 } from "@geometrix/sim";
 import { useState } from "preact/hooks";
 import { useGame } from "../context.ts";
 import type { CreepView, PresetId } from "@geometrix/sim";
-import { RESOURCE_NAMES, ruleText } from "../format.ts";
+import { DNA_NAMES, RESOURCE_NAMES, ruleText } from "../format.ts";
+import { DnaIcon } from "./dna-icon.tsx";
 import {
   ACTION_LABELS,
-  ACTION_TYPES,
   actionOf,
   CONDITION_LABELS,
-  CONDITION_TYPES,
   conditionOf,
-  move,
+  GROUP_ACTIONS,
+  GROUP_CONDITIONS,
+  groupOf,
+  indicesOf,
+  moveInGroup,
   newRule,
   parseCount,
+  percentOf,
+  permilleOf,
   removeAt,
   replaceAt,
   sameRules,
+  toggleDna,
+  type RuleGroup,
 } from "../rules-draft.ts";
+
+/** The two groups of the editor (M2 encontro plan section 9). */
+const GROUPS: {
+  group: RuleGroup;
+  title: string | null;
+  empty: string;
+  hint?: string;
+}[] = [
+  {
+    group: "plain",
+    title: null,
+    empty: "Sem regras: o creep mantém a ordem atual.",
+  },
+  {
+    group: "reaction",
+    title: "Quando abordado",
+    empty: "Sem reações: valem os padrões abaixo.",
+    hint: "Decididas só num encontro ou numa luta",
+  },
+];
 
 type Draft = { base: Rule[]; rules: Rule[] };
 
@@ -79,12 +108,23 @@ export function RulesEditor({ creep }: { creep: CreepView }) {
 
   if (!editable) {
     return (
-      <ol class="rules-readonly">
-        {creep.rules.map((rule, i) => (
-          <li key={i}>{ruleText(rule)}</li>
-        ))}
-        {creep.rules.length === 0 && <li class="muted">sem regras</li>}
-      </ol>
+      <>
+        {GROUPS.map(({ group, title }) => {
+          const list = creep.rules.filter((r) => groupOf(r) === group);
+          if (group === "reaction" && list.length === 0) return null;
+          return (
+            <div key={group}>
+              {title !== null && <h4>{title}</h4>}
+              <ol class="rules-readonly">
+                {list.map((rule, i) => (
+                  <li key={i}>{ruleText(rule)}</li>
+                ))}
+                {list.length === 0 && <li class="muted">sem regras</li>}
+              </ol>
+            </div>
+          );
+        })}
+      </>
     );
   }
 
@@ -125,72 +165,89 @@ export function RulesEditor({ creep }: { creep: CreepView }) {
         </button>
       </div>
 
-      <ol class="rules">
-        {rules.map((rule, i) => (
-          <li key={i} class="rule">
-            <span class="rule-index">{i + 1}</span>
-            <div class="rule-body">
-              <ConditionField
-                value={rule.when}
-                disabled={!canAct}
-                onChange={(when) =>
-                  edit((r) => replaceAt(r, i, { ...r[i]!, when }))
-                }
-              />
-              <span class="arrow">→</span>
-              <ActionField
-                value={rule.then}
-                core={core}
-                disabled={!canAct}
-                onChange={(then) =>
-                  edit((r) => replaceAt(r, i, { ...r[i]!, then }))
-                }
-                onPick={(apply) =>
-                  pickCell("Clique no mapa para escolher o ponto.", apply)
-                }
-              />
-            </div>
-            <div class="rule-buttons">
-              <button
-                class="ghost"
-                title="Subir"
-                disabled={!canAct || i === 0}
-                onClick={() => edit((r) => move(r, i, -1))}
-              >
-                ↑
-              </button>
-              <button
-                class="ghost"
-                title="Descer"
-                disabled={!canAct || i === rules.length - 1}
-                onClick={() => edit((r) => move(r, i, 1))}
-              >
-                ↓
-              </button>
-              <button
-                class="ghost"
-                title="Remover"
-                disabled={!canAct}
-                onClick={() => edit((r) => removeAt(r, i))}
-              >
-                ✕
-              </button>
-            </div>
-          </li>
-        ))}
-        {rules.length === 0 && (
-          <li class="muted">Sem regras: o creep mantém a ordem atual.</li>
-        )}
-      </ol>
+      {GROUPS.map(({ group, title, empty, hint }) => {
+        const indices = indicesOf(rules, group);
+        return (
+          <div key={group} class={`rule-group rule-group-${group}`}>
+            {title !== null && <h4 title={hint}>{title}</h4>}
+            <ol class="rules">
+              {indices.map((i, k) => {
+                const rule = rules[i]!;
+                return (
+                  <li key={i} class="rule">
+                    <span class="rule-index">{k + 1}</span>
+                    <div class="rule-body">
+                      <ConditionField
+                        value={rule.when}
+                        options={GROUP_CONDITIONS[group]}
+                        disabled={!canAct}
+                        onChange={(when) =>
+                          edit((r) => replaceAt(r, i, { ...r[i]!, when }))
+                        }
+                      />
+                      <span class="arrow">→</span>
+                      <ActionField
+                        value={rule.then}
+                        options={GROUP_ACTIONS[group]}
+                        core={core}
+                        disabled={!canAct}
+                        onChange={(then) =>
+                          edit((r) => replaceAt(r, i, { ...r[i]!, then }))
+                        }
+                        onPick={(apply) =>
+                          pickCell(
+                            "Clique no mapa para escolher o ponto.",
+                            apply,
+                          )
+                        }
+                      />
+                    </div>
+                    <div class="rule-buttons">
+                      <button
+                        class="ghost"
+                        title="Subir"
+                        disabled={!canAct || k === 0}
+                        onClick={() => edit((r) => moveInGroup(r, i, -1))}
+                      >
+                        ↑
+                      </button>
+                      <button
+                        class="ghost"
+                        title="Descer"
+                        disabled={!canAct || k === indices.length - 1}
+                        onClick={() => edit((r) => moveInGroup(r, i, 1))}
+                      >
+                        ↓
+                      </button>
+                      <button
+                        class="ghost"
+                        title="Remover"
+                        disabled={!canAct}
+                        onClick={() => edit((r) => removeAt(r, i))}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </li>
+                );
+              })}
+              {indices.length === 0 && <li class="muted">{empty}</li>}
+            </ol>
+            <button
+              class="add-rule"
+              disabled={!canAct || rules.length >= max}
+              title={
+                rules.length >= max ? `Máximo de ${max} regras` : undefined
+              }
+              onClick={() => edit((r) => [...r, newRule(group)])}
+            >
+              {group === "plain" ? "+ Regra" : "+ Reação"}
+            </button>
+          </div>
+        );
+      })}
 
       <div class="rules-footer">
-        <button
-          disabled={!canAct || rules.length >= max}
-          title={rules.length >= max ? `Máximo de ${max} regras` : undefined}
-          onClick={() => edit((r) => [...r, newRule()])}
-        >
-          + Regra
-        </button>
         <span class="spacer" />
         {dirty && (
           <>
@@ -213,7 +270,9 @@ export function RulesEditor({ creep }: { creep: CreepView }) {
       )}
       <p class="hint muted">
         A cada tick vale a primeira regra cuja condição é verdadeira e cuja ação
-        é possível.
+        é possível. Num encontro, valem só as reações; sem reação que valha, o
+        creep paga a extorsão, tenta fugir do ataque e, na luta, continua
+        lutando.
       </p>
     </div>
   );
@@ -268,6 +327,7 @@ function CountInput(props: {
 
 function ConditionField(props: {
   value: Condition;
+  options: readonly Condition["type"][];
   disabled: boolean;
   onChange(value: Condition): void;
 }) {
@@ -283,7 +343,7 @@ function ConditionField(props: {
           )
         }
       >
-        {CONDITION_TYPES.map((t) => (
+        {withCurrent(props.options, value.type).map((t) => (
           <option key={t} value={t}>
             {CONDITION_LABELS[t]}
           </option>
@@ -314,12 +374,108 @@ function ConditionField(props: {
           onChange={(amount) => onChange({ ...value, amount })}
         />
       )}
+      {value.type === "enemyInSight" && (
+        <EnemyFilter
+          value={value}
+          disabled={disabled}
+          onChange={(filter) => onChange({ type: "enemyInSight", ...filter })}
+        />
+      )}
+      {(value.type === "hpBelow" || value.type === "demandAtMost") && (
+        <PercentInput
+          title={
+            value.type === "hpBelow"
+              ? "% do HP máximo"
+              : "% da carga que a exigência leva"
+          }
+          permille={value.permille}
+          disabled={disabled}
+          onChange={(permille) => onChange({ ...value, permille })}
+        />
+      )}
     </span>
+  );
+}
+
+/** The option list, with the current type even if the group lacks it. */
+const withCurrent = <T extends string>(options: readonly T[], current: T) =>
+  options.includes(current) ? options : [current, ...options];
+
+function PercentInput(props: {
+  permille: number;
+  disabled: boolean;
+  title: string;
+  onChange(permille: number): void;
+}) {
+  return (
+    <span class="percent">
+      <CountInput
+        title={props.title}
+        max={100}
+        value={percentOf(props.permille)}
+        disabled={props.disabled}
+        onChange={(percent) => props.onChange(permilleOf(percent))}
+      />
+      %
+    </span>
+  );
+}
+
+type EnemyFilterValue = { radius: number; dna?: Dna[]; minCargo: number };
+
+/** Radius, DNA and minimum cargo of "inimigo à vista" and "abordar" (D13). */
+function EnemyFilter(props: {
+  value: EnemyFilterValue;
+  disabled: boolean;
+  onChange(value: EnemyFilterValue): void;
+}) {
+  const { value, disabled, onChange } = props;
+  const set = (change: Partial<EnemyFilterValue>) => {
+    const next = { ...value, ...change };
+    const { radius, minCargo, dna } = next;
+    onChange(
+      dna === undefined ? { radius, minCargo } : { radius, dna, minCargo },
+    );
+  };
+  return (
+    <>
+      <CountInput
+        title="raio, em células"
+        value={value.radius}
+        disabled={disabled}
+        onChange={(radius) => set({ radius })}
+      />
+      <span class="dna-filter" title="DNA do inimigo">
+        {DNAS.map((d) => {
+          const on = value.dna === undefined || value.dna.includes(d);
+          return (
+            <button
+              key={d}
+              class={on ? "ghost dna-on" : "ghost dna-off"}
+              title={`${DNA_NAMES[d]}: ${on ? "sim" : "não"}`}
+              aria-pressed={on}
+              disabled={disabled}
+              onClick={() => set({ dna: toggleDna(value.dna, d) })}
+            >
+              <DnaIcon dna={d} team={1} size={14} />
+            </button>
+          );
+        })}
+      </span>
+      <span class="small muted">carga ≥</span>
+      <CountInput
+        title="carga mínima do inimigo"
+        value={value.minCargo}
+        disabled={disabled}
+        onChange={(minCargo) => set({ minCargo })}
+      />
+    </>
   );
 }
 
 function ActionField(props: {
   value: Action;
+  options: readonly Action["type"][];
   core: Cell;
   disabled: boolean;
   onChange(value: Action): void;
@@ -343,7 +499,7 @@ function ActionField(props: {
           )
         }
       >
-        {ACTION_TYPES.map((t) => (
+        {withCurrent(props.options, value.type).map((t) => (
           <option key={t} value={t}>
             {ACTION_LABELS[t]}
           </option>
@@ -355,6 +511,31 @@ function ActionField(props: {
           disabled={disabled}
           onChange={(resource) => onChange({ ...value, resource })}
         />
+      )}
+      {value.type === "approach" && (
+        <>
+          <select
+            value={value.intent}
+            disabled={disabled}
+            title="intenção"
+            onChange={(e) =>
+              onChange({
+                ...value,
+                intent: e.currentTarget.value as "attack" | "extort",
+              })
+            }
+          >
+            <option value="extort">para extorquir</option>
+            <option value="attack">para atacar</option>
+          </select>
+          <EnemyFilter
+            value={value}
+            disabled={disabled}
+            onChange={(filter) =>
+              onChange({ type: "approach", intent: value.intent, ...filter })
+            }
+          />
+        </>
       )}
       {(value.type === "moveTo" || value.type === "buildRoad") && (
         <>

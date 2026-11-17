@@ -7,7 +7,12 @@ import {
   updateVision,
 } from "@geometrix/sim";
 import { describe, expect, it } from "vitest";
-import { approachOptions, reactionOf } from "../src/encounter-actions.ts";
+import {
+  approachOptions,
+  engagementText,
+  reactionOf,
+  safeConductLeft,
+} from "../src/encounter-actions.ts";
 import { handleKey, order } from "../src/interaction.ts";
 import { GameStore } from "../src/store.ts";
 import { encounterWorld, testWorld, viewOf, welcomeOf } from "./helpers.ts";
@@ -147,5 +152,62 @@ describe("the reaction panel (spec C-5)", () => {
     });
     // The victim's pending answer stays hidden from the aggressor's team.
     expect(reaction.encounter.reply).toBeNull();
+  });
+});
+
+describe("the inspector's encounter and safe conduct (spec C-7)", () => {
+  it("says who is in the encounter, from both sides", () => {
+    // Dominated, so the dialogue waits for the answer (a free victim pays in
+    // the tick it opens).
+    const { world, hunter, prey } = encounterWorld("extort", true);
+    const own = viewOf(world, 0);
+    const enemy = viewOf(world, 1);
+    const creep = (state: typeof own, id: number) =>
+      state.creeps.find((c) => c.id === id)!;
+    expect(engagementText(own, creep(own, hunter.id))).toBe(
+      `abordou ${prey.name} para extorquir`,
+    );
+    expect(engagementText(enemy, creep(enemy, prey.id))).toBe(
+      `abordado por ${hunter.name}, que quer extorquir`,
+    );
+  });
+
+  it("counts the rounds of a fight for the own team", () => {
+    const { world, hunter, prey } = encounterWorld("attack", true);
+    step(world, [
+      {
+        playerId: 9,
+        command: { type: "react", creepId: prey.id, choice: "fight" },
+      },
+    ]);
+    const own = viewOf(world, 0);
+    expect(
+      engagementText(
+        own,
+        own.creeps.find((c) => c.id === hunter.id)!,
+      ),
+    ).toBe(`lutando com ${prey.name}, rodada 0`);
+  });
+
+  it("gives the safe conduct after paying, until it runs out", () => {
+    const { world, prey } = encounterWorld("extort", true);
+    step(world, [
+      {
+        playerId: 9,
+        command: { type: "react", creepId: prey.id, choice: "pay" },
+      },
+    ]);
+    const conduct = prey.safeConduct!;
+    expect(conduct.team).toBe(0);
+    const left = safeConductLeft(conduct, world.tick, world.params)!;
+    expect(left).toEqual({
+      team: 0,
+      seconds:
+        (conduct.untilTick - world.tick) * world.params.world.tickSeconds,
+    });
+    expect(
+      safeConductLeft(conduct, conduct.untilTick, world.params),
+    ).toBeNull();
+    expect(safeConductLeft(null, 0, world.params)).toBeNull();
   });
 });

@@ -102,3 +102,43 @@ export function reactionOf(
         : null,
   };
 }
+
+/**
+ * The encounter a creep is in, as the inspector says it (spec C-7): with
+ * whom, what for and at which stage; null when it is in none. Another team's
+ * creep shows only what its encounter's public fields say.
+ */
+export function engagementText(state: TeamView, creep: Creep): string | null {
+  if (creep.engagement === null) return null;
+  const encounter = state.encounters.find((e) => e.id === creep.engagement);
+  if (encounter === undefined) return "num encontro";
+  const aggressor = encounter.aggressor === creep.id;
+  const otherId = aggressor ? encounter.victim : encounter.aggressor;
+  const other = state.creeps.find((c) => c.id === otherId);
+  const name = other?.name ?? `#${otherId}`;
+  if (encounter.stage === "fight") {
+    return isOwnEncounter(encounter)
+      ? `lutando com ${name}, rodada ${encounter.rounds}`
+      : `lutando com ${name}`;
+  }
+  const what = encounter.intent === "attack" ? "atacar" : "extorquir";
+  return aggressor
+    ? `abordou ${name} para ${what}`
+    : `abordado por ${name}, que quer ${what}`;
+}
+
+/**
+ * The safe conduct of a creep that paid (D9): against which team and for how
+ * many world seconds more; null without one (or once it ran out).
+ */
+export function safeConductLeft(
+  safeConduct: CreepView["safeConduct"],
+  tick: number,
+  params: Params,
+): { team: number; seconds: number } | null {
+  if (safeConduct === null || safeConduct.untilTick <= tick) return null;
+  return {
+    team: safeConduct.team,
+    seconds: (safeConduct.untilTick - tick) * params.world.tickSeconds,
+  };
+}

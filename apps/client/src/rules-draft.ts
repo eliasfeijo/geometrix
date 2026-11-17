@@ -2,7 +2,16 @@
 // `condition -> action` in the closed vocabulary (spec P-2), sent whole with
 // setRules. Pure functions, so the editor can stay a thin view.
 
-import type { Action, Cell, Condition, Resource, Rule } from "@geometrix/sim";
+import {
+  DNAS,
+  isReaction,
+  type Action,
+  type Cell,
+  type Condition,
+  type Dna,
+  type Resource,
+  type Rule,
+} from "@geometrix/sim";
 
 export const CONDITION_TYPES = [
   "always",
@@ -29,6 +38,29 @@ export const ACTION_TYPES = [
   "fight",
   "flee",
 ] as const satisfies readonly Action["type"][];
+
+/**
+ * The editor's two groups (M2 encontro plan section 9): the rules that run
+ * the creep outside an encounter, and its reactions ("Quando abordado"),
+ * decided only in one (spec A-2). The order only matters within a group.
+ */
+export type RuleGroup = "plain" | "reaction";
+
+export const groupOf = (rule: Rule): RuleGroup =>
+  isReaction(rule.then) ? "reaction" : "plain";
+
+/** What each group offers: a reaction rule is one whose action is one. */
+export const GROUP_ACTIONS: Record<RuleGroup, readonly Action["type"][]> = {
+  plain: ACTION_TYPES.filter((t) => !isReaction({ type: t } as Action)),
+  reaction: ACTION_TYPES.filter((t) => isReaction({ type: t } as Action)),
+};
+
+/** The demand only exists in an encounter; resources and stock only outside. */
+export const GROUP_CONDITIONS: Record<RuleGroup, readonly Condition["type"][]> =
+  {
+    plain: CONDITION_TYPES.filter((t) => t !== "demandAtMost"),
+    reaction: ["always", "hpBelow", "demandAtMost", "cargoFull", "cargoEmpty"],
+  };
 
 export const CONDITION_LABELS: Record<Condition["type"], string> = {
   always: "sempre",
@@ -134,9 +166,62 @@ export function actionOf(
   }
 }
 
-export function newRule(): Rule {
-  return { when: { type: "always" }, then: { type: "deliver" } };
+/** A new rule of the group; editor defaults only, changed right there. */
+export function newRule(group: RuleGroup = "plain"): Rule {
+  return group === "plain"
+    ? { when: { type: "always" }, then: { type: "deliver" } }
+    : {
+        when: { type: "hpBelow", permille: DEFAULT_PERMILLE },
+        then: { type: "flee" },
+      };
 }
+
+/**
+ * Moves rule i up (-1) or down (+1) past the next rule of its own group;
+ * the rules of the other group in between keep their places.
+ */
+export function moveInGroup(
+  rules: readonly Rule[],
+  i: number,
+  delta: -1 | 1,
+): Rule[] {
+  const rule = rules[i];
+  if (rule === undefined) return [...rules];
+  const group = groupOf(rule);
+  let j = i + delta;
+  while (j >= 0 && j < rules.length && groupOf(rules[j]!) !== group) j += delta;
+  if (j < 0 || j >= rules.length) return [...rules];
+  const next = [...rules];
+  [next[i], next[j]] = [next[j]!, next[i]!];
+  return next;
+}
+
+/** The indices of the rules of a group, in order. */
+export const indicesOf = (rules: readonly Rule[], group: RuleGroup) =>
+  rules.flatMap((rule, i) => (groupOf(rule) === group ? [i] : []));
+
+/**
+ * The DNA filter after a click on `dna` (D13): no filter (undefined) means
+ * all three. Turning the last one off is not allowed (nothing would match).
+ */
+export function toggleDna(
+  filter: readonly Dna[] | undefined,
+  dna: Dna,
+): Dna[] | undefined {
+  const on = new Set(filter ?? DNAS);
+  if (on.has(dna)) {
+    if (on.size === 1) return filter === undefined ? undefined : [...filter];
+    on.delete(dna);
+  } else {
+    on.add(dna);
+  }
+  const next = DNAS.filter((d) => on.has(d));
+  return next.length === DNAS.length ? undefined : next;
+}
+
+/** Per mille as the editor shows it, in whole percent, and back. */
+export const percentOf = (permille: number) => Math.floor(permille / 10);
+export const permilleOf = (percent: number) => Math.min(percent, 100) * 10;
 
 export function replaceAt(
   rules: readonly Rule[],
