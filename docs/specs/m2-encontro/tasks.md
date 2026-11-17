@@ -70,7 +70,7 @@ na sua branch (plan §12, skill `commit`), com merge `--no-ff` em `main`.
 
 ## F5 — Cliente (`m2/encontro-f5-client`)
 
-- [ ] Barra de HP (próprio e inimigo à vista); despojo no mapa, lembrado sob o véu (spec C-1, C-2)
+- [x] Barra de HP (próprio e inimigo à vista); despojo no mapa, lembrado sob o véu (spec C-1, C-2)
 - [ ] Marcas de perseguição, diálogo, luta e fuga; cursor de abordar (spec C-3)
 - [ ] Menu do clique direito (atacar / extorquir com a exigência) e painel de reação com o tempo restante e o botão
       de fugir na luta (spec C-5, C-6)
