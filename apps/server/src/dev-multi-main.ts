@@ -63,11 +63,14 @@ try {
   const { id: worldId } = await post<{ id: number }>("/api/worlds", {
     ...(options.seed === undefined ? {} : { seed: options.seed }),
     multiplier: options.multiplier,
+    ...(options.bot ? { botTeams: [1] } : {}),
   });
-  console.log(`\nworld #${worldId} (×${options.multiplier})`);
+  console.log(
+    `\nworld #${worldId} (×${options.multiplier}${options.bot ? ", bot on Orange" : ""})`,
+  );
   const wsl = process.platform === "linux" && isWsl(readText("/proc/version"));
   for (let i = 1; i <= options.clients; i++) {
-    const player = playerOf(i);
+    const player = playerOf(i, options.bot);
     const joined = await post<JoinResponse>(
       `/api/worlds/${worldId}/join`,
       player,

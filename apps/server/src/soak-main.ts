@@ -16,9 +16,10 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { parseReplay, type WorldSummary } from "@geometrix/protocol";
 import { viewJson } from "@geometrix/protocol/stream";
-import { SIM_VERSION, view } from "@geometrix/sim";
+import { eventsFor, SIM_VERSION, view, type SimEvent } from "@geometrix/sim";
 import { stateHash } from "./hash.ts";
-import { SoakClient } from "./soak-client.ts";
+import { Store } from "./persistence.ts";
+import { SOAK_CHRONICLE_KEEP, SoakClient } from "./soak-client.ts";
 import {
   interruptions,
   parseSoakArgs,
@@ -117,7 +118,8 @@ while (!ended) {
 
 for (const stop of dropTimers) stop();
 const replay = parseReplay(await get(`/api/worlds/${worldId}/replay`));
-const final = rebuild(replay);
+const replayEvents: SimEvent[] = [];
+const final = rebuild(replay, (tickEvents) => replayEvents.push(...tickEvents));
 const rebuilt = stateHash(final);
 const hashOk = rebuilt === replay.finalHash;
 // The last send carries the last tick; give the clients a moment to get it.
@@ -138,13 +140,42 @@ const finals = clients.map((client) => ({
 server.kill("SIGTERM");
 await exited(server);
 
+// The chronicle the server kept through the crashes (M2 encontro N-2): one
+// row per event and team that saw it, as the rebuilt replay emits them; and
+// each client's chronicle is the server's latest entries for its team.
+const store = new Store(db);
+const chronicleRows = store.chronicleCount(worldId);
+const chronicleBytes = store.chronicleBytes(worldId);
+const expectedRows = [0, 1].reduce(
+  (sum, team) => sum + eventsFor(replayEvents, team).length,
+  0,
+);
+const chronicles = finals.map(({ report: r }, i) => {
+  const kept = clients[i]!.chronicle;
+  const server = store.recentChronicle(worldId, r.team, kept.length);
+  return {
+    entries: kept.length,
+    same: JSON.stringify(kept) === JSON.stringify(server),
+  };
+});
+store.close();
+
 const summary = summarize(samples, options.multiplier);
 const recoveredOk = events.every((e) => e.recoveredTick >= e.seenTick);
 const clientsOk = finals.every(
-  (f) =>
-    f.same && f.report.hashes.mismatch === 0 && f.report.errors.length === 0,
+  (f, i) =>
+    f.same &&
+    chronicles[i]!.same &&
+    f.report.hashes.mismatch === 0 &&
+    f.report.errors.length === 0,
 );
-const ok = hashOk && recoveredOk && events.length === plan.length && clientsOk;
+const chronicleOk = chronicleRows === expectedRows;
+const ok =
+  hashOk &&
+  recoveredOk &&
+  events.length === plan.length &&
+  clientsOk &&
+  chronicleOk;
 writeFileSync(join(outDir, "samples.csv"), samplesCsv(samples));
 writeFileSync(join(outDir, "summary.md"), report());
 log(`\n${report()}\n${outDir}`);
@@ -176,6 +207,9 @@ function report(): string {
         .map((p) => `${mb(p.firstMb)} → ${mb(p.lastMb)}`)
         .join(", "),
     `- SQLite at the end: ${mb(summary.finalDbMb)}`,
+    `- Chronicle table: ${chronicleRows} rows (${(chronicleBytes / 1024).toFixed(1)} KB ` +
+      `of event JSON); the rebuilt replay's events give ${expectedRows} ` +
+      `(${chronicleOk ? "same" : "DIFFERENT"})`,
     `- Loop speed (share of ×${options.multiplier}): ` +
       `median ${pct(summary.medianSpeedShare)}, slowest ${pct(summary.minSpeedShare)}`,
     "",
@@ -195,14 +229,18 @@ function clientSections(): string[] {
     "",
     `Headless WebSocket clients, ${options.clients} per team, each dropping its ` +
       `own connection every ${options.dropEverySeconds} s (staggered). Bytes per ` +
-      `real second at ×${options.multiplier}: each send covers several ticks.`,
+      `real second at ×${options.multiplier}: each send covers several ticks. ` +
+      `Chronicle: the entries a client keeps (the browser's ${SOAK_CHRONICLE_KEEP}) ` +
+      `against the server's latest for its team.`,
     "",
-    "| Client | Team | Final view | Bytes/s, mean | Bytes/s, peak | Deltas | Drops | Resumed | Welcomes (join · reconnect · resync) | Resyncs (seq · hash) | Hashes ok · mismatched |",
-    "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
+    "| Client | Team | Final view | Chronicle | Bytes/s, mean | Bytes/s, peak | Deltas | Drops | Resumed | Welcomes (join · reconnect · resync) | Resyncs (seq · hash) | Hashes ok · mismatched |",
+    "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
   ];
-  for (const { report: r, same, tick } of finals) {
+  for (const [i, { report: r, same, tick }] of finals.entries()) {
+    const chronicle = chronicles[i]!;
     lines.push(
       `| ${r.name} | ${r.team} | ${same ? "same as the server" : `DIFFERENT (tick ${tick})`} | ` +
+        `${chronicle.same ? "same" : "DIFFERENT"}, last ${chronicle.entries} | ` +
         `${kb(r.meanBytesPerSecond)} | ${kb(r.peakBytesPerSecond)} | ${r.deltas} | ${r.drops} | ${r.resumes} | ` +
         `${r.welcomes.join} · ${r.welcomes.reconnect} · ${r.welcomes.resync} | ` +
         `${r.resyncs.seqGap} · ${r.resyncs.hashMismatch} | ${r.hashes.ok} · ${r.hashes.mismatch} |`,

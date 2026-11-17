@@ -75,8 +75,8 @@ export function roadBuilderRules(target: Cell): Rule[] {
 /**
  * The raider (M2 encontro spec D14, plan section 6): extorts a loaded enemy
  * in sight, picks up spoils, delivers when full, explores; fights when
- * approached and flees below 400‰ of its HP (a number of the rule, not a
- * param).
+ * approached and flees below 400‰ of its HP. Targets carry at least 10, the
+ * circle's capacity (plan C11). Both numbers belong to the rule, not params.
  */
 export function raiderRules(): Rule[] {
   return [
@@ -84,7 +84,7 @@ export function raiderRules(): Rule[] {
     { when: { type: "always" }, then: { type: "fight" } },
     {
       when: { type: "always" },
-      then: { type: "approach", intent: "extort", radius: 10, minCargo: 1 },
+      then: { type: "approach", intent: "extort", radius: 10, minCargo: 10 },
     },
     { when: { type: "always" }, then: { type: "pickup" } },
     deliverWhenFull(),

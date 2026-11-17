@@ -8,6 +8,7 @@ import {
   createWorld,
   step,
   type CommandInput,
+  type SimEvent,
   type WorldState,
 } from "@geometrix/sim";
 
@@ -18,7 +19,7 @@ Runs a whole bot x bot world through the real server loop, kills the server
 and at the end rebuilds the exported replay in Node: its hash must match the
 server's. Headless clients follow their team streams the whole time, dropping
 their own connection now and then; each must end with the server's view and
-no hash mismatch (M1.5). Samples memory, database size and loop speed into
+no hash mismatch (M1.5), and with the server's chronicle (M2). Samples memory, database size and loop speed into
 runs/soak-<id>/.
 
   --mult <n>      time multiplier (default 360: 3 world days in ~12 min)
@@ -133,8 +134,14 @@ export function interruptions(
   }));
 }
 
-/** The state a replay ends on, rebuilt with the sim (as the browser does). */
-export function rebuild(replay: Replay): WorldState {
+/**
+ * The state a replay ends on, rebuilt with the sim (as the browser does).
+ * `onEvents` gets each tick's events.
+ */
+export function rebuild(
+  replay: Replay,
+  onEvents?: (events: readonly SimEvent[]) => void,
+): WorldState {
   const state = createWorld(replay.seed, replay.params);
   let at = 0;
   while (state.tick < replay.ticks) {
@@ -143,7 +150,8 @@ export function rebuild(replay: Replay): WorldState {
       const { playerId, command } = replay.commands[at++]!;
       commands.push({ playerId, command });
     }
-    step(state, commands);
+    const events = step(state, commands);
+    onEvents?.(events);
   }
   return state;
 }
