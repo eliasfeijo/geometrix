@@ -228,7 +228,7 @@ próprio: estourou os 5 s duas vezes seguidas com a suíte inteira e outra sess�
 - [ ] As arenas 2× (43 × 27) com as zonas de nascimento a 1/4 da largura, e uma aberta 3× (63 × 39) só para o
       relatório; o teste de simetria de 180°; o `sweep` de novo (duração, inatividade, fuga, custo) e os replays, para
       o dono ver antes da página (spec D3, §6; plan §4, C2)
-- [ ] A reação por participante: `fácil`/`normal`/`difícil` no setup, os números em `params/battle.json`, o
+- [x] A reação por participante: `fácil`/`normal`/`difícil` no setup, os números em `params/battle.json`, o
       `rng` sorteando a reação de cada decisão (spec D20; plan C3)
 - [ ] `lab.html` como 2ª entrada do Vite, `npm run lab`, servida também pelo `npm run server` (plan §13, P11)
 - [ ] `worker.ts`: o relógio sem deriva, ×1/×4/instantâneo, pausar e reiniciar, a visão e os eventos por tick, o log

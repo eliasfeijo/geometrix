@@ -3,7 +3,7 @@
 
 import type { Arena, Dir } from "./arena.ts";
 import type { Gambit } from "./gambits.ts";
-import type { BattleParams, Dna } from "./params.ts";
+import type { BattleParams, Dna, Reaction } from "./params.ts";
 import type { RngState } from "./rng.ts";
 
 /**
@@ -44,6 +44,8 @@ export type Participant = {
   controller: Controller;
   /** Replaced whole, never mutated in place (like the sim's rules). */
   gambits: Gambit[];
+  /** How fast the gambits react, from the setup (spec D20). */
+  reaction: Reaction;
   intent: Intent;
   /** Progress towards the next cell, in CELL_COST units (plan P2). */
   movePoints: number;

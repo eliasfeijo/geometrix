@@ -4,7 +4,13 @@
 
 import { ArenaError, parseArena, type Arena } from "./arena.ts";
 import { copyGambits, type Gambit } from "./gambits.ts";
-import { DNAS, type BattleParams, type Dna } from "./params.ts";
+import {
+  DNAS,
+  REACTIONS,
+  type BattleParams,
+  type Dna,
+  type Reaction,
+} from "./params.ts";
 import { createRng, nextInt } from "./rng.ts";
 import {
   BATTLE_VERSION,
@@ -26,6 +32,8 @@ export type ParticipantSetup = {
    * become; the presets are only what the lab and the CLI start from (G-3).
    */
   gambits: Gambit[];
+  /** How fast the gambits react for this participant (spec D20). */
+  reaction: Reaction;
 };
 
 export type BattleSetup = {
@@ -63,7 +71,7 @@ export function participantIssue(
   params: BattleParams,
 ): string | null {
   if (!isRecord(input)) return "expected an object";
-  const { name, dna, hp, carry, gambits } = input;
+  const { name, dna, hp, carry, gambits, reaction } = input;
   if (typeof name !== "string" || name.length === 0) {
     return "name must be a non-empty string";
   }
@@ -84,6 +92,9 @@ export function participantIssue(
   }
   const list = copyGambits(gambits, params.gambits.maxRules);
   if (typeof list === "string") return `${name}: ${list}`;
+  if (!REACTIONS.includes(reaction as Reaction)) {
+    return `${name}: reaction must be ${REACTIONS.join(", ")}`;
+  }
   return null;
 }
 
@@ -202,6 +213,7 @@ export function placeParticipant(
       setup.gambits,
       state.params.gambits.maxRules,
     ) as Gambit[],
+    reaction: setup.reaction,
     intent: {
       move: null,
       attack: false,

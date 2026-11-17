@@ -61,6 +61,7 @@ export function member(
     hp,
     carry: { materia: 0, cristal: 0 },
     gambits: [],
+    reaction: "normal",
     ...overrides,
   };
 }
