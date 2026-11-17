@@ -24,6 +24,7 @@
     "dev:multi": "node apps/server/src/dev-multi-main.ts",
     "soak": "node apps/server/src/soak-main.ts",
     "client": "npm run dev -w @geometrix/client",
+    "lab": "npm run dev -w @geometrix/client -- --open /lab.html",
     "build": "npm run build -w @geometrix/client"
   },
   "devDependencies": {
