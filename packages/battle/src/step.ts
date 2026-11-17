@@ -6,7 +6,7 @@
 //   4. movement: points, carry brake, rng disputes                 (F1)
 //   5. projectiles, after the creeps                               (F2)
 //   6. damage and death                                            (F2)
-//   7. drop and pick up                                            (F2)
+//   7. drop and pick up
 //   8. exit ring and inactivity                                    (F2)
 //   9. the end, when at most one side is left                      (F2)
 //
@@ -14,6 +14,7 @@
 // arrival order (plan P5): the lab's worker queues them, the log keeps them
 // under the tick they were applied in, and a replay applies them there.
 
+import { dropAndPickUp } from "./carry.ts";
 import { applyCommands } from "./commands.ts";
 import { createEventLog, type BattleEvent } from "./events.ts";
 import { moveParticipants, turnToIntent } from "./movement.ts";
@@ -28,6 +29,7 @@ export function stepBattle(
   applyCommands(state, commands);
   turnToIntent(state);
   moveParticipants(state);
+  dropAndPickUp(state, log);
   state.tick += 1;
   return log.events;
 }

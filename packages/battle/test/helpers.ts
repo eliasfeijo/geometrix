@@ -10,7 +10,9 @@ import {
   type BattleSetup,
   type ParticipantSetup,
 } from "../src/setup.ts";
+import type { BattleEvent } from "../src/events.ts";
 import type { BattleState, Participant } from "../src/state.ts";
+import { stepBattle } from "../src/step.ts";
 
 const DEFAULT_PARAMS_URL = new URL(
   "../../../params/battle.json",
@@ -117,6 +119,28 @@ export function put(
 export function xyOf(state: BattleState, id: number): [number, number] {
   const { cell } = state.participants.find((p) => p.id === id)!;
   return [cell % state.arena.width, Math.floor(cell / state.arena.width)];
+}
+
+/** Puts every participant under the human, so nothing moves on its own. */
+export function humans(state: BattleState): BattleState {
+  for (const p of state.participants) p.controller = "human";
+  return state;
+}
+
+/**
+ * Steps `ticks` times; the first step gets `commands`. Returns every event,
+ * in order.
+ */
+export function run(
+  state: BattleState,
+  ticks: number,
+  commands: unknown[] = [],
+): BattleEvent[] {
+  const events: BattleEvent[] = [];
+  for (let i = 0; i < ticks; i++) {
+    events.push(...stepBattle(state, i === 0 ? commands : []));
+  }
+  return events;
 }
 
 type Mutable<T> = { -readonly [K in keyof T]: Mutable<T[K]> };

@@ -1,7 +1,6 @@
 // The command vocabulary of the battle (plan section 6, ADR-0002): the human
 // who dominates a participant, the lab and, from F3, the gambits all speak it,
-// through the same validation. F1 has the human's movement and aim commands;
-// drop, pickup, control, setGambits and join come with F2.
+// through the same validation.
 
 import { DIRS, type Dir } from "./arena.ts";
 import { findParticipant, type BattleState, type Controller } from "./state.ts";
@@ -12,11 +11,24 @@ export type BattleCommand =
   /** Fires the next possible attack once, even if the key is already up. */
   | { type: "attackOnce"; id: number }
   /** Turns without walking, to aim. */
-  | { type: "face"; id: number; dir: Dir };
+  | { type: "face"; id: number; dir: Dir }
+  /** Leaves the whole carry on the cell, on the next tick (spec D8, C-1). */
+  | { type: "drop"; id: number }
+  /** Takes from the cell's pile, on the next tick (spec D8, C-2). */
+  | { type: "pickup"; id: number };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
+
+/** Commands a participant takes from whoever controls it. */
+const PARTICIPANT_COMMANDS: readonly string[] = [
+  "intent",
+  "attackOnce",
+  "face",
+  "drop",
+  "pickup",
+];
 
 const isDir = (value: unknown): value is Dir => DIRS.includes(value as Dir);
 
@@ -33,7 +45,7 @@ export function validateCommand(
 ): string | null {
   if (!isRecord(command)) return "expected an object";
   const { type, id } = command;
-  if (type !== "intent" && type !== "attackOnce" && type !== "face") {
+  if (!PARTICIPANT_COMMANDS.includes(type as string)) {
     return `unknown command ${String(type)}`;
   }
   if (!Number.isSafeInteger(id)) return "id must be an integer";
@@ -67,6 +79,15 @@ export function applyCommand(state: BattleState, command: BattleCommand): void {
       return;
     case "face":
       participant.facing = command.dir;
+      return;
+    // The bag acts once, on stage 7; the last of the two in a tick wins.
+    case "drop":
+      participant.intent.drop = true;
+      participant.intent.pickup = false;
+      return;
+    case "pickup":
+      participant.intent.pickup = true;
+      participant.intent.drop = false;
       return;
   }
 }
