@@ -15,6 +15,7 @@ import {
   isOwnCreep,
   type Cell,
   type CreepView,
+  type TeamEvent,
   type TeamView,
 } from "@geometrix/sim";
 import { viewHash } from "./hash.ts";
@@ -38,12 +39,18 @@ export type Snapshot = { state: TeamView; at: number };
 /** What the welcome tells once: it does not change while connected. */
 export type WorldInfo = Omit<
   WelcomeMessage,
-  "type" | "protocol" | "stream" | "seq" | "view" | "status"
+  "type" | "protocol" | "stream" | "seq" | "view" | "status" | "chronicle"
 >;
 
 export type Notice = { id: number; text: string; at: number };
 
 export const NOTICE_MS = 4000;
+
+/**
+ * Entries of the chronicle a client keeps (M2 encontro C-4): the server's
+ * welcome brings 100; a long session drops the oldest past this.
+ */
+export const CHRONICLE_KEEP = 300;
 
 export class GameStore {
   readonly info = signal<WorldInfo | null>(null);
@@ -56,6 +63,8 @@ export class GameStore {
   /** Player names by id, from GET /api/worlds (the state has none). */
   readonly names = signal<ReadonlyMap<number, string>>(new Map());
   readonly notices = signal<Notice[]>([]);
+  /** The team's events, oldest first (M2 encontro C-4, N-1). */
+  readonly chronicle = signal<readonly TeamEvent[]>([]);
   private nextNotice = 1;
   /** Pan and zoom; null until the map element has a size. */
   readonly view = signal<View | null>(null);
@@ -126,18 +135,21 @@ export class GameStore {
   receive(message: WorldMessage, now: number): void {
     if (message.type === "welcome") {
       this.base++;
-      const { type, protocol, stream, seq, view, status, ...info } = message;
+      const { type, protocol, stream, seq, view, status, chronicle, ...info } =
+        message;
       void [type, protocol, stream, seq];
       this.info.value = info;
       this.status.value = status;
       this.previous.value = null;
       this.current.value = { state: view, at: now };
+      this.chronicle.value = chronicle.slice(-CHRONICLE_KEEP);
       return;
     }
     const current = this.current.value;
     if (current === null) return;
     const next = applyDelta(current.state, message.delta);
     this.show(next, now);
+    if (message.events !== undefined) this.chronicled(message.events);
     if (message.status !== undefined) this.status.value = message.status;
     if (message.hash !== undefined) void this.checkHash(next, message.hash);
   }
@@ -162,6 +174,14 @@ export class GameStore {
   show(view: TeamView, now: number): void {
     this.previous.value = this.current.value;
     this.current.value = { state: view, at: now };
+  }
+
+  /** Appends events to the chronicle, keeping the latest CHRONICLE_KEEP. */
+  chronicled(events: readonly TeamEvent[]): void {
+    if (events.length === 0) return;
+    const all = [...this.chronicle.value, ...events];
+    this.chronicle.value =
+      all.length > CHRONICLE_KEEP ? all.slice(-CHRONICLE_KEEP) : all;
   }
 
   notify(text: string, now: number): void {
