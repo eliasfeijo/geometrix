@@ -26,6 +26,14 @@ export function loadTestParams(): BattleParams {
   return parseBattleParams(readTestParamsJson());
 }
 
+export const ARENA_NAMES = ["aberta", "pedras", "corredor"] as const;
+
+/** An arena of params/arenas, one string per row. */
+export function readArenaRows(name: string): string[] {
+  const url = new URL(`../../../params/arenas/${name}.txt`, import.meta.url);
+  return readFileSync(url, "utf8").trimEnd().split("\n");
+}
+
 type Mutable<T> = { -readonly [K in keyof T]: Mutable<T[K]> };
 
 /** test/params.json changed by `edit`, then validated. */

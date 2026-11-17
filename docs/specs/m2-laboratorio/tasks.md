@@ -20,7 +20,7 @@ cada merge, conferir os pontos de contato do plan §16.
       (devDependency de teste) (plan P1)
 - [x] `params.ts` (schema, `parseBattleParams`, `checkConsistency`: durações múltiplas do tick, `CELL_COST`
       divisível pelo tick), `params/battle.json` e o `test/params.json` do pacote (spec §6, plan §3)
-- [ ] `arena.ts`: parser do texto, anel de saída, trechos de entrada, vizinhos, linha livre; as três arenas em
+- [x] `arena.ts`: parser do texto, anel de saída, trechos de entrada, vizinhos, linha livre; as três arenas em
       `params/arenas/`, simétricas por rotação de 180°, com um teste da simetria (plan §4)
 - [ ] `state.ts` e `setup.ts`: `BattleSetup`, a validação com motivo, `createBattle` com o nascimento pelo `rng`,
       `BATTLE_VERSION` 1 (spec S-1, S-2, plan §5, §8)
