@@ -127,8 +127,10 @@ export class WorldHost {
   /**
    * Rebuilds a stored world (ADR-0004): the latest snapshot, then the logged
    * commands of the ticks after it, up to the tick the world had reached.
-   * Players stored without a join in the state (it was still queued when the
-   * process stopped) join again.
+   * The chronicle of those ticks is deleted and written again from the
+   * events step returns (M2 encontro plan section 8); each team's latest
+   * entries are then read back. Players stored without a join in the state
+   * (it was still queued when the process stopped) join again.
    */
   static recover(context: HostContext, row: WorldRow): WorldHost {
     const { store } = context;
@@ -146,15 +148,18 @@ export class WorldHost {
       throw new RecoveryError(`world ${row.id}: snapshot hash mismatch`);
     }
     const log = store.commandsFrom(row.id, snapshot.tick);
-    let at = 0;
-    while (state.tick < row.tick) {
-      const commands = [];
-      while (at < log.length && log[at]!.tick === state.tick) {
-        const { playerId, command } = log[at++]!;
-        commands.push({ playerId, command });
+    store.transaction(() => {
+      store.deleteChronicleFrom(row.id, snapshot.tick);
+      let at = 0;
+      while (state.tick < row.tick) {
+        const commands = [];
+        while (at < log.length && log[at]!.tick === state.tick) {
+          const { playerId, command } = log[at++]!;
+          commands.push({ playerId, command });
+        }
+        store.putChronicle(row.id, step(state, commands));
       }
-      step(state, commands);
-    }
+    });
     const players = store.players(row.id);
     const bots = players
       .filter((p) => p.bot)
@@ -167,6 +172,13 @@ export class WorldHost {
       bots,
       row.status,
     );
+    for (const team of state.teams) {
+      host.recent[team.id] = store.recentChronicle(
+        row.id,
+        team.id,
+        context.config.chronicleWelcome,
+      );
+    }
     if (host.status === "running") {
       for (const p of players) {
         if (findPlayer(state, p.id) !== undefined) continue;
@@ -264,6 +276,7 @@ export class WorldHost {
           state.tick % metricsEveryTicks === 0
             ? sampleMetrics(state)
             : undefined,
+        events,
       });
       if (ended) store.setStatus(this.id, "ended");
     });
