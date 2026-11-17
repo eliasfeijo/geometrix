@@ -233,7 +233,7 @@ próprio: estourou os 5 s duas vezes seguidas com a suíte inteira e outra sess�
 - [ ] `lab.html` como 2ª entrada do Vite, `npm run lab`, servida também pelo `npm run server` (plan §13, P11)
 - [x] `worker.ts`: o relógio sem deriva, ×1/×4/instantâneo, pausar e reiniciar, a visão e os eventos por tick, o log
       e o hash no fim (Web Crypto) (plan §13, P10)
-- [ ] `channel.ts`: atraso por perna, jitter, ordem preservada, com teste em relógio falso; o seletor de RTT e o
+- [x] `channel.ts`: atraso por perna, jitter, ordem preservada, com teste em relógio falso; o seletor de RTT e o
       tamanho médio da visão (spec L-3, L-4, D17, plan P6, P7)
 - [ ] `arena-view.tsx`: as formas pelo DNA, a direção, a barra de HP, a carga, os projéteis, as pedras, a saída, os
       trechos, as pilhas, a contagem da fuga, o relógio de inatividade perto de estourar; interpolação com o botão
