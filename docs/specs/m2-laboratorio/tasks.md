@@ -130,7 +130,7 @@ sensíveis a tempo" do dashboard (tirar de lá no merge). Fora isso, a F2 só to
 
 ## F3 — A IA e o auto-resolve (`m2/laboratorio-f3-gambits`)
 
-- [ ] `view.ts` (`BattleView`) e `gambits.ts`: o vocabulário, a avaliação (1ª regra possível), os alvos sem
+- [x] `view.ts` (`BattleView`) e `gambits.ts`: o vocabulário, a avaliação (1ª regra possível), os alvos sem
       desempate pelo id, o tempo de reação pelo `rng` (spec G-1, G-2, D14, plan §9, P12, P13)
 - [ ] As ações: BFS até alinhar, manter distância, esquivar, proteger, fugir, largar, catar; um teste por condição e
       por ação, em arenas de texto
