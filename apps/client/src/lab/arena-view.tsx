@@ -3,7 +3,8 @@
 // drawn once; on top, the piles, the projectiles and the creeps, each with
 // where it faces, its HP, its load, the escape count on the ring and the idle
 // clock when it is close to running out. Positions glide over one tick
-// (interpolate.ts) unless the page turns that off.
+// (interpolate.ts) unless the page turns that off. During the start countdown
+// (spec D21) its seconds stand over the arena.
 
 import type { Arena, BattleParams, BattleView, Dir } from "@geometrix/battle";
 import { useEffect, useMemo, useState } from "preact/hooks";
@@ -22,6 +23,11 @@ const STEP: Record<Dir, [number, number]> = {
   down: [0, 1],
   left: [-1, 0],
 };
+
+/** The seconds of the start countdown still to go, shown as 3, 2, 1. */
+export function countdownSeconds(view: BattleView, tps: number): number {
+  return Math.ceil(view.countdownTicks / tps);
+}
 
 /** The idle clock shows once this much of it has run (per mille). */
 const IDLE_WARNING_PERMILLE = 666;
@@ -277,6 +283,18 @@ export function ArenaView(props: Props) {
           </g>
         );
       })}
+      {current.countdownTicks > 0 && (
+        <text
+          class="lab-countdown"
+          x={arena.width / 2}
+          y={arena.height / 2}
+          text-anchor="middle"
+          dominant-baseline="central"
+          font-size={Math.min(arena.width, arena.height) / 3}
+        >
+          {countdownSeconds(current, tps)}
+        </text>
+      )}
     </svg>
   );
 }

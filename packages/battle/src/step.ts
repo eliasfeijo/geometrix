@@ -10,6 +10,13 @@
 //   8. exit ring and inactivity
 //   9. the end, when at most one side is left
 //
+// During the countdown at the start (spec D21, S-4), stages 1, 2 and the turn
+// run, so the human and the AI can aim, and the rest waits: nobody attacks,
+// walks, drops or picks up, and the exit count and the idle clock only start
+// when it is over. What was asked meanwhile (a held key, a latch, a drop)
+// acts on the first tick of the fight. Whoever joins during the countdown
+// waits for it too; whoever joins later gets no countdown of its own.
+//
 // The caller passes the commands that arrived during the previous tick, in
 // arrival order (plan P5): the lab's worker queues them, the log keeps them
 // under the tick they were applied in, and a replay applies them there.
@@ -21,6 +28,7 @@ import { applyCommands } from "./commands.ts";
 import { createEventLog, type BattleEvent } from "./events.ts";
 import { checkEnd, leaveArena } from "./exits.ts";
 import { moveParticipants, turnToIntent } from "./movement.ts";
+import { countdownTicks } from "./params.ts";
 import type { BattleState } from "./state.ts";
 
 /** Advances the battle one tick, in place, and returns what happened. */
@@ -35,12 +43,17 @@ export function stepBattle(
   applyCommands(state, log, commands);
   runGambits(state, log);
   turnToIntent(state);
-  attack(state, log, hits);
-  moveParticipants(state);
+  const fighting = state.tick >= countdownTicks(state.params);
+  if (fighting) {
+    attack(state, log, hits);
+    moveParticipants(state);
+  }
   moveProjectiles(state, hits);
   applyHits(state, log, hits);
-  dropAndPickUp(state, log);
-  leaveArena(state, log);
+  if (fighting) {
+    dropAndPickUp(state, log);
+    leaveArena(state, log);
+  }
   checkEnd(state, log);
   state.tick += 1;
   return log.events;

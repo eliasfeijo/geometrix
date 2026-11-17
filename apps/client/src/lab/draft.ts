@@ -1,6 +1,7 @@
 // The lab's setup as the form edits it (spec L-1, L-6): an arena, 2 to 4
 // sides of 1 to 5 participants, each with a DNA, a starting HP in per mille,
-// a load of matéria, a gambits preset and a reaction; and the seed. It turns
+// a load of matéria, a gambits preset and a reaction; the seed; and who the
+// owner dominates from the start, or nobody (F5). It turns
 // into the battle's setup, with the preset's list copied in (the setup
 // carries the list, so a log replays the same whatever the presets become).
 
@@ -31,6 +32,11 @@ export type SetupDraft = {
   arena: ArenaName;
   seed: number;
   sides: MemberDraft[][];
+  /**
+   * The participant the owner dominates from the start, by its place in the
+   * setup (sides in order, then members), or null to just watch.
+   */
+  you: number | null;
 };
 
 /** The starting HP choices of the form, in per mille. */
@@ -46,13 +52,31 @@ export function member(dna: Dna): MemberDraft {
   };
 }
 
-/** The lab opens on a 1 × 1, a square against a circle. */
+/** The lab opens on a 1 × 1, the owner's square against a circle. */
 export function defaultDraft(): SetupDraft {
   return {
     arena: "pedras",
     seed: 1,
     sides: [[member("square")], [member("circle")]],
+    you: 0,
   };
+}
+
+/**
+ * The draft's choice of whom to dominate, kept in the setup: a place past the
+ * last participant (one was taken out) falls back to the first.
+ */
+export function youOf(draft: SetupDraft): number | null {
+  if (draft.you === null) return null;
+  return draft.you < namesUsed(draft) ? draft.you : 0;
+}
+
+/**
+ * The id of the participant at `place` once the battle is created: the
+ * battle numbers the setup's participants from 1, in the setup's order.
+ */
+export function idOfPlace(place: number): number {
+  return place + 1;
 }
 
 /** A seed for the "draw a seed" button: outside the battle, Math.random. */

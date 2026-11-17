@@ -31,6 +31,12 @@
   margin: 0 0 8px;
 }
 
+.lab h3 {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin: 10px 0 4px;
+}
+
 .lab-columns {
   display: grid;
   grid-template-columns: 330px minmax(0, 1fr) 360px;
@@ -122,11 +128,6 @@
 .lab button:focus-visible,
 .lab select:focus-visible,
 .lab input:focus-visible,
-.lab-stage:focus-visible {
-  outline: 2px solid #ffd166;
-  outline-offset: 2px;
-}
-
 .lab button[aria-pressed="true"] {
   border-color: #ffd166;
   color: #ffd166;
@@ -367,4 +368,23 @@
 
 .lab-check input {
   margin: 0;
+}
+
+/* The start countdown (spec D21): its seconds over the arena. */
+.lab-countdown {
+  font-family: var(--font-game);
+  font-weight: 700;
+  fill: #f2f4f7;
+  fill-opacity: 0.85;
+  paint-order: stroke;
+  stroke: #0d0f12;
+  stroke-width: 0.3px;
+  pointer-events: none;
+}
+
+/* The blind mode's grade (spec D17). */
+.lab-grade-button {
+  min-width: 2.5rem;
+  font-size: 1.1rem;
+  font-family: var(--font-game);
 }

@@ -1,5 +1,5 @@
 {
-  "battleVersion": 1,
+  "battleVersion": 2,
   "setup": {
     "rule": "grid",
     "arena": [
@@ -85,6 +85,7 @@
   },
   "params": {
     "tick": { "ticksPerSecond": 20 },
+    "start": { "countdownMs": 3000 },
     "dna": {
       "square": {
         "hp": 300,
@@ -125,184 +126,59 @@
     "gambits": { "maxRules": 8 },
     "limits": { "maxSides": 4, "maxPerSide": 5 }
   },
-  "ticks": 370,
+  "ticks": 258,
   "commands": [
     {
-      "tick": 35,
+      "tick": 10,
       "commands": [{ "type": "control", "id": 1, "controller": "human" }]
     },
     {
-      "tick": 42,
+      "tick": 11,
       "commands": [
         { "type": "intent", "id": 1, "move": "right", "attack": false }
       ]
     },
     {
-      "tick": 57,
-      "commands": [{ "type": "intent", "id": 1, "move": null, "attack": false }]
-    },
-    {
-      "tick": 60,
+      "tick": 17,
       "commands": [
+        { "type": "intent", "id": 1, "move": null, "attack": false },
         { "type": "attackOnce", "id": 1 },
         { "type": "intent", "id": 1, "move": null, "attack": true }
       ]
     },
     {
-      "tick": 62,
+      "tick": 18,
       "commands": [{ "type": "intent", "id": 1, "move": null, "attack": false }]
     },
     {
-      "tick": 67,
-      "commands": [{ "type": "intent", "id": 1, "move": "up", "attack": false }]
-    },
-    {
-      "tick": 72,
-      "commands": [{ "type": "intent", "id": 1, "move": null, "attack": false }]
-    },
-    {
-      "tick": 76,
+      "tick": 70,
       "commands": [
         { "type": "intent", "id": 1, "move": "right", "attack": false }
       ]
     },
     {
-      "tick": 91,
-      "commands": [{ "type": "intent", "id": 1, "move": null, "attack": false }]
-    },
-    { "tick": 93, "commands": [{ "type": "attackOnce", "id": 1 }] },
-    {
-      "tick": 94,
-      "commands": [{ "type": "intent", "id": 1, "move": null, "attack": true }]
-    },
-    {
-      "tick": 96,
-      "commands": [{ "type": "intent", "id": 1, "move": null, "attack": false }]
-    },
-    {
-      "tick": 100,
-      "commands": [{ "type": "intent", "id": 1, "move": "up", "attack": false }]
-    },
-    {
-      "tick": 106,
-      "commands": [{ "type": "intent", "id": 1, "move": null, "attack": false }]
-    },
-    {
-      "tick": 110,
+      "tick": 107,
       "commands": [
-        { "type": "intent", "id": 1, "move": "right", "attack": false }
-      ]
-    },
-    {
-      "tick": 125,
-      "commands": [{ "type": "intent", "id": 1, "move": null, "attack": false }]
-    },
-    {
-      "tick": 128,
-      "commands": [
+        { "type": "intent", "id": 1, "move": null, "attack": false },
         { "type": "attackOnce", "id": 1 },
-        { "type": "intent", "id": 1, "move": null, "attack": true }
+        { "type": "intent", "id": 1, "move": null, "attack": true },
+        { "type": "intent", "id": 1, "move": "up", "attack": true }
       ]
     },
     {
-      "tick": 129,
-      "commands": [{ "type": "intent", "id": 1, "move": null, "attack": false }]
-    },
-    {
-      "tick": 134,
-      "commands": [{ "type": "intent", "id": 1, "move": "up", "attack": false }]
+      "tick": 121,
+      "commands": [
+        { "type": "intent", "id": 1, "move": null, "attack": true },
+        { "type": "intent", "id": 1, "move": null, "attack": false },
+        { "type": "intent", "id": 1, "move": "right", "attack": false }
+      ]
     },
     {
       "tick": 139,
       "commands": [{ "type": "intent", "id": 1, "move": null, "attack": false }]
     },
     {
-      "tick": 144,
-      "commands": [
-        { "type": "intent", "id": 1, "move": "right", "attack": false }
-      ]
-    },
-    {
-      "tick": 158,
-      "commands": [{ "type": "intent", "id": 1, "move": null, "attack": false }]
-    },
-    { "tick": 161, "commands": [{ "type": "attackOnce", "id": 1 }] },
-    {
-      "tick": 162,
-      "commands": [{ "type": "intent", "id": 1, "move": null, "attack": true }]
-    },
-    {
-      "tick": 164,
-      "commands": [{ "type": "intent", "id": 1, "move": null, "attack": false }]
-    },
-    {
-      "tick": 168,
-      "commands": [{ "type": "intent", "id": 1, "move": "up", "attack": false }]
-    },
-    {
-      "tick": 174,
-      "commands": [{ "type": "intent", "id": 1, "move": null, "attack": false }]
-    },
-    {
-      "tick": 178,
-      "commands": [
-        { "type": "intent", "id": 1, "move": "right", "attack": false }
-      ]
-    },
-    {
-      "tick": 192,
-      "commands": [{ "type": "intent", "id": 1, "move": null, "attack": false }]
-    },
-    {
-      "tick": 196,
-      "commands": [
-        { "type": "attackOnce", "id": 1 },
-        { "type": "intent", "id": 1, "move": null, "attack": true }
-      ]
-    },
-    {
-      "tick": 197,
-      "commands": [{ "type": "intent", "id": 1, "move": null, "attack": false }]
-    },
-    {
-      "tick": 202,
-      "commands": [{ "type": "intent", "id": 1, "move": "up", "attack": false }]
-    },
-    {
-      "tick": 208,
-      "commands": [{ "type": "intent", "id": 1, "move": null, "attack": false }]
-    },
-    {
-      "tick": 212,
-      "commands": [
-        { "type": "intent", "id": 1, "move": "right", "attack": false }
-      ]
-    },
-    {
-      "tick": 226,
-      "commands": [{ "type": "intent", "id": 1, "move": null, "attack": false }]
-    },
-    {
-      "tick": 229,
-      "commands": [
-        { "type": "attackOnce", "id": 1 },
-        { "type": "intent", "id": 1, "move": null, "attack": true }
-      ]
-    },
-    {
-      "tick": 231,
-      "commands": [{ "type": "intent", "id": 1, "move": null, "attack": false }]
-    },
-    {
-      "tick": 235,
-      "commands": [{ "type": "intent", "id": 1, "move": "up", "attack": false }]
-    },
-    {
-      "tick": 242,
-      "commands": [{ "type": "intent", "id": 1, "move": null, "attack": false }]
-    },
-    {
-      "tick": 245,
+      "tick": 142,
       "commands": [
         {
           "type": "join",
@@ -332,7 +208,7 @@
       ]
     },
     {
-      "tick": 282,
+      "tick": 159,
       "commands": [
         {
           "type": "setGambits",
@@ -344,9 +220,109 @@
             },
             { "when": { "type": "always" }, "then": { "type": "flee" } }
           ]
-        }
+        },
+        { "type": "intent", "id": 1, "move": "right", "attack": false }
       ]
+    },
+    {
+      "tick": 170,
+      "commands": [
+        { "type": "intent", "id": 1, "move": null, "attack": false },
+        { "type": "attackOnce", "id": 1 },
+        { "type": "intent", "id": 1, "move": null, "attack": true }
+      ]
+    },
+    {
+      "tick": 172,
+      "commands": [
+        { "type": "intent", "id": 1, "move": null, "attack": false },
+        { "type": "intent", "id": 1, "move": "down", "attack": false }
+      ]
+    },
+    {
+      "tick": 181,
+      "commands": [
+        { "type": "intent", "id": 1, "move": null, "attack": false },
+        { "type": "attackOnce", "id": 1 }
+      ]
+    },
+    {
+      "tick": 182,
+      "commands": [{ "type": "intent", "id": 1, "move": null, "attack": true }]
+    },
+    {
+      "tick": 183,
+      "commands": [
+        { "type": "intent", "id": 1, "move": null, "attack": false },
+        { "type": "intent", "id": 1, "move": "left", "attack": false }
+      ]
+    },
+    {
+      "tick": 193,
+      "commands": [
+        { "type": "intent", "id": 1, "move": null, "attack": false },
+        { "type": "attackOnce", "id": 1 }
+      ]
+    },
+    {
+      "tick": 194,
+      "commands": [{ "type": "intent", "id": 1, "move": null, "attack": true }]
+    },
+    {
+      "tick": 195,
+      "commands": [{ "type": "intent", "id": 1, "move": null, "attack": false }]
+    },
+    {
+      "tick": 196,
+      "commands": [
+        { "type": "intent", "id": 1, "move": "right", "attack": false }
+      ]
+    },
+    {
+      "tick": 205,
+      "commands": [
+        { "type": "intent", "id": 1, "move": null, "attack": false },
+        { "type": "attackOnce", "id": 1 },
+        { "type": "intent", "id": 1, "move": null, "attack": true }
+      ]
+    },
+    {
+      "tick": 207,
+      "commands": [
+        { "type": "intent", "id": 1, "move": null, "attack": false },
+        { "type": "intent", "id": 1, "move": "down", "attack": false }
+      ]
+    },
+    {
+      "tick": 217,
+      "commands": [{ "type": "intent", "id": 1, "move": null, "attack": false }]
+    },
+    {
+      "tick": 218,
+      "commands": [
+        { "type": "attackOnce", "id": 1 },
+        { "type": "intent", "id": 1, "move": null, "attack": true }
+      ]
+    },
+    {
+      "tick": 219,
+      "commands": [
+        { "type": "intent", "id": 1, "move": null, "attack": false },
+        { "type": "intent", "id": 1, "move": "left", "attack": false }
+      ]
+    },
+    {
+      "tick": 229,
+      "commands": [
+        { "type": "intent", "id": 1, "move": null, "attack": false },
+        { "type": "attackOnce", "id": 1 },
+        { "type": "intent", "id": 1, "move": null, "attack": true }
+      ]
+    },
+    {
+      "tick": 231,
+      "commands": [{ "type": "intent", "id": 1, "move": null, "attack": false }]
     }
   ],
-  "finalHash": "76a5fcf49c91a0d48fb115c8f34df806b8db79a1cc60175d6ecdd1c030e68241"
+  "finalHash": "7106ce22a5dc62bddcda05bce3d39d6fcfbb74b339a423eb701d0e1942d30734"
 }

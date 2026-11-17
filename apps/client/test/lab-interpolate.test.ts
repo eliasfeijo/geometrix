@@ -5,6 +5,7 @@ import { glideProgress, positions } from "../src/lab/interpolate.ts";
 describe("the interpolation (plan P8)", () => {
   const view = (cells: number[], shots: number[] = []): BattleView => ({
     tick: 0,
+    countdownTicks: 0,
     participants: cells.map((cell, i) => ({
       id: i + 1,
       side: 0,
