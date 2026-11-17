@@ -3,6 +3,9 @@
 // human's (spec G-2), or says it cannot be done now (null), and the next rule
 // is tried. The intent they set lasts until the next decision (plan P12).
 //
+// The ones that stop somewhere never stop on the exit ring (only flee aims
+// there; a pile on the ring is still picked up).
+//
 //   attack        go until the target is aligned within range, then face it
 //                 and fire; melee: until next to it
 //   approach      go next to the target, then stand facing it
@@ -15,7 +18,15 @@
 //   drop          leave the whole carry here
 //   pickup        go to the nearest pile and pick it up
 
-import { alignedDir, DIRS, exitCells, neighbor, stepsFrom } from "./arena.ts";
+import {
+  alignedDir,
+  DIRS,
+  exitCells,
+  isExit,
+  neighbor,
+  stepsFrom,
+  type Dir,
+} from "./arena.ts";
 import type { BattleCommand } from "./commands.ts";
 import type { Action, Condition, Target } from "./gambits.ts";
 import {
@@ -30,7 +41,6 @@ import {
 import { nextInt } from "./rng.ts";
 import { carryTotal } from "./state.ts";
 import type { ViewParticipant } from "./view.ts";
-import type { Dir } from "./arena.ts";
 
 type Commands = BattleCommand[] | null;
 
@@ -61,6 +71,14 @@ function reach(
   return way === "here" ? there() : go(mind, way);
 }
 
+/**
+ * The cells an action may stop on: in the grid and off the exit ring, where
+ * standing a while would escape (spec D7). Only flee aims at the ring.
+ */
+function standable(mind: Mind, cells: readonly number[]): number[] {
+  return cells.filter((cell) => cell >= 0 && !isExit(mind.state.arena, cell));
+}
+
 /** Fire at `target` if it is aligned within range from where self stands. */
 function fireAt(mind: Mind, target: ViewParticipant): Commands {
   const dir = alignedDir(
@@ -75,12 +93,11 @@ function fireAt(mind: Mind, target: ViewParticipant): Commands {
 function attack(mind: Mind, by: Target): Commands {
   const target = pickTarget(mind, by);
   if (target === null) return null;
-  return (
-    fireAt(mind, target) ??
-    reach(mind, alignedCells(mind, target.cell, mind.kit.range), () =>
-      fireAt(mind, target),
-    )
+  const goals = standable(
+    mind,
+    alignedCells(mind, target.cell, mind.kit.range),
   );
+  return reach(mind, goals, () => fireAt(mind, target));
 }
 
 function approach(mind: Mind, by: Target): Commands {
@@ -88,7 +105,7 @@ function approach(mind: Mind, by: Target): Commands {
   if (target === null) return null;
   const { arena } = mind.state;
   const next = DIRS.map((dir) => neighbor(arena, target.cell, dir));
-  return reach(mind, next, () => {
+  return reach(mind, standable(mind, next), () => {
     const dir = alignedDir(arena, mind.self.cell, target.cell, 1)!;
     return [{ type: "face", id: mind.self.id, dir }, ...still(mind)];
   });
@@ -100,8 +117,13 @@ function keepDistance(mind: Mind, by: Target): Commands {
   const { range } = mind.kit;
   // Where the lines out of the target are cut short by rock, the band does
   // not exist: then anywhere aligned will do.
-  let goals = alignedCells(mind, target.cell, range, Math.max(range - 1, 1));
-  if (goals.length === 0) goals = alignedCells(mind, target.cell, range);
+  let goals = standable(
+    mind,
+    alignedCells(mind, target.cell, range, Math.max(range - 1, 1)),
+  );
+  if (goals.length === 0) {
+    goals = standable(mind, alignedCells(mind, target.cell, range));
+  }
   return reach(mind, goals, () => fireAt(mind, target));
 }
 
@@ -176,9 +198,9 @@ function protect(mind: Mind, when: Condition): Commands {
   if (enemy === undefined) return null;
   // The ward's neighbours nearest to the enemy: the cells that stand between.
   const fromEnemy = stepsFrom(arena, [enemy.cell]);
-  const sides = DIRS.map((dir) => neighbor(arena, ward.cell, dir)).filter(
+  const around = DIRS.map((dir) => neighbor(arena, ward.cell, dir));
+  const sides = standable(mind, around).filter(
     (cell) =>
-      cell >= 0 &&
       fromEnemy[cell]! >= 0 &&
       (cell === mind.self.cell || !mind.occupied.has(cell)),
   );
