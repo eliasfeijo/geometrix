@@ -2,10 +2,19 @@
 // log, snapshots and metrics. Each world has a single writer, the process that
 // hosts it; better-sqlite3 is synchronous, which fits the tick loop. A tick is
 // stored in one transaction: its commands, the tick it reached and, when due,
-// a snapshot and metric samples.
+// a snapshot and metric samples. The chronicle (M2 encontro plan section 8,
+// P7) is derived data (ADR-0007 rule 6): one row per event and team of its
+// audience, written with the tick, rebuilt from the log on recovery.
 
 import Database from "better-sqlite3";
-import type { Command, MetricsSample, Params } from "@geometrix/sim";
+import {
+  eventsFor,
+  type Command,
+  type MetricsSample,
+  type Params,
+  type SimEvent,
+  type TeamEvent,
+} from "@geometrix/sim";
 import type { LoggedCommand, WorldStatus } from "@geometrix/protocol";
 
 export type { LoggedCommand };
@@ -40,6 +49,8 @@ export type TickRecord = {
   tick: number;
   snapshot?: Snapshot;
   metrics?: MetricsSample;
+  /** The events step returned, with their audience. */
+  events?: readonly SimEvent[];
 };
 
 const SCHEMA = `
@@ -83,6 +94,14 @@ CREATE TABLE IF NOT EXISTS metrics (
   sample_json TEXT    NOT NULL
 );
 CREATE INDEX IF NOT EXISTS metrics_world_tick ON metrics (world_id, tick);
+CREATE TABLE IF NOT EXISTS chronicle (
+  world_id   INTEGER NOT NULL REFERENCES worlds(id),
+  team_id    INTEGER NOT NULL,
+  tick       INTEGER NOT NULL,
+  idx        INTEGER NOT NULL,
+  event_json TEXT    NOT NULL,
+  PRIMARY KEY (world_id, team_id, tick, idx)
+);
 `;
 
 type WorldRecord = {
@@ -242,7 +261,59 @@ export class Store {
         .run(record.tick, record.worldId);
       if (record.snapshot) this.putSnapshot(record.worldId, record.snapshot);
       if (record.metrics) this.putMetrics(record.worldId, record.metrics);
+      if (record.events) this.putChronicle(record.worldId, record.events);
     });
+  }
+
+  /**
+   * One row per event and team of its audience, without the audience: the
+   * event as that team receives it.
+   */
+  putChronicle(worldId: number, events: readonly SimEvent[]): void {
+    if (events.length === 0) return;
+    const insert = this.db.prepare(
+      `INSERT INTO chronicle (world_id, team_id, tick, idx, event_json)
+       VALUES (?, ?, ?, ?, ?)`,
+    );
+    const teams = new Set(events.flatMap((e) => e.teams));
+    for (const team of [...teams].sort((a, b) => a - b)) {
+      for (const event of eventsFor(events, team)) {
+        insert.run(
+          worldId,
+          team,
+          event.tick,
+          event.index,
+          JSON.stringify(event),
+        );
+      }
+    }
+  }
+
+  /** Deletes the chronicle of ticks >= `fromTick` (recovery redoes it). */
+  deleteChronicleFrom(worldId: number, fromTick: number): void {
+    this.db
+      .prepare("DELETE FROM chronicle WHERE world_id = ? AND tick >= ?")
+      .run(worldId, fromTick);
+  }
+
+  /** The team's latest `limit` events, oldest first. */
+  recentChronicle(worldId: number, team: number, limit: number): TeamEvent[] {
+    const rows = this.db
+      .prepare(
+        `SELECT event_json FROM chronicle
+         WHERE world_id = ? AND team_id = ?
+         ORDER BY tick DESC, idx DESC LIMIT ?`,
+      )
+      .all(worldId, team, limit) as { event_json: string }[];
+    return rows.reverse().map((r) => JSON.parse(r.event_json) as TeamEvent);
+  }
+
+  /** How many chronicle rows a world has (the table is never pruned, P7). */
+  chronicleCount(worldId: number): number {
+    const row = this.db
+      .prepare("SELECT COUNT(*) AS n FROM chronicle WHERE world_id = ?")
+      .get(worldId) as { n: number };
+    return row.n;
   }
 
   putSnapshot(worldId: number, snapshot: Snapshot): void {

@@ -95,7 +95,11 @@ describe("rebuild", () => {
     const host = WorldHost.create(
       {
         store,
-        config: { snapshotEveryTicks: 300, metricsEveryTicks: 60 },
+        config: {
+          snapshotEveryTicks: 300,
+          metricsEveryTicks: 60,
+          chronicleWelcome: 100,
+        },
       },
       {
         seed: 3,

@@ -180,6 +180,8 @@ export class ReplayController {
         stream: "replay",
         seq: 0,
         view: seen,
+        // The replay's chronicle comes with F5 (plan section 9).
+        chronicle: [],
       },
       now,
     );

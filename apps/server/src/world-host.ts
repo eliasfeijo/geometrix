@@ -3,7 +3,9 @@
 // Commands take the same path as in the harness: validate on receipt (ack or
 // reject), the accepted one gets the tick it will apply on and a seq, and step
 // validates it again. Time is not read here; the TickLoop decides when a tick
-// runs, so tests drive ticks directly.
+// runs, so tests drive ticks directly. The events of each tick go to the
+// listeners, and each team's latest ones stay in memory: the chronicle a new
+// stream starts from (M2 encontro spec N-1).
 
 import type { RejectReason, WorldStatus } from "@geometrix/protocol";
 import {
@@ -19,7 +21,10 @@ import {
   validate,
   view,
   type Command,
+  eventsFor,
   type Params,
+  type SimEvent,
+  type TeamEvent,
   type WorldState,
 } from "@geometrix/sim";
 import type { ServerConfig } from "./config.ts";
@@ -33,7 +38,10 @@ import type {
 
 export type HostContext = {
   store: Store;
-  config: Pick<ServerConfig, "snapshotEveryTicks" | "metricsEveryTicks">;
+  config: Pick<
+    ServerConfig,
+    "snapshotEveryTicks" | "metricsEveryTicks" | "chronicleWelcome"
+  >;
 };
 
 export type NewWorld = {
@@ -57,7 +65,9 @@ export class WorldHost {
   private readonly context: HostContext;
   private readonly bots: readonly Bot[];
   private pending: LoggedCommand[] = [];
-  private readonly listeners: (() => void)[] = [];
+  private readonly listeners: ((events: readonly SimEvent[]) => void)[] = [];
+  /** Each team's latest events, oldest first, at most chronicleWelcome. */
+  private readonly recent: TeamEvent[][];
 
   private constructor(
     context: HostContext,
@@ -73,6 +83,7 @@ export class WorldHost {
     this.state = state;
     this.bots = bots;
     this.status = status;
+    this.recent = state.teams.map(() => []);
   }
 
   /** Creates, stores and returns a new world, with its bots joining on tick 0. */
@@ -116,8 +127,10 @@ export class WorldHost {
   /**
    * Rebuilds a stored world (ADR-0004): the latest snapshot, then the logged
    * commands of the ticks after it, up to the tick the world had reached.
-   * Players stored without a join in the state (it was still queued when the
-   * process stopped) join again.
+   * The chronicle of those ticks is deleted and written again from the
+   * events step returns (M2 encontro plan section 8); each team's latest
+   * entries are then read back. Players stored without a join in the state
+   * (it was still queued when the process stopped) join again.
    */
   static recover(context: HostContext, row: WorldRow): WorldHost {
     const { store } = context;
@@ -135,15 +148,18 @@ export class WorldHost {
       throw new RecoveryError(`world ${row.id}: snapshot hash mismatch`);
     }
     const log = store.commandsFrom(row.id, snapshot.tick);
-    let at = 0;
-    while (state.tick < row.tick) {
-      const commands = [];
-      while (at < log.length && log[at]!.tick === state.tick) {
-        const { playerId, command } = log[at++]!;
-        commands.push({ playerId, command });
+    store.transaction(() => {
+      store.deleteChronicleFrom(row.id, snapshot.tick);
+      let at = 0;
+      while (state.tick < row.tick) {
+        const commands = [];
+        while (at < log.length && log[at]!.tick === state.tick) {
+          const { playerId, command } = log[at++]!;
+          commands.push({ playerId, command });
+        }
+        store.putChronicle(row.id, step(state, commands));
       }
-      step(state, commands);
-    }
+    });
     const players = store.players(row.id);
     const bots = players
       .filter((p) => p.bot)
@@ -156,6 +172,13 @@ export class WorldHost {
       bots,
       row.status,
     );
+    for (const team of state.teams) {
+      host.recent[team.id] = store.recentChronicle(
+        row.id,
+        team.id,
+        context.config.chronicleWelcome,
+      );
+    }
     if (host.status === "running") {
       for (const p of players) {
         if (findPlayer(state, p.id) !== undefined) continue;
@@ -235,7 +258,7 @@ export class WorldHost {
     }
     const commands = this.pending;
     this.pending = [];
-    step(state, commands);
+    const events = step(state, commands);
 
     const { snapshotEveryTicks, metricsEveryTicks } = this.context.config;
     const ended = state.tick >= this.durationTicks;
@@ -253,11 +276,31 @@ export class WorldHost {
           state.tick % metricsEveryTicks === 0
             ? sampleMetrics(state)
             : undefined,
+        events,
       });
       if (ended) store.setStatus(this.id, "ended");
     });
     if (ended) this.status = "ended";
-    for (const listener of this.listeners) listener();
+    this.remember(events);
+    for (const listener of this.listeners) listener(events);
+  }
+
+  /** The team's latest events, oldest first: what a new stream starts from. */
+  chronicle(team: number): TeamEvent[] {
+    return [...(this.recent[team] ?? [])];
+  }
+
+  private remember(events: readonly SimEvent[]): void {
+    if (events.length === 0) return;
+    const { chronicleWelcome } = this.context.config;
+    for (const team of this.state.teams) {
+      const seen = eventsFor(events, team.id);
+      if (seen.length === 0) continue;
+      const kept = [...this.recent[team.id]!, ...seen];
+      this.recent[team.id] = kept.slice(
+        Math.max(0, kept.length - chronicleWelcome),
+      );
+    }
   }
 
   /** Stores a snapshot of the state now (clean shutdown). */
@@ -265,8 +308,8 @@ export class WorldHost {
     this.context.store.putSnapshot(this.id, snapshotOf(this.state));
   }
 
-  /** Calls `listener` after every tick. */
-  onTick(listener: () => void): void {
+  /** Calls `listener` after every tick, with the tick's events. */
+  onTick(listener: (events: readonly SimEvent[]) => void): void {
     this.listeners.push(listener);
   }
 }

@@ -48,6 +48,7 @@ export function welcomeOf(
     stream: "test",
     seq: 0,
     view: viewOf(state, team),
+    chronicle: [],
   };
 }
 

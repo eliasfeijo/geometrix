@@ -12,10 +12,10 @@
 | | |
 |---|---|
 | **Marco** | **M2 — A emboscada** ([ROADMAP](../ROADMAP.md)). M0, M1 e M1.5 ✅ |
-| **Fatia** | **A — O encontro** ([spec](../specs/m2-encontro/spec.md) · [plan](../specs/m2-encontro/plan.md) · [tasks](../specs/m2-encontro/tasks.md)): F0 a F3 ✅ (a F3: bots e harness) · **B — O laboratório de batalha** ([spec](../specs/m2-laboratorio/spec.md) · [plan](../specs/m2-laboratorio/plan.md) · [tasks](../specs/m2-laboratorio/tasks.md)): F0 ✅ (spec, ADR-0008 e plan aprovados) |
+| **Fatia** | **A — O encontro** ([spec](../specs/m2-encontro/spec.md) · [plan](../specs/m2-encontro/plan.md) · [tasks](../specs/m2-encontro/tasks.md)): F0 a F4 ✅ (a F4: rede e servidor) · **B — O laboratório de batalha** ([spec](../specs/m2-laboratorio/spec.md) · [plan](../specs/m2-laboratorio/plan.md) · [tasks](../specs/m2-laboratorio/tasks.md)): F0 ✅ (spec, ADR-0008 e plan aprovados) |
 | **Em execução** | Nenhuma fase |
-| **Próxima fase** | **A F4 — Rede e servidor**, branch `m2/encontro-f4-network` (skill `implement-phase`), com o checkpoint `geo net` |
-| **Pode andar em paralelo** | **B F1 — O pacote e o movimento**, branch `m2/laboratorio-f1-package`, numa outra sessão com worktree próprio (como a spec da B); a B mexe no pacote de batalha, não no `sim`. Ela não edita o dashboard nem o `CLAUDE.md`; o merge em `main` acontece entre duas fases da A. A A F5 e a B F4 mexem no cliente e na config do Vite: uma entra em `main` antes de a outra começar. Medições de tempo com a outra sessão rodando testes saem distorcidas |
+| **Próxima fase** | **A F5 — Cliente**, branch `m2/encontro-f5-client` (skill `implement-phase`) |
+| **Pode andar em paralelo** | **B F1 — O pacote e o movimento**, branch `m2/laboratorio-f1-package`, numa outra sessão com worktree próprio (`.claude/worktrees/lab-f1`); a B mexe no pacote de batalha, não no `sim`. Ela não edita o dashboard nem o `CLAUDE.md`; o merge em `main` acontece entre duas fases da A. **A A F5 e a B F4 mexem no cliente e na config do Vite: uma entra em `main` antes de a outra começar.** Medições de tempo com a outra sessão rodando testes saem distorcidas (na A F4, um teste de 1,7 s passou dos 5 s do Vitest) |
 | **Aguardando o dono** | Nada |
 | **Bloqueios** | Nenhum |
 
@@ -23,7 +23,7 @@
 
 As fatias do M2 seguem o grafo de dependências do [ROADMAP](../ROADMAP.md), não uma fila.
 
-1. **A F4 a F6**, em sequência.
+1. **A F5 e a F6**, em sequência.
 2. **A implementação da B** (F1 a F5) em paralelo à A, numa outra sessão.
 3. **Já liberadas pelo checkpoint da A F3:** as rodadas de design do **papel do cristal** e da **fatia E** (se o
    cerco passa pela instância de batalha, a E depende da D; senão, pode vir antes dela).
@@ -31,31 +31,30 @@ As fatias do M2 seguem o grafo de dependências do [ROADMAP](../ROADMAP.md), nã
 
 ### O que a próxima fase precisa saber
 
-- **o encontro no `sim`** (F2, `sim/encounter.ts`): estágio 4 do `step` (`runEncounters`); critérios de
-  abordagem e exigência em `sim/approach.ts`; despojos em `sim/spoils.ts`; reações do piloto em `autopilot.ts`
-  (`ruleReaction`, `isReaction`); o comando `react` e as ordens `approach`/`pickup`/`flee` em `domination.ts` e
-  `orders.ts`. Atividades: `talking`, `fighting`, `fleeing`. `state.encounters` e `state.spoils` são arrays
-  ordenados por id;
-- **o que a F4 põe na visão:** `encounters` e `spoils` ainda não estão na `TeamView` (entram junto com o delta,
-  senão o hash do cliente diverge); o creep inimigo já mostra `name`, `hp` e `engagement`;
-- **eventos** (`sim/events.ts`, ADR-0007): o `step` devolve `SimEvent[]` com o público (`teams`), e todos os tipos
-  do plan §7 já são emitidos; `eventsFor(events, team)` filtra e tira o `teams`; o `createWorld` não emite;
-- **harness** (F3, `apps/cli`): `stepWithBots` devolve os eventos do tick; `EventHash` (`hash.ts`, uma linha de
-  `canonicalJson` por evento) é o que o `geo verify` compara, além do hash do estado; as métricas de encontro
-  ficam em `encounters.ts` (`EncounterTracker`) e saem no `report.md` e no `encounters.json` do `geo sim`. O
-  `geo net` ainda não mede os eventos: é o checkpoint da F4;
-- **o bot** (`sim/strategist.ts`): `floor(creeps ÷ 6)` salteadores enquanto o time alcança uma célula nunca vista
-  (`nearestUnseen`, que agora sai cedo por `hasFrontier` em `known.ts`), depois todos coletam; coletores com a
-  postura pelo DNA na frente das regras do papel (`postureRules`: ■ luta e foge abaixo de 400‰ de HP, ▲ paga, ●
-  foge), por `setRules`; o salteador, por `applyPreset raider`. Desempates de alvo pela célula no referencial do
-  time, nunca pelo id (o espelho entre os times; teste em `bot-world.test.ts`, que vale até o 1º sorteio);
-- **identidade e HP** (F1): `creep.name` de `nameAt(state.births)`; `creep.hp` em milésimos (`maxHp`);
-  `regenerateHp` no estágio 5; `inCoreZone` e `kill` em `hp.ts`;
-- **visão e memória** (`sim/vision.ts`, `view.ts`): a `view` filtrada é a única entrada do estrategista e do
-  cliente; `fullView` (time −1) para o replay. Um depósito lembrado como vazio fora da visão nunca é revisitado
-  (pergunta aberta no GDD 07);
-- **rede:** `PROTOCOL_VERSION` 3, `welcome` só com o tamanho do mapa; o terreno chega pelo `known` do delta; a
-  propriedade do diff de 6 h × 3 seeds fica em `packages/protocol/test/`;
+- **a visão** (`sim/view.ts`): `encounters` e `spoils` entraram na F4. O encontro com um creep do time vem inteiro
+  (`EncounterView`), menos a resposta pendente do outro lado (`reply` para o time do agressor, `aggressorReply`
+  para o da vítima, sempre `null`); o de outros times numa célula visível só com `id`, `aggressor`, `victim`,
+  `intent`, `stage`, `x`, `y` (`ForeignEncounterView`; com 2 times não acontece). `isOwnEncounter` distingue. Os
+  despojos são a memória do time (o último valor visto), como os depósitos. O creep inimigo à vista mostra `name`,
+  `hp` (milésimos: mostre `floor(hp / 1000)`; o máximo é `params.hp.max[dna]`) e `engagement`;
+- **os eventos no cliente:** `DeltaMessage.events` traz os eventos do time (`TeamEvent`, sem `teams`, em ordem de
+  `(tick, index)`) dos ticks que o delta cobre; o `WelcomeMessage.chronicle`, as últimas 100 do time **até a visão
+  do `welcome`**: o delta seguinte traz as que vêm depois, sem repetir. O cliente ainda ignora os dois. O replay
+  monta um `welcome` com `chronicle: []` (`replay/controller.ts`): na F5, o `step` devolve os eventos e o replay
+  mostra todos (`fullView`). `PROTOCOL_VERSION` 4;
+- **o encontro no `sim`** (F2): `sim/encounter.ts` (estágio 4 do `step`); `demandFor` e os critérios de abordagem
+  em `sim/approach.ts` (a exigência do menu "Extorquir"); despojos em `sim/spoils.ts`; o comando `react` e as
+  ordens `approach { targetId, intent }` e `pickup { spoilId }` (`domination.ts`, `orders.ts`), com as recusas
+  `notEngaged`, `invalidReaction`, `engaged`, `fleeing`; a janela do dominado é `deadlineTick` (em ticks), a
+  rodada `nextRoundTick`. Atividades: `talking`, `fighting`, `fleeing`; a ordem de fuga é
+  `{ type: "flee", untilTick }`. O evento leva o `CreepRef` (id, time, DNA, nome) porque o morto sai do estado;
+- **o vocabulário do piloto** (para o editor de regras): condições `enemyInSight`, `hpBelow`, `demandAtMost`;
+  ações `approach`, `pickup`, `pay`, `fight`, `flee` (as três últimas são regras de reação); preset `raider`. O
+  cliente da F2 só ganhou rótulos e o botão "Salteador";
+- **o servidor** (F4): `WorldHost.onTick` entrega os eventos do tick; `TeamStream.record`/`advance` os põem no
+  delta (e no buffer de retomada); a tabela `chronicle` (uma linha por evento e time do público, sem poda) com
+  `Store.recentChronicle` e `Store.chronicleCount` (para o relatório do soak da F6); a recuperação apaga a partir
+  do tick do snapshot e refaz;
 - **cliente:** a névoa é a `FogLayer` (`map/fog-layer.tsx`); seleção por área (`map/layout.ts`); cursor da ação
   (`map/cursor.ts`);
 - o replay de um mundo só abre depois que ele acaba: para uma sessão, `--mult` alto ou o mundo do soak;
@@ -98,7 +97,7 @@ Só o que ainda está aberto. Ao resolver, tire daqui e registre no Histórico.
 | M0 — Design | ✅ |
 | M1 — O ciclo da riqueza | ✅ 2026-11-14 |
 | M1.5 — A névoa | ✅ 2026-11-14 (rede e fog of war) |
-| M2 — A emboscada | 🟡 Fatia A: F0–F3 ✅, F4–F6 ⬜ · Fatia B: F0 ✅, F1–F5 ⬜ · Fatias C, D, E ⬜ |
+| M2 — A emboscada | 🟡 Fatia A: F0–F4 ✅, F5–F6 ⬜ · Fatia B: F0 ✅, F1–F5 ⬜ · Fatias C, D, E ⬜ |
 | M2.5 — A jungle hostil e o fim do mundo | ⬜ (fim do mundo decidido no GDD, 2026-11-15) |
 | M3 — O time · M4 — O mundo vivo · M5 — As lendas | ⬜ |
 
@@ -155,6 +154,7 @@ Só o que ainda está aberto. Ao resolver, tire daqui e registre no Histórico.
 | M2 A (encontro) — spec | ✅ Aprovada (2026-11-15), com D1–D21 decididas na rodada interativa; as de gameplay no GDD 01, 02, 03, 06, 07, 08; a ideia do dono de acampamento e torres em incubação no GDD 01. ADR-0007 (eventos do `sim`) ✅ `Accepted` (2026-11-15) |
 | M2 A (encontro) — plan | ✅ Aprovado (2026-11-15), com P1–P11 pela proposta; fases F1–F6 no tasks.md. F0 ✅ | [plan.md](../specs/m2-encontro/plan.md) · [tasks.md](../specs/m2-encontro/tasks.md) | [spec.md](../specs/m2-encontro/spec.md) |
 | M2 B (laboratório) — spec e plan | ✅ Aprovados (2026-11-15), escritos numa sessão paralela (worktree `../geometrix-lab`); ADR-0008 (pacote de batalha) ✅ `Accepted`. Fases F1–F5 no tasks.md | [spec.md](../specs/m2-laboratorio/spec.md) · [plan.md](../specs/m2-laboratorio/plan.md) · [tasks.md](../specs/m2-laboratorio/tasks.md) |
+| M2 A — F4 Rede e servidor | ✅ Concluída, merge em `main`. `encounters` e `spoils` na visão e no delta, os eventos do time no delta, a crônica no `welcome`, `PROTOCOL_VERSION` 4; tabela `chronicle` com a recuperação que refaz; propriedade do diff com piso de mortes. **Checkpoint `geo net`** ✅: 196 B/s, 172,8 µs por envio (o `main` antes da F4: 177,1 µs), 0 divergências | [tasks.md](../specs/m2-encontro/tasks.md) · `apps/server/src/{stream,world-host,persistence}.ts` · `runs/m2-encontro-f4-net/` |
 | M2 A — F3 Bots e harness | ✅ Concluída, merge em `main`. O bot com salteadores (`floor(creeps ÷ 6)`, só enquanto há o que explorar) e coletores com postura pelo DNA; métricas de encontro no `geo sim` e no `geo sweep`; `geo verify` com o hash dos eventos; desempates de alvo pelo referencial do time; `SIM_VERSION` 8. **Checkpoint** (dono, 2 rodadas, 2026-11-17): decisões C1–C10; custo do tick ~1,04× o da F6 | [tasks.md](../specs/m2-encontro/tasks.md) · [plan §11.1](../specs/m2-encontro/plan.md) · `apps/cli/src/{encounters,hash}.ts` |
 | M2 A — F2 O encontro no `sim` | ✅ Concluída, merge em `main`. Ordens `approach`/`pickup`/`flee`, o estágio de encontros (abrir, diálogo, rodadas, fechar), extorsão com salvo-conduto e bloqueio, fuga pela velocidade, sorteio pelo HP × DNA, morte, saque e despojo, o vocabulário de encontro e as regras de reação, o preset salteador, o comando `react`, todos os eventos; `SIM_VERSION` 7 | [tasks.md](../specs/m2-encontro/tasks.md) · `packages/sim/src/{encounter,approach,spoils}.ts` |
 | M2 A — F1 Identidade, HP e eventos | ✅ Concluída, merge em `main`. Params do encontro, nomes no `sim` pelo contador de nascimentos, HP em milésimos com regeneração e `kill`, `step` devolve os eventos (`born`) com o público e `eventsFor`, nome/HP/encontro do inimigo na visão, `SIM_VERSION` 6 | [tasks.md](../specs/m2-encontro/tasks.md) · `packages/sim/src/{names,hp,events}.ts` |
@@ -189,6 +189,36 @@ Um item por problema: o que a pessoa não entendeu ou não conseguiu, a tarefa o
 ## Registro das fases
 
 Medições, interpretações e decisões de cada fase, da mais recente para a mais antiga.
+
+- **M2 A F4 — Rede e servidor** ✅ (2026-11-17). 2 291 testes; `geo verify` OK (seed 42, 536 eventos nos quatro
+  caminhos). **Checkpoint `geo net --seed 42 --days 3`** (`runs/m2-encontro-f4-net/`), com a linha de base do
+  `main` antes da F4 na mesma máquina (`base-main/`):
+
+  | Medida | `main` (F3) | F4 | Alvo |
+  |---|---|---|---|
+  | Banda por cliente a ×1 | 195 B/s (pico 3 976 B) | 196 B/s (pico 3 976 B) | ≤ 2 048 B/s |
+  | CPU por envio, 2 times (mediana + hash amortizado) | 177,1 µs | 172,8 µs | ≤ 250 µs |
+  | Partes: visão / diff / eventos / `stringify` | 50,8 / 88,9 / — / 3,5 µs | 49,1 / 87,6 / 0,3 / 3,5 µs | |
+  | Divergências do diff | 0 em 518 400 | 0 em 518 400 | 0 |
+
+  O hash final é o mesmo nos dois (`477ddafe…`): a F4 não mudou o `sim` (sem `SIM_VERSION` novo). Os eventos não
+  pesam: 1 116 em 3 dias (2 times), em 496 deltas, no máximo 7 num delta; a crônica de um `welcome` (100 entradas)
+  tem 17 KB, a visão 35 KB. A CPU subiu desde a F6 do fog (126 µs) por causa do mundo das F1–F3 (ou da máquina,
+  com a outra sessão rodando testes), não da rede. A propriedade do diff de 6 h passou a exigir mortes (3, 8 e 7
+  nas seeds 1, 42 e 649), encontros e despojos. Interpretações, a validar:
+  - **O encontro do próprio time vem inteiro, menos a resposta pendente do outro lado** (o plan §8 dizia
+    "inteiros"): na luta, o `reply` espera a rodada seguinte, vários ticks, e diria ao time inimigo o que o
+    jogador vai fazer. O `deadlineTick` continua visível ao agressor: o diálogo que dura mais de um tick já mostra
+    que a vítima é dominada (a livre reage no mesmo tick).
+  - **A crônica do `welcome` vai até a visão dele** (a última enviada ao time), não até o estado agora: assim o
+    delta seguinte traz os eventos depois dela, sem repetir nem perder. O stream de cada time começa da crônica
+    que o `WorldHost` guarda em memória (as últimas 100 por time; lidas da tabela na recuperação).
+  - `chronicleWelcome` (100) entrou no `ServerConfig`, como os outros valores de operação.
+  - A recuperação apaga as linhas com `tick >=` o do snapshot: o evento leva o tick em que o `step` começou.
+  - Mundos gravados antes da F4 começam com a crônica vazia (a tabela é nova; o `SIM_VERSION` não mudou).
+  - O `geo net` conta os eventos nos bytes e o `eventsFor` na CPU do envio.
+  - Dois testes de `geo verify` com mundos de 2 h ganharam timeout de 30 s: levam 1,7 s sozinhos e passaram dos 5 s
+    com a suíte da outra sessão rodando ao mesmo tempo.
 
 - **M2 A F3, fechamento** (2026-11-17). Decisões do dono na 2ª rodada no [plan §11.1](../specs/m2-encontro/plan.md)
   (C6–C10): o depósito lembrado vazio fica para a rodada de balanceamento (pergunta aberta no GDD 07); encontros só
