@@ -4,13 +4,16 @@ import {
   type BattleParams,
   type Dna,
 } from "../src/params.ts";
-import type { Dir } from "../src/arena.ts";
+import { DIRS, type Dir } from "../src/arena.ts";
+import { createRng, nextInt } from "../src/rng.ts";
 import {
   createBattle,
   type BattleSetup,
   type ParticipantSetup,
 } from "../src/setup.ts";
+import type { BattleEvent } from "../src/events.ts";
 import type { BattleState, Participant } from "../src/state.ts";
+import { stepBattle } from "../src/step.ts";
 
 const DEFAULT_PARAMS_URL = new URL(
   "../../../params/battle.json",
@@ -117,6 +120,86 @@ export function put(
 export function xyOf(state: BattleState, id: number): [number, number] {
   const { cell } = state.participants.find((p) => p.id === id)!;
   return [cell % state.arena.width, Math.floor(cell / state.arena.width)];
+}
+
+/** Puts every participant under the human, so nothing moves on its own. */
+export function humans(state: BattleState): BattleState {
+  for (const p of state.participants) p.controller = "human";
+  return state;
+}
+
+/**
+ * Steps `ticks` times; the first step gets `commands`. Returns every event,
+ * in order.
+ */
+export function run(
+  state: BattleState,
+  ticks: number,
+  commands: unknown[] = [],
+): BattleEvent[] {
+  const events: BattleEvent[] = [];
+  for (let i = 0; i < ticks; i++) {
+    events.push(...stepBattle(state, i === 0 ? commands : []));
+  }
+  return events;
+}
+
+/**
+ * A 3 × 3 on `rows` (ids 1 to 6), wounded and with some carry. On the small
+ * FIELD (the default) the sides meet fast, and random commands also kill.
+ */
+export function brawlSetup(seed: number, rows: string[] = FIELD): BattleSetup {
+  const side = () => [
+    member("square", { hp: 90, carry: { materia: 10, cristal: 5 } }),
+    member("triangle", { hp: 60 }),
+    member("circle", { hp: 48, carry: { materia: 0, cristal: 4 } }),
+  ];
+  return setupOf(rows, [side(), side()], seed);
+}
+
+/** The brawl of `brawlSetup`, every participant under the human. */
+export function brawl(seed: number, rows: string[] = FIELD): BattleState {
+  return humans(createBattle(brawlSetup(seed, rows), loadTestParams()));
+}
+
+/**
+ * A seeded stream of human commands for participants 1 to `ids`, per tick:
+ * intents (walk and attack), turns, latches, drops and pickups. Commands for
+ * participants who left are refused by the battle, as they would be.
+ */
+export function plan(seed: number, ticks: number, ids = 6): unknown[][] {
+  const input = createRng(seed);
+  return Array.from({ length: ticks }, () => {
+    const commands: unknown[] = [];
+    for (let id = 1; id <= ids; id++) {
+      if (nextInt(input, 5) !== 0) continue;
+      const dir = DIRS[nextInt(input, 4)]!;
+      switch (nextInt(input, 6)) {
+        case 0:
+          commands.push({ type: "intent", id, move: null, attack: false });
+          break;
+        case 1:
+        case 2:
+          commands.push({
+            type: "intent",
+            id,
+            move: dir,
+            attack: nextInt(input, 2) === 0,
+          });
+          break;
+        case 3:
+          commands.push({ type: "face", id, dir });
+          commands.push({ type: "attackOnce", id });
+          break;
+        case 4:
+          commands.push({ type: "drop", id });
+          break;
+        default:
+          commands.push({ type: "pickup", id });
+      }
+    }
+    return commands;
+  });
 }
 
 type Mutable<T> = { -readonly [K in keyof T]: Mutable<T[K]> };

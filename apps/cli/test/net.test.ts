@@ -124,15 +124,19 @@ describe("geo net", () => {
     expect(io.lines[0]).toBe(
       "geo net --seed 3: 3600 ticks, balanced x balanced",
     );
-    // The CPU time depends on the machine's load (it failed twice with another
-    // session running its tests): the `geo net` checkpoint judges it, and
-    // netVerdicts has its own test. Bandwidth and the diff property must pass.
-    expect(io.errors.filter((e) => e !== "FAIL: cpu")).toEqual([]);
-    expect(code).toBe(io.errors.length === 0 ? 0 : 1);
     const json = JSON.parse(
       readFileSync(join(out, "one", NET_FILES.json), "utf8"),
     ) as NetResult;
     expect(json.property.mismatches).toBe(0);
+    // Bandwidth and the diff property are deterministic and must pass. The
+    // CPU target is a wall-clock measurement: with another session running
+    // tests it can miss, and then the CLI reports it and exits 1. The test
+    // checks that the exit code follows the verdicts, not the machine's load.
+    const verdicts = netVerdicts(json);
+    expect(verdicts.bandwidth).toBe(true);
+    expect(verdicts.property).toBe(true);
+    expect(code).toBe(verdicts.cpu ? 0 : 1);
+    expect(io.errors).toEqual(verdicts.cpu ? [] : ["FAIL: cpu"]);
     expect(json.options.paramsSource).toBe("params/default.json");
     expect(readFileSync(join(out, "one", NET_FILES.report), "utf8")).toContain(
       "# geo net — one",
