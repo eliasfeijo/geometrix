@@ -231,7 +231,7 @@ próprio: estourou os 5 s duas vezes seguidas com a suíte inteira e outra sess�
 - [x] A reação por participante: `fácil`/`normal`/`difícil` no setup, os números em `params/battle.json`, o
       `rng` sorteando a reação de cada decisão (spec D20; plan C3)
 - [ ] `lab.html` como 2ª entrada do Vite, `npm run lab`, servida também pelo `npm run server` (plan §13, P11)
-- [ ] `worker.ts`: o relógio sem deriva, ×1/×4/instantâneo, pausar e reiniciar, a visão e os eventos por tick, o log
+- [x] `worker.ts`: o relógio sem deriva, ×1/×4/instantâneo, pausar e reiniciar, a visão e os eventos por tick, o log
       e o hash no fim (Web Crypto) (plan §13, P10)
 - [ ] `channel.ts`: atraso por perna, jitter, ordem preservada, com teste em relógio falso; o seletor de RTT e o
       tamanho médio da visão (spec L-3, L-4, D17, plan P6, P7)
