@@ -15,8 +15,8 @@
 | **Fatia** | **A — O encontro** ([spec](../specs/m2-encontro/spec.md) · [plan](../specs/m2-encontro/plan.md) · [tasks](../specs/m2-encontro/tasks.md)): F0 a F5 ✅ (a F5: o cliente) · **B — O laboratório de batalha** ([spec](../specs/m2-laboratorio/spec.md) · [plan](../specs/m2-laboratorio/plan.md) · [tasks](../specs/m2-laboratorio/tasks.md)): F0 a F2 ✅ (a F2: o combate) |
 | **Em execução** | Nenhuma fase |
 | **Próxima fase** | **A F6 — Soak e playtest**, branch `m2/encontro-f6-soak` (skill `implement-phase`); o checkpoint é do dono |
-| **Pode andar em paralelo** | **B F3 — A IA e o laboratório**, a partir de `main` (que já tem a B F2), numa outra sessão, com worktree próprio em `.claude/worktrees/` (fora do Git; o ESLint o ignora desde a A F5). A B não edita o dashboard nem o `CLAUDE.md`; o merge dela em `main` acontece entre duas fases da A. **A B F4 mexe no cliente e na config do Vite:** começa depois de a A F5 estar em `main` (já está). Medições de tempo com a outra sessão rodando testes saem distorcidas |
-| **Aguardando o dono** | Nada
+| **Pode andar em paralelo** | **B F3 — A IA e o auto-resolve**, branch `m2/laboratorio-f3-gambits` a partir de `main` (que já tem a B F2), numa outra sessão, com worktree próprio em `.claude/worktrees/` (fora do Git; o ESLint o ignora desde a A F5). A B não edita o dashboard nem o `CLAUDE.md`; o merge dela em `main` acontece entre duas fases da A. **A B F4 mexe no cliente e na config do Vite:** começa depois de a A F5 estar em `main` (já está). Medições de tempo com a outra sessão rodando testes saem distorcidas |
+| **Aguardando o dono** | Nada |
 | **Bloqueios** | Nenhum |
 
 ### Próximos passos
