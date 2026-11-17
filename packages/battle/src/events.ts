@@ -2,12 +2,21 @@
 // a tick, as structured data, outside the state and its hash. stepBattle
 // returns them; the same state and commands give the same list in the same
 // order. They are the battle side of the internal contract v0 (ADR-0008 rule
-// 8), versioned by BATTLE_VERSION. F1 defines them and the collector; the
-// combat stages that emit them come with F2.
+// 8), versioned by BATTLE_VERSION. Who emits each: attacked, hit and died the
+// combat (combat.ts); dropped and picked the bag (carry.ts); joined and
+// controlChanged the lab's commands (commands.ts); escaped and ended the
+// exits (exits.ts).
 
 import type { Dir } from "./arena.ts";
 import type { Dna } from "./params.ts";
-import type { Carry, Controller, Outcome, Participant, Pile } from "./state.ts";
+import type {
+  BattleState,
+  Carry,
+  Controller,
+  Outcome,
+  Participant,
+  Pile,
+} from "./state.ts";
 
 /** A participant as events name it: those who leave the arena leave the state. */
 export type ParticipantRef = {
@@ -79,11 +88,25 @@ export function emit(log: BattleEventLog, body: BattleEventBody): void {
   log.events.push({ ...body, tick: log.tick, index: log.events.length });
 }
 
-export function participantRef(participant: Participant): ParticipantRef {
+export function participantRef(
+  participant: Pick<Participant, "id" | "side" | "dna" | "name">,
+): ParticipantRef {
   return {
     id: participant.id,
     side: participant.side,
     dna: participant.dna,
     name: participant.name,
   };
+}
+
+/**
+ * Who participant `id` is, in the arena or gone: a projectile outlives its
+ * owner, and its hit still names it.
+ */
+export function refById(state: BattleState, id: number): ParticipantRef {
+  const who =
+    state.participants.find((p) => p.id === id) ??
+    state.departed.find((d) => d.id === id);
+  if (who === undefined) throw new Error(`no participant ${id} ever`);
+  return participantRef(who);
 }

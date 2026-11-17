@@ -119,6 +119,12 @@ export function carryTotal(carry: Carry): number {
   return carry.materia + carry.cristal;
 }
 
+/** Records who left the arena, keeping `departed` ordered by id (spec S-3). */
+export function depart(state: BattleState, departure: Departure): void {
+  state.departed.push(departure);
+  state.departed.sort((a, b) => a.id - b.id);
+}
+
 export function findParticipant(
   state: BattleState,
   id: number,

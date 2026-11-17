@@ -133,6 +133,12 @@ export function setupIssue(
   return null;
 }
 
+/** The cells of an entry stretch nobody stands on, in index order. */
+export function freeEntryCells(state: BattleState, entry: number): number[] {
+  const taken = new Set(state.participants.map((p) => p.cell));
+  return state.arena.entries[entry]!.cells.filter((c) => !taken.has(c));
+}
+
 /**
  * A free cell of an entry stretch, drawn by the rng (plan section 8), or null
  * when every cell is taken. One rng call whenever a cell is free.
@@ -141,10 +147,23 @@ export function drawEntryCell(
   state: BattleState,
   entry: number,
 ): number | null {
-  const taken = new Set(state.participants.map((p) => p.cell));
-  const free = state.arena.entries[entry]!.cells.filter((c) => !taken.has(c));
+  const free = freeEntryCells(state, entry);
   if (free.length === 0) return null;
   return free[nextInt(state.rng, free.length)]!;
+}
+
+/**
+ * The stretch a new side enters by (spec E-1, plan section 8): the first one
+ * no side with participants in the arena is using, or null.
+ */
+export function freeStretch(state: BattleState): number | null {
+  const used = new Set(
+    state.participants.map(
+      (p) => state.sides.find((s) => s.id === p.side)!.entry,
+    ),
+  );
+  const entry = state.arena.entries.findIndex((_, i) => !used.has(i));
+  return entry < 0 ? null : entry;
 }
 
 /**

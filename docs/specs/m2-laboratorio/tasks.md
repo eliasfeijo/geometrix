@@ -68,17 +68,65 @@ CPU).
 
 ## F2 — O combate (`m2/laboratorio-f2-combat`)
 
-- [ ] `combat.ts`: recarga, corpo a corpo (atacar antes de andar), projéteis (nascer, andar, conferir a célula de
+- [x] `combat.ts`: recarga, corpo a corpo (atacar antes de andar), projéteis (nascer, andar, conferir a célula de
       partida, acertar o primeiro inimigo, parar na pedra e no alcance, atravessar aliado), dano, morte (spec
       A-1..A-5, plan §7, P3)
-- [ ] `carry.ts`: pilha na morte, largar a bolsa, catar até a capacidade, cristal primeiro (spec C-1, C-2, D8)
-- [ ] `exits.ts`: fuga pela borda (contagem zerada por golpe), inatividade (zerada por dano dado ou recebido), fim
+- [x] `carry.ts`: pilha na morte, largar a bolsa, catar até a capacidade, cristal primeiro (spec C-1, C-2, D8)
+- [x] `exits.ts`: fuga pela borda (contagem zerada por golpe), inatividade (zerada por dano dado ou recebido), fim
       com o lado vencedor ou sem vencedor; batalha acabada não avança (spec F-1..F-4, D7, D9)
-- [ ] Comandos `join`, `control`, `setGambits` (a lista copiada campo a campo); entrada com o `rng` e o lado novo
+- [x] Comandos `join`, `control`, `setGambits` (a lista copiada campo a campo); entrada com o `rng` e o lado novo
       (spec E-1, D11, D12, plan §6)
-- [ ] Eventos completos e o desfecho no `ended`; `totals` de dano por participante (spec D19, F-3, plan §10)
-- [ ] `log.ts`: `BattleLog` e `replayLog`; teste de 2 execuções e snapshot → restore no meio com o mesmo hash (spec
+- [x] Eventos completos e o desfecho no `ended`; `totals` de dano por participante (spec D19, F-3, plan §10)
+- [x] `log.ts`: `BattleLog` e `replayLog`; teste de 2 execuções e snapshot → restore no meio com o mesmo hash (spec
       R-2, plan §11)
+
+### Registro da F2 (2026-11-17)
+
+Como na F1, o registro fica aqui e entra no "Registro das fases" do dashboard no merge da B em `main`.
+
+**Medições.** 2 400 ticks de um 3 × 3 na arena de pedras, com comandos sorteados (andar, atacar, virar, largar,
+catar), a saída e a inatividade esticadas para a batalha durar: mediana de 4,6 ms e p95 de 12–16 ms em 50 seeds (duas
+rodadas), com ~0,8 projétil no ar em média. O orçamento da spec §7 (50 ms) se mede na F3, com a IA. Testes do pacote:
+234, em 15 arquivos (eram 141). Uma propriedade sobre 40 batalhas inteiras confere os eventos (carimbo e posição no
+tick, um `ended` por último), os `totals` (a soma dos golpes e o HP que cada um perdeu), um evento por saída e a carga
+conservada entre os resultados e as pilhas.
+
+**Interpretações a validar** (detalhes que a spec e o plan deixam abertos):
+
+1. **Golpes simultâneos no tick:** os estágios 3 (corpo a corpo) e 5 (projéteis) só registram os golpes, e o estágio 6
+   aplica todos. Dois que se batem no mesmo tick acertam os dois, qualquer que seja a id; quem chega a 0 ainda anda
+   no estágio 4 e morre onde está. A ordem de aplicação (corpo a corpo pela id do atacante, depois projéteis pela id)
+   só decide quem leva o crédito da morte; um golpe em quem já chegou a 0 no mesmo tick se perde (o projétil some).
+2. **Dano contado é o que tirou do HP:** o `hit` e os `totals` levam o dano efetivo (o excesso não conta).
+3. **Recarga:** desconta antes de atacar, então uma recarga de n ticks dá um ataque a cada n ticks; o ataque que erra
+   também gasta a recarga; qualquer ataque consome o *latch*.
+4. **Corpo a corpo com alcance:** velocidade 0 acerta o primeiro inimigo na linha livre até o alcance (com alcance 1,
+   a célula da frente); aliado não bloqueia, como no projétil.
+5. **Projétil:** nasce na célula da frente, que é a 1ª do alcance; sobre pedra ou fora da grade, não nasce (o
+   `attacked` sai assim mesmo); ganha pontos já no tick em que nasce, pela velocidade do DNA do dono; some quando
+   passaria do alcance (fica na última célula o tempo normal); sobrevive ao dono, e o golpe é creditado a ele.
+6. **Saída e inatividade no mesmo tick:** vale a borda (o creep escolheu). O morto sai com carga zero no `departed`
+   (ela ficou na pilha).
+7. **Largar e catar** agem uma vez; se os dois chegam no mesmo tick, vale o último.
+8. **Troca de domínio** (`control`): zera a intenção (andar, atacar, *latch*, largar, catar) de quem troca, e os
+   gambits decidem já no tick da troca; trocar para o mesmo controlador não faz nada nem gera evento; o `human` num
+   participante solta o anterior (o evento da soltura vem antes).
+9. **Entrada** (`join`): um lado sem ninguém na arena perdeu e não recebe reforço (quem chega depois entra como lado
+   novo); o lado novo pega o primeiro trecho que nenhum lado com gente na arena usa; `maxSides` conta os lados com
+   gente na arena, e `maxPerSide` os vivos do lado. Os comandos do laboratório (`join`, `control`, `setGambits`)
+   são recusados se vierem dos gambits.
+10. **`setGambits`** vale para qualquer participante, inclusive o dominado (ele guarda a lista para quando for
+    solto); `permille` em 0..1000, `cells` ≥ 0.
+11. **`BattleLog`** ganhou `ticks` (o plan §11 não tem): uma batalha pode parar antes do fim (o laboratório pausa ou
+    reinicia). O `replayLog` recusa um log cuja batalha acaba antes dele e aceita `until` e `from` (o snapshot →
+    restore do `geo battle verify` da F3). Os comandos recusados ficam no log: o replay os recusa do mesmo jeito.
+12. **`departed`** fica ordenado por id (S-3), não pela ordem das saídas (o `tick` de cada saída está nele).
+13. **`BATTLE_VERSION` continua 1:** nenhum log foi exportado ainda.
+
+**Pontos de atenção para o merge:** `apps/cli/test/net.test.ts` mudou (commit `test(cli)` próprio): o alvo de CPU do
+`geo net` estourou duas vezes com a suíte inteira e outra sessão rodando; o teste agora exige banda e propriedade, e
+confere que o código de saída e a linha `FAIL: cpu` seguem o veredito de CPU. Resolve a pendência viva "Testes
+sensíveis a tempo" do dashboard (tirar de lá no merge). Fora isso, a F2 só toca em `packages/battle` e neste arquivo.
 
 ## F3 — A IA e o auto-resolve (`m2/laboratorio-f3-gambits`)
 
