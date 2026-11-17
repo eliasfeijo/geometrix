@@ -68,6 +68,7 @@ chutes.
 | D17 | Latência simulada | A página e o *worker* conversam por um canal com **atraso de ida e de volta** (metade do RTT escolhido cada) e ***jitter***. Seletor de RTT: 0, 50, 100, 150, 200 e 300 ms. A página mostra o atraso medido entre a tecla e o efeito na tela. **Modo às cegas:** o laboratório sorteia o RTT a cada batalha sem mostrá-lo, o dono dá uma nota de 1 a 5 ao fim ("dá para jogar?"), e o relatório cruza nota × RTT, exportável | A pergunta 3 da hipótese. Às cegas, o dono não julga o número, julga o jogo |
 | D18 | Determinismo | Mesmo setup + mesmos comandos ⇒ mesmo hash, em qualquer execução e engine. O laboratório **exporta o log** de uma batalha (setup + comandos por tick), e o `geo battle verify` reproduz o hash que o *worker* calculou | ADR-0003 e ADR-0008. É o que garante que o auto-resolve da junção dá o mesmo resultado no servidor e no replay |
 | D19 | Eventos | O passo da batalha devolve eventos estruturados fora do estado (ADR-0007): ataque, golpe, dano, morte, largou, catou, entrou, fugiu (pela borda ou por inatividade), fim. O laboratório mostra uma lista simples, **sem a crônica narrada**, e a tabela de resultado no fim | A crônica é da fatia A; a tradução para os eventos do mundo é da D |
+| D21 | Contagem no começo **(gameplay; dono)** | A batalha começa com uma **contagem de 3 s**: todos parados, podem **virar**, mas não andar nem atacar; a IA também. Regra da batalha: vale no laboratório, no mundo e no auto-resolve. Número provisório em `params/battle.json` | Dono, 2026-11-17, ao jogar o laboratório: sem ela, quem domina chega à luta com o aliado já morrendo, e a nota às cegas mediria a correria, não a latência |
 | D20 | Dificuldade da IA **(gameplay; dono)** | Cada participante da IA tem uma **reação** no setup: fácil (600 ms), normal (250 ms) ou difícil (100 ms), mais a lista de gambits, que o laboratório já deixa editar. Números provisórios em `params/battle.json` | Dono, 2026-11-17, no checkpoint da F3: ficar preso na borda sob fogo é aceitável se a dificuldade do bot for configurável. Uma IA que aprende fica como proposta sem marco (GDD 06) |
 
 ## 4. Escopo
@@ -110,6 +111,8 @@ Formato: *Quando [gatilho], o sistema deve [resposta].*
   batalha.
 - **S-3** O estado deve ser só JSON, com ids de um contador nunca reaproveitados e arrays ordenados por id; o
   `serialize` deve recusar o resto.
+- **S-4** Durante a contagem do começo (D21), todos devem ficar parados: o virar vale, do humano e da IA; andar e
+  atacar não.
 
 ### Movimento (`battle`)
 - **M-1** A cada tick, um creep com ordem de andar deve acumular pontos pela velocidade de batalha do DNA, freada
@@ -204,6 +207,7 @@ o círculo mata o quadrado em 13 golpes e o quadrado mata o círculo em 4.
 | Arena | 43 × 27 células, mais o anel de saída (2× a de 21 × 13, dono, 2026-11-17); uma aberta de 63 × 39 (3×) só para comparar no relatório |
 | Zonas de nascimento | uma por lado, a 1/4 da largura (ou da altura) a partir da borda: opostas para 2 lados e espalhadas para 3 ou 4 |
 | Reação da IA (D20) | fácil 600 ms, normal 250 ms, difícil 100 ms |
+| Contagem no começo (D21) | 3 s |
 | HP baixo nos presets (fugir) | 250‰ (dado da regra, não param) |
 | Inimigo perto, no preset portador | 4 células (dado da regra) |
 | RTT do canal | 0, 50, 100, 150, 200, 300 ms; *jitter* de ±20% do atraso de cada perna (constantes do laboratório) |
@@ -241,6 +245,8 @@ cada uma evoluindo conforme entram as mecânicas em comum.
    num 1 × 1. Perguntas do PLAYTEST (ex.: "você sabia por que perdeu?", "dava para ver o tiro chegando?", "qual DNA
    você quis jogar de novo?").
 4. **Sessão do dono, às cegas:** pelo menos 5 batalhas por RTT, em ordem sorteada, com a nota ao fim de cada uma.
+   **Um setup único** na sessão inteira (dono, 2026-11-17), o 1 × 1 dominando, para a nota medir o atraso e não o
+   confronto.
 
 ### Critério para fechar a fatia
 - Critérios da §7 verdes, ou o dono decide o que fazer com o que reprovou.

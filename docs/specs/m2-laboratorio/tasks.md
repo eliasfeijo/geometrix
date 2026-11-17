@@ -333,9 +333,27 @@ referência do `serialize.test.ts` da batalha também.
 
 ## F5 — Às cegas e o playtest (`m2/laboratorio-f5-playtest`)
 
+**Abertura (dono, 2026-11-17, depois de jogar o laboratório da F4):** com 300 ms e a interpolação ligada, "rodou
+suave"; o que atrapalha é chegar à luta. Hoje é preciso começar, correr para pausar, dominar, continuar e clicar na
+arena para o teclado valer, e o aliado já está morrendo. A nota às cegas mediria essa correria, não a latência.
+Decidido: a **contagem de 3 s** no começo é regra da batalha (spec D21, S-4; GDD 06) e a sessão às cegas usa **um
+setup único** (spec §8). O resto do pacote abaixo é do laboratório (sem gameplay).
+
+- [ ] A contagem do começo (spec D21, S-4): um parâmetro em `params/battle.json` (e nos params de teste), em que só
+      o `face` vale, do humano e da IA; o evento ou o campo da visão que a página precisa para mostrá-la; a
+      `BATTLE_VERSION` sobe para 2 (o mesmo log passa a dar outro resultado), o hash de referência e a *fixture* do
+      laboratório refeitos (um log novo exportado da página). **Interpretações a validar:** o relógio de inatividade
+      começa a correr no fim da contagem; largar e catar também esperam a contagem; quem entra no meio da luta não
+      ganha contagem própria
+- [ ] A UX do combate humano: escolher no setup quem o dono domina desde o começo (ou "só assistir"), e o Começar e
+      o Reiniciar já dominam; o teclado vale na página inteira durante a batalha, salvo com o foco num campo do
+      formulário (sem clicar na arena); atalhos para reiniciar (R) e pausar (Esc ou P); a contagem visível na arena
 - [ ] `session.ts`: o registro de cada batalha (setup, domínio, desfecho, RTT, nota) no `localStorage` com
       `try/catch`, o export em JSON, o resumo nota × RTT e vitórias dominando × IA (spec L-5, plan P14)
-- [ ] O modo às cegas: o RTT sorteado pela página e escondido, a nota de 1 a 5 antes de revelar (spec D17)
+- [ ] O modo às cegas: o RTT sorteado pela página e escondido, a nota de 1 a 5 antes de revelar (spec D17). Um
+      setup único na sessão (dono); o sorteio sem repetição (5 de cada RTT embaralhados, com quantas faltam); o
+      atraso medido escondido até a nota (ele entregaria o RTT); "próxima batalha" num toque, com o mesmo setup e o
+      próximo RTT
 - [ ] Perguntas do laboratório no [PLAYTEST.md](../../PLAYTEST.md) (spec §8)
 - [ ] **Checkpoint:** sessão livre e sessão às cegas do dono (pelo menos 5 batalhas por RTT); ele responde às
       perguntas 1 a 4 da hipótese e decide a próxima regra (livre, forja ou nenhuma antes da junção); fecha a fatia B
