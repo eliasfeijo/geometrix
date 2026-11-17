@@ -211,7 +211,7 @@ Balanceamento nos params do `sim` (`schema`, `default.json` e `test/params.json`
 | Salvo-conduto | 600 s de mundo |
 | Bloqueio do par agressor–vítima | 1 800 s de mundo |
 | Limite de HP para fugir, no preset salteador | 400‰ (dado da regra, não param) |
-| Carga mínima do alvo, no preset salteador | 1 até a F5; sobe na F6 (dono, 2026-11-17; plan §11.1, C11), dado da regra, não param |
+| Carga mínima do alvo, no preset salteador | 1 até a F5; **10** desde a F6 (dono, 2026-11-17; plan §11.1, C11), dado da regra, não param |
 | Salteadores do bot | 1 a cada 6 creeps (constante do estrategista, não do jogo) |
 | Entradas da crônica no `welcome` | 100 (constante do servidor) |
 
