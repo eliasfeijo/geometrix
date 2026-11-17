@@ -287,6 +287,22 @@ describe("the raider preset (spec D14)", () => {
     expect(raider.order.type).toBe("deliver");
   });
 
+  test("leaves alone a target carrying less than 10 (plan C11)", () => {
+    const run = (cargo: number) => {
+      const { w, creeps } = world([
+        ["triangle", 0, 8],
+        ["square", 1, 12],
+      ]);
+      const [raider, collector] = creeps as [Creep, Creep];
+      raider.rules = raiderRules();
+      collector.cargo.materia = cargo;
+      step(w, []);
+      return raider.order.type;
+    };
+    expect(run(9)).not.toBe("approach");
+    expect(run(10)).toBe("approach");
+  });
+
   test("fights when attacked and flees when wounded", () => {
     const { w, creeps } = world([
       ["circle", 0, 9],

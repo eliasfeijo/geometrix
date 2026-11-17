@@ -26,9 +26,10 @@ import { nameAt } from "./names.ts";
  * returns events (M2 encontro F1). 7: encounters, fights, flight, spoils
  * and the encounter vocabulary (M2 encontro F2). 8: the deposit reached at
  * the same cost goes to the first cell in the team's frame, not the lower id
- * (M2 encontro F3).
+ * (M2 encontro F3). 9: the raider preset approaches targets carrying at least
+ * 10, not 1 (M2 encontro F6, plan C11).
  */
-export const SIM_VERSION = 8;
+export const SIM_VERSION = 9;
 
 export type Stock = Record<Resource, number>;
 

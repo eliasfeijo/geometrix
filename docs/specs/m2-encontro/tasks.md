@@ -82,8 +82,8 @@ na sua branch (plan §12, skill `commit`), com merge `--no-ff` em `main`.
 
 ## F6 — Soak e playtest (`m2/encontro-f6-soak`)
 
-- [ ] Preset salteador com a carga mínima do alvo maior (plan §11.1, C11): o número com o dono na abertura
-      (proposta: 10); `SIM_VERSION` 9 e os hashes fixos; `geo sim` de 3 dias do seed 42 com os encontros por
+- [x] Preset salteador com a carga mínima do alvo maior (plan §11.1, C11): o número com o dono na abertura
+      (decidido: 10); `SIM_VERSION` 9 e os hashes fixos; `geo sim` de 3 dias do seed 42 com os encontros por
       desfecho antes e depois, no "Registro das fases"
 - [ ] `npm run soak` com a crônica final de cada cliente igual à do servidor; tamanho da tabela `chronicle` no
       relatório
