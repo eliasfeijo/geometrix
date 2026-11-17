@@ -12,10 +12,10 @@
 | | |
 |---|---|
 | **Marco** | **M2 — A emboscada** ([ROADMAP](../ROADMAP.md)). M0, M1 e M1.5 ✅ |
-| **Fatia** | **A — O encontro** ([spec](../specs/m2-encontro/spec.md) · [plan](../specs/m2-encontro/plan.md) · [tasks](../specs/m2-encontro/tasks.md)): F0 a F5 ✅, F6 🟡 no checkpoint do dono · **B — O laboratório de batalha** ([spec](../specs/m2-laboratorio/spec.md) · [plan](../specs/m2-laboratorio/plan.md) · [tasks](../specs/m2-laboratorio/tasks.md)): F0 a F2 ✅ (a F2: o combate) |
-| **Em execução** | **A F6 — Soak e playtest**: tasks do salteador (C11) e do soak ✅; o PLAYTEST pronto; falta a sessão do dono, que fecha a fatia A. Os commits estão na branch `worktree-encontro-f6` (worktree `.claude/worktrees/encontro-f6`), à frente de `m2/encontro-f6-soak`: no checkout principal, `git merge --ff-only worktree-encontro-f6` |
-| **Próxima fase** | Depois do checkpoint: o merge da A F6 em `main`, e a fatia A ✅ |
-| **Pode andar em paralelo** | **B F3 — A IA e o auto-resolve**, branch `m2/laboratorio-f3-gambits` a partir de `main` (que já tem a B F2), numa outra sessão, com worktree próprio em `.claude/worktrees/` (fora do Git; o ESLint o ignora desde a A F5). A B não edita o dashboard nem o `CLAUDE.md`; o merge dela em `main` acontece entre duas fases da A. Medições de tempo com a outra sessão rodando testes saem distorcidas |
+| **Fatia** | **A — O encontro** ([spec](../specs/m2-encontro/spec.md) · [plan](../specs/m2-encontro/plan.md) · [tasks](../specs/m2-encontro/tasks.md)): F0 a F5 ✅, F6 🟡 no checkpoint do dono · **B — O laboratório de batalha** ([spec](../specs/m2-laboratorio/spec.md) · [plan](../specs/m2-laboratorio/plan.md) · [tasks](../specs/m2-laboratorio/tasks.md)): F0 a F3 ✅ (a F3: a IA e o auto-resolve) |
+| **Em execução** | **A F6 — Soak e playtest**: tasks do salteador (C11) e do soak ✅; o PLAYTEST pronto. **Já em `main`** (merge antes do checkpoint, a pedido do dono, para testar a partir dela); falta a sessão do dono, que fecha a fatia A. O que sair do checkpoint vai numa branch nova a partir de `main` (`m2/encontro-f6-checkpoint`) |
+| **Próxima fase** | Depois do checkpoint: a fatia A ✅ |
+| **Pode andar em paralelo** | **B F4 — O laboratório**, branch `m2/laboratorio-f4-lab` a partir de `main` (que já tem a B F3), numa outra sessão, com worktree próprio em `.claude/worktrees/` (fora do Git; o ESLint o ignora). A B não edita o dashboard nem o `CLAUDE.md`; o merge dela em `main` acontece entre duas fases da A. **A B F4 mexe no cliente e na config do Vite** (2ª entrada, `lab.html`). Medições de tempo com a outra sessão rodando testes saem distorcidas |
 | **Aguardando o dono** | **A sessão a ×6 contra o bot** (checkpoint da A F6), com as respostas abaixo |
 | **Bloqueios** | Nenhum |
 
@@ -35,11 +35,11 @@
 As fatias do M2 seguem o grafo de dependências do [ROADMAP](../ROADMAP.md), não uma fila.
 
 1. **A F6, checkpoint do dono** (acima). Com as respostas: os achados em "Achados do playtest", as decisões no
-   GDD (skill `gdd-decision`), o `[x]` das duas últimas tasks da F6, e o merge da branch em `main`, que fecha a
-   fatia A.
-2. **A B F3** (`/implement-phase M2 B F3`), em paralelo numa outra sessão com worktree próprio, branch
-   `m2/laboratorio-f3-gambits` a partir de `main`. O contexto dela está no [tasks.md da B](../specs/m2-laboratorio/tasks.md)
-   (os registros da F1 e da F2) e no plan da B; ela não edita este dashboard.
+   GDD (skill `gdd-decision`), o `[x]` das duas últimas tasks da F6, numa branch `m2/encontro-f6-checkpoint` a
+   partir de `main`, com o merge dela fechando a fatia A.
+2. **A B F4** (`/implement-phase M2 B F4`), em paralelo numa outra sessão com worktree próprio, branch
+   `m2/laboratorio-f4-lab` a partir de `main`. O contexto dela está no [tasks.md da B](../specs/m2-laboratorio/tasks.md)
+   (os registros da F1 a F3 e as decisões do checkpoint da F3) e no plan da B; ela não edita este dashboard.
 3. **Já liberadas pelo checkpoint da A F3:** as rodadas de design do **papel do cristal** e da **fatia E** (se o
    cerco passa pela instância de batalha, a E depende da D; senão, pode vir antes dela).
 4. **Depois da A:** a D (com a B pronta) ou a E, e a C em paralelo à D.
@@ -107,7 +107,7 @@ Só o que ainda está aberto. Ao resolver, tire daqui e registre no Histórico.
 | M0 — Design | ✅ |
 | M1 — O ciclo da riqueza | ✅ 2026-11-14 |
 | M1.5 — A névoa | ✅ 2026-11-14 (rede e fog of war) |
-| M2 — A emboscada | 🟡 Fatia A: F0–F5 ✅, F6 🟡 (checkpoint do dono) · Fatia B: F0–F2 ✅, F3–F5 ⬜ · Fatias C, D, E ⬜ |
+| M2 — A emboscada | 🟡 Fatia A: F0–F5 ✅, F6 🟡 (em `main`; checkpoint do dono) · Fatia B: F0–F3 ✅, F4–F5 ⬜ · Fatias C, D, E ⬜ |
 | M2.5 — A jungle hostil e o fim do mundo | ⬜ (fim do mundo decidido no GDD, 2026-11-15) |
 | M3 — O time · M4 — O mundo vivo · M5 — As lendas | ⬜ |
 
@@ -171,6 +171,8 @@ Só o que ainda está aberto. Ao resolver, tire daqui e registre no Histórico.
 | M2 A — F3 Bots e harness | ✅ Concluída, merge em `main`. O bot com salteadores (`floor(creeps ÷ 6)`, só enquanto há o que explorar) e coletores com postura pelo DNA; métricas de encontro no `geo sim` e no `geo sweep`; `geo verify` com o hash dos eventos; desempates de alvo pelo referencial do time; `SIM_VERSION` 8. **Checkpoint** (dono, 2 rodadas, 2026-11-17): decisões C1–C10; custo do tick ~1,04× o da F6 | [tasks.md](../specs/m2-encontro/tasks.md) · [plan §11.1](../specs/m2-encontro/plan.md) · `apps/cli/src/{encounters,hash}.ts` |
 | M2 A — F2 O encontro no `sim` | ✅ Concluída, merge em `main`. Ordens `approach`/`pickup`/`flee`, o estágio de encontros (abrir, diálogo, rodadas, fechar), extorsão com salvo-conduto e bloqueio, fuga pela velocidade, sorteio pelo HP × DNA, morte, saque e despojo, o vocabulário de encontro e as regras de reação, o preset salteador, o comando `react`, todos os eventos; `SIM_VERSION` 7 | [tasks.md](../specs/m2-encontro/tasks.md) · `packages/sim/src/{encounter,approach,spoils}.ts` |
 | M2 A — F1 Identidade, HP e eventos | ✅ Concluída, merge em `main`. Params do encontro, nomes no `sim` pelo contador de nascimentos, HP em milésimos com regeneração e `kill`, `step` devolve os eventos (`born`) com o público e `eventsFor`, nome/HP/encontro do inimigo na visão, `SIM_VERSION` 6 | [tasks.md](../specs/m2-encontro/tasks.md) · `packages/sim/src/{names,hp,events}.ts` |
+| M2 B — F3 A IA e o auto-resolve | ✅ Concluída numa sessão paralela, merge em `main` (2026-11-17). `BattleView` e gambits, as ações (alinhar, manter distância, esquivar, proteger, fugir, largar, catar), os presets por papel e os padrões por DNA, `geo battle sweep` (a matriz) e `geo battle verify` no CI. **Checkpoint** (dono, depois de ver os replays): decisões C1–C3 no plan da B | [tasks.md](../specs/m2-laboratorio/tasks.md) (registro da F3) · `packages/battle/src/{ai,actions,mind,presets,view}.ts` · `apps/cli/src/battle*.ts` |
+| M2 A — F6 Soak e playtest | 🟡 Em `main` antes do checkpoint (a pedido do dono, para testar). Salteador com `minCargo` 10 (C11), `SIM_VERSION` 9; soak com a crônica de cada cliente conferida contra o servidor; `dev:multi --bot`; a seção "Encontro (M2)" do PLAYTEST. Falta a sessão do dono a ×6 | [tasks.md](../specs/m2-encontro/tasks.md) · [PLAYTEST](../PLAYTEST.md) · `apps/server/src/soak*.ts` |
 | Fim do mundo — brainstorm | ✅ Respondido pelo dono (2026-11-15, rodada interativa). A duração termina num apocalipse: a corrupção dos depósitos de cristal esgotados, que não pode ser limpa e é vista de longe; só o final feliz das tribos (M4) a detém, e salva o mundo inteiro; vitória pírrica com humor; qualquer creep vivo no fim vira lenda; empate no relógio da fatia E. **ROADMAP:** fatias do M2 como grafo, M2.5 "A jungle hostil e o fim do mundo", M5 novo, "As lendas" | [brainstorm §0](../brainstorm/2026-11-15-fim-do-mundo.md) · [ROADMAP](../ROADMAP.md) |
 | M2.5, M3, M4, M5 | ⬜ Não iniciados | [ROADMAP](../ROADMAP.md) |
 
@@ -203,8 +205,9 @@ Um item por problema: o que a pessoa não entendeu ou não conseguiu, a tarefa o
 
 Medições, interpretações e decisões de cada fase, da mais recente para a mais antiga.
 
-- **M2 A F6 — Soak e playtest** 🟡 checkpoint do dono (2026-11-17). 2 563 testes, `npm run check` verde; `geo
-  verify` OK (seed 42).
+- **M2 A F6 — Soak e playtest** 🟡 checkpoint do dono (2026-11-17); merge em `main` antes do checkpoint, a pedido
+  do dono, para testar a partir dela (depois da B F3). 2 563 testes na branch, `npm run check` verde; `geo verify`
+  OK (seed 42).
 
   **Salteador (C11), decidido pelo dono na abertura: `minCargo` 10.** `geo sim` de 3 dias do seed 42 com cada
   candidato (a mesma regra; só o número muda):
@@ -246,6 +249,12 @@ Medições, interpretações e decisões de cada fase, da mais recente para a ma
   2. **`dev:multi --bot`** (novo): o bot no Laranja e todos os jogadores no Azul, para a sessão da spec §8 ser um
      comando só.
   3. **O roteiro do PLAYTEST** (seção "Encontro (M2)", tarefas E1–E9) é do agente, a partir dos exemplos da spec §8.
+
+- **M2 B F3 — A IA e o auto-resolve** ✅ (2026-11-17), numa sessão paralela; merge em `main` entre a A F5 e a A F6.
+  As medições (`geo battle sweep`, seeds 1–100: 6 600 batalhas em ~11 s; o 3 × 3 em 22,5–23,5 ms por 2 400 ticks,
+  orçamento de 50 ms), as interpretações e as **decisões do checkpoint** (combate cru não se balanceia antes de skills;
+  lutas de ~14 s boas; arenas 2× com zonas de nascimento e a reação por participante na F4) estão no **registro da
+  F3** do [tasks.md da B](../specs/m2-laboratorio/tasks.md) e no plan da B (C1–C3).
 
 - **M2 B F2 — O combate** ✅ (2026-11-17), numa sessão paralela; merge direto em `main` com o OK do dono, depois da
   A F5. As medições (2 400 ticks de um 3 × 3: mediana de 4,6 ms, p95 de 12–16 ms em 50 seeds; o orçamento de 50 ms
