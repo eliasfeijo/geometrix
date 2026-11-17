@@ -11,12 +11,15 @@ import {
 import { describe, expect, test } from "vitest";
 import paramsJson from "../../../packages/battle/test/params.json?raw";
 import { LAB_ARENAS, LAB_PARAMS } from "../src/lab/assets.ts";
+import { countdownSeconds } from "../src/lab/arena-view.tsx";
 import {
   defaultDraft,
+  idOfPlace,
   member,
   namesUsed,
   participantOf,
   setupOf,
+  youOf,
 } from "../src/lab/draft.ts";
 import { eventLines, eventText } from "../src/lab/events-list.tsx";
 import { actionOf, conditionOf, moved } from "../src/lab/gambits-editor.tsx";
@@ -75,11 +78,52 @@ describe("the setup draft (spec L-1)", () => {
     expect(labName(20)).toBe("Ária 2");
   });
 
+  test("the owner dominates by default the first participant, by its id", () => {
+    const draft = {
+      ...defaultDraft(),
+      sides: [[member("square"), member("triangle")], [member("circle")]],
+      you: 2,
+    };
+    const state = createBattle(
+      setupOf(draft, params, LAB_ARENAS.pedras),
+      params,
+    );
+    const id = idOfPlace(youOf(draft)!);
+    expect(state.participants.find((p) => p.id === id)!.name).toBe("Cobre");
+    expect(youOf(defaultDraft())).toBe(0);
+    // Just watching, or a place taken out of the setup: back to the first.
+    expect(youOf({ ...draft, you: null })).toBe(null);
+    expect(youOf({ ...draft, you: 7 })).toBe(0);
+  });
+
   test("a new member takes its DNA's default preset", () => {
     expect(member("triangle").preset).toBe("skirmisher");
     expect(participantOf(member("square"), params, 0).gambits).toEqual(
       defaultGambits("square"),
     );
+  });
+});
+
+describe("the start countdown on the arena (spec D21)", () => {
+  test("its seconds go 3, 2, 1 and then it is gone", () => {
+    const lab = parseBattleParams({
+      ...JSON.parse(paramsJson),
+      start: { countdownMs: 3000 },
+    });
+    const state = createBattle(
+      setupOf(defaultDraft(), lab, LAB_ARENAS.pedras),
+      lab,
+    );
+    const seconds: number[] = [];
+    for (let tick = 0; tick <= 61; tick++) {
+      seconds.push(countdownSeconds(battleView(state), 20));
+      stepBattle(state, []);
+    }
+    expect(seconds.slice(0, 2)).toEqual([3, 3]);
+    expect(seconds[20]).toBe(2);
+    expect(seconds[40]).toBe(1);
+    expect(seconds[59]).toBe(1);
+    expect(seconds.slice(60)).toEqual([0, 0]);
   });
 });
 

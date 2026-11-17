@@ -42,6 +42,8 @@ export class LabConnection {
   private readonly up: DelayedChannel<ToWorker>;
   private readonly down: DelayedChannel<Frame | Ended>;
   private nextSeq = 1;
+  /** The page's battles, numbered (protocol: a new one drops old inputs). */
+  private battle = 0;
   private readonly worker: WorkerLike;
   private readonly scheduler: Scheduler;
   private readonly callbacks: LabCallbacks;
@@ -83,14 +85,21 @@ export class LabConnection {
   start(setup: BattleSetup, params: BattleParams, speed: Speed): void {
     this.latency.reset();
     this.sizes.reset();
-    this.worker.postMessage({ type: "start", setup, params, speed });
+    this.battle += 1;
+    this.worker.postMessage({
+      type: "start",
+      battle: this.battle,
+      setup,
+      params,
+      speed,
+    });
   }
 
   /** A battle command of the human: it crosses the network (spec L-3). */
   send(command: BattleCommand): void {
     const seq = this.nextSeq++;
     this.latency.sent(seq, this.scheduler.now());
-    this.up.send({ type: "input", seq, command });
+    this.up.send({ type: "input", battle: this.battle, seq, command });
   }
 
   pause(): void {
@@ -118,6 +127,8 @@ export class LabConnection {
   }
 
   private arrive(message: Frame | Ended): void {
+    // What the previous battle sent before a restart is no longer shown.
+    if (message.battle !== this.battle) return;
     if (message.type === "ended") {
       this.callbacks.ended(message);
       return;

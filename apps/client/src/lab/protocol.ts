@@ -19,9 +19,19 @@ import type {
 export type Speed = 1 | 4 | "instant";
 
 export type ToWorker =
-  | { type: "start"; setup: BattleSetup; params: BattleParams; speed: Speed }
+  /**
+   * A new battle. `battle` numbers the page's battles: an input still on the
+   * network from the previous one (a key held across a restart) is dropped.
+   */
+  | {
+      type: "start";
+      battle: number;
+      setup: BattleSetup;
+      params: BattleParams;
+      speed: Speed;
+    }
   /** A battle command, numbered by the page to measure its delay (L-4). */
-  | { type: "input"; seq: number; command: BattleCommand }
+  | { type: "input"; battle: number; seq: number; command: BattleCommand }
   | { type: "pause" }
   | { type: "resume" }
   | { type: "speed"; speed: Speed }
@@ -33,6 +43,8 @@ export type ToWorker =
 /** What crosses the channel back to the page. */
 export type Frame = {
   type: "frame";
+  /** The battle it belongs to (a restart drops the old one's frames). */
+  battle: number;
   view: BattleView;
   /** The events of the ticks since the last frame (one tick, or all at once). */
   events: BattleEvent[];
@@ -42,6 +54,7 @@ export type Frame = {
 
 export type Ended = {
   type: "ended";
+  battle: number;
   /** sha256 of serializeBattle at the end, as `geo battle verify` computes it. */
   hash: string;
   ticks: number;

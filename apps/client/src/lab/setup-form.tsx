@@ -18,12 +18,14 @@ import {
   HP_CHOICES,
   member,
   randomSeed,
+  youOf,
   type MemberDraft,
   type SetupDraft,
 } from "./draft.ts";
 import {
   DNA_GLYPHS,
   DNA_LABELS,
+  labName,
   PRESET_LABELS,
   REACTION_LABELS,
   sideLetter,
@@ -240,6 +242,31 @@ export function SetupForm({ draft, params, onChange, onStart }: SetupProps) {
           </div>
         </fieldset>
       ))}
+      <div class="lab-row">
+        <label>
+          você joga com
+          <select
+            id="setup-you"
+            value={String(youOf(draft) ?? "")}
+            onChange={(e) => {
+              const value = e.currentTarget.value;
+              onChange({ ...draft, you: value === "" ? null : Number(value) });
+            }}
+          >
+            <option value="">ninguém (só assistir)</option>
+            {draft.sides.flatMap((members, side) =>
+              members.map((m, i) => {
+                const place = draft.sides.slice(0, side).flat().length + i;
+                return (
+                  <option key={place} value={String(place)}>
+                    {sideLetter(side)} · {DNA_GLYPHS[m.dna]} {labName(place)}
+                  </option>
+                );
+              }),
+            )}
+          </select>
+        </label>
+      </div>
       <div class="lab-row">
         {draft.sides.length < maxSides && (
           <button

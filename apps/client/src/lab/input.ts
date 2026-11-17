@@ -4,13 +4,21 @@
 // creep only turns); Shift + a direction only turns; Space held attacks, and
 // its tap also arms the latch, so a quick tap still fires; Q drops the bag,
 // E picks up; Tab moves the domination to the next participant and 0
-// releases it. Keys are read by position (`code`), so WASD works on any
-// layout. A new intent goes out only when it changes: with latency, one
+// releases it; R restarts the battle and P or Esc pauses it (F5). Keys are
+// read by position (`code`), so WASD works on any layout; with Ctrl, Alt or
+// Meta they belong to the browser (Ctrl + R still reloads). A new intent goes out only when it changes: with latency, one
 // message on press and one on release, never one per cell.
 
 import type { BattleCommand, Dir } from "@geometrix/battle";
 
-export type KeyLike = { code: string; shiftKey: boolean; repeat: boolean };
+export type KeyLike = {
+  code: string;
+  shiftKey: boolean;
+  repeat: boolean;
+  ctrlKey?: boolean;
+  altKey?: boolean;
+  metaKey?: boolean;
+};
 
 const MOVE_KEYS: Record<string, Dir> = {
   ArrowUp: "up",
@@ -32,7 +40,14 @@ export type KeyResult = {
   cycle?: boolean;
   /** 0: release the domination. */
   release?: boolean;
+  /** R: restart the battle with the same setup. */
+  restart?: boolean;
+  /** P or Esc: pause, or resume. */
+  pause?: boolean;
 };
+
+const withModifier = (key: KeyLike) =>
+  key.ctrlKey === true || key.altKey === true || key.metaKey === true;
 
 const IGNORED: KeyResult = { handled: false, commands: [] };
 
@@ -48,6 +63,17 @@ export class KeyboardInput {
 
   /** A key pressed; `id` is the dominated participant, if any. */
   down(key: KeyLike, id: number | null): KeyResult {
+    if (withModifier(key)) return IGNORED;
+    if (key.code === "KeyR") {
+      return key.repeat
+        ? { handled: true, commands: [] }
+        : { handled: true, commands: [], restart: true };
+    }
+    if (key.code === "KeyP" || key.code === "Escape") {
+      return key.repeat
+        ? { handled: true, commands: [] }
+        : { handled: true, commands: [], pause: true };
+    }
     if (key.code === "Tab") return { handled: true, commands: [], cycle: true };
     if (key.code === "Digit0" || key.code === "Numpad0") {
       return { handled: true, commands: [], release: true };

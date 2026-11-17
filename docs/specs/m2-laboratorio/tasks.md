@@ -345,7 +345,7 @@ setup único** (spec §8). O resto do pacote abaixo é do laboratório (sem game
       laboratório refeitos (um log novo exportado da página). **Interpretações a validar:** o relógio de inatividade
       começa a correr no fim da contagem; largar e catar também esperam a contagem; quem entra no meio da luta não
       ganha contagem própria
-- [ ] A UX do combate humano: escolher no setup quem o dono domina desde o começo (ou "só assistir"), e o Começar e
+- [x] A UX do combate humano: escolher no setup quem o dono domina desde o começo (ou "só assistir"), e o Começar e
       o Reiniciar já dominam; o teclado vale na página inteira durante a batalha, salvo com o foco num campo do
       formulário (sem clicar na arena); atalhos para reiniciar (R) e pausar (Esc ou P); a contagem visível na arena
 - [ ] `session.ts`: o registro de cada batalha (setup, domínio, desfecho, RTT, nota) no `localStorage` com
