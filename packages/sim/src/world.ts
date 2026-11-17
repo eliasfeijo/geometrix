@@ -24,9 +24,11 @@ import { nameAt } from "./names.ts";
  * (fog F6, E1), and each resource has its own gather pace (E2). 6: creeps
  * have a name from the birth counter, HP that regenerates, and can die; step
  * returns events (M2 encontro F1). 7: encounters, fights, flight, spoils
- * and the encounter vocabulary (M2 encontro F2).
+ * and the encounter vocabulary (M2 encontro F2). 8: the deposit reached at
+ * the same cost goes to the first cell in the team's frame, not the lower id
+ * (M2 encontro F3).
  */
-export const SIM_VERSION = 7;
+export const SIM_VERSION = 8;
 
 export type Stock = Record<Resource, number>;
 
