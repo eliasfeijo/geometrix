@@ -141,6 +141,71 @@ sensíveis a tempo" do dashboard (tirar de lá no merge). Fora isso, a F2 só to
       (`verify` nas seeds 1, 42, 649; o orçamento do `sweep --quick`) (spec R-2, R-3, plan §12)
 - [ ] **Checkpoint:** o dono lê a matriz, a duração, a inatividade e a fuga carregada no relatório, antes da página
 
+### Registro da F3 (2026-11-17)
+
+Como na F1 e na F2, o registro fica aqui e entra no "Registro das fases" do dashboard no merge da B em `main`.
+
+**Medições** (`geo battle sweep`, seeds 1–100, 22 cenários × 3 arenas = 6 600 batalhas, em 10,6–10,8 s; duas
+rodadas com os mesmos desfechos). Para ler: `npm run geo -- battle sweep` e abrir `runs/<id>/battle.md`.
+
+| Critério (spec §7) | Alvo | Medido |
+|---|---|---|
+| O DNA não decide sozinho | nenhum DNA acima de 75% no mesmo par nas três arenas | **reprova:** quadrado vence o triângulo em 100% nas três |
+| Duração do 1 × 1 (mediana) | 15–90 s | **reprova:** 13,6 s (de 12,3 s no quadrado × triângulo a 18,8 s no quadrado × círculo na aberta) |
+| Duração do 3 × 3 (mediana) | até 120 s | 23,9 s |
+| Custo do 3 × 3 por 2 400 ticks (mediana) | até 50 ms | 22,5–23,5 ms (era ~48 ms antes do cache das distâncias, commit `perf`) |
+| Espelhos (o lado não decide) | ~50% | 37–59% para o lado A em 9 casos de 100 batalhas; o quadrado espelhado tem 11–17% sem vencedor (os dois morrem no mesmo tick) |
+| O ferido pesa | muda a taxa | sim, sempre: o lado a 500‰ perde de 74% a 100% |
+| Inatividade | o dono julga | quase nenhuma: 0% nos 1 × 1, até 4% no 3 × 3 |
+| Fuga carregada (quadrado cheio × círculo) | o dono julga | do trecho de entrada, 100% escapa em 2,6 s; do centro, 88% na aberta, 5–9% nas pedras, 22% no corredor, **com ou sem largar a bolsa** |
+
+Vitórias do 1 × 1 de HP cheio (A / B): quadrado × triângulo 100/0 nas três; quadrado × círculo 19/81 (aberta),
+92/8 (pedras), 80/20 (corredor); triângulo × círculo 39/61, 77/23, 46/54. O `verify` passa nas seeds 1, 42 e 649
+(18 casos; 5,8 s). O `sweep --quick` do CI (660 batalhas) leva 1,2 s. Testes: 2 611 no total (eram 2 571 no começo
+da fase).
+
+**Interpretações a validar** (detalhes que a spec e o plan deixam abertos):
+
+1. **Decididas pelo dono na abertura da fase:** "proteger", já na posição, vira para o inimigo e ataca se ele estiver
+   alinhado; as distâncias de "inimigo a até N", "aliado ferido a até N" e "o mais perto" são em passos contornando
+   pedra (os corpos não contam, porque se mexem). A composição da matriz ficou comigo (o dono pediu): os cenários e o
+   que cada um mede estão no comentário de `GROUPS` em `apps/cli/src/battle.ts`.
+2. **A lista de gambits está no setup de cada participante** (`ParticipantSetup.gambits`), não só o nome do preset: um
+   log exportado repete a batalha mesmo que um preset mude depois. Os presets são só o padrão de quem monta (G-3).
+3. **Quase alinhado, a IA espera metade das vezes** (um sorteio do `rng`): sem isso, dois atiradores a uma fileira de
+   distância trocavam de fileira para sempre e a luta acabava por inatividade, sem golpe.
+4. **As ações que param num lugar nunca param no anel de saída** (só "fugir" mira o anel; "catar" aceita uma pilha no
+   anel): o atirador parava na borda para atirar e fugia sem querer.
+5. **Os empates** (alvo, primeiro passo do caminho, esquiva, aliado a proteger) vão pelo `rng`, nunca pelo id; o alvo
+   empatado mantém o anterior antes do sorteio.
+6. **A visão (`BattleView`)** é uma cópia, sem o `rng`, as intenções, os pontos de movimento e a memória da IA. Toda
+   decisão de um tick lê a visão do começo do estágio 2, e a IA decide no próprio tick em que recebe o creep de volta.
+7. **Sem regra possível, o creep fica parado** (a intenção zera); entre duas decisões ele mantém a intenção, inclusive
+   a de atacar na direção em que olha.
+8. **"Manter distância"** mira as células alinhadas com o alvo entre alcance − 1 e alcance; onde a pedra corta essas
+   linhas, qualquer célula alinhada serve.
+9. **Veredito "o DNA não decide sozinho":** reprova só se o **mesmo** DNA passa de 75% nas três arenas. Quadrado ×
+   círculo passa de 75% nas três, mas com vencedores diferentes (a arena decide).
+10. **Fuga carregada do centro:** o harness move o quadrado para o centro depois do setup (do trecho de entrada, a
+    saída está a um passo). É só do relatório, não é regra.
+11. **`BATTLE_VERSION` continua 1:** o setup mudou de formato (a lista de gambits), mas nenhum log foi exportado ainda.
+
+**Para o checkpoint (o dono responde):**
+
+1. **Quadrado × triângulo, 100% a 0%.** O triângulo para e atira, e o quadrado chega e bate. Mexo no preset do
+   triângulo (por exemplo, "manter distância" como o círculo), nos números do `battle.json`, ou deixo como está?
+2. **Lutas curtas.** O 1 × 1 dura ~14 s na mediana (o alvo era 15–90 s). Aceita, ou aumento o HP (ou diminuo o dano)?
+3. **Fugir no começo é de graça.** Todo mundo nasce a um passo da saída, então qualquer um sai em 2,6 s antes de o
+   inimigo chegar. No laboratório isso é ok, ou o nascimento deveria ser mais para dentro da arena?
+4. **Na borda, sob fogo, ninguém sai.** Cada golpe zera os 2 s de saída, e o círculo atira a cada 0,8 s: o quadrado
+   que chega à borda com um círculo atirando nele morre lá. Por isso largar a bolsa quase não muda a fuga carregada.
+   É o que você quer?
+
+**Pontos de atenção para o merge:** `apps/server/test/ws.test.ts` ganhou timeout explícito (commit `test(server)`
+próprio: estourou os 5 s duas vezes seguidas com a suíte inteira e outra sessão rodando); `.github/workflows/ci.yml`
+(dois passos novos no fim); `apps/cli/src/main.ts` (o subcomando `battle` e o texto do `USAGE`);
+`apps/cli/package.json` e `package-lock.json` (a CLI depende do `@geometrix/battle`).
+
 ## F4 — O laboratório (`m2/laboratorio-f4-lab`)
 
 - [ ] `lab.html` como 2ª entrada do Vite, `npm run lab`, servida também pelo `npm run server` (plan §13, P11)
