@@ -12,20 +12,31 @@
 | | |
 |---|---|
 | **Marco** | **M2 — A emboscada** ([ROADMAP](../ROADMAP.md)). M0, M1 e M1.5 ✅ |
-| **Fatia** | **A — O encontro** ([spec](../specs/m2-encontro/spec.md) · [plan](../specs/m2-encontro/plan.md) · [tasks](../specs/m2-encontro/tasks.md)): F0 a F5 ✅ (a F5: o cliente) · **B — O laboratório de batalha** ([spec](../specs/m2-laboratorio/spec.md) · [plan](../specs/m2-laboratorio/plan.md) · [tasks](../specs/m2-laboratorio/tasks.md)): F0 a F2 ✅ (a F2: o combate) |
-| **Em execução** | Nenhuma fase |
-| **Próxima fase** | **A F6 — Soak e playtest**, branch `m2/encontro-f6-soak` (skill `implement-phase`); o checkpoint é do dono |
-| **Pode andar em paralelo** | **B F3 — A IA e o auto-resolve**, branch `m2/laboratorio-f3-gambits` a partir de `main` (que já tem a B F2), numa outra sessão, com worktree próprio em `.claude/worktrees/` (fora do Git; o ESLint o ignora desde a A F5). A B não edita o dashboard nem o `CLAUDE.md`; o merge dela em `main` acontece entre duas fases da A. **A B F4 mexe no cliente e na config do Vite:** começa depois de a A F5 estar em `main` (já está). Medições de tempo com a outra sessão rodando testes saem distorcidas |
-| **Aguardando o dono** | Nada |
+| **Fatia** | **A — O encontro** ([spec](../specs/m2-encontro/spec.md) · [plan](../specs/m2-encontro/plan.md) · [tasks](../specs/m2-encontro/tasks.md)): F0 a F5 ✅, F6 🟡 no checkpoint do dono · **B — O laboratório de batalha** ([spec](../specs/m2-laboratorio/spec.md) · [plan](../specs/m2-laboratorio/plan.md) · [tasks](../specs/m2-laboratorio/tasks.md)): F0 a F2 ✅ (a F2: o combate) |
+| **Em execução** | **A F6 — Soak e playtest**: tasks do salteador (C11) e do soak ✅; o PLAYTEST pronto; falta a sessão do dono, que fecha a fatia A. Os commits estão na branch `worktree-encontro-f6` (worktree `.claude/worktrees/encontro-f6`), à frente de `m2/encontro-f6-soak`: no checkout principal, `git merge --ff-only worktree-encontro-f6` |
+| **Próxima fase** | Depois do checkpoint: o merge da A F6 em `main`, e a fatia A ✅ |
+| **Pode andar em paralelo** | **B F3 — A IA e o auto-resolve**, branch `m2/laboratorio-f3-gambits` a partir de `main` (que já tem a B F2), numa outra sessão, com worktree próprio em `.claude/worktrees/` (fora do Git; o ESLint o ignora desde a A F5). A B não edita o dashboard nem o `CLAUDE.md`; o merge dela em `main` acontece entre duas fases da A. Medições de tempo com a outra sessão rodando testes saem distorcidas |
+| **Aguardando o dono** | **A sessão a ×6 contra o bot** (checkpoint da A F6), com as respostas abaixo |
 | **Bloqueios** | Nenhum |
+
+**Aguardando o dono — checkpoint da A F6** (as medições estão no topo de "Registro das fases"):
+
+1. **A sessão:** `npm run dev:multi -- --clients 1 --mult 6 --seed 42 --bot` e a seção "Encontro (M2)" do
+   [PLAYTEST.md](../PLAYTEST.md) (tarefas E1–E9 e o questionário). No bot × bot do seed 42, o 1º encontro sai em
+   ~3,7 h de mundo (~37 min reais a ×6); para ver um antes, aborde um coletor do bot (E4).
+2. **O tom da crônica** (D17): as frases que soaram erradas, com o texto.
+3. **A hipótese** (spec §1): (1) o encontro cria conflito e história? (2) muda o que você faz? (3) sem dominar o
+   jogo?
+4. **Os critérios da spec §7** estão verdes com o `minCargo` 10 (soak, `geo net`, sweep, custo do tick). Algum
+   número do registro pede outra rodada antes de fechar a fatia?
 
 ### Próximos passos
 
 As fatias do M2 seguem o grafo de dependências do [ROADMAP](../ROADMAP.md), não uma fila.
 
-1. **A F6** (`/implement-phase M2 A F6`, na branch `m2/encontro-f6-soak`, que já existe com os commits de docs
-   do merge da B F2 e da decisão C11): primeiro o preset salteador (C11), depois o soak e o PLAYTEST, e por fim a
-   sessão do dono a ×6, que fecha a fatia A.
+1. **A F6, checkpoint do dono** (acima). Com as respostas: os achados em "Achados do playtest", as decisões no
+   GDD (skill `gdd-decision`), o `[x]` das duas últimas tasks da F6, e o merge da branch em `main`, que fecha a
+   fatia A.
 2. **A B F3** (`/implement-phase M2 B F3`), em paralelo numa outra sessão com worktree próprio, branch
    `m2/laboratorio-f3-gambits` a partir de `main`. O contexto dela está no [tasks.md da B](../specs/m2-laboratorio/tasks.md)
    (os registros da F1 e da F2) e no plan da B; ela não edita este dashboard.
@@ -35,29 +46,20 @@ As fatias do M2 seguem o grafo de dependências do [ROADMAP](../ROADMAP.md), nã
 
 ### O que a próxima fase precisa saber
 
-- **decisão do dono depois da F5** (2026-11-17; plan §11.1, **C11**; GDD 07): subir a carga mínima do alvo no
-  preset salteador (`raiderRules` em `sim/presets.ts`, a ação `approach` com `minCargo: 1`), para o bot só emboscar
-  quem vale a pena; vale também para o botão "Salteador" do jogador. **O número é a primeira lacuna da abertura da
-  F6:** a proposta é 10 (a capacidade do círculo; o quadrado leva 30, o triângulo 20), provisório, dado da regra e
-  não param. Muda o comportamento do `sim`: `SIM_VERSION` 9 e os hashes fixos (skill `implement-phase`). Meça antes
-  e depois com o `geo sim` de 3 dias do seed 42 (encontros por desfecho; o relatório já os tem). A alternativa de
-  bloquear o par também depois de uma fuga ficou de fora (seria regra nova). O motivo: num mundo com bots a ×360,
-  a crônica do Azul tinha 27 encontros e 1 pagamento em 3,5 h, com extorsões de 1 ou 2 de matéria repetidas;
+- **o salteador** (F6, C11): `raiderRules` aborda só alvos com 10 ou mais de carga, para o jogador e o bot;
+  `SIM_VERSION` 9;
 - **a crônica no cliente** (F5): `GameStore.chronicle` (eventos do time, do mais velho ao mais novo) começa do
   `welcome.chronicle` (o servidor manda 100) e recebe os `events` de cada delta (`chronicled`); um `welcome` novo
   (resync) recomeça. O cliente guarda as últimas `CHRONICLE_KEEP` (300). O texto sai de
   `chronicle/narrate.ts` + `templates.ts` (variante `(tick × 7919 + index) mod n`); `plainText(narrate(e))` dá a
-  frase em texto. **Para o soak** (crônica final de cada cliente igual à do servidor): o `SoakClient`
-  (`apps/server/src/soak*.ts`) ainda não guarda os eventos; compare os `(tick, index)` das últimas entradas com
-  `Store.recentChronicle` do servidor, e o tamanho da tabela com `Store.chronicleCount`;
+  frase em texto. O `SoakClient` guarda a crônica do mesmo jeito (F6), e o soak a compara com o SQLite;
 - **o replay** guarda os eventos de cada tick simulado uma vez (`ReplayPlayer.eventsBetween`) e mostra a crônica do
   mundo inteiro;
 - **no mapa** (F5): barra de HP, despojo, perseguição, diálogo com a janela, luta com as rodadas e o rastro da fuga
   (`map/combat-marks.ts`, `map/encounter-layer.tsx`); o clique direito num inimigo abre o menu de abordar
   (`panels/approach-menu.tsx`), o creep dominado num encontro abre o painel de reação (`panels/reaction-panel.tsx`);
   a lógica pura dos dois está em `encounter-actions.ts`;
-- **a sessão contra o bot:** o `dev:multi` cria o mundo **sem bots**. Para jogar contra o bot, crie o mundo pelo
-  lobby com "Bot no Laranja" (ou `POST /api/worlds` com `botTeams: [1]`) e entre no Azul;
+- **a sessão contra o bot:** `npm run dev:multi -- --bot` põe o bot no Laranja e todos os jogadores no Azul (F6);
 - **screenshot com cliques:** o Chromium headless do cache do Playwright aceita o CDP
   (`--remote-debugging-port`), e o WebSocket nativo do Node 26 basta para navegar, clicar
   (`Input.dispatchMouseEvent`), carregar um arquivo no replay (`DOM.setFileInputFiles`) e capturar
@@ -76,7 +78,8 @@ Só o que ainda está aberto. Ao resolver, tire daqui e registre no Histórico.
   revisita, a causa de 20–25% de diferença na matéria entregue entre os times no seed 42 (pergunta aberta no
   [GDD 07](../gdd/07-piloto-automatico.md); plan §11.1, C6).
 - **Playtest da A F6:** observar os encontros só nas primeiras ~8 h (os salteadores do bot voltam a coletar quando
-  não há o que explorar; C7). A patrulha fica para depois.
+  não há o que explorar; C7). A patrulha fica para depois. No seed 42 com o `minCargo` 10, nenhum encontro depois
+  das 8,3 h de mundo.
 - **Perguntas abertas do GDD 06 e 08 que a fatia A não cobre** (duração da batalha, tempo do mundo durante a luta,
   canais e sintaxe do chat, macros, reparo): ficam para as fatias B a E.
 - **Deploy** (quando acontecer): quem cria o mundo escolhe a seed no lobby (N9) e criar mundo deixa de ser público;
@@ -86,7 +89,7 @@ Só o que ainda está aberto. Ao resolver, tire daqui e registre no Histórico.
 - **Olhos novos** (quando o dono achar o jogo divertido): o playtest com pessoas que nunca viram o jogo responde de
   novo à hipótese do M1.5 (o roteiro e as perguntas de névoa estão no [PLAYTEST.md](../PLAYTEST.md)); observar se
   travam num mundo só de humanos, em que ninguém explora sem ordem (regra D3).
-- **`SIM_VERSION` (hoje 8, desde a F3 do encontro):** mundos persistidos guardam a versão. Mudou o comportamento do
+- **`SIM_VERSION` (hoje 9, desde a F6 do encontro):** mundos persistidos guardam a versão. Mudou o comportamento do
   `sim`? Suba a versão; um mundo de outra versão não é recuperado (o servidor loga e o pula).
 - **Testes sensíveis a tempo com duas sessões rodando:** o alvo de CPU saiu do teste do `geo net` na A F5 (falhou
   de novo sob carga; o checkpoint do `geo net` o julga). Com load alto, testes do servidor ainda passam dos 5 s do
@@ -104,7 +107,7 @@ Só o que ainda está aberto. Ao resolver, tire daqui e registre no Histórico.
 | M0 — Design | ✅ |
 | M1 — O ciclo da riqueza | ✅ 2026-11-14 |
 | M1.5 — A névoa | ✅ 2026-11-14 (rede e fog of war) |
-| M2 — A emboscada | 🟡 Fatia A: F0–F5 ✅, F6 ⬜ · Fatia B: F0–F2 ✅, F3–F5 ⬜ · Fatias C, D, E ⬜ |
+| M2 — A emboscada | 🟡 Fatia A: F0–F5 ✅, F6 🟡 (checkpoint do dono) · Fatia B: F0–F2 ✅, F3–F5 ⬜ · Fatias C, D, E ⬜ |
 | M2.5 — A jungle hostil e o fim do mundo | ⬜ (fim do mundo decidido no GDD, 2026-11-15) |
 | M3 — O time · M4 — O mundo vivo · M5 — As lendas | ⬜ |
 
@@ -199,6 +202,50 @@ Um item por problema: o que a pessoa não entendeu ou não conseguiu, a tarefa o
 ## Registro das fases
 
 Medições, interpretações e decisões de cada fase, da mais recente para a mais antiga.
+
+- **M2 A F6 — Soak e playtest** 🟡 checkpoint do dono (2026-11-17). 2 563 testes, `npm run check` verde; `geo
+  verify` OK (seed 42).
+
+  **Salteador (C11), decidido pelo dono na abertura: `minCargo` 10.** `geo sim` de 3 dias do seed 42 com cada
+  candidato (a mesma regra; só o número muda):
+
+  | `minCargo` | Encontros (Azul abordou / Laranja abordou) | Na zona do Núcleo da vítima | Pagou / recusou / tentou fugir | Mortes | Matéria entregue (Azul / Laranja) |
+  |---|---|---|---|---|---|
+  | 1 (antes) | 8 / 104 | 93% | 7 / 4 / 101 | 1 | 172 975 / 137 875 |
+  | 5 | 9 / 27 | 83% | 3 / 4 / 29 | 1 | 174 861 / 149 410 |
+  | **10 (depois)** | **6 / 17** | **48%** | **3 / 9 / 11** | **2** | **154 578 / 174 602** |
+  | 15 | 2 / 23 | 80% | 7 / 3 / 15 | 1 | 139 180 / 196 300 |
+  | 20 | 1 / 1 | 0% | 2 / 0 / 0 | 0 | 142 195 / 197 830 |
+
+  Com o 10, desfechos como vítima: 3 pagaram, 6 escaparam no diálogo, 12 escaparam na luta, 2 vítimas morreram (dois
+  quadrados do Azul, com cristal); 15 despojos criados, todos catados. Os encontros caem entre 3,7 h e 8,3 h de
+  mundo; nenhum depois. Os dois times terminam com 30 creeps. Mudou o `SIM_VERSION` (9), o hash fixo do
+  `serialize`, o da trava de comportamento do bot (6 h do seed 42) e o piso de despojos do teste de propriedade do
+  diff (> 10; com o 10, seeds 1, 42, 649: 9, 5 e 7 mortes, 26–54 encontros fechados, 20–31 despojos).
+
+  **Os critérios da spec §7, com o 10:**
+  - **sweep de 6 h, seeds 1–20:** nas 20 seeds, os dois times terminam com creeps (5–6) e entregando matéria (mín.
+    3 854; média 4 959, a da F3 era 4 969); 0,8 encontro por time por hora (0,2–1,8); 30% pagos, 59% com fuga, 12%
+    com morte; 65% das fugas escaparam; 0,6 morte por time; 69% dos encontros na zona do Núcleo da vítima (0–100%);
+    diferença de creeps entre os times 1 (0–2);
+  - **`geo net` de 3 dias, seed 42:** 234 B/s por cliente (alvo 2 048), 195,6 µs por envio (alvo 250; a F4: 172,8,
+    com a outra sessão rodando), 0 divergências;
+  - **custo do tick:** `geo sim` de 3 dias do seed 42 em 14,2 s na rodada mais calma (a F6 do fog: 13–14 s; alvo
+    ≤ 1,5×). Intercalado com o `minCargo` 1, com a outra sessão carregando a máquina: 19,6 × 24,4, 17,9 × 18,8,
+    16,2 × 15,8 s: o 10 não custa mais;
+  - **soak** (`npm run soak`, ×360, 13,1 min): **OK**. Replay com o hash do servidor; 6/6 interrupções (5 `kill -9`
+    e 1 SIGTERM) recuperadas em 3,6–17,2 s; os 4 clientes com a visão final e a **crônica final iguais às do
+    servidor** (as últimas 100 de cada um: o último `kill -9` foi no tick 241 909 e o `welcome` traz 100), 0 hashes
+    divergentes; **tabela `chronicle`: 292 linhas (146 por time), ~50 KB de JSON**, o mesmo número que os eventos do
+    replay reconstruído dão; SQLite de 122,1 MB no fim; memória máx. 210,5 MB.
+
+  **Interpretações a validar:**
+  1. **O soak compara a crônica** do cliente com as últimas entradas do time no SQLite, byte a byte, e o número de
+     linhas da tabela com os eventos do replay reconstruído (`eventsFor` dos dois times). O segundo pega evento
+     perdido ou dobrado pela recuperação depois de um `kill -9`.
+  2. **`dev:multi --bot`** (novo): o bot no Laranja e todos os jogadores no Azul, para a sessão da spec §8 ser um
+     comando só.
+  3. **O roteiro do PLAYTEST** (seção "Encontro (M2)", tarefas E1–E9) é do agente, a partir dos exemplos da spec §8.
 
 - **M2 B F2 — O combate** ✅ (2026-11-17), numa sessão paralela; merge direto em `main` com o OK do dono, depois da
   A F5. As medições (2 400 ticks de um 3 × 3: mediana de 4,6 ms, p95 de 12–16 ms em 50 seeds; o orçamento de 50 ms
