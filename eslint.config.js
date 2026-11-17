@@ -36,9 +36,10 @@ export default defineConfig(
   js.configs.recommended,
   tseslint.configs.recommended,
   {
-    // Determinism guards for the simulation (plan section 2), bot strategists
-    // included: their decisions go into the command log.
-    files: ["packages/sim/src/**/*.ts"],
+    // Determinism guards for the simulations (plan section 2): the world, bot
+    // strategists included (their decisions go into the command log), and the
+    // battle (ADR-0008).
+    files: ["packages/sim/src/**/*.ts", "packages/battle/src/**/*.ts"],
     rules: {
       "no-restricted-properties": [
         "error",
@@ -46,14 +47,15 @@ export default defineConfig(
           object: "Math",
           property,
           message:
-            "Nondeterministic in the sim: use the seeded RNG or integer math.",
+            "Nondeterministic in a simulation: use the seeded RNG or integer math.",
         })),
       ],
       "no-restricted-globals": [
         "error",
         ...["Date", "performance", "crypto", "Intl"].map((name) => ({
           name,
-          message: "Clocks, crypto and locale APIs are not allowed in the sim.",
+          message:
+            "Clocks, crypto and locale APIs are not allowed in a simulation.",
         })),
       ],
       "no-restricted-syntax": [
@@ -65,7 +67,7 @@ export default defineConfig(
         {
           // Number literals with a fraction or a negative exponent: 1.5, .5, 1e-3.
           selector: String.raw`Literal[raw=/^(?:\d[\d_]*)?\.\d|^[\d_.]+[eE]-/]`,
-          message: "Floating-point literals are not allowed in the sim.",
+          message: "Floating-point literals are not allowed in a simulation.",
         },
       ],
     },
