@@ -36,6 +36,8 @@ export type WsContext = {
   broadcastIntervalMs: number;
   viewHashEveryTicks: number;
   deltaBufferMs: number;
+  /** The team's latest events a welcome carries. */
+  chronicleWelcome: number;
   /** Told about connections and inputs (domination release, F6). */
   presence?: Presence;
   /** Server log, for incidents such as a resync (default console.log). */
@@ -132,7 +134,7 @@ function welcome(
   player: PlayerRow,
   stream: TeamStream,
 ): WelcomeMessage {
-  const { seq, view, status } = stream.lastView();
+  const { seq, view, status, chronicle } = stream.lastView();
   return {
     type: "welcome",
     protocol: PROTOCOL_VERSION,
@@ -146,7 +148,7 @@ function welcome(
     stream: stream.id,
     seq,
     view,
-    chronicle: [],
+    chronicle,
   };
 }
 
@@ -204,11 +206,22 @@ class Broadcaster {
     const options = {
       hashEveryTicks: context.viewHashEveryTicks,
       bufferMs: context.deltaBufferMs,
+      chronicleSize: context.chronicleWelcome,
     };
     this.streams = host.state.teams.map(
-      (team) => new TeamStream(host.state, team.id, host.status, options),
+      (team) =>
+        new TeamStream(
+          host.state,
+          team.id,
+          host.status,
+          options,
+          host.chronicle(team.id),
+        ),
     );
-    host.onTick(() => this.ticked());
+    host.onTick((events) => {
+      for (const stream of this.streams) stream.record(events);
+      this.ticked();
+    });
   }
 
   stream(team: number): TeamStream {

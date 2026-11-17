@@ -24,6 +24,8 @@ export type ServerConfig = {
   viewHashEveryTicks: number;
   /** Real time a team stream keeps its deltas for resuming (M1.5 spec S-5). */
   deltaBufferMs: number;
+  /** A team's latest events a welcome carries (M2 encontro spec N-1: 100). */
+  chronicleWelcome: number;
   /** Domination released after this long without input (spec, F6). */
   dominationTimeoutMs: number;
   /** A disconnected player keeps their domination this long (spec, F6). */
@@ -41,6 +43,7 @@ export const DEFAULT_CONFIG: ServerConfig = {
   broadcastIntervalMs: 200,
   viewHashEveryTicks: 60,
   deltaBufferMs: 30 * 1000,
+  chronicleWelcome: 100,
   dominationTimeoutMs: 5 * 60 * 1000,
   reconnectGraceMs: 15 * 1000,
 };
@@ -67,6 +70,7 @@ export function loadConfig(env: NodeJS.ProcessEnv): ServerConfig {
     broadcastIntervalMs: DEFAULT_CONFIG.broadcastIntervalMs,
     viewHashEveryTicks: DEFAULT_CONFIG.viewHashEveryTicks,
     deltaBufferMs: DEFAULT_CONFIG.deltaBufferMs,
+    chronicleWelcome: DEFAULT_CONFIG.chronicleWelcome,
     dominationTimeoutMs: DEFAULT_CONFIG.dominationTimeoutMs,
     reconnectGraceMs: DEFAULT_CONFIG.reconnectGraceMs,
   };

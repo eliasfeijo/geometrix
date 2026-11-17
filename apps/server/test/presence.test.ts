@@ -10,7 +10,14 @@ const SECOND = 1000;
 function setup() {
   const store = new Store(":memory:");
   const host = WorldHost.create(
-    { store, config: { snapshotEveryTicks: 300, metricsEveryTicks: 60 } },
+    {
+      store,
+      config: {
+        snapshotEveryTicks: 300,
+        metricsEveryTicks: 60,
+        chronicleWelcome: 100,
+      },
+    },
     {
       seed: 42,
       params: testParams(),
