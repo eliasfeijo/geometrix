@@ -72,7 +72,7 @@ CPU).
       partida, acertar o primeiro inimigo, parar na pedra e no alcance, atravessar aliado), dano, morte (spec
       A-1..A-5, plan §7, P3)
 - [x] `carry.ts`: pilha na morte, largar a bolsa, catar até a capacidade, cristal primeiro (spec C-1, C-2, D8)
-- [ ] `exits.ts`: fuga pela borda (contagem zerada por golpe), inatividade (zerada por dano dado ou recebido), fim
+- [x] `exits.ts`: fuga pela borda (contagem zerada por golpe), inatividade (zerada por dano dado ou recebido), fim
       com o lado vencedor ou sem vencedor; batalha acabada não avança (spec F-1..F-4, D7, D9)
 - [ ] Comandos `join`, `control`, `setGambits` (a lista copiada campo a campo); entrada com o `rng` e o lado novo
       (spec E-1, D11, D12, plan §6)
