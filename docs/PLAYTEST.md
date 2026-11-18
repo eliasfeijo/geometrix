@@ -228,9 +228,39 @@ Desde a fatia B do M2, a batalha tem uma página própria, sem mundo e sem servi
 à mão, joga-se dominando um creep (ou só se assiste), com uma rede simulada entre a página e a batalha. A sessão
 responde às perguntas 1 a 4 da hipótese da [spec do laboratório](specs/m2-laboratorio/spec.md) §1: **a regra de
 grade é divertida, a micro importa, quanta latência ela aguenta sem predição, e a IA de gambits serve de
-adversário?** Quem joga é o dono. São duas sessões (spec §8): a **livre** e a **às cegas**.
+adversário?** Quem joga é o dono.
 
-### Preparação
+O roteiro está em **grupos**, um de cada vez, na ordem: cada grupo é uma sequência só no laboratório, e a ordem
+resolve as dependências (dono, 2026-11-18, no checkpoint da F5: o roteiro anterior, em duas listas, era difícil de
+seguir). Com o Claude na sessão, ele entrega um grupo por vez e junta as respostas; sozinho, siga daqui.
+
+| # | Grupo | Tempo | Rede |
+|---|---|---|---|
+| 0 | Preparação | 2 min | — |
+| 1 | Duelos dominando (você × IA, 9 batalhas) | ~12 min | 0 ms |
+| 2 | A IA no seu lugar (os mesmos 9, só assistindo, no instantâneo) | ~5 min | — |
+| 3 | Assistir: um 3 × 3 e um 1 × 1 × 1 | ~5 min | — |
+| 4 | Mexer na luta: editar gambits e soltar reforço | ~8 min | — |
+| 5 | Às cegas, parte 1 (15 batalhas) | ~15 min | sorteada |
+| 6 | Às cegas, parte 2 (15 batalhas) e encerrar | ~15 min | sorteada |
+| 7 | 300 ms com e sem interpolar | ~5 min | 300 ms |
+| 8 | Fechamento: as tabelas, as perguntas da hipótese e a próxima regra | ~10 min | — |
+
+**Por que nessa ordem:**
+
+- **O grupo 1 vem antes das às cegas:** os controles se aprendem a 0 ms. Senão as primeiras notas às cegas medem o
+  aprendizado, não a latência.
+- **O grupo 2 vem logo depois do 1:** o painel "Você × IA" compara as batalhas que você jogou com as da IA no
+  mesmo confronto (arena, DNAs e HP de cada lado).
+- **O grupo 4 usa um confronto que não aparece nos grupos 1 e 2:** um reforço ou um gambit editado estragaria
+  aquela comparação.
+- **O grupo 7 vem depois das às cegas:** quem sabe como 300 ms "parece" reconhece o RTT às cegas e dá nota ao
+  número. Além disso, a sessão às cegas precisa do "interpolar" ligado, e o grupo 7 o desliga.
+
+**O que anotar:** só o que você sentiu. Vitória, derrota, RTT, atraso medido e nota ficam no registro da sessão,
+que vai no export do fim.
+
+### Grupo 0: Preparação (2 min)
 
 ```sh
 npm run lab
@@ -239,74 +269,176 @@ npm run lab
 Abre o laboratório no Vite (`/lab.html`). Sem o Vite: `npm run build` e `npm run server`, e
 `http://localhost:8080/lab`. A página não fala com o servidor do jogo: tudo roda no navegador.
 
-Lembretes para o observador:
+1. **Use uma aba só, no mesmo endereço, do começo ao fim.** O registro da sessão fica guardado neste navegador,
+   para este endereço: o 5173 e o 8080 têm registros separados.
+2. No painel **"Sessão"** (coluna da direita): se houver batalhas no registro (de testes antigos), clique em
+   **"Exportar sessão"** (guarda uma cópia) e depois em **"Limpar"**. O registro tem de começar em 0.
+3. No painel **"Rede simulada"**: RTT em **0 ms** e **"interpolar" marcado**. Na barra acima da arena, velocidade
+   **×1**.
+4. Nos grupos 1 e 2, **não mexa** na dificuldade ("IA normal"), no HP nem na carga. O "Você × IA" separa os
+   confrontos por arena, DNA e HP, não pela dificuldade: misturar dificuldades bagunça a comparação sem aparecer.
 
-- Toda batalha começa com a **contagem de 3 s** (spec D21): todos parados, só dá para virar. O "você joga com"
-  do formulário diz quem o dono domina desde o começo; o **Começar**, o **Reiniciar** e o **R** já dominam.
-- O teclado vale na página inteira, salvo num campo do formulário: setas ou WASD andam, Shift + seta vira, espaço
-  ataca, Q larga a bolsa, E cata, Tab domina o próximo, 0 solta, R reinicia, P ou Esc pausa.
-- Quem fica **15 s** sem dar nem levar dano foge sozinho (inatividade); quem fica **2 s** no anel da borda sem
-  levar golpe foge pela borda. A batalha acaba quando sobra no máximo um lado.
-- A dificuldade da IA é por participante (fácil, normal, difícil); o editor de gambits troca as regras de quem
-  está selecionado, a partir do tick seguinte.
-- **Toda batalha que acaba entra no registro da sessão** (painel "Sessão"), que sobrevive a recarregar a página.
-  No fim, **"Exportar sessão"** baixa o JSON com os dois resumos: guarde-o junto das anotações.
+Teclas (valem na página inteira, salvo com o foco num campo do formulário): **setas ou WASD** andam, **Shift +
+seta** vira, **espaço** ataca, **Q** larga a bolsa, **E** cata, **Tab** domina o próximo, **0** solta, **R**
+reinicia, **P** ou **Esc** pausa e continua.
 
-### F. Sessão livre (~30 min)
+As regras que o jogador precisa saber:
 
-| # | Tarefa | O que observar |
-|---|---|---|
-| F1 | Jogue cada DNA (■, ▲, ●) contra a IA normal, num 1 × 1, nas três arenas | Qual DNA ele quis jogar de novo? Em qual arena a posição pesou? |
-| F2 | Repita um confronto que perdeu, agora só assistindo (IA × IA, "ninguém" no "você joga com") | O painel "Você × IA" compara as vitórias dele com as da IA no mesmo confronto |
-| F3 | Assista a um 3 × 3 e a um 1 × 1 × 1 | Dá para acompanhar quem atira em quem? A IA parece crível? |
-| F4 | Edite os gambits de um participante (ex.: o atirador sem esquivar) e veja a diferença | Acha o editor? Entende a lista em ordem? |
-| F5 | Solte um reforço num 1 × 1, num lado existente e num lado novo | A entrada no meio muda a luta? |
-| F6 | Jogue uma batalha a 300 ms, com e sem "interpolar" | Qual dos dois sente melhor? |
+- Toda batalha começa com a **contagem de 3 s** (spec D21): todos parados, só dá para virar. O "você joga com" do
+  formulário diz quem você domina desde o começo; o **Começar**, o **Reiniciar** e o **R** já dominam.
+- **Parado, o creep dá o primeiro passo na hora** (spec D22), e cada toque na tecla anda uma célula.
+- Quem fica **2 s** no anel da borda sem levar golpe foge pela borda. Se a batalha inteira passa **15 s** sem
+  nenhum dano em ninguém, **todos fogem** (spec D9). A batalha acaba quando sobra no máximo um lado.
+- Toda batalha que acaba entra no registro. **Trocar ou soltar o domínio no meio** (Tab, 0, "dominar", "soltar")
+  tira a batalha das contas do "Você × IA".
 
-Questionário da sessão livre: escala de 1 a 5 (1 = discordo totalmente, 5 = concordo totalmente), mais uma frase
-livre em cada uma.
+### Grupo 1: Duelos dominando (~12 min, 9 batalhas)
 
-| # | Pergunta | Nota | Comentário |
+Jogar cada DNA contra a IA normal nas três arenas. Em cada batalha:
+
+1. No formulário **"Montar a batalha"**, escolha a **arena** e o **DNA** do Lado A e do Lado B (o preset muda
+   sozinho com o DNA). A seed fica como está.
+2. **"você joga com"** em **"A · …"** (o padrão).
+3. **Começar**. Durante o "3, 2, 1", vire com Shift + seta.
+4. Jogue até o fim; a tabela de resultado aparece sob a arena. Começo errado? **R** reinicia do zero, já
+   dominando (só a batalha que vai até o fim entra no registro).
+
+| # | Arena | Você (Lado A) | IA (Lado B) |
 |---|---|---|---|
-| F1 | Você sabia por que perdeu? | | |
-| F2 | Dava para ver o tiro chegando (e desviar)? | | |
-| F3 | Dava para ler quem olha para onde, o HP, a contagem da fuga e o relógio de inatividade? | | |
-| F4 | A IA parecia um adversário de verdade (nem boba, nem perfeita)? | | |
-| F5 | Chegar à luta foi rápido (a contagem, o domínio desde o começo, o teclado sem clicar)? | | |
+| 1 | pedras | ■ quadrado | ● círculo |
+| 2 | pedras | ▲ triângulo | ● círculo |
+| 3 | pedras | ● círculo | ■ quadrado |
+| 4 | aberta | ■ | ● |
+| 5 | aberta | ▲ | ● |
+| 6 | aberta | ● | ■ |
+| 7 | corredor | ■ | ● |
+| 8 | corredor | ▲ | ● |
+| 9 | corredor | ● | ■ |
 
-### G. Sessão às cegas (~30 batalhas)
+```
+GRUPO 1
+Comentários por batalha (opcional): 1 … 9
+Notas (1 = discordo totalmente, 5 = concordo totalmente) + uma frase:
+F1 Eu sabia por que perdi:
+F2 Dava para ver o tiro chegando (e desviar):
+F5 Chegar à luta foi rápido (contagem, domínio desde o começo, teclado sem clicar):
+Livre: qual DNA você quis jogar de novo? Em qual arena a posição pesou? Algum duelo pareceu decidido de antemão?
+Algo travou, confundiu ou irritou?
+```
 
-Responde à pergunta 3 da hipótese (latência). **Um setup só na sessão inteira** (dono, 2026-11-17), o 1 × 1
-dominando, para a nota medir o atraso e não o confronto. Sugestão: **▲ (você) × ● (IA normal) nas pedras**, o
-duelo à distância em que mirar e desviar mais sentem o atraso (spec D4); vale qualquer outro, desde que seja o
-mesmo até o fim.
+### Grupo 2: A IA no seu lugar (~5 min, 27 batalhas instantâneas)
 
-1. Monte o setup no formulário, com "você joga com" no seu creep, e clique em **"Começar sessão às cegas"** no
-   painel da sessão. A página sorteia a ordem de **5 batalhas de cada RTT** (0, 50, 100, 150, 200 e 300 ms), 30 no
-   total, e esconde o RTT e o atraso medido.
-2. Jogue cada batalha até o fim. Errou o começo? **R** reinicia com o mesmo RTT escondido.
-3. No fim, dê a nota (botões ou teclas **1 a 5**) à pergunta **"dá para jogar?"**: 1 = não dá, 5 = nem senti
-   atraso. Só então o RTT e o atraso medido aparecem.
-4. **Enter** (ou N, ou o botão) abre a próxima. Dá para parar e voltar depois: o sorteio fica guardado, e o painel
-   oferece a próxima batalha.
-5. Depois da última, **"Encerrar"** mostra a tabela nota × RTT e o veredito (até onde a nota mediana fica em 4 ou
-   mais; de onde cai abaixo de 3). **Exporte a sessão.**
+Os mesmos 9 confrontos, com a IA dos dois lados, para o "Você × IA" comparar.
+
+1. Uma vez: **"você joga com"** em **"ninguém (só assistir)"**, e **"instantâneo"** na barra sobre a arena.
+2. Para **cada um dos 9 confrontos** da tabela do grupo 1 (todos, nas três arenas): acerte a arena e os DNAs, e
+   repita **3 vezes**: **"sortear"** (ao lado da seed) e **Começar**.
+
+Só com a IA, **a mesma seed dá a mesma batalha**: sorteie antes de cada uma, e não use o R (ele repete a seed). No
+fim, o painel "Sessão" mostra **"Você × IA, no mesmo confronto"**.
+
+```
+GRUPO 2
+Algum número do "Você × IA" te surpreendeu? Algo estranho?
+```
+
+### Grupo 3: Assistir (~5 min, 2 batalhas)
+
+"você joga com" em "ninguém", velocidade **×1**.
+
+1. **Um 3 × 3 nas pedras:** no Lado A, **"+ participante"** duas vezes, e os três como **■, ▲, ●**; o mesmo no
+   Lado B. **Começar** e assista até o fim (P pausa para olhar com calma, Esc continua).
+2. **Um 1 × 1 × 1 na aberta:** tire os extras com o **✕** (A = ■, B = ●) e clique em **"+ lado"** (o Lado C vem com
+   um ▲). **Começar** e assista.
+
+Repare em quem atira em quem, para onde cada um olha, as barras de HP, a contagem da fuga, o relógio de
+inatividade, a lista "Eventos" e a tabela de resultado.
+
+```
+GRUPO 3
+F3 Dava para ler quem olha para onde, o HP, a contagem da fuga e o relógio de inatividade:
+F4 A IA parecia um adversário de verdade (nem boba, nem perfeita):
+Livre: dava para acompanhar quem atirava em quem no 3 × 3? O 1 × 1 × 1 teve algo diferente do 1 × 1? Assistir
+prendeu a sua atenção? O que faltou na tela?
+```
+
+### Grupo 4: Mexer na luta (~8 min, 4 batalhas)
+
+Um confronto que não está nos grupos 1 e 2: **corredor, ▲ × ▲**, "você joga com" em "ninguém", velocidade ×1.
+
+1. **Editar gambits:** **Começar** e, durante a contagem, **P**. Em **"Na arena"**, clique no nome do ▲ do Lado A:
+   abre o painel **"Gambits de …"**. Tire a regra **"esquivar"** com o **✕** ("Tirar a regra") e clique em
+   **"Aplicar"**. **Esc** continua. Assista: o ▲ sem esquiva leva mais tiro?
+2. **A mesma luta com a esquiva:** **R** reinicia com o mesmo setup e a mesma seed, com os gambits originais.
+   Compare as duas.
+3. **Reforço num lado existente:** **Começar** de novo. Com a luta andando, no painel **"Reforço"**: lado **B**, um
+   **●**, **"Soltar na arena"**.
+4. **Reforço num lado novo:** **Começar** de novo, e solte um **■** no lado **"novo (C)"**.
+
+```
+GRUPO 4
+Achou o editor? Entendeu que a lista vale em ordem (a 1ª regra possível)?
+A esquiva fez diferença?
+A entrada no meio mudou a luta? E o lado novo?
+```
+
+### Grupos 5 e 6: A sessão às cegas (~30 batalhas, em duas partes)
+
+Responde à pergunta 3 da hipótese (latência). **Um setup só na sessão inteira** (dono, 2026-11-17): o 1 × 1
+dominando, para a nota medir o atraso e não o confronto. Sugestão: **▲ (você) × ● (IA normal) nas pedras**, o duelo
+à distância em que mirar e desviar mais sentem o atraso (spec D4).
+
+1. Confira o **"interpolar" marcado** (a sessão inteira usa o mesmo).
+2. Monte o setup no formulário, com "você joga com" no seu ▲, e clique em **"Começar sessão às cegas"** no painel
+   "Sessão". A página sorteia a ordem de **5 batalhas de cada RTT** (0, 50, 100, 150, 200 e 300 ms), 30 no total, e
+   esconde o RTT e o atraso medido.
+3. Jogue cada batalha até o fim. Errou o começo? **R** reinicia com o mesmo RTT escondido.
+4. No fim, a nota (botões ou teclas **1 a 5**) para **"dá para jogar?"**: 1 = não dá, 5 = nem senti atraso. Só então
+   o RTT e o atraso medido aparecem.
+5. **Enter** (ou N, ou o botão) abre a próxima. O painel mostra quantas faltam.
+
+**Grupo 5:** as primeiras 15. Dá para parar aí e voltar depois: o sorteio fica guardado, e o painel oferece a
+próxima batalha. **Grupo 6:** as outras 15; depois da última, **"Encerrar"** mostra a tabela nota × RTT e o
+veredito (até onde a nota mediana fica em 4 ou mais; de onde cai abaixo de 3). **Exporte a sessão.**
 
 Não olhe o seletor de RTT nem o export no meio da sessão: a nota tem de julgar o jogo, não o número.
 
-### Perguntas da hipótese (fim das duas sessões)
+```
+GRUPOS 5 E 6
+Alguma batalha que chamou atenção (o número dela no painel, e por quê)?
+Quando o atraso incomodou, o que ficou ruim: andar, mirar, desviar?
+```
 
-1. **A regra de grade é divertida?** Jogar e assistir, de 1 × 1 a 3 × 3 e com três lados, prendeu a sua atenção?
-   O que faltou?
-2. **A micro importa e o DNA não decide sozinho?** Dominando, você venceu confrontos que a IA perde no mesmo setup
-   (o painel "Você × IA")? Algum 1 × 1 pareceu decidido de antemão?
-3. **Quanta latência a grade aguenta?** Até que RTT a nota ficou em 4 ou mais, e a partir de qual caiu abaixo
-   de 3 (a tabela da sessão às cegas)? Isso basta para o deploy sem predição?
-4. **A IA de gambits serve?** Como adversário (crível, nem boba nem perfeita) e como auto-resolve (o que ela faria
-   no seu lugar)?
+### Grupo 7: 300 ms com e sem interpolar (~5 min, 4 batalhas)
 
-E a decisão que fecha a fatia: **a próxima regra a experimentar é a livre (MOBA-lite), a forja, ou nenhuma antes
-da junção?**
+Fora da sessão às cegas: RTT em **300 ms** no painel "Rede simulada", o mesmo ▲ × ● nas pedras, dominando.
+
+1. Duas batalhas com **"interpolar" marcado**.
+2. Duas com **"interpolar" desmarcado**.
+3. No fim, marque o "interpolar" de novo e volte o RTT para 0 ms.
+
+```
+GRUPO 7
+F6 Qual dos dois sente melhor a 300 ms, com ou sem interpolar? Por quê?
+```
+
+### Grupo 8: Fechamento (~10 min)
+
+1. **"Exportar sessão"** (se ainda não exportou depois do grupo 7). Com o Claude: diga onde o arquivo está, e ele
+   monta as tabelas (você × IA, nota × RTT) e as compara com o `geo battle sweep`.
+2. As **perguntas da hipótese**:
+   1. **A regra de grade é divertida?** Jogar e assistir, de 1 × 1 a 3 × 3 e com três lados, prendeu a sua
+      atenção? O que faltou?
+   2. **A micro importa e o DNA não decide sozinho?** Dominando, você venceu confrontos que a IA perde no mesmo
+      setup (o "Você × IA")? Algum 1 × 1 pareceu decidido de antemão?
+   3. **Quanta latência a grade aguenta?** Até que RTT a nota ficou em 4 ou mais, e a partir de qual caiu abaixo
+      de 3? Isso basta para o deploy sem predição?
+   4. **A IA de gambits serve?** Como adversário (crível, nem boba nem perfeita) e como auto-resolve (o que ela
+      faria no seu lugar)?
+3. A decisão que fecha a fatia: **a próxima regra a experimentar é a livre (MOBA-lite), a forja, ou nenhuma antes
+   da junção?**
+4. As **interpretações a validar** das fases (o `tasks.md` do laboratório, F4 a F6): o Claude as resume para um sim
+   ou não por item.
 
 ## Validar o replay (dono)
 
