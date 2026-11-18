@@ -11,6 +11,7 @@ const who = (p: ParticipantRef) =>
 export function eventText(event: BattleEvent): string | null {
   switch (event.type) {
     case "attacked":
+    case "missed":
       return null;
     case "hit":
       return `${who(event.by)} acerta ${who(event.target)}: −${event.damage} (${event.hp})`;
