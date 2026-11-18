@@ -102,8 +102,8 @@ describe("pick up (spec C-2, D8)", () => {
   test("a pile does not block its cell: walk onto it and pick up", () => {
     const state = carrier(0, 0);
     state.piles.push({ id: 9, cell: HERE + 1, materia: 1, cristal: 0 });
-    // A square steps every 7 ticks (3 cells per second at 20 ticks).
-    run(state, 7, [{ type: "intent", id: 1, move: "right", attack: false }]);
+    // Standing, the first step is ready (D22): one tick walks one cell.
+    run(state, 1, [{ type: "intent", id: 1, move: "right", attack: false }]);
     run(state, 1, [
       { type: "intent", id: 1, move: null, attack: false },
       { type: "pickup", id: 1 },

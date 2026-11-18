@@ -5,6 +5,7 @@
 import { ArenaError, parseArena, type Arena } from "./arena.ts";
 import { copyGambits, type Gambit } from "./gambits.ts";
 import {
+  CELL_COST,
   DNAS,
   REACTIONS,
   type BattleParams,
@@ -221,7 +222,8 @@ export function placeParticipant(
       drop: false,
       pickup: false,
     },
-    movePoints: 0,
+    // Whoever is born or joins has stood still: its first step is ready (D22).
+    movePoints: CELL_COST,
     cooldownTicks: 0,
     exitTicks: 0,
     idleTicks: 0,

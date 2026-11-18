@@ -491,7 +491,7 @@ As decisões C4 a C7 do checkpoint da F5 (plan §15; spec D9, D22, M-1, A-4, F-2
 
 - [x] As decisões no GDD 06, na spec e no plan; o roteiro do laboratório em grupos no PLAYTEST; o registro da 1ª
       parte do checkpoint (acima) (2026-11-18)
-- [ ] **O primeiro passo imediato** (spec D22, M-1; C4): parado, o creep anda no tick seguinte ao comando, e cada
+- [x] **O primeiro passo imediato** (spec D22, M-1; C4): parado, o creep anda no tick seguinte ao comando, e cada
       toque anda uma célula sem passar da velocidade do DNA. Sugestão: com a intenção parada, os pontos não zeram,
       mas se recompõem pelo ganho do tick (com o freio da carga) até `CELL_COST`, e não passam dele; quem ficou
       parado o tempo de uma célula tem o passo pronto. Testes: um toque de 1 tick anda uma célula; toques mais
