@@ -1,5 +1,5 @@
 {
-  "battleVersion": 2,
+  "battleVersion": 3,
   "setup": {
     "rule": "grid",
     "arena": [
@@ -324,5 +324,5 @@
       "commands": [{ "type": "intent", "id": 1, "move": null, "attack": false }]
     }
   ],
-  "finalHash": "7106ce22a5dc62bddcda05bce3d39d6fcfbb74b339a423eb701d0e1942d30734"
+  "finalHash": "3a8e229cbdb0d1282d9a603ebcc054270dfc3f8e7cb7877c593cd9ee42d91af0"
 }

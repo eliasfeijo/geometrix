@@ -37,10 +37,12 @@ describe("stepBattle", () => {
     stepBattle(state, [{ type: "intent", id: 1, move: "up", attack: false }]);
     const circle = state.participants[0]!;
     expect(circle.facing).toBe("up");
-    expect(circle.movePoints).toBe(1500);
-    // A circle steps every 4 ticks.
-    for (let i = 0; i < 3; i++) stepBattle(state, []);
+    // Standing, the first step was ready (D22); then a circle steps every 4
+    // ticks, the first of them with the tick's gain already in.
     expect(xyOf(state, 1)).toEqual([3, 2]);
+    expect(circle.movePoints).toBe(1500);
+    for (let i = 0; i < 3; i++) stepBattle(state, []);
+    expect(xyOf(state, 1)).toEqual([3, 1]);
   });
 
   test("releasing the key stops the walk; a face command only turns", () => {
@@ -51,7 +53,7 @@ describe("stepBattle", () => {
       { type: "face", id: 1, dir: "down" },
     ]);
     for (let i = 0; i < 10; i++) stepBattle(state, []);
-    expect(xyOf(state, 1)).toEqual([3, 3]);
+    expect(xyOf(state, 1)).toEqual([2, 3]);
     expect(state.participants[0]!.facing).toBe("down");
   });
 

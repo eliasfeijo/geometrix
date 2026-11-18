@@ -6,6 +6,7 @@ import {
   setupIssue,
   type BattleSetup,
 } from "../src/setup.ts";
+import { CELL_COST } from "../src/params.ts";
 import { BATTLE_VERSION } from "../src/state.ts";
 import { loadTestParams, member, readArenaRows, setupOf } from "./helpers.ts";
 
@@ -66,8 +67,9 @@ describe("createBattle (spec S-1)", () => {
     for (const p of state.participants) {
       expect(p.controller).toBe("gambits");
       expect(p.intent.move).toBeNull();
+      // The first step is ready (D22).
       expect([p.movePoints, p.cooldownTicks, p.exitTicks, p.idleTicks]).toEqual(
-        [0, 0, 0, 0],
+        [CELL_COST, 0, 0, 0],
       );
     }
   });

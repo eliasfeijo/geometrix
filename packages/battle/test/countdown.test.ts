@@ -52,6 +52,17 @@ describe("the start countdown (spec D21, S-4)", () => {
     expect(xyOf(state, 1)).not.toEqual(start);
   });
 
+  test("it ends with the first step ready (D22)", () => {
+    const state = humans(battle());
+    const [x, y] = xyOf(state, 1);
+    run(state, COUNTDOWN, [
+      { type: "intent", id: 1, move: "up", attack: false },
+    ]);
+    expect(state.participants[0]!.movePoints).toBe(6000);
+    stepBattle(state, []);
+    expect(xyOf(state, 1)).toEqual([x, y - 1]);
+  });
+
   test("the AI decides and turns, but stands still", () => {
     const state = battle([
       [member("triangle", { gambits: presetGambits("skirmisher") })],
