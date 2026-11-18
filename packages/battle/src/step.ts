@@ -48,7 +48,7 @@ export function stepBattle(
     attack(state, log, hits);
     moveParticipants(state);
   }
-  moveProjectiles(state, hits);
+  moveProjectiles(state, log, hits);
   applyHits(state, log, hits);
   if (fighting) {
     dropAndPickUp(state, log);

@@ -2,7 +2,7 @@
 // a tick, as structured data, outside the state and its hash. stepBattle
 // returns them; the same state and commands give the same list in the same
 // order. They are the battle side of the internal contract v0 (ADR-0008 rule
-// 8), versioned by BATTLE_VERSION. Who emits each: attacked, hit and died the
+// 8), versioned by BATTLE_VERSION. Who emits each: attacked, hit, missed and died the
 // combat (combat.ts); dropped and picked the bag (carry.ts); joined and
 // controlChanged the lab's commands (commands.ts); escaped and ended the
 // exits (exits.ts).
@@ -43,8 +43,23 @@ export type BattleEventBody =
       type: "hit";
       by: ParticipantRef;
       target: ParticipantRef;
+      /** HP taken off: the attacker's damage, down to what the target had. */
       damage: number;
       hp: number;
+      /** Where the target stands when the blow lands. */
+      cell: number;
+    }
+  | {
+      /**
+       * A shot that vanished without hitting anyone (spec L-8): into rock or
+       * off the grid, or past its range. `cell` is the last one it was on
+       * (the shooter's, when the cell in front was already rock), and `dir`
+       * the way it flew.
+       */
+      type: "missed";
+      by: ParticipantRef;
+      cell: number;
+      dir: Dir;
     }
   | { type: "died"; participant: ParticipantRef; by: ParticipantRef | null }
   | { type: "dropped"; participant: ParticipantRef; carry: Carry; cell: number }

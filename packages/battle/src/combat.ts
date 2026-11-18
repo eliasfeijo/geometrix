@@ -90,7 +90,15 @@ export function attack(
       continue;
     }
     const cell = neighbor(state.arena, participant.cell, dir);
-    if (cell < 0 || isRock(state.arena, cell)) continue;
+    if (cell < 0 || isRock(state.arena, cell)) {
+      emit(log, {
+        type: "missed",
+        by: participantRef(participant),
+        cell: participant.cell,
+        dir,
+      });
+      continue;
+    }
     state.projectiles.push({
       id: state.nextId++,
       owner: participant.id,
@@ -111,9 +119,14 @@ export function attack(
  * gains points at its speed and enters the next cells, checking each. It hits
  * the first enemy it finds, vanishes into rock or off the grid, and vanishes
  * when it would go past its range: it stays on its last cell as long as on
- * any other.
+ * any other. A shot that vanishes without a hit says so (`missed`, spec
+ * L-8), from the last cell it was on.
  */
-export function moveProjectiles(state: BattleState, hits: Hit[]): void {
+export function moveProjectiles(
+  state: BattleState,
+  log: BattleEventLog,
+  hits: Hit[],
+): void {
   const spent = new Set<Projectile>();
   for (const projectile of state.projectiles) {
     const hit = (): boolean => {
@@ -140,6 +153,12 @@ export function moveProjectiles(state: BattleState, hits: Hit[]): void {
       const next = neighbor(state.arena, projectile.cell, projectile.dir);
       if (projectile.cellsLeft === 0 || next < 0 || isRock(state.arena, next)) {
         spent.add(projectile);
+        emit(log, {
+          type: "missed",
+          by: owner,
+          cell: projectile.cell,
+          dir: projectile.dir,
+        });
         break;
       }
       projectile.cell = next;
@@ -185,6 +204,7 @@ export function applyHits(
       target: participantRef(target),
       damage: dealt,
       hp: target.hp,
+      cell: target.cell,
     });
     if (target.hp === 0) killers.set(targetId, by);
   }
