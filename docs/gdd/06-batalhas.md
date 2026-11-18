@@ -58,8 +58,10 @@
       sai antes do passo, e o projétil anda depois dos creeps (plan do laboratório, P3);
     - **fuga pela borda** (D7): a arena é a bolha; quem fica na saída por um instante sem levar golpe sai da
       batalha. A carga freia o creep; ele pode largar a bolsa numa pilha, e qualquer um cata (D8);
-    - **o fim** (D9): **sem relógio da batalha**. Cada creep tem um relógio de inatividade, que zera quando ele
-      dá ou leva dano; quando estoura, ele foge sozinho. A batalha acaba quando sobra no máximo um lado na arena;
+    - **o fim** (D9): **sem relógio de duração**. Um relógio de inatividade **da batalha inteira** zera quando
+      qualquer um dá ou leva dano; quando estoura, todos fogem ao mesmo tempo, sem vencedor (até o checkpoint da F5,
+      era um relógio por creep, e quem estourava fugia sozinho). A batalha acaba quando sobra no máximo um lado na
+      arena;
     - **lados** (D10, D11): de 2 a 4, hostis entre si; dá para entrar no meio da luta, sem diálogo;
     - **IA de gambits** (D14, D15): lista ordenada condição → ação por creep, com presets por DNA, editável no
       laboratório; é o adversário do laboratório e o auto-resolve.
@@ -76,6 +78,16 @@
     **contagem de 3 s** (provisório), em que todos ficam parados: podem virar, mas não andar nem atacar, e a IA
     também. É **regra da batalha**: vale no laboratório, no mundo e no auto-resolve. Dá ao humano tempo de se
     preparar antes da luta.
+  - **Checkpoint da F5 do laboratório** (dono, 2026-11-18, na sessão livre;
+    [tasks do laboratório](../specs/m2-laboratorio/tasks.md)):
+    - **o primeiro passo é imediato:** parado, o creep anda já no tick seguinte ao comando, e depois segue no ritmo
+      do DNA. Cada toque anda uma célula, e a velocidade média não muda. Antes, o creep parado esperava o tempo de
+      uma célula inteira (200 a 333 ms) antes do primeiro passo, e um toque mais curto que isso se perdia: tocar a
+      tecla várias vezes não movia o creep, e parar e voltar a andar parecia lento;
+    - **a inatividade é da batalha, não de cada creep:** 15 s (provisório) sem nenhum dano em ninguém, todos fogem
+      ao mesmo tempo, sem vencedor. Ideia do dono: com um relógio por creep, quem não acertava nem era acertado
+      fugia no meio de uma luta que estava acontecendo (no 3 × 3 e no 1 × 1 × 1). No 1 × 1, as duas regras dão o
+      mesmo resultado.
   - **Chefão disputado** (M2.5): quando dois lados ferem o mesmo chefão, leva o buff ou o item quem dá o último
     golpe ([05](05-tribos-e-diplomacia.md)).
 
@@ -100,6 +112,9 @@ sequenceDiagram
     W->>W: aplica os eventos e libera os participantes
 ```
 
+- **Som da batalha** (pedido do dono, 2026-11-18, no checkpoint da F5, **sem marco**): um sinal sonoro para o
+  disparo e o golpe, além do sinal visual que o laboratório ganha na F6. O jogo ainda não tem som nenhum: é um
+  sistema novo, que só entra com um marco escolhido pelo dono.
 - **IA que aprende** (ideia do dono, 2026-11-17, **sem marco**): o bot começa burro e vai ficando mais esperto, até
   um "modo pesadelo". Um caminho concreto (agente): uma busca offline por listas de gambits que vençam a melhor
   lista anterior, com o auto-resolve (centenas de lutas por segundo), gerando níveis de bot. Aumenta o escopo do
@@ -123,3 +138,5 @@ Detalhes e análise no [brainstorm M2–M3](../brainstorm/2026-11-15-m2-m3.md) �
 - Qual é o raio da "bolha" da batalha? Até que distância alguém pode entrar no meio da luta? (Que reforços e
   terceiros entram já está decidido; o raio do encontro na fatia A, também.) Fatia D.
 - Quanto tempo do mundo passa durante uma batalha?
+- **Golpe crítico?** (dono, 2026-11-18, no checkpoint da F5, ao pedir o sinal de acerto e de erro): um golpe que às
+  vezes tira mais dano. Seria uma regra de combate, com os stats e as skills do M2.5; não entra no M2.

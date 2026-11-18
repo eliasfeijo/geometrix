@@ -372,6 +372,19 @@ contrato interno v0 do ADR-0008, versionado pela `BATTLE_VERSION`.
 | C2 | Arenas 2× maiores, com zonas de nascimento a 1/4 da largura (spec D3, §6); uma aberta 3× para comparar. Primeira task da F4, com o `sweep` e os replays de novo antes da página |
 | C3 | A fuga pela borda não muda (um golpe zera a contagem). A dificuldade da IA fica configurável: reação por participante no setup (spec D20); uma IA que aprende é proposta sem marco no GDD 06 |
 
+### Decisões do checkpoint da F5 (dono, 2026-11-18, na sessão livre)
+
+O checkpoint da F5 continua depois da F6, que implementa estas decisões (registro no
+[tasks.md](tasks.md), F5 e F6).
+
+| # | Decisão |
+|---|---|
+| C4 | **Primeiro passo imediato** (spec D22, M-1): parado, o creep anda no tick seguinte ao comando; cada toque anda uma célula, sem passar da velocidade do DNA |
+| C5 | **Inatividade da batalha** (spec D9, A-4, F-2): um relógio só; 15 s sem nenhum dano em ninguém, todos fogem ao mesmo tempo, sem vencedor |
+| C6 | **A tela do laboratório legível num notebook** (spec L-8): a arena na largura disponível, formas, barras e traços maiores; sinal de quem ataca, do golpe (com o dano) e do projétil que some sem acertar. Sem som (proposta sem marco no GDD 06) |
+| C7 | **O domínio acaba com a batalha** no laboratório: o "instantâneo" não fica travado depois do fim, e dominar o creep que já é seu não marca a batalha como "trocou de domínio" |
+| C8 | **Golpe crítico** fica como pergunta aberta no GDD 06, para o M2.5 (stats e skills); não entra no M2 |
+
 ## 16. Pontos de contato com a fatia A
 
 A B anda em paralelo e mora num pacote novo. Os arquivos que as duas tocam, e que pedem atenção no merge:
@@ -399,4 +412,5 @@ Cada fase na sua branch `m2/laboratorio-f<n>-<slug>`, com merge `--no-ff` em `ma
 | F2 | **O combate:** ataque corpo a corpo e projéteis, dano, morte e pilhas, largar e catar, a fuga pela borda, a inatividade, o fim, a entrada, `control` e `setGambits`, os eventos e o resultado, o log e o `replayLog` | — |
 | F3 | **A IA e o auto-resolve:** o vocabulário dos gambits, o BFS, a esquiva, o tempo de reação, os presets; `geo battle sweep` e `verify`; os passos do CI | **Dono:** a matriz de confrontos, a duração, a inatividade e a fuga carregada, nos números, antes da página |
 | F4 | **O laboratório:** as arenas 2× e as zonas de nascimento (C2), a reação por participante (C3), `lab.html`, o *worker*, o canal com latência, o render, o teclado, o setup, a troca de domínio, o reforço, o editor de gambits, os eventos e o resultado, o atraso medido, o export do log (e a *fixture* da CLI) | — |
-| F5 | **Às cegas e o playtest:** o modo às cegas, o registro da sessão e o export, as perguntas do PLAYTEST | **Dono:** sessão livre e sessão às cegas; responde às perguntas 1 a 4 da hipótese e decide a próxima regra; fecha a fatia B |
+| F5 | **Às cegas e o playtest:** o modo às cegas, o registro da sessão e o export, as perguntas do PLAYTEST | **Dono:** sessão livre e sessão às cegas; responde às perguntas 1 a 4 da hipótese e decide a próxima regra; fecha a fatia B (continua depois da F6) |
+| F6 | **Os ajustes do checkpoint da F5** (C4–C7): o primeiro passo imediato, a inatividade da batalha, a `BATTLE_VERSION` 3 com o `sweep` e a *fixture* refeitos, o domínio que acaba com a batalha, a tela legível com o sinal do ataque, do golpe e do erro | — (o checkpoint da F5 retoma) |

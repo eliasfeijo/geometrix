@@ -57,7 +57,7 @@ chutes.
 | D6 | Stats base por DNA **(gameplay)** | Nos params da batalha: **HP máximo, dano, alcance, recarga do ataque, velocidade de batalha, velocidade do projétil e capacidade de carga**. O participante entra com o **HP atual** que o setup der (o ferido luta ferido) | GDD 02. O HP máximo e a capacidade repetem os números do `sim` até a junção, que escolhe uma fonte só (ADR-0008) |
 | D7 | Fuga pela borda **(gameplay; dono)** | Quem fica numa célula de saída por um instante, sem levar golpe, **sai da batalha** com o que carrega; um golpe zera a contagem | Dono, 2026-11-15. A arena é a bolha |
 | D8 | Carga, largar e catar **(gameplay)** | A carga **freia** o creep na batalha, em proporção à fração da capacidade ocupada (cheio, a metade da velocidade). O comando **largar a bolsa** deixa toda a carga numa **pilha** na célula e tira o freio. Quem morre deixa a carga numa pilha na própria célula. O comando **catar** pega da pilha da célula até a capacidade livre, cristal primeiro | Dono, 2026-11-15 (fuga): o agressor escolhe entre catar e perseguir, como no mundo. O freio proporcional faz do quadrado carregado até o talo quem quase nunca escapa (GDD 06). O que sobra na arena volta ao mundo na junção (D) |
-| D9 | Fim da batalha e inatividade **(gameplay; dono)** | **Não há relógio da batalha.** Cada participante tem um **relógio de inatividade**, que corre desde o começo ou desde a entrada dele e zera quando ele **dá ou leva dano**. Quando estoura, o creep **foge sozinho** (sai como na D7, com o que carrega). A batalha acaba quando **sobra no máximo um lado** na arena (os outros morreram ou fugiram): esse lado vence; se não sobra ninguém, não há vencedor | Dono, 2026-11-15: aniquilação ou fuga, com o tempo contando só a inatividade. Resolve o impasse entre dois *kiters* e o humano ausente, sem cortar uma luta que está acontecendo |
+| D9 | Fim da batalha e inatividade **(gameplay; dono)** | **Não há relógio da batalha.** Cada participante tem um **relógio de inatividade**, que corre desde o começo ou desde a entrada dele e zera quando ele **dá ou leva dano**. Quando estoura, o creep **foge sozinho** (sai como na D7, com o que carrega). A batalha acaba quando **sobra no máximo um lado** na arena (os outros morreram ou fugiram): esse lado vence; se não sobra ninguém, não há vencedor. **Checkpoint da F5 (dono, 2026-11-18):** o relógio de inatividade passa a ser **um só, da batalha**: zera quando qualquer um dá ou leva dano, e quando estoura **todos fogem ao mesmo tempo**, sem vencedor | Dono, 2026-11-15: aniquilação ou fuga, com o tempo contando só a inatividade. Resolve o impasse entre dois *kiters* e o humano ausente, sem cortar uma luta que está acontecendo. Dono, 2026-11-18: com um relógio por creep, quem não acertava nem era acertado fugia no meio da luta dos outros (no 3 × 3 e no 1 × 1 × 1); o relógio da batalha resolve o mesmo impasse sem isso. O humano ausente num 3 × 3 não sai mais sozinho |
 | D10 | Lados **(gameplay)** | De 2 a 4 lados, **todos hostis entre si** nesta fatia. Cada lado tem um trecho da borda de entrada | GDD 06 (lados, não grupos). Alianças entre lados (tribos, M4) ficam para quando houver quem se alie |
 | D11 | Entrada no meio da luta **(gameplay; dono)** | O comando **entrar** põe um participante novo num lado (existente ou novo) numa célula livre do trecho de entrada desse lado. Quem entra não passa por diálogo. O laboratório tem um botão para isso. Com as zonas de nascimento (D3), quem entra nasce na zona do seu lado | Dono, 2026-11-15: o motor e o laboratório já nascem com isso; o lado do mundo (quem pode entrar, a bolha) é da junção |
 | D12 | Domínio no laboratório **(gameplay)** | O humano domina **um** participante de cada vez, ou nenhum (só assiste). No laboratório, ele troca de participante a qualquer momento, sem custo. O dominado não usa os gambits; ao ser liberado, volta a eles | GDD 02. A troca livre é do laboratório: no mundo, o domínio vem da fatia A |
@@ -70,6 +70,7 @@ chutes.
 | D19 | Eventos | O passo da batalha devolve eventos estruturados fora do estado (ADR-0007): ataque, golpe, dano, morte, largou, catou, entrou, fugiu (pela borda ou por inatividade), fim. O laboratório mostra uma lista simples, **sem a crônica narrada**, e a tabela de resultado no fim | A crônica é da fatia A; a tradução para os eventos do mundo é da D |
 | D21 | Contagem no começo **(gameplay; dono)** | A batalha começa com uma **contagem de 3 s**: todos parados, podem **virar**, mas não andar nem atacar; a IA também. Regra da batalha: vale no laboratório, no mundo e no auto-resolve. Número provisório em `params/battle.json` | Dono, 2026-11-17, ao jogar o laboratório: sem ela, quem domina chega à luta com o aliado já morrendo, e a nota às cegas mediria a correria, não a latência |
 | D20 | Dificuldade da IA **(gameplay; dono)** | Cada participante da IA tem uma **reação** no setup: fácil (600 ms), normal (250 ms) ou difícil (100 ms), mais a lista de gambits, que o laboratório já deixa editar. Números provisórios em `params/battle.json` | Dono, 2026-11-17, no checkpoint da F3: ficar preso na borda sob fogo é aceitável se a dificuldade do bot for configurável. Uma IA que aprende fica como proposta sem marco (GDD 06) |
+| D22 | Primeiro passo imediato **(gameplay; dono)** | Parado, o creep dá o **primeiro passo no tick seguinte** ao comando de andar, e depois segue no ritmo do DNA. Cada toque na tecla anda uma célula; a velocidade média não muda (tocar não anda mais rápido que segurar) | Dono, 2026-11-18, no checkpoint da F5: o creep parado esperava o tempo de uma célula inteira (200 a 333 ms) antes de andar, e um toque mais curto se perdia; tocar a tecla várias vezes não movia o creep, e parar e voltar a andar parecia lento |
 
 ## 4. Escopo
 
@@ -85,8 +86,8 @@ chutes.
   carga e preset; seed), jogar dominando um participante (D12, D13), assistir, pausar, reiniciar, trocar a
   velocidade (×1, ×4, instantâneo), soltar um reforço (D11), editar os gambits (D15), o canal com latência e o modo
   às cegas (D17), a lista de eventos e o resultado (D19), exportar o log.
-- **Visual:** o creep pela forma do DNA, com a direção para onde olha, a barra de HP, a carga e o relógio de
-  inatividade perto de estourar; os projéteis; as pedras, a saída e os trechos de entrada; as pilhas; a contagem da
+- **Visual:** o creep pela forma do DNA, com a direção para onde olha, a barra de HP e a carga; o relógio de
+  inatividade da batalha perto de estourar; os projéteis; as pedras, a saída e os trechos de entrada; as pilhas; a contagem da
   fuga na borda.
 - **Playtest:** perguntas do laboratório no [PLAYTEST.md](../../PLAYTEST.md).
 
@@ -116,7 +117,9 @@ Formato: *Quando [gatilho], o sistema deve [resposta].*
 
 ### Movimento (`battle`)
 - **M-1** A cada tick, um creep com ordem de andar deve acumular pontos pela velocidade de batalha do DNA, freada
-  pela carga (D8), e entrar na célula vizinha quando completar o custo de uma célula.
+  pela carga (D8), e entrar na célula vizinha quando completar o custo de uma célula. Um creep parado deve ter o
+  passo seguinte pronto assim que tiver ficado parado o tempo de uma célula (D22): o primeiro passo sai no tick
+  seguinte ao comando, e tocar a tecla não anda mais rápido que segurá-la.
 - **M-2** Um creep não deve entrar numa célula de pedra nem numa célula ocupada; nesse caso, só vira.
 - **M-3** Quando dois creeps completam o passo para a mesma célula no mesmo tick, o `rng` da batalha deve escolher
   quem entra; o outro fica e mantém os pontos. A ordem das chamadas ao `rng` deve ser fixa.
@@ -127,7 +130,8 @@ Formato: *Quando [gatilho], o sistema deve [resposta].*
 - **A-3** O ataque do círculo e do triângulo deve criar um projétil na célula da frente, que avança pela velocidade
   do projétil, na direção do disparo, até acertar o primeiro inimigo, entrar numa pedra ou percorrer o alcance.
   Aliados do atirador não o bloqueiam.
-- **A-4** Um golpe deve tirar o dano do atacante do HP de quem é atingido e zerar o relógio de inatividade dos dois.
+- **A-4** Um golpe deve tirar o dano do atacante do HP de quem é atingido e zerar o relógio de inatividade da
+  batalha (D9).
 - **A-5** Quando o HP chega a 0, o creep deve sair da arena no mesmo tick, deixando a carga numa pilha (D8).
 
 ### Carga e pilhas (`battle`)
@@ -138,16 +142,15 @@ Formato: *Quando [gatilho], o sistema deve [resposta].*
 ### Fuga, inatividade e fim (`battle`)
 - **F-1** Um creep que fica numa célula de saída pelo tempo de saída, sem levar golpe, deve sair da batalha com o HP
   e a carga que tem. Um golpe deve zerar a contagem.
-- **F-2** Quando o relógio de inatividade de um creep estoura (D9), ele deve sair da batalha na hora, como em F-1,
-  com o motivo "inatividade" no evento.
+- **F-2** Quando o relógio de inatividade da batalha estoura (D9), todos os que estão na arena devem sair na hora,
+  como em F-1, com o motivo "inatividade" no evento, e a batalha acaba sem vencedor.
 - **F-3** Quando sobra no máximo um lado na arena, a batalha deve acabar: esse lado vence, ou ninguém, se a arena
   ficou vazia. O evento de fim deve trazer o desfecho de cada participante (venceu, morreu, fugiu pela borda, fugiu
   por inatividade), o HP final, o dano dado e recebido, e a carga com que saiu; e as pilhas que ficaram na arena.
 - **F-4** Uma batalha acabada não deve aceitar comandos nem avançar.
 
 ### Entrada no meio da luta (`battle`)
-- **E-1** O comando entrar deve pôr o participante novo numa célula livre do trecho de entrada do lado, com o
-  relógio de inatividade zerado; um lado novo deve ganhar um trecho de entrada livre. Sem célula livre, a entrada
+- **E-1** O comando entrar deve pôr o participante novo numa célula livre do trecho de entrada do lado; um lado novo deve ganhar um trecho de entrada livre. Sem célula livre, a entrada
   deve ser recusada com o motivo.
 
 ### IA de gambits (`battle`)
@@ -178,7 +181,8 @@ Formato: *Quando [gatilho], o sistema deve [resposta].*
   participante, e valer a partir do tick seguinte.
 - **L-8** A tela deve deixar legível quem olha para onde, os projéteis, o HP, a carga, as pilhas, a saída, a
   contagem da fuga e o relógio de inatividade perto de estourar; e mostrar a lista de eventos e, no fim, a tabela
-  de resultado.
+  de resultado. **Checkpoint da F5:** legível numa tela de notebook (a arena ocupa a largura disponível), com um
+  sinal de quem ataca, de quem é atingido (e quanto) e de onde o projétil some sem acertar.
 
 ## 6. Parâmetros iniciais (chutes, para serem quebrados)
 
