@@ -6,6 +6,7 @@ describe("the interpolation (plan P8)", () => {
   const view = (cells: number[], shots: number[] = []): BattleView => ({
     tick: 0,
     countdownTicks: 0,
+    idleTicks: 0,
     participants: cells.map((cell, i) => ({
       id: i + 1,
       side: 0,
@@ -19,7 +20,6 @@ describe("the interpolation (plan P8)", () => {
       reaction: "normal",
       cooldownTicks: 0,
       exitTicks: 0,
-      idleTicks: 0,
     })),
     projectiles: shots.map((cell, i) => ({
       id: 100 + i,

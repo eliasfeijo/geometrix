@@ -382,6 +382,17 @@
   pointer-events: none;
 }
 
+/* The battle's idle clock close to running out (spec D9). */
+.lab-idle {
+  font-family: var(--font-game);
+  font-size: 1px;
+  font-weight: 700;
+  paint-order: stroke;
+  stroke: #0d0f12;
+  stroke-width: 0.15px;
+  pointer-events: none;
+}
+
 /* The blind mode's grade (spec D17). */
 .lab-grade-button {
   min-width: 2.5rem;

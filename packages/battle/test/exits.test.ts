@@ -95,13 +95,17 @@ describe("escape by the edge (spec F-1, D7)", () => {
   test("when edge and inactivity run out together, it is the edge", () => {
     const state = onTheRing();
     byId(state, 1).exitTicks = DWELL - 1;
-    byId(state, 1).idleTicks = TIMEOUT - 1;
-    expect(run(state, 1)[0]).toMatchObject({ type: "escaped", reason: "edge" });
+    state.idleTicks = TIMEOUT - 1;
+    expect(
+      run(state, 1).map((e) =>
+        e.type === "escaped" ? [e.participant.id, e.reason] : e.type,
+      ),
+    ).toEqual([[1, "edge"], [2, "idle"], "ended"]);
   });
 });
 
-describe("inactivity (spec F-2, D9)", () => {
-  test("whoever neither deals nor takes damage for the timeout flees on the spot", () => {
+describe("the battle's inactivity (spec F-2, D9)", () => {
+  test("when nobody takes HP off anyone for the timeout, everyone flees at once", () => {
     const state = humans(battleOn(FIELD, [["square"], ["circle"]]));
     put(state, 1, 3, 3);
     put(state, 2, 5, 4);
@@ -116,27 +120,44 @@ describe("inactivity (spec F-2, D9)", () => {
     expect(state.ended).toEqual({ tick: TIMEOUT - 1, winnerSide: null });
   });
 
-  test("dealing or taking damage zeroes the clock of both", () => {
+  test("any blow zeroes it, for everyone: a bystander no longer flees alone", () => {
     const state = humans(battleOn(FIELD, [["square", "circle"], ["square"]]));
     put(state, 1, 3, 3, "right");
     put(state, 2, 1, 5);
     put(state, 3, 4, 3);
     run(state, 100);
     const events = run(state, TIMEOUT, [{ type: "attackOnce", id: 1 }]);
-    // The bystander (2) runs out first; the two squares, a timeout after the
-    // blow of tick 100.
+    // The blow of tick 100 zeroed the clock; the bystander (2) neither dealt
+    // nor took damage, and stays until the clock runs out for all three.
     expect(
       ofType(events, "escaped").map((e) => [e.tick, e.participant.id]),
     ).toEqual([
-      [TIMEOUT - 1, 2],
       [100 + TIMEOUT - 1, 1],
+      [100 + TIMEOUT - 1, 2],
       [100 + TIMEOUT - 1, 3],
     ]);
+    expect(state.ended).toEqual({ tick: 100 + TIMEOUT - 1, winnerSide: null });
   });
 
-  test("the clock starts at the entry", () => {
+  test("whoever joins does not reset it, and flees with the others", () => {
     const state = humans(battleOn(FIELD, [["square"], ["circle"]]));
-    expect(state.participants.map((p) => p.idleTicks)).toEqual([0, 0]);
+    run(state, 200);
+    stepBattle(state, [
+      { type: "join", side: 0, participant: member("triangle") },
+    ]);
+    const events = run(state, TIMEOUT - 201);
+    expect(ofType(events, "escaped").map((e) => e.participant.id)).toEqual([
+      1, 2, 3,
+    ]);
+    expect(events.at(-1)).toMatchObject({ type: "ended", tick: TIMEOUT - 1 });
+  });
+
+  test("the clock starts at 0 and is the battle's, not a participant's", () => {
+    const state = humans(battleOn(FIELD, [["square"], ["circle"]]));
+    expect(state.idleTicks).toBe(0);
+    expect(state.participants.some((p) => "idleTicks" in p)).toBe(false);
+    run(state, 10);
+    expect(state.idleTicks).toBe(10);
   });
 });
 

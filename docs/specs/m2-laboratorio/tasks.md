@@ -497,7 +497,7 @@ As decisões C4 a C7 do checkpoint da F5 (plan §15; spec D9, D22, M-1, A-4, F-2
       parado o tempo de uma célula tem o passo pronto. Testes: um toque de 1 tick anda uma célula; toques mais
       rápidos que o ritmo não andam mais rápido que segurar; segurar mantém a velocidade média; o bloqueio e a
       disputa como antes; a contagem (S-4) termina com o passo pronto. Vale para a IA também
-- [ ] **A inatividade da batalha** (spec D9, A-4, F-2; C5): um relógio só no estado da batalha, no lugar do relógio
+- [x] **A inatividade da batalha** (spec D9, A-4, F-2; C5): um relógio só no estado da batalha, no lugar do relógio
       de cada participante; zera com qualquer golpe que tire HP; começa no fim da contagem, como hoje; quando
       estoura, todos os que estão na arena saem com o motivo "inatividade" (um evento por saída, na ordem da id) e a
       batalha acaba sem vencedor. A visão mostra o relógio para a página. A IA não lê o relógio (o `gambits.ts` não o

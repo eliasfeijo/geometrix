@@ -205,18 +205,17 @@ describe("projectiles (spec A-3)", () => {
 });
 
 describe("damage and death (spec A-4, A-5)", () => {
-  test("a blow resets the idle clock of both and the exit count of the target", () => {
+  test("a blow resets the battle's idle clock and the exit count of the target", () => {
     const state = humans(battleOn(FIELD, [["square"], ["square"]]));
     put(state, 1, 3, 3, "right");
     put(state, 2, 4, 3, "left");
-    for (const p of state.participants) {
-      p.idleTicks = 100;
-      p.exitTicks = 10;
-    }
-    // Stage 6 alone: stage 8 of the same tick counts both up again.
+    state.idleTicks = 100;
+    for (const p of state.participants) p.exitTicks = 10;
+    // Stage 6 alone: stage 8 of the same tick counts the clock up again.
     applyHits(state, createEventLog(0), [{ by: 1, target: 2, damage: 30 }]);
-    expect(byId(state, 1)).toMatchObject({ idleTicks: 0, exitTicks: 10 });
-    expect(byId(state, 2)).toMatchObject({ idleTicks: 0, exitTicks: 0 });
+    expect(state.idleTicks).toBe(0);
+    expect(byId(state, 1)).toMatchObject({ exitTicks: 10 });
+    expect(byId(state, 2)).toMatchObject({ exitTicks: 0 });
   });
 
   test("at 0 HP the creep leaves in the same tick, its carry left in a pile", () => {
