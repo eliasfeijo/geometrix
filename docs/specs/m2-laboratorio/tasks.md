@@ -502,7 +502,7 @@ As decisões C4 a C7 do checkpoint da F5 (plan §15; spec D9, D22, M-1, A-4, F-2
       estoura, todos os que estão na arena saem com o motivo "inatividade" (um evento por saída, na ordem da id) e a
       batalha acaba sem vencedor. A visão mostra o relógio para a página. A IA não lê o relógio (o `gambits.ts` não o
       usa). **A validar:** quem entra no meio não zera o relógio (só o dano zera)
-- [ ] A `BATTLE_VERSION` 3 (o mesmo log dá outro resultado): o hash de referência do `serialize.test.ts`, o
+- [x] A `BATTLE_VERSION` 3 (o mesmo log dá outro resultado): o hash de referência do `serialize.test.ts`, o
       `geo battle sweep` de novo (seeds 1–100; a tabela comparada com a da F5: duração, inatividade, custo,
       vitórias), o `verify` nas seeds 1, 42 e 649, e a *fixture* do laboratório refeita (um log novo exportado da
       página, com domínio, reforço e gambits, que dê na CLI o hash do worker)
