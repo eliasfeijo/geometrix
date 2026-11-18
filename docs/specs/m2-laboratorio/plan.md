@@ -69,7 +69,9 @@ apps/client/
   `checkConsistency` exige múltiplo de `1000 / ticksPerSecond` (50 ms). Ex.: a recarga de 0,8 s são 800 ms, 16 ticks.
 - **Movimento em pontos**, como o `CELL_COST` do `sim`: `CELL_COST = 6 000`, divisível por 20. Por tick, o creep
   ganha `cellsPerSecond × CELL_COST ÷ ticksPerSecond` pontos, vezes o freio da carga em ‰, com `Math.floor`; entra na
-  célula seguinte ao juntar `CELL_COST`. O projétil anda pela mesma conta, com a velocidade dele.
+  célula seguinte ao juntar `CELL_COST`. O projétil anda pela mesma conta, com a velocidade dele. **Desde a F6**
+  (spec D22, C4): parado, o creep também ganha pontos, mas só até `CELL_COST`; quem nasce ou entra começa com
+  `CELL_COST`. O primeiro passo sai no tick seguinte ao comando, e tocar não anda mais rápido que segurar.
 - **Freio da carga** (spec D8): `freio‰ = 1 000 − fullBrakePermille × carga ÷ capacidade` (com `Math.floor`); com a
   bolsa cheia e `fullBrakePermille` = 500, metade da velocidade.
 - **HP e dano inteiros**, sem milésimos: a batalha não regenera, então não há arredondamento a acumular.
@@ -143,7 +145,6 @@ type Participant = {
   movePoints: number;
   cooldownTicks: number;
   exitTicks: number;          // ticks seguidos no anel sem levar golpe
-  idleTicks: number;          // desde o último dano dado ou recebido, ou da entrada
   ai: { nextDecisionTick: number; target: number | null };
   status: "fighting";         // quem sai vai para `departed`
 };
@@ -158,6 +159,7 @@ type BattleState = {
   participants: Participant[]; projectiles: Projectile[]; piles: Pile[];
   departed: Departure[];      // morreu ou fugiu: desfecho, HP final, carga, dano dado e recebido, tick
   totals: { id: number; dealt: number; taken: number }[];  // por participante, ordenado por id
+  idleTicks: number;          // da batalha (F6, C5): ticks de luta desde o último golpe que tirou HP
   ended: { tick: number; winnerSide: number | null } | null;
 };
 ```
@@ -195,18 +197,22 @@ Um só vocabulário para o humano e para a IA (ADR-0008, regra 6), validado por 
    sobre a `BattleView` do começo do tick e trocar a intenção dele (P12). Entre duas decisões, ele segue a intenção
    anterior.
 3. **Virar e atacar** (P3): quem tem intenção de atacar (ou *latch*) e recarga zerada ataca na direção em que olha.
-   O corpo a corpo resolve na hora; o projétil nasce na célula da frente (se for pedra, some).
-4. **Movimento:** pontos, freio da carga; quem junta `CELL_COST` tenta entrar na célula vizinha. Pedra ou célula
+   O corpo a corpo resolve na hora; o projétil nasce na célula da frente (se for pedra, some, com o evento
+   `missed`).
+4. **Movimento:** pontos, freio da carga (parado, até `CELL_COST`); quem junta `CELL_COST` tenta entrar na célula vizinha. Pedra ou célula
    ocupada no começo da etapa: só vira. Duas entradas na mesma célula: o `rng` escolhe, em ordem de id dos
    candidatos, uma chamada por disputa (M-3).
 5. **Projéteis**, em ordem de id: cada um confere a célula onde está e cada célula em que entra neste tick, **depois
-   do movimento**; acerta o primeiro inimigo que encontrar, some numa pedra ou ao fim do alcance. Conferir a célula
-   de partida pega o creep que andou para dentro do tiro.
-6. **Dano e morte:** o dano zera o `idleTicks` de quem bate e de quem apanha (spec A-4, D9) e o `exitTicks` de quem
-   apanha (F-1). HP 0: sai para `departed`, e a carga vira pilha na célula (A-5).
+   do movimento**; acerta o primeiro inimigo que encontrar, some numa pedra ou ao fim do alcance (o evento `missed`,
+   desde a F6). Conferir a célula de partida pega o creep que andou para dentro do tiro.
+6. **Dano e morte:** o golpe que tira HP zera o `idleTicks` da batalha (spec A-4, D9; até a F5, o de quem batia e o
+   de quem apanhava) e o `exitTicks` de quem apanha (F-1). HP 0: sai para `departed`, e a carga vira pilha na
+   célula (A-5).
 7. **Largar e catar** (C-1, C-2).
 8. **Saída e inatividade:** no anel, `exitTicks` + 1; ao chegar a `dwellMs`, foge pela borda (F-1). Fora do anel,
-   `exitTicks` = 0. `idleTicks` + 1; ao chegar a `timeoutMs`, foge por inatividade (F-2).
+   `exitTicks` = 0. Depois, o `idleTicks` da batalha + 1; ao chegar a `timeoutMs`, todos os que ficaram na arena
+   fogem por inatividade, em ordem de id, e a batalha acaba sem vencedor (F-2). Quem completou a borda no mesmo
+   tick sai pela borda.
 9. **Fim:** se sobra no máximo um lado com participantes, `ended` (F-3).
 
 **Atacar antes de andar** (P3): no mesmo tick, o golpe sai antes do passo. Quem está colado no quadrado e foge leva
@@ -220,7 +226,7 @@ o golpe daquele tick; o projétil, por sua vez, só se move depois dos creeps, e
   novo no tick seguinte, se a célula ainda estiver livre.
 - **Pilhas:** uma por célula, somadas. Uma pilha não ocupa a célula (dá para pisar e catar).
 - **Entrada** (E-1): a célula livre do trecho do lado é escolhida pelo `rng`; um lado novo recebe o primeiro trecho
-  sem participantes vivos. O `idleTicks` começa em 0.
+  sem participantes vivos. Quem entra não zera o `idleTicks` da batalha (F6); começa com o passo pronto.
 - **Nascimento** (S-1): a mesma escolha pelo `rng`, olhando para o lado oposto ao do trecho.
 - **Nome:** vem do setup (o laboratório usa uma lista curta de nomes próprios do laboratório; os nomes do mundo
   chegam pela junção).
@@ -273,7 +279,8 @@ type Gambit = { when: Condition; then: Action };
 ## 10. Eventos e resultado
 
 `BattleEvent = { tick, index, type, ... }`, fora do estado (ADR-0007): `attacked` (quem, direção), `hit` (quem,
-em quem, dano, HP restante), `died`, `dropped`, `picked`, `joined`, `escaped` (`reason: "edge" | "idle"`),
+em quem, dano, HP restante e, desde a F6, a célula de quem apanhou), `missed` (F6: quem atirou, a última célula do
+projétil que sumiu sem acertar e a direção; a do atirador, quando a frente já era pedra), `died`, `dropped`, `picked`, `joined`, `escaped` (`reason: "edge" | "idle"`),
 `controlChanged`, `ended` (lado vencedor ou `null`, e o desfecho de cada participante: `won`, `died`,
 `escapedEdge`, `escapedIdle`, com HP final, carga, dano dado e recebido; e as pilhas que ficaram). Os eventos são o
 contrato interno v0 do ADR-0008, versionado pela `BATTLE_VERSION`.
@@ -284,7 +291,8 @@ contrato interno v0 do ADR-0008, versionado pela `BATTLE_VERSION`.
   compara a sequência do RNG e a saída do `canonicalJson` com as do `sim` (devDependency só de teste: o runtime não
   importa o `sim`). A extração para um pacote comum fica para a junção, quando o mundo chamar a batalha.
 - **Hash:** sha256 do `serializeBattle`, fora do pacote (`node:crypto` na CLI, Web Crypto no *worker*).
-- **`BATTLE_VERSION`** = 1; sobe quando o mesmo log passa a dar outro resultado.
+- **`BATTLE_VERSION`** = 1; sobe quando o mesmo log passa a dar outro resultado (2 na F5, com a contagem; 3 na
+  F6, com o primeiro passo imediato e a inatividade da batalha).
 - **O log** (`BattleLog`): `{ battleVersion, setup, params, commands: { tick, commands }[], finalHash }`. O
   `replayLog` recria a batalha e aplica os comandos; o `geo battle verify --log` compara com o `finalHash`.
 - **Lint e tsconfig:** o bloco do `eslint.config.js` passa a valer para `packages/battle/src/**/*.ts`; o tsconfig do

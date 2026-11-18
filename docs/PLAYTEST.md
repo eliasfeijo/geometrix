@@ -271,7 +271,7 @@ Abre o laboratório no Vite (`/lab.html`). Sem o Vite: `npm run build` e `npm ru
 
 1. **Use uma aba só, no mesmo endereço, do começo ao fim.** O registro da sessão fica guardado neste navegador,
    para este endereço: o 5173 e o 8080 têm registros separados.
-2. No painel **"Sessão"** (coluna da direita): se houver batalhas no registro (de testes antigos), clique em
+2. No painel **"Sessão"** (abaixo da arena): se houver batalhas no registro (de testes antigos), clique em
    **"Exportar sessão"** (guarda uma cópia) e depois em **"Limpar"**. O registro tem de começar em 0.
 3. No painel **"Rede simulada"**: RTT em **0 ms** e **"interpolar" marcado**. Na barra acima da arena, velocidade
    **×1**.
@@ -289,6 +289,9 @@ As regras que o jogador precisa saber:
 - **Parado, o creep dá o primeiro passo na hora** (spec D22), e cada toque na tecla anda uma célula.
 - Quem fica **2 s** no anel da borda sem levar golpe foge pela borda. Se a batalha inteira passa **15 s** sem
   nenhum dano em ninguém, **todos fogem** (spec D9). A batalha acaba quando sobra no máximo um lado.
+- **Na tela** (F6): quem ataca pulsa num anel da cor do lado; quem leva o golpe pisca em branco, com o dano subindo
+  em amarelo; o tiro que some sem acertar deixa um **x** onde sumiu. O tempo sem dano aparece na barra sobre a
+  arena, e em vermelho, grande, sobre a arena nos últimos 5 s.
 - Toda batalha que acaba entra no registro. **Trocar ou soltar o domínio no meio** (Tab, 0, "dominar", "soltar")
   tira a batalha das contas do "Você × IA".
 
