@@ -118,6 +118,23 @@ describe("projectiles (spec A-3)", () => {
     ]);
   });
 
+  test("say where they vanish without a hit (spec L-8)", () => {
+    const state = shooter();
+    put(state, 2, 8, 1);
+    const events = run(state, 12, [{ type: "attackOnce", id: 1 }]);
+    // The last cell it was on, (7, 3), and the way it flew.
+    expect(events.filter((e) => e.type === "missed")).toEqual([
+      {
+        type: "missed",
+        by: { id: 1, side: 0, dna: "circle", name: "circle" },
+        cell: at(7, 3),
+        dir: "right",
+        tick: 9,
+        index: 0,
+      },
+    ]);
+  });
+
   test("vanish into rock, and are never born on it", () => {
     const rocky = [
       ".........",
@@ -130,12 +147,18 @@ describe("projectiles (spec A-3)", () => {
     ];
     const state = shooter(rocky);
     put(state, 2, 5, 3);
-    run(state, 20, [{ type: "attackOnce", id: 1 }]);
+    const first = run(state, 20, [{ type: "attackOnce", id: 1 }]);
     expect(byId(state, 2).hp).toBe(300);
     expect(state.projectiles).toEqual([]);
+    // Born on (2, 3), it vanishes into the rock of (3, 3).
+    expect(first.filter((e) => e.type === "missed")).toMatchObject([
+      { cell: at(2, 3), dir: "right" },
+    ]);
     put(state, 1, 2, 3, "right");
     const events = run(state, 1, [{ type: "attackOnce", id: 1 }]);
-    expect(events.map((e) => e.type)).toEqual(["attacked"]);
+    // Rock in front: no shot, and the miss is on the shooter's cell.
+    expect(events.map((e) => e.type)).toEqual(["attacked", "missed"]);
+    expect(events[1]).toMatchObject({ cell: at(2, 3), dir: "right" });
     expect(state.projectiles).toEqual([]);
   });
 
@@ -205,18 +228,17 @@ describe("projectiles (spec A-3)", () => {
 });
 
 describe("damage and death (spec A-4, A-5)", () => {
-  test("a blow resets the idle clock of both and the exit count of the target", () => {
+  test("a blow resets the battle's idle clock and the exit count of the target", () => {
     const state = humans(battleOn(FIELD, [["square"], ["square"]]));
     put(state, 1, 3, 3, "right");
     put(state, 2, 4, 3, "left");
-    for (const p of state.participants) {
-      p.idleTicks = 100;
-      p.exitTicks = 10;
-    }
-    // Stage 6 alone: stage 8 of the same tick counts both up again.
+    state.idleTicks = 100;
+    for (const p of state.participants) p.exitTicks = 10;
+    // Stage 6 alone: stage 8 of the same tick counts the clock up again.
     applyHits(state, createEventLog(0), [{ by: 1, target: 2, damage: 30 }]);
-    expect(byId(state, 1)).toMatchObject({ idleTicks: 0, exitTicks: 10 });
-    expect(byId(state, 2)).toMatchObject({ idleTicks: 0, exitTicks: 0 });
+    expect(state.idleTicks).toBe(0);
+    expect(byId(state, 1)).toMatchObject({ exitTicks: 10 });
+    expect(byId(state, 2)).toMatchObject({ exitTicks: 0 });
   });
 
   test("at 0 HP the creep leaves in the same tick, its carry left in a pile", () => {
@@ -253,6 +275,7 @@ describe("damage and death (spec A-4, A-5)", () => {
         target: { id: 2, side: 1, dna: "circle", name: "circle" },
         damage: 20,
         hp: 0,
+        cell: at(4, 3),
         tick: 0,
         index: 1,
       },

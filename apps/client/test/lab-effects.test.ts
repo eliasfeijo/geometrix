@@ -1,0 +1,105 @@
+import {
+  battleView,
+  createBattle,
+  parseBattleParams,
+  stepBattle,
+  type BattleEvent,
+} from "@geometrix/battle";
+import { describe, expect, test } from "vitest";
+import paramsJson from "../../../packages/battle/test/params.json?raw";
+import { LAB_ARENAS } from "../src/lab/assets.ts";
+import { idleWarning } from "../src/lab/arena-view.tsx";
+import { defaultDraft, setupOf } from "../src/lab/draft.ts";
+import {
+  EFFECT_MS,
+  effectProgress,
+  effectsOf,
+  liveEffects,
+} from "../src/lab/effects.ts";
+
+const params = parseBattleParams(JSON.parse(paramsJson));
+
+/** The events of a default 1 × 1 on the rocks, until it ends. */
+function battleEvents(): BattleEvent[] {
+  const state = createBattle(
+    setupOf(defaultDraft(), params, LAB_ARENAS.pedras),
+    params,
+  );
+  const events: BattleEvent[] = [];
+  while (state.ended === null) events.push(...stepBattle(state, []));
+  return events;
+}
+
+describe("the signals of the attack (spec L-8, plan C6)", () => {
+  test("one per attack, blow and miss, at the frame's arrival", () => {
+    const events = battleEvents();
+    const effects = effectsOf(events, 1000, params);
+    const count = (type: string) => events.filter((e) => e.type === type);
+    expect(effects.filter((e) => e.kind === "attack")).toHaveLength(
+      count("attacked").length,
+    );
+    expect(effects.filter((e) => e.kind === "hit")).toHaveLength(
+      count("hit").length,
+    );
+    expect(effects.filter((e) => e.kind === "miss")).toHaveLength(
+      count("missed").length,
+    );
+    expect(effects.every((e) => e.at === 1000)).toBe(true);
+    // The square strikes in melee, the circle shoots.
+    const attacks = effects.filter((e) => e.kind === "attack");
+    expect(new Set(attacks.map((e) => e.melee))).toEqual(
+      new Set([true, false]),
+    );
+  });
+
+  test("a blow carries the damage it took and where it landed", () => {
+    const events = battleEvents();
+    const hit = events.find((e) => e.type === "hit")!;
+    const [effect] = effectsOf([hit], 0, params);
+    expect(effect).toEqual({
+      kind: "hit",
+      id: hit.target.id,
+      cell: hit.cell,
+      damage: hit.damage,
+      at: 0,
+    });
+  });
+
+  test("each fades over its time, then leaves", () => {
+    const [miss] = effectsOf(
+      [
+        {
+          type: "missed",
+          by: { id: 1, side: 0, dna: "circle", name: "x" },
+          cell: 5,
+          dir: "up",
+          tick: 0,
+          index: 0,
+        },
+      ],
+      100,
+      params,
+    );
+    expect(effectProgress(miss!, 100)).toBe(0);
+    expect(effectProgress(miss!, 100 + EFFECT_MS.miss / 2)).toBe(0.5);
+    expect(liveEffects([miss!], 100 + EFFECT_MS.miss - 1)).toHaveLength(1);
+    expect(liveEffects([miss!], 100 + EFFECT_MS.miss)).toHaveLength(0);
+  });
+});
+
+describe("the battle's idle clock on the page (spec D9, L-8)", () => {
+  test("warns after 2/3 of the timeout, during the fight only", () => {
+    const state = createBattle(
+      setupOf(defaultDraft(), params, LAB_ARENAS.pedras),
+      params,
+    );
+    // Nobody does anything: no gambits.
+    for (const p of state.participants) p.gambits = [];
+    const timeout = params.inactivity.timeoutMs / 50;
+    for (let i = 0; i < (timeout * 2) / 3 - 1; i++) stepBattle(state, []);
+    expect(idleWarning(battleView(state), params)).toBe(false);
+    stepBattle(state, []);
+    stepBattle(state, []);
+    expect(idleWarning(battleView(state), params)).toBe(true);
+  });
+});

@@ -15,9 +15,16 @@ import {
   type Gambit,
 } from "@geometrix/battle";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
-import { ArenaView, sideColor } from "./arena-view.tsx";
+import {
+  ArenaView,
+  idleSecondsLeft,
+  idleWarning,
+  sideColor,
+} from "./arena-view.tsx";
 import { LAB_ARENAS, LAB_PARAMS } from "./assets.ts";
 import { LabConnection, type WorkerLike } from "./connection.ts";
+import { isSwitch, keepsDomination } from "./domination.ts";
+import { effectsOf, liveEffects, type Effect } from "./effects.ts";
 import {
   defaultDraft,
   idOfPlace,
@@ -113,6 +120,7 @@ export function Lab() {
   const [arena, setArena] = useState<Arena | null>(null);
   const [frames, setFrames] = useState<Frames | null>(null);
   const [events, setEvents] = useState<BattleEvent[]>([]);
+  const [effects, setEffects] = useState<Effect[]>([]);
   const [endedEvent, setEndedEvent] = useState<EndedEvent | null>(null);
   const [ended, setEnded] = useState<Ended | null>(null);
   const [speed, setSpeed] = useState<Speed>(1);
@@ -170,6 +178,10 @@ export function Lab() {
           }));
           if (frame.events.length > 0) {
             setEvents((old) => [...old, ...frame.events].slice(-MAX_EVENTS));
+            const signals = effectsOf(frame.events, at, params);
+            if (signals.length > 0) {
+              setEffects((old) => [...liveEffects(old, at), ...signals]);
+            }
             for (const event of frame.events) {
               if (event.type === "ended") {
                 setEndedEvent(event);
@@ -187,11 +199,10 @@ export function Lab() {
           const { interpolate: glide, speed: s } = live.current;
           connection.shown(frame.applied, at + (glide ? tickMsAt(s) : 0));
           if (frame.applied.length > 0) setMeasured((n) => n + 1);
+          // The domination ends when the creep leaves or the battle ends
+          // (C7): instant is back, and "Na arena" offers no release.
           const mine = live.current.dominated;
-          if (
-            mine !== null &&
-            !frame.view.participants.some((p) => p.id === mine)
-          ) {
+          if (mine !== null && !keepsDomination(frame.view, mine)) {
             setDominated(null);
           }
         },
@@ -342,6 +353,7 @@ export function Lab() {
     setError(null);
     setFrames(null);
     setEvents([]);
+    setEffects([]);
     setEndedEvent(null);
     setEnded(null);
     setPaused(false);
@@ -422,6 +434,8 @@ export function Lab() {
   }
 
   function dominate(id: number) {
+    // Taking the creep already taken changes nothing, not even the record.
+    if (!isSwitch(dominated, id)) return;
     switched();
     send({ type: "control", id, controller: "human" });
     setDominated(id);
@@ -536,38 +550,9 @@ export function Lab() {
           Esc pausa.
         </p>
       </header>
-      <div class="lab-columns">
-        <aside class="lab-side-col">
-          <SetupForm
-            draft={draft}
-            params={params}
-            onChange={setDraft}
-            onStart={startDraft}
-            locked={session.blind !== null}
-          />
-          {running && (
-            <ReinforceForm
-              sides={inArena}
-              newSide={newSide}
-              side={reinforceSide}
-              onSide={setReinforceSide}
-              value={reinforcement}
-              params={params}
-              onChange={setReinforcement}
-              onSend={(side) =>
-                send({
-                  type: "join",
-                  side,
-                  participant: participantOf(
-                    reinforcement,
-                    params,
-                    names.current++,
-                  ),
-                })
-              }
-            />
-          )}
-        </aside>
+      {/* The battle first, as wide as the page allows (plan C6); the build
+          and the tools below it. */}
+      <div class="lab-play">
         <main class="lab-main">
           <div class="lab-controls">
             <button
@@ -614,12 +599,27 @@ export function Lab() {
             >
               Exportar log
             </button>
+            {running && current.countdownTicks === 0 && (
+              <span
+                class={
+                  idleWarning(current, params)
+                    ? "lab-idle-meter lab-idle-meter-warn"
+                    : "lab-idle-meter"
+                }
+                title="Sem dano em ninguém por esse tempo, todos fogem (D9)"
+              >
+                sem dano: {(current.idleTicks / TPS).toFixed(0)} s · fogem em{" "}
+                {idleSecondsLeft(current, params)} s
+              </span>
+            )}
             <span class="lab-clock">
               {current === null ? "—" : `${(current.tick / TPS).toFixed(1)} s`}
             </span>
           </div>
           {error !== null && <p class="lab-error">Setup recusado: {error}</p>}
-          <div class="lab-stage">
+          <div
+            class={current === null ? "lab-stage lab-stage-empty" : "lab-stage"}
+          >
             {arena !== null && current !== null ? (
               <ArenaView
                 arena={arena}
@@ -629,16 +629,19 @@ export function Lab() {
                 arrivedAt={frames!.at}
                 glideMs={tickMsAt(speed)}
                 interpolate={interpolate}
+                effects={effects}
                 dominated={dominated}
                 selected={selected}
                 onSelect={select}
               />
             ) : (
               <p class="lab-empty">
-                Monte a batalha ao lado e clique em Começar.
+                Monte a batalha abaixo e clique em Começar.
               </p>
             )}
           </div>
+        </main>
+        <aside class="lab-side-col lab-play-side">
           {blindEnd !== null && (
             <GradePanel
               grade={blindEnd.grade}
@@ -650,30 +653,6 @@ export function Lab() {
               onNext={() => nextBlind()}
             />
           )}
-          {endedEvent !== null && current !== null && (
-            <ResultTable
-              ended={endedEvent}
-              params={params}
-              seconds={(endedEvent.tick + 1) / TPS}
-              hash={ended?.hash ?? null}
-            />
-          )}
-        </main>
-        <aside class="lab-side-col">
-          <LatencyPanel
-            rttMs={rtt}
-            onRtt={(value) => {
-              setRtt(value);
-              if (conn.current !== null) conn.current.rttMs = value;
-            }}
-            measured={measured}
-            tickMs={1000 / TPS}
-            interpolate={interpolate}
-            onInterpolate={setInterpolate}
-            frameBytes={conn.current?.sizes.averageBytes ?? Number.NaN}
-            blindRttMs={blindRtt}
-            hidden={blindRtt !== null && blindEnd?.grade == null}
-          />
           <section class="lab-panel">
             <h2>Na arena</h2>
             {current === null || current.participants.length === 0 ? (
@@ -685,21 +664,23 @@ export function Lab() {
                     key={p.id}
                     class={p.id === selected ? "lab-selected" : undefined}
                   >
-                    <button
-                      type="button"
-                      class="lab-who"
-                      style={{ color: sideColor(p.side) }}
-                      onClick={() => select(p.id)}
-                    >
-                      {DNA_GLYPHS[p.dna]} {p.name} ({sideLetter(p.side)})
-                    </button>
+                    <span class="lab-who-cell">
+                      <button
+                        type="button"
+                        class="lab-who"
+                        style={{ color: sideColor(p.side) }}
+                        onClick={() => select(p.id)}
+                      >
+                        {DNA_GLYPHS[p.dna]} {p.name} ({sideLetter(p.side)})
+                      </button>
+                      <span class="lab-hint">
+                        {p.controller === "human"
+                          ? "você"
+                          : `IA ${REACTION_LABELS[p.reaction]}`}
+                      </span>
+                    </span>
                     <span class="lab-num">
                       {p.hp}/{params.dna[p.dna].hp}
-                    </span>
-                    <span class="lab-hint">
-                      {p.controller === "human"
-                        ? "você"
-                        : `IA ${REACTION_LABELS[p.reaction]}`}
                     </span>
                     {p.id === dominated ? (
                       <button type="button" onClick={release}>
@@ -719,17 +700,63 @@ export function Lab() {
               </ul>
             )}
           </section>
-          <GambitsEditor
-            name={selectedName}
-            draft={gambitsDraft}
-            maxRules={params.gambits.maxRules}
-            dirty={dirty && running}
-            onChange={setGambitsDraft}
-            onApply={() => {
-              if (selected === null || gambitsDraft === null) return;
-              send({ type: "setGambits", id: selected, gambits: gambitsDraft });
-              setGambitsRunning(gambitsDraft);
+          <EventsList lines={lines} />
+        </aside>
+      </div>
+      {endedEvent !== null && current !== null && (
+        <ResultTable
+          ended={endedEvent}
+          params={params}
+          seconds={(endedEvent.tick + 1) / TPS}
+          hash={ended?.hash ?? null}
+        />
+      )}
+      <div class="lab-tools">
+        <div class="lab-side-col">
+          <SetupForm
+            draft={draft}
+            params={params}
+            onChange={setDraft}
+            onStart={startDraft}
+            locked={session.blind !== null}
+          />
+          {running && (
+            <ReinforceForm
+              sides={inArena}
+              newSide={newSide}
+              side={reinforceSide}
+              onSide={setReinforceSide}
+              value={reinforcement}
+              params={params}
+              onChange={setReinforcement}
+              onSend={(side) =>
+                send({
+                  type: "join",
+                  side,
+                  participant: participantOf(
+                    reinforcement,
+                    params,
+                    names.current++,
+                  ),
+                })
+              }
+            />
+          )}
+        </div>
+        <div class="lab-side-col">
+          <LatencyPanel
+            rttMs={rtt}
+            onRtt={(value) => {
+              setRtt(value);
+              if (conn.current !== null) conn.current.rttMs = value;
             }}
+            measured={measured}
+            tickMs={1000 / TPS}
+            interpolate={interpolate}
+            onInterpolate={setInterpolate}
+            frameBytes={conn.current?.sizes.averageBytes ?? Number.NaN}
+            blindRttMs={blindRtt}
+            hidden={blindRtt !== null && blindEnd?.grade == null}
           />
           <SessionPanel
             session={session}
@@ -746,8 +773,21 @@ export function Lab() {
             }
             onNextBlind={() => nextBlind()}
           />
-          <EventsList lines={lines} />
-        </aside>
+        </div>
+        <div class="lab-side-col">
+          <GambitsEditor
+            name={selectedName}
+            draft={gambitsDraft}
+            maxRules={params.gambits.maxRules}
+            dirty={dirty && running}
+            onChange={setGambitsDraft}
+            onApply={() => {
+              if (selected === null || gambitsDraft === null) return;
+              send({ type: "setGambits", id: selected, gambits: gambitsDraft });
+              setGambitsRunning(gambitsDraft);
+            }}
+          />
+        </div>
       </div>
     </div>
   );

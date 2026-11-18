@@ -6,7 +6,7 @@ import {
   turnToIntent,
 } from "../src/movement.ts";
 import { CELL_COST } from "../src/params.ts";
-import { nextInt } from "../src/rng.ts";
+import { createRng, nextInt } from "../src/rng.ts";
 import type { BattleState } from "../src/state.ts";
 import { battleOn, FIELD, member, put, xyOf } from "./helpers.ts";
 
@@ -38,10 +38,9 @@ describe("speed and the carry brake (spec M-1, D8)", () => {
     go(state, 1, "right");
     for (let tick = 1; tick <= 40; tick++) {
       walk(state, 1);
-      // Points carry over between cells, so the pace is exact.
-      const cells = Math.floor(
-        (tick * cellsPerSecond * CELL_COST) / 20 / CELL_COST,
-      );
+      // The first step is ready (D22), and points carry over between cells,
+      // so the pace after it is exact.
+      const cells = Math.floor((tick * cellsPerSecond) / 20) + 1;
       expect(xyOf(state, 1)).toEqual([Math.min(cells, 8), 0]);
     }
   });
@@ -60,7 +59,7 @@ describe("speed and the carry brake (spec M-1, D8)", () => {
     expect(moveGain(state, square)).toBe((900 * permille) / 1000);
   });
 
-  test("a full bag halves the speed: 3 cells in 2 s instead of 6", () => {
+  test("a full bag halves the speed: 3 cells after the first in 2 s instead of 6", () => {
     const state = battleOn(FIELD, [
       [member("square", { carry: { materia: 10, cristal: 20 } })],
       ["circle"],
@@ -69,19 +68,34 @@ describe("speed and the carry brake (spec M-1, D8)", () => {
     put(state, 2, 8, 6);
     go(state, 1, "right");
     walk(state, 40);
-    expect(xyOf(state, 1)).toEqual([3, 0]);
+    expect(xyOf(state, 1)).toEqual([4, 0]);
   });
 
-  test("points reset when the intent to walk stops", () => {
+  test("standing, points build back up to one cell and no further (D22)", () => {
     const state = battleOn(FIELD, [["square"], ["circle"]]);
-    put(state, 1, 3, 3);
+    const square = put(state, 1, 3, 6);
     go(state, 1, "up");
-    walk(state, 5);
-    expect(state.participants[0]!.movePoints).toBe(4500);
-    go(state, 1, null);
     walk(state, 1);
-    expect(state.participants[0]!.movePoints).toBe(0);
-    expect(xyOf(state, 1)).toEqual([3, 3]);
+    // The ready step was spent at once; the tick's gain is left over.
+    expect(xyOf(state, 1)).toEqual([3, 5]);
+    expect(square.movePoints).toBe(900);
+    go(state, 1, null);
+    walk(state, 2);
+    expect(square.movePoints).toBe(2700);
+    walk(state, 10);
+    expect(square.movePoints).toBe(CELL_COST);
+    expect(xyOf(state, 1)).toEqual([3, 5]);
+  });
+
+  test("the carry brake slows the build-up too", () => {
+    const state = battleOn(FIELD, [
+      [member("square", { carry: { materia: 30, cristal: 0 } })],
+      ["circle"],
+    ]);
+    const square = state.participants[0]!;
+    square.movePoints = 0;
+    walk(state, 4);
+    expect(square.movePoints).toBe(4 * 450);
   });
 
   test("walking turns the creep the way it walks", () => {
@@ -90,6 +104,61 @@ describe("speed and the carry brake (spec M-1, D8)", () => {
     go(state, 1, "down");
     walk(state, 1);
     expect(state.participants[0]!.facing).toBe("down");
+  });
+});
+
+describe("the first step (spec D22, M-1)", () => {
+  /** A square at (0, 3) of FIELD, walking right; the circle far away. */
+  function square(): BattleState {
+    const state = battleOn(FIELD, [["square"], ["circle"]]);
+    put(state, 1, 0, 3);
+    put(state, 2, 8, 0);
+    return state;
+  }
+
+  /** Steps one tick per entry of `pattern` (true: holding the key). */
+  function play(state: BattleState, pattern: readonly boolean[]): number[] {
+    const xs: number[] = [];
+    for (const holding of pattern) {
+      go(state, 1, holding ? "right" : null);
+      walk(state, 1);
+      xs.push(xyOf(state, 1)[0]);
+    }
+    return xs;
+  }
+
+  test("a creep that stood still steps on the first tick of the order", () => {
+    const state = square();
+    expect(play(state, [true])).toEqual([1]);
+  });
+
+  test("a 1-tick tap walks one cell, once it stood the time of a cell", () => {
+    const state = square();
+    // A square steps every 6.67 ticks: 7 ticks standing make it ready again.
+    const tap = [true, false, false, false, false, false, false];
+    const xs = play(state, [...tap, ...tap, ...tap]);
+    expect(xs.at(-1)).toBe(3);
+    expect(xs.filter((x, i) => x !== (xs[i - 1] ?? 0))).toEqual([1, 2, 3]);
+  });
+
+  test("tapping faster than the pace walks no faster than holding", () => {
+    const rng = createRng(7);
+    const holding = play(square(), Array<boolean>(60).fill(true));
+    for (let round = 0; round < 200; round++) {
+      const pattern = Array.from({ length: 60 }, () => nextInt(rng, 3) > 0);
+      const xs = play(square(), pattern);
+      xs.forEach((x, i) => expect(x).toBeLessThanOrEqual(holding[i]!));
+    }
+  });
+
+  test("after a tap and a rest, holding walks at the DNA's pace", () => {
+    const state = square();
+    play(state, [true, false, false, false, false, false, false]);
+    const xs = play(state, Array<boolean>(40).fill(true));
+    // Ready again: one cell at once, then 3 cells per second.
+    xs.forEach((x, i) => {
+      expect(x).toBe(Math.min(8, 1 + Math.floor(((i + 1) * 3) / 20) + 1));
+    });
   });
 });
 

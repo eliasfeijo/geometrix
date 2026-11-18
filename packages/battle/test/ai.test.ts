@@ -259,11 +259,12 @@ describe("the view", () => {
       "facing",
       "hp",
       "id",
-      "idleTicks",
       "name",
       "reaction",
       "side",
     ]);
+    // The idle clock is the battle's (D9), on the view for the page.
+    expect(battleView(state).idleTicks).toBe(state.idleTicks);
   });
 });
 

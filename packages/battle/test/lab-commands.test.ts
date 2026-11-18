@@ -214,8 +214,6 @@ describe("join (spec E-1, D11)", () => {
       hp: 200,
       controller: "gambits",
       gambits: [],
-      // Stage 8 of the tick it entered counted one.
-      idleTicks: 1,
     });
     expect(byId(state, 3)).not.toHaveProperty("extra");
     expect(state.totals.map((t) => t.id)).toEqual([1, 2, 3]);
