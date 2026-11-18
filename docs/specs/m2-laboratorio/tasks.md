@@ -421,3 +421,102 @@ mostrou a tabela nota × RTT ao encerrar. Testes: 2 686 no total (eram 2 664 no 
 2. As **perguntas 1 a 4 da hipótese** (spec §1) e a **próxima regra**: a livre, a forja ou nenhuma antes da junção.
 3. As **interpretações 1 a 8** acima, e o *jitter* da reação de cada nível, pendente da F4 (fácil 600 ± 250 ms,
    normal 250 ± 100, difícil 100 ± 50).
+
+### Checkpoint, 1ª parte (dono, 2026-11-18): grupos 0 a 3
+
+O dono achou o roteiro do laboratório difícil de seguir; ele foi reorganizado em **grupos** de tarefas, um de cada
+vez, na ordem das dependências ([PLAYTEST.md](../../PLAYTEST.md), "Laboratório de batalha (M2)", grupos 0 a 8). A
+sessão parou no grupo 3: os achados pedem mudanças de regra e de tela antes do resto, e elas vão para a **F6**
+(abaixo). O export da 1ª parte é o `sessao-lab-2026-11-18-03-28.json` (38 batalhas), na pasta Downloads do dono,
+fora do repo.
+
+**Grupo 1** (9 duelos dominando, RTT 0, IA normal, seed 1, com as regras da `BATTLE_VERSION` 2):
+
+| Você × IA | pedras | aberta | corredor |
+|---|---|---|---|
+| ■ × ● | perdeu sem dar um golpe | perdeu | perdeu |
+| ▲ × ● | venceu ("botei pra correr") | perdeu (não viu o HP descendo) | perdeu (o W que não andava) |
+| ● × ■ | venceu | venceu | venceu sem levar dano |
+
+Notas: **F1 3** (sabe por que perde, em geral pelo confronto ■ × ●; na 8, ficou parado apertando W por 2–3 s sem
+sentido), **F2 3** (o tiro é previsível e dá para desviar; "uma certa sensação de lentidão que trava o movimento";
+não balancear a velocidade do tiro antes das skills), **F5 4** (a contagem melhorou bastante a preparação). O ▲ foi
+o DNA que ele quis jogar de novo ("o único que não é cheese"); ■ × ● pareceu decidido de antemão; "a IA do círculo
+pode ser ajustada"; a barra de HP quase não se vê na tela do notebook.
+
+**Grupo 2** (IA × IA, 3 seeds sorteadas por confronto), com as batalhas 1 e 2 do grupo 1 contadas à mão (o registro
+as marcou como "trocou de domínio": alguma troca ou soltura no meio, provavelmente um Tab, um 0 ou um clique em
+"dominar"/"soltar" pelo hábito da F4):
+
+| Confronto (você no A), nas 3 arenas | Você | A IA no seu lugar |
+|---|---|---|
+| ■ × ● | 0/3 | 0/9 |
+| ▲ × ● | 1/3 | 4/9 |
+| ● × ■ | 3/3 | 8/9 |
+
+Dois dos três 1 × 1 são decididos pelo DNA; só o ▲ × ● está aberto, e ali o dono e a IA ficaram parecidos. Com uma
+batalha dele por confronto, ainda não diz se a micro pesa.
+
+**Grupo 3** (assistir um 3 × 3 nas pedras e um 1 × 1 × 1 na aberta): **F3 "não"** ("tudo muito confuso e pequeno
+demais para eu conseguir enxergar"); **F4 sem nota** ("foi muito rápido, mesmo no ×1": não deu para ver por que o
+■ Ária fugiu por inatividade). No 3 × 3, "confusão total": o projétil some sem sinal de acerto ou de erro. No
+1 × 1 × 1, o ▲ fugiu por inatividade sem acertar nem levar tiro, "de novo essa fuga por inatividade estragando a
+luta". Faltou um sinal visual e/ou sonoro do começo, do meio e do fim do ataque (o disparo e o golpe, pelo menos).
+
+**Achados e decisões** (plan §15, C4 a C8):
+
+1. **O W que não andava** (grupo 1, batalha 8) não era rede: parado, o creep esperava o tempo de uma célula inteira
+   segurando a tecla (200 a 333 ms) antes do primeiro passo, e soltar antes zerava os pontos (a interpretação 2 da
+   F1). Toques repetidos nunca moviam o creep. **Decidido (C4, spec D22):** o primeiro passo é imediato.
+2. **A fuga por inatividade cortava lutas** (grupo 3). **Decidido (C5, spec D9):** um relógio só, da batalha (ideia
+   do dono).
+3. **A tela ilegível no notebook e sem sinal do golpe** (grupos 1 e 3). **Decidido (C6, spec L-8):** a arena na
+   largura disponível, tudo maior, e o sinal de quem ataca, do golpe (com o dano) e do projétil que some sem
+   acertar. O **som** fica como proposta sem marco, e o **golpe crítico** como pergunta aberta para o M2.5 (GDD 06;
+   C8).
+4. **Bug: o domínio sobrevivia ao fim da batalha.** Depois de uma batalha vencida dominando, a página continuava
+   dominando o creep, e o "instantâneo" ficava desligado até um "soltar" à mão. **C7:** o domínio acaba com a
+   batalha, e dominar o creep que já é seu não marca a batalha como "trocou".
+
+**A retomada** (depois do merge da F6, nesta ordem): exportar e limpar o registro (a 1ª parte já está no export
+acima), refazer os **grupos 1 a 3** com as regras e a tela novas (a `BATTLE_VERSION` 3 muda o movimento e a
+inatividade, e as notas do F3 e do F4 eram da tela antiga; é também o aquecimento antes das às cegas) e seguir do
+**grupo 4 ao 8**. Continuam pendentes do checkpoint: as interpretações 1 a 8 da F5 e o *jitter* da reação de cada
+nível (F4).
+
+## F6 — Os ajustes do checkpoint da F5 (`m2/laboratorio-f6-ajustes`)
+
+As decisões C4 a C7 do checkpoint da F5 (plan §15; spec D9, D22, M-1, A-4, F-2, L-8). Worktree:
+`.claude/worktrees/lab-f6`. Depois do merge, o checkpoint da F5 retoma (a "retomada", acima).
+
+- [x] As decisões no GDD 06, na spec e no plan; o roteiro do laboratório em grupos no PLAYTEST; o registro da 1ª
+      parte do checkpoint (acima) (2026-11-18)
+- [ ] **O primeiro passo imediato** (spec D22, M-1; C4): parado, o creep anda no tick seguinte ao comando, e cada
+      toque anda uma célula sem passar da velocidade do DNA. Sugestão: com a intenção parada, os pontos não zeram,
+      mas se recompõem pelo ganho do tick (com o freio da carga) até `CELL_COST`, e não passam dele; quem ficou
+      parado o tempo de uma célula tem o passo pronto. Testes: um toque de 1 tick anda uma célula; toques mais
+      rápidos que o ritmo não andam mais rápido que segurar; segurar mantém a velocidade média; o bloqueio e a
+      disputa como antes; a contagem (S-4) termina com o passo pronto. Vale para a IA também
+- [ ] **A inatividade da batalha** (spec D9, A-4, F-2; C5): um relógio só no estado da batalha, no lugar do relógio
+      de cada participante; zera com qualquer golpe que tire HP; começa no fim da contagem, como hoje; quando
+      estoura, todos os que estão na arena saem com o motivo "inatividade" (um evento por saída, na ordem da id) e a
+      batalha acaba sem vencedor. A visão mostra o relógio para a página. A IA não lê o relógio (o `gambits.ts` não o
+      usa). **A validar:** quem entra no meio não zera o relógio (só o dano zera)
+- [ ] A `BATTLE_VERSION` 3 (o mesmo log dá outro resultado): o hash de referência do `serialize.test.ts`, o
+      `geo battle sweep` de novo (seeds 1–100; a tabela comparada com a da F5: duração, inatividade, custo,
+      vitórias), o `verify` nas seeds 1, 42 e 649, e a *fixture* do laboratório refeita (um log novo exportado da
+      página, com domínio, reforço e gambits, que dê na CLI o hash do worker)
+- [ ] **O domínio acaba com a batalha** (C7): no fim da batalha, a página solta o domínio (o "instantâneo" volta a
+      valer, e o "Na arena" não oferece mais "soltar"); dominar o participante que já é seu não faz nada nem marca
+      a batalha como "trocou"
+- [ ] **A tela legível num notebook** (spec L-8; C6): a arena ocupa a largura disponível (e cabe na altura de uma
+      tela de 1366 × 768), com as formas, a barra de HP, a seta da direção e os traços maiores; **o ataque:** um
+      pulso em quem ataca (o `attacked`); **o golpe:** um clarão no atingido e o número do dano subindo (o `hit`,
+      com o dano efetivo); **o erro:** uma marca curta onde o projétil some sem acertar (na pedra ou no fim do
+      alcance), tirada dos quadros e dos eventos, ou de um evento novo se a dedução for frágil (evento novo é
+      contrato: registre); a contagem da fuga e o **relógio de inatividade da batalha** maiores, este perto do
+      relógio da batalha ou sobre a arena. Conferir no Chromium headless pelo CDP a 1366 × 768, com capturas, e
+      guardar as capturas para o dono ver antes do merge
+- [ ] O registro da F6 (medições, interpretações) aqui, e o merge: o worktree não faz merge em `main`; deixe a
+      mensagem no scratchpad e entregue ao dono os comandos (`git merge --no-ff`, `npm run check` em `main`, e a
+      remoção do worktree)
