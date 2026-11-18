@@ -68,9 +68,11 @@ describe("createBattle (spec S-1)", () => {
       expect(p.controller).toBe("gambits");
       expect(p.intent.move).toBeNull();
       // The first step is ready (D22).
-      expect([p.movePoints, p.cooldownTicks, p.exitTicks, p.idleTicks]).toEqual(
-        [CELL_COST, 0, 0, 0],
-      );
+      expect([p.movePoints, p.cooldownTicks, p.exitTicks]).toEqual([
+        CELL_COST,
+        0,
+        0,
+      ]);
     }
   });
 

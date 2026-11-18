@@ -159,8 +159,8 @@ export function moveProjectiles(state: BattleState, hits: Hit[]): void {
  * Stage 6, damage and death (spec A-4, A-5). The hits apply in the order they
  * were recorded (melee by attacker id, then projectiles by id), which only
  * decides who is credited with a kill. A blow takes the damage off the
- * target's HP, down to 0; it resets the idle clock of both (D9) and the exit
- * count of the target (F-1). A blow on someone already at 0 is lost. Then
+ * target's HP, down to 0; it resets the battle's idle clock (D9, A-4) and the
+ * exit count of the target (F-1). A blow on someone already at 0 is lost. Then
  * whoever is at 0 leaves the arena, in id order, leaving its carry in a pile
  * where it stands.
  */
@@ -175,10 +175,8 @@ export function applyHits(
     if (target.hp === 0) continue;
     const dealt = Math.min(damage, target.hp);
     target.hp -= dealt;
-    target.idleTicks = 0;
+    if (dealt > 0) state.idleTicks = 0;
     target.exitTicks = 0;
-    const attacker = findParticipant(state, by);
-    if (attacker !== undefined) attacker.idleTicks = 0;
     state.totals.find((t) => t.id === by)!.dealt += dealt;
     state.totals.find((t) => t.id === targetId)!.taken += dealt;
     emit(log, {

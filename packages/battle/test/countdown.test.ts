@@ -84,18 +84,14 @@ describe("the start countdown (spec D21, S-4)", () => {
     // A creep put on the exit ring does not escape during the countdown.
     put(state, 1, 0, 3);
     run(state, COUNTDOWN);
-    expect(state.participants.map((p) => [p.idleTicks, p.exitTicks])).toEqual([
-      [0, 0],
-      [0, 0],
-    ]);
+    expect(state.idleTicks).toBe(0);
+    expect(state.participants.map((p) => p.exitTicks)).toEqual([0, 0]);
     stepBattle(state, []);
-    expect(state.participants.map((p) => [p.idleTicks, p.exitTicks])).toEqual([
-      [1, 1],
-      [1, 0],
-    ]);
+    expect(state.idleTicks).toBe(1);
+    expect(state.participants.map((p) => p.exitTicks)).toEqual([1, 0]);
   });
 
-  test("an idle creep flees one timeout after the countdown, not before", () => {
+  test("an idle battle ends one timeout after the countdown, not before", () => {
     const state = humans(battle());
     const timeout = 15000 / 50;
     const events = run(state, COUNTDOWN + timeout - 1);

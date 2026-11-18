@@ -1,8 +1,8 @@
 // The arena on the lab's page (spec L-8, plan P8, P9): SVG in cells, with the
 // shapes of the world's map. Rock, the exit ring and the spawn zones are
 // drawn once; on top, the piles, the projectiles and the creeps, each with
-// where it faces, its HP, its load, the escape count on the ring and the idle
-// clock when it is close to running out. Positions glide over one tick
+// where it faces, its HP, its load and the escape count on the ring; the
+// battle's idle clock when it is close to running out. Positions glide over one tick
 // (interpolate.ts) unless the page turns that off. During the start countdown
 // (spec D21) its seconds stand over the arena.
 
@@ -29,8 +29,18 @@ export function countdownSeconds(view: BattleView, tps: number): number {
   return Math.ceil(view.countdownTicks / tps);
 }
 
-/** The idle clock shows once this much of it has run (per mille). */
+/** The battle's idle clock shows once this much of it has run (per mille). */
 const IDLE_WARNING_PERMILLE = 666;
+
+/** Whole seconds left before everyone flees for inactivity (spec D9). */
+export function idleSecondsLeft(
+  view: BattleView,
+  params: BattleParams,
+): number {
+  const tps = params.tick.ticksPerSecond;
+  const timeout = (params.inactivity.timeoutMs * tps) / 1000;
+  return Math.ceil(Math.max(0, timeout - view.idleTicks) / tps);
+}
 
 type Props = {
   arena: Arena;
@@ -134,6 +144,7 @@ export function ArenaView(props: Props) {
   const tps = params.tick.ticksPerSecond;
   const dwellTicks = (params.exit.dwellMs * tps) / 1000;
   const idleTicks = (params.inactivity.timeoutMs * tps) / 1000;
+  const idle = (current.idleTicks * 1000) / idleTicks;
 
   return (
     <svg
@@ -186,7 +197,6 @@ export function ArenaView(props: Props) {
         const band =
           hp > 0.5 ? COLORS.hp.high : hp > 0.25 ? COLORS.hp.mid : COLORS.hp.low;
         const load = p.carry.materia + p.carry.cristal;
-        const idle = (p.idleTicks * 1000) / idleTicks;
         return (
           <g
             key={`p${p.id}`}
@@ -259,18 +269,6 @@ export function ArenaView(props: Props) {
                 fill={p.carry.cristal > 0 ? COLORS.cristal : COLORS.materia}
               />
             )}
-            {idle >= IDLE_WARNING_PERMILLE && (
-              <circle
-                cx={cx - 0.4}
-                cy={cy + 0.4}
-                r={0.16}
-                fill="none"
-                stroke={COLORS.fight}
-                stroke-width={0.08}
-                stroke-dasharray={arcDash(0.16, 1 - idle / 1000)}
-                transform={`rotate(-90 ${cx - 0.4} ${cy + 0.4})`}
-              />
-            )}
             <text
               class="lab-name"
               x={cx}
@@ -283,6 +281,17 @@ export function ArenaView(props: Props) {
           </g>
         );
       })}
+      {idle >= IDLE_WARNING_PERMILLE && current.ended === null && (
+        <text
+          class="lab-idle"
+          x={arena.width / 2}
+          y={1.6}
+          text-anchor="middle"
+          fill={COLORS.fight}
+        >
+          {`sem dano: todos fogem em ${idleSecondsLeft(current, params)} s`}
+        </text>
+      )}
       {current.countdownTicks > 0 && (
         <text
           class="lab-countdown"

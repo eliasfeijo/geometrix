@@ -226,7 +226,6 @@ export function placeParticipant(
     movePoints: CELL_COST,
     cooldownTicks: 0,
     exitTicks: 0,
-    idleTicks: 0,
     ai: { nextDecisionTick: state.tick, target: null },
   };
   state.participants.push(participant);
@@ -257,6 +256,7 @@ export function createBattle(
     piles: [],
     departed: [],
     totals: [],
+    idleTicks: 0,
     ended: null,
   };
   setup.sides.forEach((members, side) => {
