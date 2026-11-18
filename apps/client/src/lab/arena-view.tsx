@@ -16,6 +16,7 @@ import { DnaShape } from "../map/creep-shape.tsx";
 import { arcDash } from "../map/shapes.ts";
 import { effectProgress, liveEffects, type Effect } from "./effects.ts";
 import { cellPoint, glideProgress, positions } from "./interpolate.ts";
+import { sideLetter } from "./labels.ts";
 
 /** Side colors: the world's two teams, then two more for 3 and 4 sides. */
 export const SIDE_COLORS = ["#4ea8ff", "#ff8c42", "#c8e05a", "#e57bd9"];
@@ -488,6 +489,24 @@ export function ArenaView(props: Props) {
           font-size={Math.min(arena.width, arena.height) / 3}
         >
           {countdownSeconds(current, tps)}
+        </text>
+      )}
+      {current.ended !== null && (
+        // The outcome stays over the arena: the result table is below it.
+        <text
+          class="lab-banner"
+          x={arena.width / 2}
+          y={2}
+          text-anchor="middle"
+          fill={
+            current.ended.winnerSide === null
+              ? COLORS.outline
+              : sideColor(current.ended.winnerSide)
+          }
+        >
+          {current.ended.winnerSide === null
+            ? "fim: ninguém vence"
+            : `fim: o lado ${sideLetter(current.ended.winnerSide)} vence`}
         </text>
       )}
     </svg>
