@@ -509,7 +509,7 @@ As decisões C4 a C7 do checkpoint da F5 (plan §15; spec D9, D22, M-1, A-4, F-2
 - [x] **O domínio acaba com a batalha** (C7): no fim da batalha, a página solta o domínio (o "instantâneo" volta a
       valer, e o "Na arena" não oferece mais "soltar"); dominar o participante que já é seu não faz nada nem marca
       a batalha como "trocou"
-- [ ] **A tela legível num notebook** (spec L-8; C6): a arena ocupa a largura disponível (e cabe na altura de uma
+- [x] **A tela legível num notebook** (spec L-8; C6): a arena ocupa a largura disponível (e cabe na altura de uma
       tela de 1366 × 768), com as formas, a barra de HP, a seta da direção e os traços maiores; **o ataque:** um
       pulso em quem ataca (o `attacked`); **o golpe:** um clarão no atingido e o número do dano subindo (o `hit`,
       com o dano efetivo); **o erro:** uma marca curta onde o projétil some sem acertar (na pedra ou no fim do
