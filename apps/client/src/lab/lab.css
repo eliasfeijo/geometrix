@@ -439,6 +439,17 @@
   pointer-events: none;
 }
 
+/* The outcome over the arena once the battle ends. */
+.lab-banner {
+  font-family: var(--font-game);
+  font-size: 1.4px;
+  font-weight: 700;
+  paint-order: stroke;
+  stroke: #0d0f12;
+  stroke-width: 0.2px;
+  pointer-events: none;
+}
+
 /* The blind mode's grade (spec D17). */
 .lab-grade-button {
   min-width: 2.5rem;
