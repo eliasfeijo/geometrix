@@ -1,16 +1,20 @@
-// The arena on the lab's page (spec L-8, plan P8, P9): SVG in cells, with the
-// shapes of the world's map. Rock, the exit ring and the spawn zones are
-// drawn once; on top, the piles, the projectiles and the creeps, each with
-// where it faces, its HP, its load and the escape count on the ring; the
-// battle's idle clock when it is close to running out. Positions glide over one tick
-// (interpolate.ts) unless the page turns that off. During the start countdown
-// (spec D21) its seconds stand over the arena.
+// The arena on the lab's page (spec L-8, plan P8, P9, C6): SVG in cells, with
+// the shapes of the world's map, as wide as the page allows. Rock, the exit
+// ring and the spawn zones are drawn once; on top, the piles, the
+// projectiles and the creeps, each with where it faces, its HP, its load and
+// the escape count on the ring; then the signals of the attack (effects.ts):
+// who attacks pulses, whoever is hit flashes with the damage rising over it,
+// and a shot that vanishes leaves a spark. The battle's idle clock shows over
+// the arena when it is close to running out. Positions glide over one tick
+// (interpolate.ts) unless the page turns that off. During the start
+// countdown (spec D21) its seconds stand over the arena.
 
 import type { Arena, BattleParams, BattleView, Dir } from "@geometrix/battle";
 import { useEffect, useMemo, useState } from "preact/hooks";
 import { COLORS } from "../map/colors.ts";
 import { DnaShape } from "../map/creep-shape.tsx";
 import { arcDash } from "../map/shapes.ts";
+import { effectProgress, liveEffects, type Effect } from "./effects.ts";
 import { cellPoint, glideProgress, positions } from "./interpolate.ts";
 
 /** Side colors: the world's two teams, then two more for 3 and 4 sides. */
@@ -29,7 +33,7 @@ export function countdownSeconds(view: BattleView, tps: number): number {
   return Math.ceil(view.countdownTicks / tps);
 }
 
-/** The battle's idle clock shows once this much of it has run (per mille). */
+/** The battle's idle clock warns once this much of it has run (per mille). */
 const IDLE_WARNING_PERMILLE = 666;
 
 /** Whole seconds left before everyone flees for inactivity (spec D9). */
@@ -42,6 +46,17 @@ export function idleSecondsLeft(
   return Math.ceil(Math.max(0, timeout - view.idleTicks) / tps);
 }
 
+/** Whether the battle's idle clock is close to running out (spec L-8). */
+export function idleWarning(view: BattleView, params: BattleParams): boolean {
+  const tps = params.tick.ticksPerSecond;
+  const timeout = (params.inactivity.timeoutMs * tps) / 1000;
+  return (
+    view.ended === null &&
+    view.countdownTicks === 0 &&
+    view.idleTicks * 1000 >= timeout * IDLE_WARNING_PERMILLE
+  );
+}
+
 type Props = {
   arena: Arena;
   params: BattleParams;
@@ -50,6 +65,8 @@ type Props = {
   arrivedAt: number;
   glideMs: number;
   interpolate: boolean;
+  /** The signals of the attack of the last frames (effects.ts). */
+  effects: readonly Effect[];
   dominated: number | null;
   selected: number | null;
   onSelect(id: number): void;
@@ -127,28 +144,154 @@ function StaticArena({ arena }: { arena: Arena }) {
   );
 }
 
+type Point = { x: number; y: number };
+
+/** Where the damage of close hits on one target rises, side by side (cells). */
+const DAMAGE_SHIFT: [number, number][] = [
+  [0, 0],
+  [1, 0.4],
+  [-1, 0.4],
+];
+
+/** One signal of the attack, drawn at `now` (spec L-8, plan C6). */
+function EffectMark({
+  effect,
+  now,
+  at,
+  slot,
+}: {
+  effect: Effect;
+  now: number;
+  /** The cell's top-left corner where the effect stands. */
+  at: Point;
+  /** Earlier hits on the same target still showing: their numbers step aside. */
+  slot: number;
+}) {
+  const p = effectProgress(effect, now);
+  const cx = at.x + 0.5;
+  const cy = at.y + 0.5;
+  if (effect.kind === "attack") {
+    // A ring that grows and fades around the attacker, and a burst on the
+    // side it strikes towards: a slash for melee, a muzzle flash for a shot.
+    const [dx, dy] = STEP[effect.dir];
+    const color = sideColor(effect.side);
+    const fx = cx + dx * (effect.melee ? 1 : 0.6);
+    const fy = cy + dy * (effect.melee ? 1 : 0.6);
+    return (
+      <g class="lab-effect" data-kind={effect.kind} opacity={1 - p}>
+        <circle
+          cx={cx}
+          cy={cy}
+          r={0.55 + 0.4 * p}
+          fill="none"
+          stroke={color}
+          stroke-width={0.14}
+        />
+        {effect.melee ? (
+          <line
+            x1={fx - dy * 0.42}
+            y1={fy - dx * 0.42}
+            x2={fx + dy * 0.42}
+            y2={fy + dx * 0.42}
+            stroke="#ffffff"
+            stroke-width={0.16}
+            stroke-linecap="round"
+          />
+        ) : (
+          <circle cx={fx} cy={fy} r={0.22 * (1 - p) + 0.08} fill="#ffffff" />
+        )}
+      </g>
+    );
+  }
+  if (effect.kind === "hit") {
+    // A white flash over the target in the first third, and the damage
+    // rising over it, fading in the last part.
+    const flash = Math.max(0, 1 - p * 3);
+    const [sx, sy] = DAMAGE_SHIFT[slot % DAMAGE_SHIFT.length]!;
+    const rise = cy - 1.15 + sy - 0.8 * p;
+    const fade = p < 0.6 ? 1 : 1 - (p - 0.6) / 0.4;
+    return (
+      <g class="lab-effect" data-kind={effect.kind}>
+        {flash > 0 && (
+          <circle
+            cx={cx}
+            cy={cy}
+            r={0.62}
+            fill="#ffffff"
+            fill-opacity={0.75 * flash}
+          />
+        )}
+        <text
+          class="lab-damage"
+          x={cx + sx}
+          y={rise}
+          text-anchor="middle"
+          opacity={fade}
+        >
+          {`−${effect.damage}`}
+        </text>
+      </g>
+    );
+  }
+  // The miss: a spark on the face of the last cell, the way the shot flew.
+  const [dx, dy] = STEP[effect.dir];
+  const sx = cx + dx * 0.5;
+  const sy = cy + dy * 0.5;
+  const arm = 0.28 + 0.12 * p;
+  return (
+    <g class="lab-effect" data-kind={effect.kind} opacity={1 - p}>
+      <circle
+        cx={sx}
+        cy={sy}
+        r={0.15 + 0.3 * p}
+        fill="none"
+        stroke={sideColor(effect.side)}
+        stroke-width={0.08}
+      />
+      <g stroke="#c9d1dc" stroke-width={0.1} stroke-linecap="round">
+        <line x1={sx - arm} y1={sy - arm} x2={sx + arm} y2={sy + arm} />
+        <line x1={sx - arm} y1={sy + arm} x2={sx + arm} y2={sy - arm} />
+      </g>
+    </g>
+  );
+}
+
 export function ArenaView(props: Props) {
   const { arena, params, previous, current, arrivedAt, glideMs } = props;
   const [now, setNow] = useState(() => performance.now());
   const t = glideProgress(arrivedAt, now, glideMs, props.interpolate);
-  // Redraw every animation frame while a glide is under way.
+  const effects = liveEffects(props.effects, now);
+  const animating = t < 1 || effects.length > 0;
+  // Redraw every animation frame while a glide or a signal is under way.
   useEffect(() => {
-    if (t >= 1) return;
+    if (!animating) return;
     const frame = requestAnimationFrame(() => setNow(performance.now()));
     return () => cancelAnimationFrame(frame);
-  }, [t, arrivedAt]);
-  useEffect(() => setNow(performance.now()), [arrivedAt]);
+  }, [animating, now, arrivedAt]);
+  useEffect(() => setNow(performance.now()), [arrivedAt, props.effects]);
 
   const staticLayer = useMemo(() => <StaticArena arena={arena} />, [arena]);
   const drawn = positions(arena.width, previous, current, t);
   const tps = params.tick.ticksPerSecond;
   const dwellTicks = (params.exit.dwellMs * tps) / 1000;
-  const idleTicks = (params.inactivity.timeoutMs * tps) / 1000;
-  const idle = (current.idleTicks * 1000) / idleTicks;
+
+  /** Where an effect stands: on its creep while it is there, else its cell. */
+  const effectAt = (effect: Effect): Point | null => {
+    if (effect.kind !== "miss") {
+      const creep = drawn.participants.get(effect.id);
+      if (creep !== undefined) return creep;
+      if (effect.kind === "attack") return null;
+    }
+    return cellPoint(arena.width, effect.cell);
+  };
 
   return (
     <svg
       class="lab-arena"
+      // Fits the window's height too: no wider than that height allows.
+      style={{
+        maxWidth: `calc((100vh - var(--lab-chrome)) * ${arena.width / arena.height})`,
+      }}
       viewBox={`0 0 ${arena.width} ${arena.height}`}
       role="img"
       aria-label="A arena da batalha"
@@ -156,7 +299,7 @@ export function ArenaView(props: Props) {
       {staticLayer}
       {current.piles.map((pile) => {
         const { x, y } = cellPoint(arena.width, pile.cell);
-        const size = 0.22 + Math.min(pile.materia + pile.cristal, 30) / 100;
+        const size = 0.3 + Math.min(pile.materia + pile.cristal, 30) / 80;
         return (
           <rect
             key={`pile${pile.id}`}
@@ -165,6 +308,8 @@ export function ArenaView(props: Props) {
             width={size}
             height={size}
             fill={pile.cristal > 0 ? COLORS.cristal : COLORS.materia}
+            stroke={COLORS.background}
+            stroke-width={0.05}
             transform={`rotate(45 ${x + 0.5} ${y + 0.5})`}
           />
         );
@@ -175,16 +320,23 @@ export function ArenaView(props: Props) {
         const cx = at.x + 0.5;
         const cy = at.y + 0.5;
         return (
-          <line
-            key={`shot${shot.id}`}
-            x1={cx - dx * 0.35}
-            y1={cy - dy * 0.35}
-            x2={cx + dx * 0.25}
-            y2={cy + dy * 0.25}
-            stroke={sideColor(shot.side)}
-            stroke-width={0.16}
-            stroke-linecap="round"
-          />
+          <g key={`shot${shot.id}`}>
+            <line
+              x1={cx - dx * 0.55}
+              y1={cy - dy * 0.55}
+              x2={cx + dx * 0.25}
+              y2={cy + dy * 0.25}
+              stroke={sideColor(shot.side)}
+              stroke-width={0.26}
+              stroke-linecap="round"
+            />
+            <circle
+              cx={cx + dx * 0.25}
+              cy={cy + dy * 0.25}
+              r={0.13}
+              fill="#ffffff"
+            />
+          </g>
         );
       })}
       {current.participants.map((p) => {
@@ -197,6 +349,12 @@ export function ArenaView(props: Props) {
         const band =
           hp > 0.5 ? COLORS.hp.high : hp > 0.25 ? COLORS.hp.mid : COLORS.hp.low;
         const load = p.carry.materia + p.carry.cristal;
+        const mine = p.id === props.dominated;
+        // The facing: a pointer from the body out past its edge.
+        const tipX = cx + dx * 0.78;
+        const tipY = cy + dy * 0.78;
+        const baseX = cx + dx * 0.5;
+        const baseY = cy + dy * 0.5;
         return (
           <g
             key={`p${p.id}`}
@@ -207,10 +365,10 @@ export function ArenaView(props: Props) {
               <circle
                 cx={cx}
                 cy={cy}
-                r={0.78}
+                r={0.82}
                 fill="none"
                 stroke={COLORS.selection}
-                stroke-width={0.06}
+                stroke-width={0.07}
                 stroke-dasharray="0.18 0.12"
               />
             )}
@@ -218,11 +376,11 @@ export function ArenaView(props: Props) {
               <circle
                 cx={cx}
                 cy={cy}
-                r={0.62}
+                r={0.66}
                 fill="none"
                 stroke={COLORS.selection}
-                stroke-width={0.1}
-                stroke-dasharray={arcDash(0.62, p.exitTicks / dwellTicks)}
+                stroke-width={0.16}
+                stroke-dasharray={arcDash(0.66, p.exitTicks / dwellTicks)}
                 transform={`rotate(-90 ${cx} ${cy})`}
               />
             )}
@@ -232,47 +390,56 @@ export function ArenaView(props: Props) {
               cy={cy}
               r={0.47}
               fill={sideColor(p.side)}
-              stroke={
-                p.id === props.dominated ? COLORS.dominated : COLORS.background
-              }
-              strokeWidth={p.id === props.dominated ? 0.1 : 0.05}
+              stroke={mine ? COLORS.dominated : COLORS.background}
+              strokeWidth={mine ? 0.12 : 0.06}
+            />
+            <polygon
+              points={`${tipX},${tipY} ${baseX - dy * 0.2},${baseY - dx * 0.2} ${baseX + dy * 0.2},${baseY + dx * 0.2}`}
+              fill={COLORS.outline}
+              stroke={COLORS.background}
+              stroke-width={0.04}
             />
             <line
               x1={cx}
               y1={cy}
-              x2={cx + dx * 0.56}
-              y2={cy + dy * 0.56}
+              x2={baseX}
+              y2={baseY}
               stroke={COLORS.outline}
-              stroke-width={0.1}
+              stroke-width={0.12}
               stroke-linecap="round"
             />
+            {/* The HP bar, a little wider than the cell. */}
             <rect
-              x={cx - 0.42}
-              y={cy - 0.8}
-              width={0.84}
-              height={0.15}
+              x={cx - 0.6}
+              y={cy - 1}
+              width={1.2}
+              height={0.3}
               fill="#000"
-              fill-opacity={0.6}
+              fill-opacity={0.75}
+              stroke="#000"
+              stroke-width={0.06}
             />
             <rect
-              x={cx - 0.42}
-              y={cy - 0.8}
-              width={0.84 * hp}
-              height={0.15}
+              x={cx - 0.6}
+              y={cy - 1}
+              width={1.2 * hp}
+              height={0.3}
               fill={band}
             />
             {load > 0 && (
               <circle
-                cx={cx + 0.38}
-                cy={cy + 0.38}
-                r={0.07 + (0.12 * load) / kit.capacity}
+                cx={cx + 0.4}
+                cy={cy + 0.4}
+                r={0.1 + (0.14 * load) / kit.capacity}
                 fill={p.carry.cristal > 0 ? COLORS.cristal : COLORS.materia}
+                stroke={COLORS.background}
+                stroke-width={0.04}
               />
             )}
             <text
               class="lab-name"
               x={cx}
-              y={cy + 1.12}
+              y={cy + 1.2}
               text-anchor="middle"
               fill={sideColor(p.side)}
             >
@@ -281,11 +448,30 @@ export function ArenaView(props: Props) {
           </g>
         );
       })}
-      {idle >= IDLE_WARNING_PERMILLE && current.ended === null && (
+      {effects.map((effect, i) => {
+        const at = effectAt(effect);
+        if (at === null) return null;
+        const slot =
+          effect.kind === "hit"
+            ? effects
+                .slice(0, i)
+                .filter((e) => e.kind === "hit" && e.id === effect.id).length
+            : 0;
+        return (
+          <EffectMark
+            key={`fx${effect.at}.${i}`}
+            effect={effect}
+            now={now}
+            at={at}
+            slot={slot}
+          />
+        );
+      })}
+      {idleWarning(current, params) && (
         <text
           class="lab-idle"
           x={arena.width / 2}
-          y={1.6}
+          y={1.8}
           text-anchor="middle"
           fill={COLORS.fight}
         >
