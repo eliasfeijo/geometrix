@@ -517,6 +517,69 @@ As decisões C4 a C7 do checkpoint da F5 (plan §15; spec D9, D22, M-1, A-4, F-2
       contrato: registre); a contagem da fuga e o **relógio de inatividade da batalha** maiores, este perto do
       relógio da batalha ou sobre a arena. Conferir no Chromium headless pelo CDP a 1366 × 768, com capturas, e
       guardar as capturas para o dono ver antes do merge
-- [ ] O registro da F6 (medições, interpretações) aqui, e o merge: o worktree não faz merge em `main`; deixe a
+- [x] O registro da F6 (medições, interpretações) aqui, e o merge: o worktree não faz merge em `main`; deixe a
       mensagem no scratchpad e entregue ao dono os comandos (`git merge --no-ff`, `npm run check` em `main`, e a
       remoção do worktree)
+
+### Registro da F6 (2026-11-18)
+
+Como nas fases anteriores, o registro fica aqui e entra no "Registro das fases" do dashboard no merge da B em `main`
+(que fecha a fatia, depois do checkpoint da F5).
+
+**As regras novas** (`BATTLE_VERSION` 3). O `geo battle sweep` (seeds 1–100, 9 200 batalhas em 45 s e 43 s, duas
+rodadas), comparado com a F5:
+
+| O quê | Na F5 | Na F6 (primeiro passo imediato, inatividade da batalha) |
+|---|---|---|
+| Duração do 1 × 1 (mediana) | 18,6 s | 18,4 s |
+| Duração do 3 × 3 (mediana) | 32,0 s | 34,7 s |
+| Custo do 3 × 3 por 2 400 ticks (mediana; alvo 50 ms) | 38 ms | 41,7 ms e 37,4 ms nas duas rodadas (nas pedras, 49,6 e 45,4): ruído do WSL |
+| Inatividade no 3 × 3 (aberta, pedras, corredor) | 7%, 19%, 2% | 0%, 0%, 0% |
+| Triângulo × círculo (A / B: aberta, pedras, corredor) | 49/51, 66/34, 49/51 | 57/41, 87/13, 49/51 |
+| Quadrado × círculo, quadrado × triângulo | 0–2/98–100, 99–100/0–1 | 0–2/98–100, 100/0 |
+| Fuga carregada (escapa) | 2–7% | 2–8% |
+
+O fim da inatividade no 3 × 3 é a C5: um creep que não acertava nem era acertado não sai mais no meio da luta dos
+outros (no 1 × 1, a inatividade fica em até 3%, no ● × ● na aberta). O triângulo ganhou terreno do círculo nas
+pedras (66% → 87%), provavelmente porque o primeiro passo imediato ajuda quem fecha a distância contornando a pedra
+(não investigado; informativo, C1). O `geo battle verify` nas seeds 1, 42 e 649: OK.
+
+A *fixture* do laboratório foi refeita: um log exportado da página no Chromium a 300 ms de RTT (o Começar já
+dominando o quadrado, teclas durante a contagem, um reforço num lado novo e os gambits do círculo trocados pelo
+portador), que dá na CLI o hash do worker (`e4fee827…`).
+
+**O laboratório**, conferido no Chromium headless pelo CDP a 1366 × 768: a arena tem **1005 × 648 px** (~22 px por
+célula; na F5, ~620 px de largura entre as colunas de 330 e 360 px), com a coluna de 300 px à direita e sem
+rolagem horizontal. As capturas mostram o pulso de quem ataca, o clarão e o dano no atingido (dois golpes seguidos
+no mesmo alvo, lado a lado), a marca do tiro que some no fim do alcance, o tempo sem dano na barra e o aviso
+vermelho sobre a arena, e a fuga de todos aos 18,0 s (3 s de contagem + 15 s). No fim de uma batalha vencida
+dominando, o "Na arena" não oferece mais "soltar" e o instantâneo volta. Testes: 2 701 no total (eram 2 686 no fim
+da F5).
+
+**Interpretações a validar:**
+
+1. **O primeiro passo:** parado, os pontos se recompõem pelo ganho do tick (com o freio da carga) até `CELL_COST`;
+   quem nasce ou entra começa com o passo pronto. Segurando desde o repouso, o 2º passo vem 1 tick antes do ritmo
+   (o ganho do tick do 1º passo sobra; no círculo, 150 ms em vez de 200), como já acontecia com quem estava
+   bloqueado. A velocidade média não muda, e tocar nunca anda mais rápido que segurar (teste sobre 200 padrões
+   de toque).
+2. **A inatividade da batalha:** só o golpe que tira HP zera o relógio; quem entra não zera; quem completa a borda
+   no mesmo tick em que o relógio estoura sai pela borda; a IA não lê o relógio. A visão leva o relógio
+   (`idleTicks`) no topo, não mais em cada participante.
+3. **Os sinais da tela vêm de eventos:** `missed` é evento novo (quem atirou, a última célula do projétil e a
+   direção; a do atirador quando a frente já é pedra), e o `hit` ganhou a célula de quem apanhou. Deduzir o erro
+   dos quadros seria frágil: o `hit` não diz qual projétil acertou. Os eventos ficam fora do estado (o hash não
+   muda com eles), no contrato v0, sob a `BATTLE_VERSION` 3. O corpo a corpo que erra não deixa marca, só o pulso.
+4. **A tela:** a batalha primeiro (a arena até a altura da janela, menos 118 px de cabeçalho e barra), a coluna
+   estreita com a nota às cegas, o "Na arena" e os eventos; o formulário, a rede, a sessão e os gambits embaixo
+   (antes da primeira batalha, o formulário fica logo abaixo do quadro vazio). A tabela de resultado também fica
+   embaixo; o desfecho aparece sobre a arena. Os sinais duram 300 ms (ataque), 900 ms (golpe) e 600 ms (erro) no
+   tempo da página: continuam na pausa e se acumulam mais no ×4. O tempo sem dano fica na barra durante a luta; o
+   aviso grande aparece com 2/3 do relógio (10 s).
+5. **O domínio:** acaba também com a batalha (o vencedor fica na visão); dominar quem já é seu não faz nada nem
+   marca a batalha como "trocou".
+6. Um teste dos presets (● × ● nas pedras, seed 7) virou dois atiradores que erram tudo até a inatividade; o teste
+   passou a pedir golpes em uma de três seeds.
+
+**Para a retomada do checkpoint** (acima): os grupos 1 a 3 refeitos com as regras e a tela novas, depois os
+grupos 4 a 8. Continuam pendentes as interpretações 1 a 8 da F5 e o *jitter* da reação de cada nível (F4).
