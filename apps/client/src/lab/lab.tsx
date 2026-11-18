@@ -18,6 +18,7 @@ import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { ArenaView, sideColor } from "./arena-view.tsx";
 import { LAB_ARENAS, LAB_PARAMS } from "./assets.ts";
 import { LabConnection, type WorkerLike } from "./connection.ts";
+import { isSwitch, keepsDomination } from "./domination.ts";
 import {
   defaultDraft,
   idOfPlace,
@@ -187,11 +188,10 @@ export function Lab() {
           const { interpolate: glide, speed: s } = live.current;
           connection.shown(frame.applied, at + (glide ? tickMsAt(s) : 0));
           if (frame.applied.length > 0) setMeasured((n) => n + 1);
+          // The domination ends when the creep leaves or the battle ends
+          // (C7): instant is back, and "Na arena" offers no release.
           const mine = live.current.dominated;
-          if (
-            mine !== null &&
-            !frame.view.participants.some((p) => p.id === mine)
-          ) {
+          if (mine !== null && !keepsDomination(frame.view, mine)) {
             setDominated(null);
           }
         },
@@ -422,6 +422,8 @@ export function Lab() {
   }
 
   function dominate(id: number) {
+    // Taking the creep already taken changes nothing, not even the record.
+    if (!isSwitch(dominated, id)) return;
     switched();
     send({ type: "control", id, controller: "human" });
     setDominated(id);
