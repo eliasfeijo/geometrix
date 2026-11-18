@@ -24,8 +24,6 @@ export type ViewParticipant = {
   cooldownTicks: number;
   /** Ticks on an exit cell without being hit (the escape count, spec L-8). */
   exitTicks: number;
-  /** Ticks since the last damage dealt or taken (the idle clock, spec L-8). */
-  idleTicks: number;
 };
 
 export type ViewProjectile = {
@@ -44,6 +42,11 @@ export type BattleView = {
    * the next step fights when it is 0.
    */
   countdownTicks: number;
+  /**
+   * The battle's idle clock (spec D9, L-8): fighting ticks since the last blow
+   * that took HP. For the page; the gambits do not read it.
+   */
+  idleTicks: number;
   participants: ViewParticipant[];
   projectiles: ViewProjectile[];
   piles: Pile[];
@@ -54,6 +57,7 @@ export function battleView(state: BattleState): BattleView {
   return {
     tick: state.tick,
     countdownTicks: Math.max(0, countdownTicks(state.params) - state.tick),
+    idleTicks: state.idleTicks,
     participants: state.participants.map((p) => ({
       id: p.id,
       side: p.side,
@@ -67,7 +71,6 @@ export function battleView(state: BattleState): BattleView {
       reaction: p.reaction,
       cooldownTicks: p.cooldownTicks,
       exitTicks: p.exitTicks,
-      idleTicks: p.idleTicks,
     })),
     projectiles: state.projectiles.map((p) => ({
       id: p.id,

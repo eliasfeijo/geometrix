@@ -41,26 +41,30 @@ export function turnToIntent(state: BattleState): void {
 }
 
 /**
- * Stage 4, movement (spec M-1..M-3). Points accumulate while the intent is to
- * walk and reset when it stops. With a full cell's worth, the creep steps
- * into the next cell unless it is off the grid, rock, or taken at the start of
- * the stage (someone leaving a cell frees it only for the next tick). Points
- * past CELL_COST carry over a step, so the pace matches the speed; a blocked
- * creep, or one that loses a dispute, holds CELL_COST and steps as soon as
- * the cell is free. Two creeps stepping into the same cell: the rng picks one,
- * among the candidates in id order, with one call per dispute, disputes in
- * the order of their first candidate's id.
+ * Stage 4, movement (spec M-1..M-3, D22). Points accumulate every tick at the
+ * DNA's speed, slowed by the carry: while the intent is to walk, and also
+ * while standing, but then only up to CELL_COST. So a creep that stood for
+ * the time of a cell has its step ready and leaves on the tick after the
+ * order to walk; tapping the key never walks faster than holding it, since
+ * standing only caps what holding would have kept. With a full cell's worth,
+ * the creep steps into the next cell unless it is off the grid, rock, or
+ * taken at the start of the stage (someone leaving a cell frees it only for
+ * the next tick). Points past CELL_COST carry over a step, so the pace
+ * matches the speed; a blocked creep, or one that loses a dispute, holds
+ * CELL_COST and steps as soon as the cell is free. Two creeps stepping into
+ * the same cell: the rng picks one, among the candidates in id order, with
+ * one call per dispute, disputes in the order of their first candidate's id.
  */
 export function moveParticipants(state: BattleState): void {
   const taken = new Set(state.participants.map((p) => p.cell));
   const contenders = new Map<number, Participant[]>();
   for (const participant of state.participants) {
     const dir = participant.intent.move;
+    participant.movePoints += moveGain(state, participant);
     if (dir === null) {
-      participant.movePoints = 0;
+      participant.movePoints = Math.min(participant.movePoints, CELL_COST);
       continue;
     }
-    participant.movePoints += moveGain(state, participant);
     if (participant.movePoints < CELL_COST) continue;
     const target = neighbor(state.arena, participant.cell, dir);
     if (target < 0 || isRock(state.arena, target) || taken.has(target)) {

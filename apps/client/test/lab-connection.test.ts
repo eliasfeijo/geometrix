@@ -20,6 +20,7 @@ function fakeWorker() {
 const view = (tick: number): BattleView => ({
   tick,
   countdownTicks: 0,
+  idleTicks: 0,
   participants: [],
   projectiles: [],
   piles: [],

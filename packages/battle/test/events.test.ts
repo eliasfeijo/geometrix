@@ -131,6 +131,7 @@ describe("the events of whole battles (spec D19, F-3)", () => {
       "escaped",
       "hit",
       "joined",
+      "missed",
       "picked",
     ]);
   });

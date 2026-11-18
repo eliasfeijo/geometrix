@@ -10,7 +10,7 @@ import type { RngState } from "./rng.ts";
  * Bumped when the same log starts giving another result (plan section 11).
  * Snapshots and logs of another version are refused.
  */
-export const BATTLE_VERSION = 2;
+export const BATTLE_VERSION = 3;
 
 export type Carry = { materia: number; cristal: number };
 
@@ -52,8 +52,6 @@ export type Participant = {
   cooldownTicks: number;
   /** Consecutive ticks on an exit cell without being hit (spec D7). */
   exitTicks: number;
-  /** Ticks since the last damage dealt or taken, or since entering (D9). */
-  idleTicks: number;
   ai: { nextDecisionTick: number; target: number | null };
 };
 
@@ -114,6 +112,12 @@ export type BattleState = {
   piles: Pile[];
   departed: Departure[];
   totals: Totals[];
+  /**
+   * The battle's idle clock (spec D9): fighting ticks since the last blow that
+   * took HP off anyone. It starts at the end of the countdown; whoever joins
+   * does not reset it.
+   */
+  idleTicks: number;
   ended: { tick: number; winnerSide: number | null } | null;
 };
 

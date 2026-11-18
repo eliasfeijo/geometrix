@@ -1,5 +1,5 @@
 {
-  "battleVersion": 2,
+  "battleVersion": 3,
   "setup": {
     "rule": "grid",
     "arena": [
@@ -126,10 +126,10 @@
     "gambits": { "maxRules": 8 },
     "limits": { "maxSides": 4, "maxPerSide": 5 }
   },
-  "ticks": 258,
+  "ticks": 257,
   "commands": [
     {
-      "tick": 10,
+      "tick": 3,
       "commands": [{ "type": "control", "id": 1, "controller": "human" }]
     },
     {
@@ -157,9 +157,12 @@
       ]
     },
     {
+      "tick": 106,
+      "commands": [{ "type": "intent", "id": 1, "move": null, "attack": false }]
+    },
+    {
       "tick": 107,
       "commands": [
-        { "type": "intent", "id": 1, "move": null, "attack": false },
         { "type": "attackOnce", "id": 1 },
         { "type": "intent", "id": 1, "move": null, "attack": true },
         { "type": "intent", "id": 1, "move": "up", "attack": true }
@@ -178,7 +181,7 @@
       "commands": [{ "type": "intent", "id": 1, "move": null, "attack": false }]
     },
     {
-      "tick": 142,
+      "tick": 140,
       "commands": [
         {
           "type": "join",
@@ -225,7 +228,7 @@
       ]
     },
     {
-      "tick": 170,
+      "tick": 169,
       "commands": [
         { "type": "intent", "id": 1, "move": null, "attack": false },
         { "type": "attackOnce", "id": 1 },
@@ -233,48 +236,40 @@
       ]
     },
     {
+      "tick": 171,
+      "commands": [{ "type": "intent", "id": 1, "move": null, "attack": false }]
+    },
+    {
       "tick": 172,
       "commands": [
-        { "type": "intent", "id": 1, "move": null, "attack": false },
         { "type": "intent", "id": 1, "move": "down", "attack": false }
       ]
     },
     {
-      "tick": 181,
+      "tick": 182,
       "commands": [
         { "type": "intent", "id": 1, "move": null, "attack": false },
-        { "type": "attackOnce", "id": 1 }
-      ]
-    },
-    {
-      "tick": 182,
-      "commands": [{ "type": "intent", "id": 1, "move": null, "attack": true }]
-    },
-    {
-      "tick": 183,
-      "commands": [
+        { "type": "attackOnce", "id": 1 },
+        { "type": "intent", "id": 1, "move": null, "attack": true },
         { "type": "intent", "id": 1, "move": null, "attack": false },
         { "type": "intent", "id": 1, "move": "left", "attack": false }
       ]
     },
     {
-      "tick": 193,
-      "commands": [
-        { "type": "intent", "id": 1, "move": null, "attack": false },
-        { "type": "attackOnce", "id": 1 }
-      ]
-    },
-    {
-      "tick": 194,
-      "commands": [{ "type": "intent", "id": 1, "move": null, "attack": true }]
-    },
-    {
-      "tick": 195,
+      "tick": 192,
       "commands": [{ "type": "intent", "id": 1, "move": null, "attack": false }]
     },
     {
-      "tick": 196,
+      "tick": 193,
       "commands": [
+        { "type": "attackOnce", "id": 1 },
+        { "type": "intent", "id": 1, "move": null, "attack": true }
+      ]
+    },
+    {
+      "tick": 195,
+      "commands": [
+        { "type": "intent", "id": 1, "move": null, "attack": false },
         { "type": "intent", "id": 1, "move": "right", "attack": false }
       ]
     },
@@ -287,7 +282,7 @@
       ]
     },
     {
-      "tick": 207,
+      "tick": 206,
       "commands": [
         { "type": "intent", "id": 1, "move": null, "attack": false },
         { "type": "intent", "id": 1, "move": "down", "attack": false }
@@ -295,34 +290,34 @@
     },
     {
       "tick": 217,
-      "commands": [{ "type": "intent", "id": 1, "move": null, "attack": false }]
-    },
-    {
-      "tick": 218,
       "commands": [
+        { "type": "intent", "id": 1, "move": null, "attack": false },
         { "type": "attackOnce", "id": 1 },
         { "type": "intent", "id": 1, "move": null, "attack": true }
       ]
     },
     {
-      "tick": 219,
+      "tick": 218,
       "commands": [
         { "type": "intent", "id": 1, "move": null, "attack": false },
         { "type": "intent", "id": 1, "move": "left", "attack": false }
       ]
     },
     {
+      "tick": 228,
+      "commands": [{ "type": "intent", "id": 1, "move": null, "attack": false }]
+    },
+    {
       "tick": 229,
       "commands": [
-        { "type": "intent", "id": 1, "move": null, "attack": false },
         { "type": "attackOnce", "id": 1 },
         { "type": "intent", "id": 1, "move": null, "attack": true }
       ]
     },
     {
-      "tick": 231,
+      "tick": 230,
       "commands": [{ "type": "intent", "id": 1, "move": null, "attack": false }]
     }
   ],
-  "finalHash": "7106ce22a5dc62bddcda05bce3d39d6fcfbb74b339a423eb701d0e1942d30734"
+  "finalHash": "e4fee8271d0791c8e6f829e02a831114a499dcc40e423f32c19238290e99af26"
 }
