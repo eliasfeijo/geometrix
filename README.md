@@ -4,12 +4,13 @@
 across a fogged jungle for days, even while you sleep. On the way, someone may stop them and ask for a toll.
 
 [Leia em português](README.pt-BR.md) · [Project overview (PT-BR)](docs/OVERVIEW.md) ·
-[Current status (PT-BR)](docs/dashboard/current-status.md)
+[How a match plays (PT-BR)](docs/GAMEPLAY.md) · [Current status (PT-BR)](docs/dashboard/current-status.md)
 
 ![A world on day 3: the blue team's roads, creeps and core, with the river and its fords in the middle](docs/img/world-day3.png)
 
-> **Pre-alpha.** The world, the economy, the autopilot and the fog of war are playable locally, against bots or
-> with friends on the same machine. There is no public server yet. Combat is the milestone being built now.
+> **Pre-alpha.** The world, the economy, the autopilot, the fog of war and the roadside encounters are playable
+> locally, against bots or with friends on the same machine; real-time battles are playable in a local battle lab.
+> There is no public server yet. Joining battles to the world is the next step.
 
 ## Why it might be your kind of game
 
@@ -19,17 +20,21 @@ across a fogged jungle for days, even while you sleep. On the way, someone may s
 - **Wealth is physical.** Matter and crystal sit somewhere on the map and must be carried home, one bag at a time.
   A loaded creep is slower, and it is a target. Roads are built cell by cell, and they are neutral: the enemy walks
   on yours too.
-- **Ambush, extortion, flight** *(in development)*. An enemy creep can approach yours and attack, or demand a toll.
-  Pay and walk away with a safe-conduct, refuse and fight, or drop the bag and run. Whether you get away depends on
-  speed, load and terrain: good luck crossing a ford with a fully loaded square. The roadside encounters of Mount &
-  Blade, played out by autopilot rules when nobody is watching.
+- **Ambush, extortion, flight.** An enemy creep can approach yours and attack, or demand a toll. Pay and walk away
+  with a safe-conduct, refuse and fight, or drop the bag and run. Whether you get away depends on speed, load and
+  terrain: good luck crossing a ford with a fully loaded square. The roadside encounters of Mount & Blade, played out
+  by autopilot rules when nobody is watching.
+- **Short real-time battles on a grid** *(in the battle lab today; in the world next)*. Directional attacks,
+  projectiles you can dodge, squares that block the way, a three-second countdown, and fleeing through the edge of
+  the arena, with or without the bag. The creeps you don't control fight by their gambits, and a battle with no
+  humans resolves itself with the same simulation.
 - **Stories, not spreadsheets.** Creeps have names and die for good. A chronicle narrates what happened, the toll
-  paid at the ford, the scout that never came back, in the spirit of RimWorld and Dwarf Fortress *(in development)*.
+  paid at the ford, the scout that never came back, in the spirit of RimWorld and Dwarf Fortress.
 - **Any creep can be the hero.** There is no fixed hero: take direct control of any creep on your team, play it,
   then release it back to its autopilot.
 - **Build your own bot.** Everything that changes the world is a command, and the house bots use the same
-  validated commands a player does. Coming next: a command line in the chat, with BYOND-style verbs, and client
-  macros; later, sandboxed scripts on the server, so you can program your creeps beyond the built-in presets.
+  validated commands a player does. Planned: a command line in the chat, with BYOND-style verbs, client macros
+  and, later, sandboxed scripts on the server, so you can program your creeps beyond the built-in presets.
 - **Fog of war, enforced by the server.** Each team only ever receives what it sees and remembers. The terrain
   arrives as you explore, and a command about something your team has never seen gets the same refusal as a
   nonexistent id.
@@ -44,6 +49,10 @@ across a fogged jungle for days, even while you sleep. On the way, someone may s
 - Gathering, hauling and delivering matter and crystal; building roads; producing creeps; a cargo upgrade.
 - An autopilot editor with presets (collector, scout, road builder), and direct control of one creep at a time.
 - Fog of war in three states (never seen, remembered, in sight), with the team's memory of what it has seen.
+- Roadside encounters: approach, extort, pay, refuse or flee; HP that carries over, permanent death, loot left on
+  the ground, and a chronicle of what happened. In the world, the fight itself is still settled by a placeholder roll.
+- A battle lab (`npm run lab`): grid battles against the AI, with up to four sides, editable gambits, three arenas
+  and simulated latency.
 - Bots that play a whole match by the same rules, and an in-browser replay of any finished world.
 
 ## What comes next
@@ -52,13 +61,13 @@ across a fogged jungle for days, even while you sleep. On the way, someone may s
 |---|---|---|
 | **M1 · The wealth cycle** | Is gathering, hauling and investing interesting on its own? | ✅ Done |
 | **M1.5 · The fog** | Does hiding information create decisions without making the map unreadable? | ✅ Done |
-| **M2 · The ambush** | Can a fight change the course of the world without dominating the game? | 🟡 Building: the encounter first, then a battle lab, chat and console, the junction with real-time battles, siege and repair |
-| **M2.5 · The hostile jungle** | Bosses with buffs, levels and skills, temperaments, destructible trees | Planned |
-| **M3 · The team** | Does team governance (taxes, votes) create decisions, or just bureaucracy? | Planned |
-| **M4 · The living world** | Neutral tribes, diplomacy and quests, scriptable autopilot | Planned |
+| **M2 · The ambush** | Can a fight change the course of the world without dominating the game? | 🟡 Building: the encounter ✅ and the battle lab ✅; next, battles joined to the world, then siege and repair |
+| **The items** | Does an item you can win and lose give a reason to fight and to come back? | Next milestone (candidate) |
+| **Theme bank** | Creeps with traits and titles, the players as gods in the chronicle, leagues led by a creep, the world's secret arc and its game master, living tribes, team governance, legends that invade other worlds | Ideas, not yet numbered |
 
-Each milestone is a hypothesis tested in playtests before the next one starts ([roadmap](docs/ROADMAP.md), in
-Portuguese).
+Each milestone is a hypothesis tested in playtests before the next one starts; the other ideas wait in a theme bank
+until the owner picks the next milestone ([roadmap](docs/ROADMAP.md) and the illustrated
+[match guide](docs/GAMEPLAY.md), in Portuguese).
 
 ## Under the hood
 
@@ -67,15 +76,17 @@ The interesting engineering is not the graphics but a world that runs for days a
 - **One deterministic simulation** (`packages/sim`, TypeScript, no dependencies) runs on the server, in a headless
   CLI and in the browser. Integer math only: positions in cells, speeds in per-mille, no `Math.random`, no
   floating-point literals. The linter enforces it.
-- **Replay = seed + command log.** A three-day bot-vs-bot world logs about 90 commands. Replays give the same state
+- **Replay = seed + command log.** A three-day bot-vs-bot world logs about 140 commands. Replays give the same state
   hash in V8 (Chromium) and JavaScriptCore (WebKit).
 - **Server-authoritative, per-team view deltas** over WebSocket: about 200 bytes per second per client at real
   speed, numbered, checked by hash and resumable after a drop.
 - **SQLite with snapshots and a command log.** A soak test kills the server with `kill -9` five times during a whole
   world and checks that every client ends with the server's exact view.
+- **A separate battle simulation** (`packages/battle`), just as deterministic, at 20 ticks per second. A whole
+  3-vs-3 battle resolved by the AI takes about 40 ms, so a sweep runs thousands of battles in under a minute.
 - **A headless harness** runs three days of world in about 13 seconds, so balance is tuned with data from dozens of
   seeds before anyone plays.
-- **Stack:** Node 26, TypeScript, Preact + signals with SVG, Vite, `ws`, `better-sqlite3`, zod, Vitest. About 2,200
+- **Stack:** Node 26, TypeScript, Preact + signals with SVG, Vite, `ws`, `better-sqlite3`, zod, Vitest. About 2,700
   tests.
 
 The [architecture overview](docs/OVERVIEW.md) (in Portuguese) explains the decisions, the costs and the trade-offs,
@@ -105,7 +116,7 @@ roadmap) are in Brazilian Portuguese.
 
 | To… | Read (PT-BR) |
 |---|---|
-| Understand the game | [Pillars](docs/PILLARS.md) → [GDD](docs/gdd/README.md) → [Glossary](docs/GLOSSARY.md) |
+| Understand the game | [Match guide](docs/GAMEPLAY.md) → [Pillars](docs/PILLARS.md) → [GDD](docs/gdd/README.md) → [Glossary](docs/GLOSSARY.md) |
 | See where the project is | [Status dashboard](docs/dashboard/current-status.md) |
 | Understand the technical decisions | [ADRs](docs/adr/README.md) |
 | See how a slice is specified | [Specs](docs/specs/README.md) |

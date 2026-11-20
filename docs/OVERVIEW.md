@@ -4,11 +4,13 @@
 > funciona por dentro, quanto custa e onde estão os limites. As fontes de verdade continuam sendo os docs linkados
 > em cada seção; este arquivo é o mapa.
 >
-> **Retrato de 2026-11-15, no começo do M2 (A emboscada).** O M1 e o M1.5 estão concluídos: o mundo sincroniza por
-> deltas da visão de cada time e tem fog of war de ponta a ponta (simulação, rede, tela e bots). O M2 foi dividido
-> em cinco fatias, e a primeira, **o encontro** (abordar, extorquir, pagar, lutar ou fugir), tem spec, ADR e plan
-> aprovados; a implementação começa agora. Os números da seção 7 são medidos com o fog. Para uma apresentação curta,
-> em inglês, veja o [README](../README.md).
+> **Retrato de 2026-11-20, no meio do M2 (A emboscada).** O M1 e o M1.5 estão concluídos. Do M2, a fatia A, **o
+> encontro** (abordar, extorquir, pagar, lutar ou fugir, com a luta por um sorteio descartável), e a fatia B, **o
+> laboratório de batalha** (um pacote de combate determinístico próprio, a regra de grade, a IA de gambits e a
+> latência simulada, numa página local), estão concluídas. A próxima frente é a D, **a junção**: o encontro abre a
+> batalha de verdade. O ROADMAP virou o marco atual, o próximo candidato (Os itens) e um banco de ideias por tema.
+> Para o jogo contado como uma partida, com as ideias que ainda não foram decididas, veja o
+> [guia da partida](GAMEPLAY.md); para uma apresentação curta, em inglês, o [README](../README.md).
 
 ## Sumário
 
@@ -94,33 +96,34 @@ design antes do próximo ([`ROADMAP.md`](ROADMAP.md)):
 flowchart LR
     M0["M0 · Design<br/>O que estamos construindo?"] --> M1["M1 · O ciclo da riqueza<br/>Coletar, transportar e investir<br/>já é interessante sozinho?"]
     M1 --> M15["M1.5 · A névoa<br/>Esconder informação cria decisões<br/>sem tornar o mapa ilegível?"]
-    M15 --> M2["M2 · A emboscada<br/>A batalha muda o rumo do mundo<br/>sem dominar o jogo?"]
-    M2 --> M25["M2.5 · A jungle hostil<br/>chefões, progressão,<br/>temperamentos, árvores"]
-    M25 --> M3["M3 · O time<br/>A governança gera decisões,<br/>ou só burocracia?"]
-    M3 --> M4["M4 · O mundo vivo<br/>tribos, diplomacia,<br/>piloto automático scriptável"]
+    M15 --> M2["M2 · A emboscada<br/>A batalha muda o rumo do mundo<br/>sem dominar o jogo?<br/>A ✅ · B ✅ · D · E"]
+    M2 --> IT["Os itens (candidato)<br/>Um item que se ganha e se perde<br/>dá motivo para lutar e voltar?"]
+    IT --> BK["O banco por tema<br/>personagens, deuses, ligas,<br/>o arco do mundo, o mundo vivo,<br/>o time, as lendas"]
     style M0 fill:#2e7d32,color:#fff
     style M1 fill:#2e7d32,color:#fff
     style M15 fill:#2e7d32,color:#fff
     style M2 fill:#f9a825,color:#000
 ```
 
-Verde: concluído. Amarelo: em construção.
+Verde: concluído. Amarelo: em construção. Os itens são o candidato a próximo marco; o banco não tem número nem ordem
+fixa: uma ideia só ganha marco quando o dono escolhe o próximo, no checkpoint do atual (ROADMAP, 2026-11-20).
 
 ## 3. O GDD em uma página
 
 O [GDD](gdd/README.md) tem um arquivo por sistema, e cada um separa **Decidido** (o dono aprovou), **Proposta**
 (ainda não aprovada) e **Perguntas abertas**. Isso é levado a sério: nada vira "decidido" sem o OK explícito do dono.
+O [guia da partida](GAMEPLAY.md) conta estes sistemas como uma partida, com o estado de cada mecânica.
 
-| Sistema | O que está decidido | O que ainda está em aberto | Marco |
+| Sistema | O que está decidido | O que ainda está em aberto | Marco · temas do banco |
 |---|---|---|---|
-| [01 Mundo e mapa](gdd/01-mundo.md) | Mundo persistente de dias (hipótese: 3); times de 3; vitória = destruir a base inimiga; início "fundação" (cada time começa com um Núcleo e cresce a partir dele); **fog of war**: névoa negra, pedras bloqueiam a visão, memória do time (depósitos com o último valor, estradas, terreno explorado), três estados na tela (nunca visto, lembrado, visível) | O começo sem depósito garantido à vista (medido nos bots: funciona), entrar no meio da partida, onde se pode construir, rio como rota | M1 · M1.5 |
-| [02 Creeps e domínio](gdd/02-creeps-e-dominio.md) | Herói = creep dominado; 1 domínio por jogador; DNA = forma inata; morte permanente; inventário; os 3 DNAs se equivalem na economia (a diferença vem do combate); **visão por DNA** (círculo 6, triângulo 4, quadrado 3; Núcleo 8); **no M2:** nome no estado, HP que persiste e regenera devagar (mais rápido perto do Núcleo), só stats base por DNA | Custo de dominar, limite de população, vários creeps na mesma célula | M1 (domínio) · M1.5 (visão) · M2 (HP, nome) · M2.5 (level, skills) · M3 (genética) |
-| [03 Economia](gdd/03-economia-e-logistica.md) | Transporte físico; dois recursos no M1: **matéria** (pesada, renovável, perto da base) e **cristal** (leve, valioso, esgotável, disputado); ritmo de coleta por recurso (cristal: 1 unidade a cada 5 s, matéria: 1 por segundo); imposto votado; **no M2:** extorsão física (a carga da vítima até o que cabe na bolsa do agressor), saque dos mortos e **despojo** no chão | Moeda cunhada × recurso; sumidouros; papel e esgotamento do cristal (~10 h de 72; medido no M2) | M1 · M1.5 · M2 · M3 |
-| [04 Governança](gdd/04-governanca.md) | Votação com níveis de autoridade (bots podem decidir / só humanos / unanimidade); representantes em times grandes | Quais decisões existem, quórum, prazo, voto delegado | M3 |
-| [05 Tribos](gdd/05-tribos-e-diplomacia.md) | Jungle com monstros e tribos neutras que podem virar aliadas ou rivais; **errantes** (monstros que vagam e reaparecem cada vez mais) no M2; **chefões** com buff logístico e um item raro no M2.5 | As tribos: relação, quests, aliança | M2 · M2.5 · M4 |
-| [06 Batalhas](gdd/06-batalhas.md) | Mundo e batalha são estados separados; a batalha é uma instância dedicada que devolve só eventos; **o encontro dispara a batalha**: o agressor ataca ou extorque, a vítima paga, recusa ou foge (a chance de escapar vem da velocidade, da carga e do terreno); salvo-conduto depois de pagar; lados, não grupos (2+ lados, entrada no meio da luta); combate experimental e configurável, com um laboratório de batalha; até a junção, a luta se resolve por um sorteio descartável | A "bolha", a duração da batalha, o tempo do mundo durante a luta, a regra de combate | M2 · M2.5 |
-| [07 Piloto automático](gdd/07-piloto-automatico.md) | Configurável por creep; persiste depois do domínio; no M1, regras declarativas `condição → ação`; no M1.5, decide só pelo que o time sabe, com a ação **explorar** e o preset batedor; o coletor escolhe o depósito pelo tempo de viagem; **no M2:** posturas de encontro (inimigo à vista, abordar, pagar, lutar, fugir) e o preset salteador | Script em sandbox (fase 2, M4), piloto por grupo | M1 · M1.5 · M2 · M4 |
-| [08 Crônica, chat e console](gdd/08-cronica-chat-e-console.md) | A crônica narra os encontros e os eventos do jogo (o `sim` emite eventos, o cliente os narra com modelos de frase, voz pelo DNA, sem LLM); chat livre; linha de comando no chat (verbos no estilo do BYOND que viram os mesmos comandos); macros de cliente com rate limit | Canais, sintaxe dos verbos, onde as macros ficam, moderação | M2 |
+| [01 Mundo e mapa](gdd/01-mundo.md) | Mundo persistente de dias (hipótese: 3); times de 3; vitória = destruir a base inimiga; início "fundação"; **fog of war** (névoa negra, pedras bloqueiam a visão, memória do time, três estados na tela); **no M2:** construções com HP, o inimigo à vista com nome e HP, o fim mínimo (empate quando o relógio acaba); **o fim do mundo como arco:** atos com gatilhos, a corrupção do cristal esgotado, o ponto sem volta, a vitória pírrica, ramos dentro da corrupção, o mestre que conduz o arco com limites, o segredo na instância | Entrar no meio da partida, onde se pode construir, rio como rota; **a moldura da saga** (em análise) | M1 · M1.5 · M2 · O arco do mundo, A jungle hostil, As lendas |
+| [02 Creeps e domínio](gdd/02-creeps-e-dominio.md) | Herói = creep dominado; 1 domínio por jogador; DNA = forma inata; morte permanente; inventário; os 3 DNAs se equivalem na economia; **visão por DNA**; **no M2:** nome no estado, HP que persiste e regenera, stats base por DNA; **a progressão híbrida** (o DNA dá uma skill natural, os itens dão as outras, o level com peso menor); **a liga de um creep líder** (piloto de grupo, recrutamento por diálogo, símbolo); títulos e laços simbólicos primeiro; dominar um creep famoso pede influência | Custo de dominar, limite de população, vários creeps na mesma célula; o retornado (em análise) | M1 · M1.5 · M2 · Os itens, Os personagens, As ligas, Os deuses |
+| [03 Economia](gdd/03-economia-e-logistica.md) | Transporte físico; **matéria** (pesada, renovável, perto da base) e **cristal** (leve, valioso, esgotável, disputado); imposto votado; **no M2:** extorsão física, saque e **despojo** no chão; **o Núcleo é a forja e o cofre** dos itens; os tributos das tribos no tesouro do time, numa caravana; **o recurso do deus** (nasce dos feitos dos fiéis, acelerado por oferendas e rituais) | Moeda cunhada × recurso; sumidouros; o papel do cristal (uma rodada própria) | M1 · M1.5 · M2 · Os itens, Os deuses, O time |
+| [04 Governança](gdd/04-governanca.md) | Votação com níveis de autoridade (bots podem decidir / só humanos / unanimidade); representantes em times grandes; **cada time escolhe o regime:** democracia ou meritocracia pela influência dos deuses | Quais decisões existem, quórum, prazo, voto delegado | O time |
+| [05 Tribos](gdd/05-tribos-e-diplomacia.md) | Monstros e tribos neutras que viram aliadas ou rivais; **errantes** (fatia D); **chefões** com buff ou item raro, para quem dá o último golpe; o **final feliz secreto** das tribos, que salva o mundo inteiro; **o mestre da mesa** (neutro, sem mexer no placar; um diretor-bot sempre, com a cadeira aberta a um humano); conversões e tributos | As tribos: relação, quests, aliança | M2 · A jungle hostil, O mundo vivo, O arco do mundo |
+| [06 Batalhas](gdd/06-batalhas.md) | Mundo e batalha separados; **o encontro dispara a batalha** (o agressor ataca ou extorque, a vítima paga, recusa ou foge); lados, não grupos; salvo-conduto; fuga largando a bolsa; **a regra de grade** (ataque direcional, projétil que se desvia, o ■ bloqueia, fuga pela borda, contagem de 3 s, inatividade da batalha inteira, sem relógio de duração), divertida para o dono; nenhuma regra nova antes da junção; **a arena pelo terreno do encontro**, com a direção no mundo virando a borda; a quest como batalha com objetivo | O raio da "bolha", o tempo do mundo durante a luta, a predição no cliente ([ADR-0009](adr/0009-predicao-no-laboratorio.md), `Proposed`), golpe crítico | M2 · A batalha, Cenários de quest, As ligas |
+| [07 Piloto automático](gdd/07-piloto-automatico.md) | Configurável por creep; persiste depois do domínio; regras declarativas `condição → ação`; decide só pelo que o time sabe; presets (coletor, batedor, construtor, salteador); **no M2:** posturas de encontro e, na batalha, **gambits** por creep com presets por papel e o auto-resolve; a liga como piloto de grupo | Script em sandbox; a quest do deus para o creep (proposta) | M1 · M1.5 · M2 · As ligas, Os deuses, Comunicação e automação |
+| [08 Crônica, chat e console](gdd/08-cronica-chat-e-console.md) | A crônica narra os encontros e os eventos (o `sim` emite eventos, o cliente escreve as frases, sem LLM); títulos na crônica; **o jogador entra na crônica**, e a partida termina numa história legível por quem joga às cegas; chat livre, linha de comando no estilo do BYOND e macros de cliente (sem marco) | Canais, sintaxe dos verbos, onde as macros ficam, moderação; a ficha (proposta) | M2 · Os personagens, Os deuses, Comunicação e automação |
 
 ### O ciclo do M1 (o que já se joga)
 
@@ -141,41 +144,43 @@ Os números são provisórios (candidato B da [passada de balanceamento 1](specs
 
 ## 4. Onde estamos: feito × pendente × planejado
 
-### Feito (M0, M1 e M1.5 concluídos, 2026-11-14)
+### Feito (M0, M1, M1.5 e as fatias A e B do M2, até 2026-11-20)
 
 | Área | O que existe |
 |---|---|
-| **Design** | Pilares, GDD com 8 sistemas, 7 ADRs `Accepted`, spec/plan/tasks do M1, das duas fatias do M1.5 e da fatia A do M2 (o encontro); o [brainstorm do M2–M3](brainstorm/2026-11-15-m2-m3.md) com as respostas do dono |
+| **Design** | Pilares, GDD com 8 sistemas, 8 ADRs `Accepted` e 1 `Proposed`, spec/plan/tasks do M1, das duas fatias do M1.5 e das fatias A e B do M2; os brainstorms com as respostas do dono, até o [consolidado depois do M2](brainstorm/2026-11-20-consolidado-depois-do-m2.md); o [guia da partida](GAMEPLAY.md) |
 | **Simulação** (`packages/sim`) | Mapa gerado por seed com simetria de ponto (rio, travessias, rochas); movimento em grid 4-direções com A* e cache; coleta, entrega, regeneração; produção com "repetir"; estradas célula a célula; upgrade; domínio; interpretador de regras + 3 presets; estrategista bot; métricas |
 | **Servidor** (`apps/server`) | HTTP (criar, listar, entrar), WebSocket com ack/reject, loop de tick com multiplicador, SQLite (log + snapshots + métricas), recuperação após crash, bots por time, liberação automática do domínio por inatividade/desconexão |
 | **Cliente** (`apps/client`) | Lobby; mapa SVG com pan/zoom e névoa em três estados; creeps interpolados com nomes; seleção por área (com lista quando o clique cai em vários creeps); cursor com o ícone da ação do clique; inspetor; painel do Núcleo; editor de regras; controle direto pelo botão direito; feedback visual (`+N`/`−N`, carga cheia, custo da estrada) |
-| **Harness** (`apps/cli`) | `geo sim` (mundo de 3 dias sem interface em ~13 s), `geo sweep` (varredura de parâmetros), `geo verify` (determinismo), `geo report` (relatório legível por humanos e por IA), `geo net` (banda e CPU dos deltas, com a correção do diff conferida em todo tick) |
+| **Harness** (`apps/cli`) | `geo sim` (mundo de 3 dias sem interface em ~13 s), `geo sweep` (varredura de parâmetros), `geo verify` (determinismo), `geo report` (relatório legível por humanos e por IA), `geo net` (banda e CPU dos deltas, com a correção do diff conferida em todo tick), `geo battle sweep` e `geo battle verify` (a matriz de batalhas pela IA e o determinismo da batalha) |
 | **Replay** | O navegador roda o mesmo `sim` a partir de seed + log, com linha do tempo e ✓/✗ do hash final, validado no Chromium (V8) e no WebKit (JavaScriptCore) |
 | **Testes de resistência** | `npm run soak`: um mundo inteiro bot × bot a ×360, com 5 `kill -9` + 1 SIGTERM no meio e 2 clientes WebSocket sem interface por time seguindo os deltas; termina com o mesmo hash no servidor, no Node e no navegador, e com a visão de cada cliente igual à do servidor |
 | **Rede por deltas** (M1.5, fatia 1) | Cada time recebe a própria visão como deltas numerados ([ADR-0006](adr/0006-sync-do-mundo.md)): `welcome` com a visão completa, depois só o que mudou; hash da visão a cada 60 ticks; retomada pelo buffer de 30 s; `resync` quando algo diverge; painel de rede no cliente (`?net=1`). Todos os critérios de viabilidade verdes ([viability.md](specs/m1.5-rede/viability.md)) |
 | **Fog of war** (M1.5, fatia 2, F0–F6) | **Simulação:** visão por raio (Núcleo e DNA) com linha de visão inteira (pedras bloqueiam); memória do time; a visão do time só com o que ele vê ou lembra. Caminho, estradas, piloto automático e bots decidem pelo que o time sabe; ação `explore` e preset batedor; comando sobre o que o time não conhece é recusado como id inexistente. **Rede:** o `welcome` só manda o tamanho do mapa, o terreno chega conforme o time explora, a seed de um mundo vivo não aparece e o replay só abre depois que o mundo acaba. **Tela:** nunca visto (negro), lembrado (véu) e visível; o inimigo só como a visão mostra. **Ajustes do playtest (F6):** coletor pelo tempo de viagem e que só espera a matéria se compensar, cristal mais lento, seleção por área, cursor com a ação |
+| **O encontro** (M2, fatia A, F0–F6) | Nome no estado, HP que persiste e regenera, morte permanente; abordar com a intenção (atacar ou extorquir), o diálogo com uma janela para o creep dominado, pagar, recusar ou fugir largando a bolsa; salvo-conduto, saque e despojo; a luta por um **sorteio descartável**; posturas de encontro e o preset salteador; os eventos do `sim` ([ADR-0007](adr/0007-eventos-do-sim.md)) e, no cliente, a crônica, o painel de reação e o menu de abordar |
+| **O laboratório de batalha** (M2, fatia B, F0–F7) | O pacote `packages/battle` ([ADR-0008](adr/0008-pacote-de-batalha.md)): uma simulação de batalha própria, determinística e inteira, a 20 ticks por segundo; a regra de grade; de 2 a 4 lados e entrada no meio; a IA de gambits com presets por papel e a reação configurável; o auto-resolve; três arenas (aberta, pedras, corredor). A página `lab.html`: a batalha num *worker*, rede simulada (RTT e *jitter*), opções de movimento, os sinais de ataque, golpe e erro, a sessão às cegas e o log exportável, que o `geo battle verify` refaz |
 
-**Em números** (fim do M1.5; o design do M2 não mudou código): ~15 700 linhas de código de produção, ~10 000 de
-teste, **2 188 testes** em 64 arquivos, ~270 commits.
+**Em números** (2026-11-20, fim da fatia B; linhas com comentários): ~29 400 linhas de código de produção, ~19 500
+de teste, **2 729 testes** em 107 arquivos, 448 commits no `main`.
 
 | Pacote | Código | Testes |
 |---|---|---|
-| `packages/sim` | 3 954 | 4 718 |
-| `packages/protocol` | 720 | 559 |
-| `apps/server` | 2 776 | 1 686 |
-| `apps/client` | 6 308 | 2 272 |
-| `apps/cli` | 1 922 | 793 |
+| `packages/sim` | 5 766 | 6 798 |
+| `packages/battle` | 3 231 | 4 192 |
+| `packages/protocol` | 784 | 644 |
+| `apps/server` | 3 056 | 1 972 |
+| `apps/client` (com o laboratório) | 12 728 | 4 517 |
+| `apps/cli` | 3 798 | 1 400 |
 
 ### Pendente
 
-- **Fatia A do M2, o encontro** ([spec](specs/m2-encontro/spec.md) · [plan](specs/m2-encontro/plan.md) ·
-  [tasks](specs/m2-encontro/tasks.md)): spec, ADR-0007 e plan aprovados; a implementação vai da F1 (nome, HP e
-  eventos no `sim`) à F6 (soak e a sessão do dono a ×6).
-- **As outras fatias do M2** (B laboratório de batalha, C chat/console/macros, D junção com os errantes, E cerco e
-  reparo): cada uma com spec, plan e checkpoint próprios ([ROADMAP](ROADMAP.md)).
+- **As fatias D e E do M2.** A **D, a junção**: o encontro abre a instância de batalha no lugar do sorteio, com dois ou
+  mais lados, entrada no meio, auto-resolve, os errantes e a arena escolhida pelo terreno do encontro. A **E, cerco e
+  reparo**: HP das construções, a vitória pelo Núcleo e o fim mínimo. Cada uma com spec, plan e checkpoint próprios
+  ([ROADMAP](ROADMAP.md)). A antiga fatia C (chat, console e macros) saiu do M2 para o banco de ideias.
 - **Deploy**: Dockerfile, `compose.yml` (app + Caddy + Litestream), workflow de deploy manual. Desenhado no
-  [plan §11](specs/m1-ciclo-da-riqueza/plan.md), ainda não escrito (não existe `infra/`). Não bloqueia mais o M2 nem
-  o M3 (dono, 2026-11-15): espera o combate dizer quanta latência é aceitável.
+  [plan §11](specs/m1-ciclo-da-riqueza/plan.md), ainda não escrito (não existe `infra/`). Espera a junção (dono,
+  2026-11-20): a latência aceitável e a predição no cliente se decidem com o ciclo inteiro colado.
 - **Playtest de diversão** com pessoas que nunca viram o jogo (o roteiro está em [`PLAYTEST.md`](PLAYTEST.md)). Volta
   quando o dono, que hoje julga a diversão nos playtests locais, achar o jogo divertido o suficiente.
 
@@ -185,11 +190,9 @@ O repo foi publicado em 2026-11-14, e o CI passa no GitHub.
 
 | Marco | Escopo |
 |---|---|
-| **M1.5 · A névoa** | ✅ Concluído. Deltas da visão de cada time (ADR-0006), validados localmente; fog of war: névoa negra, visão por DNA com linha de visão, memória do time, caminho e piloto pelo que o time sabe, ação explorar; clientes e bots vendo só o que o time enxerga |
-| **M2 · A emboscada** | Em cinco fatias: **A** o encontro no mundo (abordar, extorquir, pagar, lutar, fugir; HP, morte, despojo; a crônica), com a luta por um sorteio descartável; **B** o laboratório de batalha (combate configurável, IA de gambits, latência simulada); **C** chat, console e macros; **D** a junção (o encontro abre a instância de batalha, 2+ lados, auto-resolve, errantes); **E** cerco e reparo (HP de construções, vitória pelo Núcleo) |
-| **M2.5 · A jungle hostil** | Marco novo (dono, 2026-11-15): chefões com buffs e artefato; level, XP, evolução e skills; temperamentos; 3ª ação do encontro por DNA; árvores destrutíveis |
-| **M3 · O time** | 3v3, impostos, votação com níveis de autoridade, genética (a progressão foi para o M2.5) |
-| **M4 · O mundo vivo** | Jungle com tribos e diplomacia, piloto automático scriptável (JS em sandbox), construção ampla |
+| **M2 · A emboscada** | Faltam a **D** (a junção) e a **E** (cerco e reparo). A D herda a arena pelo encontro, a direção no mundo virando a borda da arena e três restrições de contrato: o lado neutro aceita um controlador (o mestre da mesa), o snapshot leva a posição e o recorte do terreno, e o inventário não supõe só matéria e cristal (os itens) |
+| **Os itens** (o próximo marco candidato) | A skill vem do item, num modelo híbrido; a forja e o cofre no Núcleo; o cristal como ingrediente; o item que cai no despojo; os presets do bot como a dica da interface. Em paralelo, se o dono quiser, **As fichas**: a identidade simbólica dos creeps e dos deuses, sem efeito mecânico |
+| **O banco por tema** | Sem número: os personagens, os deuses, as ligas, a batalha, os cenários de quest, a jungle hostil, o arco do mundo, o mundo vivo, comunicação e automação, a apresentação, o time, as lendas e o deploy ([ROADMAP](ROADMAP.md), com o grafo de dependências; a análise no [consolidado depois do M2](brainstorm/2026-11-20-consolidado-depois-do-m2.md)) |
 
 ## 5. Arquitetura
 
@@ -203,11 +206,12 @@ flowchart TB
     subgraph packages
         sim["packages/sim<br/>simulação pura e determinística<br/>estado + comandos → novo estado<br/>visão de cada time, bots"]
         protocol["packages/protocol<br/>mensagens cliente ↔ servidor<br/>validação com zod, delta da visão"]
+        battle["packages/battle<br/>batalha pura e determinística<br/>20 ticks/s, gambits, auto-resolve"]
     end
     subgraph apps
         server["apps/server<br/>Node: HTTP, WebSocket,<br/>loop de tick, SQLite"]
-        client["apps/client<br/>Vite + Preact + signals<br/>mapa SVG, painéis, replay"]
-        cli["apps/cli<br/>geo sim / sweep / verify / report"]
+        client["apps/client<br/>Vite + Preact + signals<br/>mapa SVG, painéis, replay,<br/>laboratório de batalha"]
+        cli["apps/cli<br/>geo sim / sweep / verify /<br/>report / net / battle"]
     end
     protocol --> sim
     server --> protocol
@@ -215,11 +219,15 @@ flowchart TB
     client --> protocol
     client --> sim
     cli --> sim
+    client --> battle
+    cli --> battle
 ```
 
 **A mesma simulação roda em três lugares:** no servidor (autoridade), na CLI (bots e balanceamento sem interface) e
-no navegador (replay hoje; previsão do creep dominado na batalha do M2). Esse é o motivo número um para tudo ser
-TypeScript ([ADR-0003](adr/0003-stack-typescript-node.md)).
+no navegador (o replay do mundo; a batalha do laboratório, num *worker*). Esse é o motivo número um para tudo ser
+TypeScript ([ADR-0003](adr/0003-stack-typescript-node.md)). **A batalha é uma simulação à parte**, com as mesmas
+regras de determinismo e sem dependência do `sim` ([ADR-0008](adr/0008-pacote-de-batalha.md)): a fatia D é que liga
+os dois, com o mundo abrindo a instância e aplicando os eventos que ela devolve.
 
 ### Em execução
 
@@ -282,13 +290,18 @@ Ordem fixa, em [`step.ts`](../packages/sim/src/step.ts):
 ```mermaid
 flowchart TD
     A["1. Comandos externos do tick, na ordem de seq<br/>(cada um revalidado contra o estado deixado pelos anteriores)"] --> B
-    B["2. Para cada creep, por id:<br/>dominado → mantém a ordem<br/>livre → 1ª regra verdadeira e possível vira a ordem"] --> C
-    C["3. Resolve ordens: movimento, coleta, entrega, obra de estrada"] --> D
-    D["4. Produção nos Núcleos e nascimento"] --> E
-    E["5. Regeneração da matéria"] --> V
-    V["6. Visão e memória de cada time (M1.5)<br/>o piloto do próximo tick decide por ela"] --> F
-    F["7. Acumuladores de métricas; tick++"]
+    B["2. Para cada creep, por id:<br/>dominado → mantém a ordem<br/>livre → 1ª regra verdadeira e possível vira a ordem<br/>num encontro → espera"] --> C
+    C["3. Resolve ordens: movimento, coleta, entrega,<br/>obra de estrada, abordagem"] --> EN
+    EN["4. Encontros (M2): abre, diálogo,<br/>rodadas da luta, fecha"] --> D
+    D["5. Produção nos Núcleos e nascimento"] --> E
+    E["6. Regeneração da matéria e do HP"] --> V
+    V["7. Visão e memória de cada time (M1.5)<br/>e a audiência dos eventos (ADR-0007)"] --> F
+    F["8. Acumuladores de métricas; tick++"]
 ```
+
+Os **eventos** do tick (nascimento, encontro, golpe, morte, despojo…) saem do `step` sem entrar no estado, cada um
+com a audiência de quem pode vê-lo; o cliente os transforma nas frases da crônica
+([ADR-0007](adr/0007-eventos-do-sim.md)).
 
 ## 6. Decisões de implementação que valem a conversa
 
@@ -301,11 +314,11 @@ em qualquer máquina e em qualquer engine JS. O hash (SHA-256 do JSON canônico 
 
 | Determinismo dá… | …o que permite |
 |---|---|
-| Replay = seed + log | Um mundo **bot × bot inteiro de 3 dias tem ~90 comandos no log.** O replay inteiro cabe em poucos KB |
+| Replay = seed + log | Um mundo **bot × bot inteiro de 3 dias tem ~140 comandos no log** (137 na seed 42). O replay inteiro cabe em poucos KB |
 | Recuperação = snapshot + log | Crash não perde o mundo (perde no máximo o tick em andamento) |
 | Anti-cheat estrutural | O servidor é a autoridade; o cliente só envia intenção |
 | Balanceamento com dados | 5 seeds × N variantes de parâmetro, cada mundo de 3 dias em segundos |
-| Previsão no cliente (M2) | O navegador roda o mesmo `sim` que o servidor |
+| Previsão no cliente (a decidir na junção) | O navegador roda as mesmas simulações que o servidor |
 
 **Como é garantido por ferramenta, não por disciplina:**
 
@@ -318,7 +331,7 @@ em qualquer máquina e em qualquer engine JS. O hash (SHA-256 do JSON canônico 
 - RNG xoshiro128** com `Math.imul`, e o estado do RNG faz parte do estado do mundo;
 - arrays ordenados por id, ids nunca reaproveitados, nada de `Map`/`Set` no estado (o `serialize` recusa);
 - o CI roda `geo verify` com 3 seeds: duas execuções, snapshot → restore → continua, e replay do log. Os três hashes
-  têm de bater.
+  têm de bater. A batalha tem o mesmo portão, `geo battle verify` (seeds 1, 42 e 649).
 
 > **Uma história boa:** a primeira passada de balanceamento mostrou o time 1 viajando quase o dobro do time 0 num
 > mapa *simétrico*. Não era sorte: o A* desempatava pelo menor índice de célula, e esse critério não é simétrico a
@@ -361,9 +374,10 @@ possível: **3 dias de mundo em ~13 s** (~50 µs por tick, ~20 000× o tempo rea
 os caminhos mais longos pelo terreno desconhecido custam ~2,3×, e a escolha do depósito pelo tempo de viagem (um A*
 por decisão) leva a ~3×. Aceito pelo dono nos checkpoints do fog; o orçamento é de 10 minutos.
 
-A batalha do M2 vai ter o próprio tick, de 20–30 Hz, numa instância separada
-([ADR-0001](adr/0001-mundo-e-batalha-separados.md)). O mundo nunca precisa ser rápido; a batalha nunca precisa ser
-durável.
+A batalha tem o próprio tick, de 50 ms (20 Hz), numa simulação separada
+([ADR-0001](adr/0001-mundo-e-batalha-separados.md), [ADR-0008](adr/0008-pacote-de-batalha.md)). Uma luta 3 × 3 inteira
+pelo auto-resolve (2 400 ticks) custa ~41 ms, e o `geo battle sweep` roda 9 200 batalhas em ~45 s. O mundo nunca
+precisa ser rápido; a batalha nunca precisa ser durável.
 
 ### 6.6 Cliente: Preact + SVG, e o navegador como engine
 
@@ -372,9 +386,13 @@ durável.
 - **Interpolação um estado atrás:** o creep desliza entre os dois últimos estados recebidos com
   `requestAnimationFrame`, então 1 mensagem por segundo ainda parece movimento contínuo.
 - **HTML para os painéis:** o editor de regras, o inspetor e o painel do Núcleo são formulários. HTML/CSS é o melhor
-  toolkit de UI que existe, e este jogo (e mais ainda o M3, com votação e governança) é pesado em UI.
-- **Bundle:** 124 KB (45 KB gzip) + 10 KB de CSS + uma fonte de 10 KB. O replay carrega sob demanda (103 KB, 31 KB
-  gzip).
+  toolkit de UI que existe, e este jogo (e mais ainda o tema "O time", com votação e governança) é pesado em UI.
+- **Bundle:** 142 KB (49 KB gzip) + um pedaço compartilhado de 17 KB (7 KB gzip) + 12 KB de CSS + uma fonte de
+  10 KB. O replay carrega sob demanda (108 KB, 33 KB gzip). O laboratório é outra página, `lab.html` (60 KB, 19 KB
+  gzip, mais o *worker* da batalha, 28 KB).
+- **O laboratório** desenha a arena também em SVG. A batalha roda num *worker*, atrás de um canal com atraso e
+  *jitter* simulados, como seria a rede; a tela interpola os passos e mostra os sinais de ataque, golpe, erro, morte
+  e fuga.
 - **A névoa** é uma camada SVG entre o mundo e os creeps: o nunca visto em negro e o lembrado sob um véu, cada um
   num único `<path>` de faixas por linha, refeito só quando o que o time conhece ou vê muda. O terreno é desenhado
   a partir do que o time conhece; o replay mostra o mundo inteiro, sem névoa.
@@ -479,15 +497,18 @@ JSON cru).
 5. **Memória:** o estado de um mundo tinha ~50 KB no M1; com o fog, um snapshot tem ~90 KB, dos quais ~66 KB são a
    memória dos dois times. O processo fica em ~130–215 MB, quase todo base do V8.
 
-**A batalha do M2 é outra conversa.** A 20–30 Hz, com latência importando, o delta em JSON a 1 Hz não basta. Lá
-entram deltas mais frequentes, provavelmente binário, e **previsão no cliente** para o creep dominado (o motivo de
-o `sim` rodar no navegador). WebTransport/WebRTC só se o head-of-line blocking do TCP aparecer na medição.
+**A batalha é outra conversa.** A 20 Hz, com latência importando, o delta em JSON a 1 Hz não basta. O laboratório
+(fatia B) preparou o lado de dentro: a batalha roda num *worker*, atrás de um canal com RTT e *jitter* simulados, e o
+grupo 7 do [PLAYTEST](PLAYTEST.md) compara as opções de movimento a 0 e a 150 ms. A **predição do próprio creep**
+está proposta como opção de experimento ([ADR-0009](adr/0009-predicao-no-laboratorio.md), `Proposed`). A rede real
+da batalha, a latência aceitável e o deploy se decidem na junção (fatia D), com o ciclo inteiro colado.
+WebTransport/WebRTC só se o head-of-line blocking do TCP aparecer na medição.
 
 ```mermaid
 flowchart LR
     A["M1<br/>estado completo em JSON<br/>~27 KB por tick"] --> B["M1.5 rede ✅<br/>delta da visão do time<br/>~230 B/s, numerado"]
     B --> D["M1.5 fog ✅<br/>a visão do time encolhe;<br/>o terreno chega conforme se explora"]
-    B --> C["M2 · batalha<br/>a decidir nas fatias B e D<br/>20–30 Hz + previsão do creep dominado"]
+    B --> C["M2 · batalha<br/>laboratório ✅ com rede simulada<br/>a rede real na junção (D)"]
     style B fill:#2e7d32,color:#fff
     style D fill:#2e7d32,color:#fff
 ```
@@ -512,16 +533,18 @@ Segundo, honestidade sobre o histórico: **as engines prontas não aparecem como
 | **A mesma simulação em servidor, CLI e navegador** | Com Unity, o servidor vira um processo da engine por mundo (headless), bem mais pesado que um `WorldHost` de ~50 KB. A CLI de balanceamento também |
 | **Navegador primeiro** | Abrir um link e jogar. Unity Web gera builds de vários MB e carrega devagar; Unreal não exporta mais para a web desde 2019. Aqui: ~40 KB gzip de JS |
 | **Visual 2D geométrico** | Formas e cores, sem sprites, animação esquelética ou partículas. O renderizador de uma engine acrescenta pouco |
-| **Jogo pesado em UI** | Editor de regras, painéis, (M3) votação e governança. HTML/CSS é muito melhor nisso que a UI de qualquer engine |
+| **Jogo pesado em UI** | Editor de regras, painéis, (mais adiante) votação e governança. HTML/CSS é muito melhor nisso que a UI de qualquer engine |
 | **Tudo é texto** | Código, testes, parâmetros, relatórios. Diff legível, CI simples, e é o formato em que o desenvolvimento assistido por IA rende mais (a seção 10 explica por que isso importa aqui). Cenas e prefabs de editor são binários ou YAML difíceis de revisar |
 | **Custo e licença** | Zero dependências pesadas; o backend inteiro é Node + `ws` + `better-sqlite3` |
 
 ### Onde uma engine seria mais produtiva (e seria honesto admitir)
 
-- **A batalha do M2.** Combate em tempo real é o território das engines: colisão, animação, efeitos, input, áudio,
-  câmera, profiler. Vamos escrever à mão coisas que a Unity ou a Godot dão prontas, e o *game feel* de uma luta é
-  difícil de acertar em SVG puro. Talvez o SVG nem aguente: um combate com centenas de entidades e efeitos
-  provavelmente pede **Canvas/WebGL** (o pilar 6 já prevê "SVG/Canvas"), e isso ainda não foi medido.
+- **A batalha.** Combate em tempo real é o território das engines: colisão, animação, efeitos, input, áudio,
+  câmera, profiler. O laboratório escreveu à mão coisas que a Unity ou a Godot dão prontas (a interpolação dos
+  passos, os sinais de golpe e de erro, o teclado com a contagem, o canal com latência simulada), e o *game feel*
+  levou duas rodadas de ajustes do dono (F6 e F7). Até aqui, a grade em SVG ficou divertida, com até 4 lados e 5
+  creeps por lado. Um combate com centenas de entidades e efeitos (as ligas sonham com 10 × 10 × 10) provavelmente
+  pede **Canvas/WebGL** (o pilar 6 já prevê "SVG/Canvas"), e isso ainda não foi medido.
 - **Netcode.** Delta por propriedade, relevância por cliente (o que cada um pode ver), sequência, retomada e
   confiabilidade sobre UDP vêm prontos na replicação da Unreal, por exemplo. Aqui, cada peça é escrita e testada por
   nós, e algumas só aparecem quando alguém de fora pergunta (foi o que levou ao
@@ -538,9 +561,9 @@ Segundo, honestidade sobre o histórico: **as engines prontas não aparecem como
 | Alternativa | O que daria | Por que não (ou não ainda) |
 |---|---|---|
 | **Godot** (web export) | Engine leve e aberta, export web menor que o da Unity, bom para a batalha | O servidor persistente, o determinismo e o replay continuam sendo escritos à mão, e o servidor viraria um processo Godot headless |
-| **Phaser / PixiJS** | Renderização 2D em Canvas/WebGL, com sprites e partículas | Candidatos reais **para a batalha do M2**, se o SVG não der conta. Não muda o resto da arquitetura |
+| **Phaser / PixiJS** | Renderização 2D em Canvas/WebGL, com sprites e partículas | Candidatos reais **para a batalha**, se o SVG não der conta na escala das ligas. Não muda o resto da arquitetura |
 | **Colyseus** (Node) | Salas, reconexão e sync de estado com delta binário, prontos | O modelo dele é sincronizar o estado mutável, não reproduzir de seed + log; persistência de dias e replay determinístico seriam por nossa conta. O spike da rede (M1.5) testou o schema de delta dele: funciona e é 4× menor, mas ficou o diff à mão em JSON, que já cabe com folga no alvo de banda |
-| **Nakama, SpacetimeDB** | Backend de jogo pronto; o SpacetimeDB junta banco e lógica do servidor, pensado para mundos persistentes | Lock-in e um modelo de programação próprio, para um jogo que ainda está validando hipóteses. Um ponto de comparação interessante para o M4 |
+| **Nakama, SpacetimeDB** | Backend de jogo pronto; o SpacetimeDB junta banco e lógica do servidor, pensado para mundos persistentes | Lock-in e um modelo de programação próprio, para um jogo que ainda está validando hipóteses. Um ponto de comparação interessante para o mundo vivo |
 | **Control plane em Go** ([do amigo](https://github.com/vitormartins1/go-multiplayer-control-plane)) | Contas, matchmaking, sessão, ranking | Complementar, não concorrente: entra pelo contrato HTTP quando houver contas e matchmaking |
 
 ### O balanço
@@ -562,26 +585,29 @@ flowchart LR
     end
 ```
 
-A aposta é que o diferencial do jogo está na metade esquerda. O M2 é onde a metade direita vai cobrar a conta, e
-onde trocar o renderizador por Canvas/WebGL (sem mudar a arquitetura) é a primeira alavanca.
+A aposta é que o diferencial do jogo está na metade esquerda. O M2 começou a cobrar a conta da metade direita (o
+laboratório é código nosso de ponta a ponta), e trocar o renderizador por Canvas/WebGL (sem mudar a arquitetura)
+continua sendo a primeira alavanca.
 
 ## 9. Limitações conhecidas
 
 **De jogo (por design do M1 e do M1.5, ou ainda em aberto):**
 
-- Ainda não tem combate, morte nem vitória: o mundo termina por tempo. É por isso que o M1 não teve playtest de
-  *diversão*, só de legibilidade. A fatia A do M2 traz o encontro, a morte e o saque, com a luta resolvida por um
-  sorteio até a batalha real chegar (fatia D); a vitória pelo Núcleo vem na fatia E.
+- **A luta no mundo ainda é um sorteio descartável.** O encontro, a morte e o saque já existem (fatia A), e a batalha
+  de grade existe no laboratório (fatia B), mas os dois só se juntam na fatia D. A vitória pelo Núcleo vem na E; até
+  lá, o mundo termina por tempo. Nas sessões do dono, a luta por sorteio não compensa o risco, e a extorsão contra o
+  bot sai quase de graça.
+- **O combate não está balanceado, de propósito:** "não se balanceia combate cru antes de skills, nível e stats"
+  (dono, checkpoint da F3 do laboratório). A IA da batalha é previsível nos corredores: um humano aprende o trajeto
+  do ●.
 - Depois do teto de população (~38–50 h de mundo), não há onde gastar: o estoque cresce sem uso. Falta um
-  sumidouro (adiado pelo dono).
+  sumidouro (adiado pelo dono). A ×6, o meio de jogo fica vazio depois de explorar (a sessão do dono na F6 do
+  encontro).
 - O cristal se esgota em ~10 h de 72, e os depósitos "disputados" quase não são disputados. A coleta mais lenta do
   M1.5 (1 unidade a cada 5 s) quase não adia isso: os bots coletam todo o cristal do mapa e terminam com ~68% dele
-  parado no estoque. Fica para o M2, quando o cristal vira o alvo da emboscada.
-- Os três DNAs se equivalem na economia, de propósito; a diferença vem com o combate.
+  parado no estoque. O papel do cristal pede uma rodada de design própria; Os itens o fazem ingrediente.
+- Os três DNAs se equivalem na economia, de propósito; a diferença está na visão e no combate.
 - Creeps não colidem: "gêmeos" andam colados na mesma célula.
-- Os nomes dos creeps são gerados no cliente a partir do id (a ordem de nascimento), o mesmo em todos os clientes e
-  no replay, qualquer que seja a visão. Como os ids também contam depósitos e obras, os últimos ~30 creeps de um
-  mundo de 3 dias ganham sufixo ("Taro II"). Na fatia A do M2, o nome passa para o estado, dado no nascimento.
 - **Num mundo só de humanos, ninguém explora sem ordem:** todo creep nasce coletor de matéria, que só explora
   quando o time não conhece depósito do recurso. É a regra (o jogador explora com o preset batedor); a observar no
   playtest com pessoas novas.
@@ -593,14 +619,14 @@ onde trocar o renderizador por Canvas/WebGL (sem mudar a arquitetura) é a prime
 
 - **Snapshots nunca podados** (~117 MB por mundo de 3 dias, com a memória do fog).
 - **Um processo para todos os mundos**, num event loop só, e uma transação por tick.
-- **Mudar o comportamento do `sim` invalida mundos em andamento:** cada mundo guarda o `SIM_VERSION` (hoje 5), e um
-  mundo de outra versão não é recuperado. Não existe migração de estado ainda.
+- **Mudar o comportamento do `sim` invalida mundos em andamento:** cada mundo guarda o `SIM_VERSION` (hoje 9), e um
+  mundo de outra versão não é recuperado. A batalha tem o próprio `BATTLE_VERSION` (hoje 4). Não existe migração de estado ainda.
 - **Sem deploy:** o jogo só rodou na máquina local (WSL). O CI roda no GitHub.
 - **Mundos acelerados gastam mais banda** que o jogo a ×1 (seção 7): ~2,9 KB/s por cliente a ×36.
 - **O tick com fog custa ~3× o sem fog** (~50 µs). Folgado no orçamento; candidatos se apertar: a busca de célula
   nunca vista do estrategista dos bots e o A* da escolha de depósito.
 - **Login de convidado:** nome + token no `localStorage`, sem conta.
-- **Teto de render do SVG não medido** para a escala de uma batalha.
+- **Teto de render do SVG não medido** para a escala de uma liga.
 - O piloto automático refaz o A* a cada tick num "construtor de estrada" travado. Coube no orçamento; fica anotado.
 
 ## 10. Como o projeto é construído
@@ -611,14 +637,18 @@ onde trocar o renderizador por Canvas/WebGL (sem mudar a arquitetura) é a prime
   [dashboard](dashboard/current-status.md) para revisão.
 - **Fases pequenas, uma branch por fase** (`m1/f6-server`, `m1.5/fog-f2-knowledge`…), Conventional Commits, merge
   `--no-ff`. O M1 teve 10 fases (F0–F9); a fatia de rede do M1.5, 6 (F0–F5); a de fog, 7 (F0–F6, a última com os
-  ajustes do playtest do dono).
+  ajustes do playtest do dono); a do encontro (M2 A), 7 (F0–F6); a do laboratório (M2 B), 8 (F0–F7, as duas últimas
+  com os ajustes do checkpoint do dono).
 - **Viabilidade antes de compromisso.** A troca do protocolo veio com critérios numéricos na spec (banda, CPU,
   correção, retomada), medidos por ferramenta (`geo net`, soak) e julgados pelo dono num relatório
   ([viability.md](specs/m1.5-rede/viability.md)) antes de o fog começar.
 - **Harness primeiro.** A F5 (CLI, bots, métricas) veio antes do servidor e do cliente. A primeira passada de
   balanceamento aconteceu sem nenhuma interface gráfica, com relatórios em Markdown legíveis por humanos e por IA.
-- **Desenvolvido com o Claude Code.** Os ~270 commits do M0 ao M1.5 (dois dias de trabalho, 2026-11-13 e 14) e do
-  design do M2 (2026-11-15) são co-autorados com o Claude. O [`CLAUDE.md`](../CLAUDE.md) e as skills em `.claude/skills/` (commit, fase, ADR, GDD,
+- **Brainstorm → consolidado → rodada.** As ideias do dono entram em `docs/brainstorm/` com a análise do agente;
+  depois vem um consolidado com expectativa × realidade e as perguntas em grupos, que o dono responde. Só então o
+  GDD e o ROADMAP mudam, e o que o dono pede para estudar antes fica marcado como em análise.
+- **Desenvolvido com o Claude Code.** Os 448 commits do `main`, do M0 à fatia B do M2 (2026-11-13 a 20), são quase
+  todos co-autorados com o Claude. O [`CLAUDE.md`](../CLAUDE.md) e as skills em `.claude/skills/` (commit, fase, ADR, GDD,
   fatia) codificam o fluxo; o dono decide o design e aprova cada portão. É um dos motivos de "tudo é texto" pesar
   tanto na seção 8.
 
@@ -627,9 +657,9 @@ onde trocar o renderizador por Canvas/WebGL (sem mudar a arquitetura) é a prime
 **É um MOBA?**
 Não. Do MOBA vêm os creeps, a ideia de dominar um deles e a luta curta em tempo real, mas a batalha é o tempero: o
 prato é o mundo persistente, a logística e os encontros no caminho. Um jogador que nunca entra numa luta ainda decide
-a partida pela economia, pelas rotas e pelas regras que deixa para os creeps (pilar 1). A regra de combate nem está
-decidida: o laboratório de batalha do M2 vai experimentar variantes (em grade, como os jogos de ação do BYOND, ou
-livre) até achar a mais divertida.
+a partida pela economia, pelas rotas e pelas regras que deixa para os creeps (pilar 1). A primeira regra de combate, a de
+grade (como os jogos de ação do BYOND), saiu do laboratório de batalha e agradou ao dono; outras (a livre, a forja)
+só depois da junção.
 
 **Por que não usar float e pronto?**
 Porque o replay no navegador tem de dar o mesmo hash do servidor. `Math.sin` e companhia podem diferir entre V8 e
@@ -651,7 +681,7 @@ levou 1,3–9 s, o hash final bateu com o do replay e os clientes conectados ret
 **Por que tick de 1 segundo?**
 Porque o mundo é de logística, não de reflexo: creeps andam 2–5 células por minuto. O tick lento deixa a simulação
 barata o bastante para rodar ~20 000× mais rápido na CLI. O que precisa de reflexo vai para a batalha, com tick
-próprio.
+próprio (50 ms).
 
 **Por que Node e não Bun / Go / Rust?**
 Node pela maturidade em processos que rodam por dias; o servidor só usa Node no adaptador, então trocar por Bun é
@@ -667,21 +697,23 @@ isoladamente ([ADR-0003](adr/0003-stack-typescript-node.md)).
 ```bash
 nvm use                                 # Node 26
 npm install
-npm run check                           # typecheck, lint, format, 2 188 testes
+npm run check                           # typecheck, lint, format, 2 729 testes
 npm run geo -- sim --seed 42 --days 3   # um mundo de 3 dias bot × bot, com report.md em runs/
 npm run geo -- verify --seed 42         # determinismo: 3 caminhos, o mesmo hash
 npm run geo -- net --seed 42 --days 3   # banda e CPU dos deltas da visão, com o diff conferido em todo tick
 npm run dev:multi -- --clients 2 --net  # servidor + um mundo + uma aba por jogador, com o painel de rede
 npm run soak                            # teste de resistência (~12 min)
+npm run lab                             # o laboratório de batalha (lab.html)
+npm run geo -- battle sweep            # 9 200 batalhas pela IA em ~45 s, com battle.md em runs/
 ```
 
 | Para… | Leia |
 |---|---|
 | Saber onde estamos agora | [`dashboard/current-status.md`](dashboard/current-status.md) |
-| Entender o jogo | [`PILLARS.md`](PILLARS.md) → [`gdd/`](gdd/README.md) → [`GLOSSARY.md`](GLOSSARY.md) |
+| Entender o jogo | [`GAMEPLAY.md`](GAMEPLAY.md) (a partida contada) → [`PILLARS.md`](PILLARS.md) → [`gdd/`](gdd/README.md) → [`GLOSSARY.md`](GLOSSARY.md) |
 | Entender as decisões técnicas | [`adr/`](adr/README.md) |
 | Ver como o M1 foi especificado e construído | [`specs/m1-ciclo-da-riqueza/`](specs/m1-ciclo-da-riqueza/spec.md) (spec, plan, tasks, balance) |
 | Ver o M1.5 | [`specs/m1.5-rede/`](specs/m1.5-rede/spec.md) (com o [relatório de viabilidade](specs/m1.5-rede/viability.md)) · [`specs/m1.5-fog/`](specs/m1.5-fog/spec.md) |
-| Ver o M2 | [brainstorm do M2–M3](brainstorm/2026-11-15-m2-m3.md) · [`specs/m2-encontro/`](specs/m2-encontro/spec.md) (fatia A) |
+| Ver o M2 | [brainstorm do M2–M3](brainstorm/2026-11-15-m2-m3.md) · [`specs/m2-encontro/`](specs/m2-encontro/spec.md) (fatia A) · [`specs/m2-laboratorio/`](specs/m2-laboratorio/spec.md) (fatia B) |
 | Jogar um playtest | [`PLAYTEST.md`](PLAYTEST.md) |
-| O que vem depois | [`ROADMAP.md`](ROADMAP.md) |
+| O que vem depois | [`ROADMAP.md`](ROADMAP.md) · [consolidado depois do M2](brainstorm/2026-11-20-consolidado-depois-do-m2.md) |
