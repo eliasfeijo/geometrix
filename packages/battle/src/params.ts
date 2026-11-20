@@ -66,7 +66,12 @@ const schema = {
    * by the participant's reaction (spec D20).
    */
   ai: { easy: reaction, normal: reaction, hard: reaction },
-  gambits: { maxRules: positive },
+  /**
+   * `meleeBerthSteps`: a ranged action's way keeps this many steps (around
+   * rock) from a melee enemy when it can (checkpoint C12: the corner bait);
+   * 0 turns it off.
+   */
+  gambits: { maxRules: positive, meleeBerthSteps: nonNegative },
   limits: { maxSides: positive, maxPerSide: positive },
 } as const satisfies Schema;
 

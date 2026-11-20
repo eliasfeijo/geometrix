@@ -38,6 +38,6 @@
     "normal": { "decisionMs": 250, "decisionJitterMs": 100 },
     "hard": { "decisionMs": 100, "decisionJitterMs": 50 }
   },
-  "gambits": { "maxRules": 8 },
+  "gambits": { "maxRules": 8, "meleeBerthSteps": 3 },
   "limits": { "maxSides": 4, "maxPerSide": 5 }
 }

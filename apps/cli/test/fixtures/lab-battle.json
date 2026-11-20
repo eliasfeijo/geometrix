@@ -123,7 +123,7 @@
       "normal": { "decisionMs": 250, "decisionJitterMs": 100 },
       "hard": { "decisionMs": 100, "decisionJitterMs": 50 }
     },
-    "gambits": { "maxRules": 8 },
+    "gambits": { "maxRules": 8, "meleeBerthSteps": 3 },
     "limits": { "maxSides": 4, "maxPerSide": 5 }
   },
   "ticks": 257,
@@ -319,5 +319,5 @@
       "commands": [{ "type": "intent", "id": 1, "move": null, "attack": false }]
     }
   ],
-  "finalHash": "32726a976215e1195c66ae47f2f7c5e5b0ae4a966e6fea311dc36d7f3877de48"
+  "finalHash": "e1c2001941ea0bea6cb476bf248ac03eed8428544eac8537d2dbc159a8e47ed2"
 }
