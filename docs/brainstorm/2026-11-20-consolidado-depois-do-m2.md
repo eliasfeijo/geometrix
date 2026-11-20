@@ -2,7 +2,7 @@
 
 > **Status:** consolidação do agente (2026-11-20), pedida pelo dono. **Rodada 1 respondida (§0); rodada 2 respondida
 > (§10.1); a moldura da saga está em análise, sem decisão (§11); rodada 3 (o papel do jogador) respondida
-> (§12.7).** O documento junta a
+> (§12.7); rodada 4 (a fidelidade, os únicos e as lendas) em §13.** O documento junta a
 > [proposta do ROADMAP](2026-11-20-roadmap-depois-do-m2.md) e as quatro levas de ideias do dia, registra a 5ª leva
 > e faz a análise fria pedida: expectativa × realidade, benefícios × trade-offs e uma recomendação por ideia. **As
 > perguntas foram refeitas aqui** (§7), em quatro grupos, só com o que é decisão do dono. As perguntas numeradas das
@@ -18,6 +18,7 @@
 | 6ª | este arquivo, §8 | Os deuses (Black & White), o karma, a main quest line secreta, os tributos e a influência |
 | 7ª | este arquivo, §11 | A moldura da saga: a torre, a convocação, os sussurros, o retornado |
 | 8ª | este arquivo, §12 | O papel do jogador: os kits divinos por estilo, o ritmo dos três dias, os portais, salvar o mundo perdendo a guerra |
+| 9ª | este arquivo, §13 | A ficha velada e a fidelidade, os únicos disfarçados, o ramo do retornado, a lenda do portal, comprar informação |
 
 ## 0. Respostas do dono (rodada interativa, 2026-11-20)
 
@@ -832,3 +833,214 @@ refinou o karma.**
 - **O retornado ganha um segundo papel:** ele adianta o fim, e a relação com ele também pode salvar o mundo. O
   retornado como creep continua em análise (§11.2).
 - **Nada muda no M2:** a fatia D e a E seguem como estão, e o próximo marco candidato continua Os itens.
+
+# Rodada 4: a fidelidade, os únicos e as lendas
+
+## 13. A 9ª leva: a ficha velada, a fidelidade, os únicos e a lenda do portal
+
+> **Nada aqui está decidido.** A análise junta a leva às decisões das rodadas 1 a 3 e termina nas perguntas da rodada
+> 4 (§13.6). **Guarda de escopo:** tudo é dos temas "Os deuses", "O arco do mundo", "O mundo vivo" e "As lendas", sem
+> marco. Nada muda no M2 (a fatia D e a E) nem no próximo marco candidato (Os itens).
+
+### 13.1 O pedido [dono]
+
+- **A ficha como a "tela do sistema" dos manhwas.** Um creep com pouca fidelidade precisa ser **persuadido** para
+  mostrar a ficha (os stats e os detalhes pessoais), e pode esconder ou omitir partes, que só aparecem a partir de um
+  nível de fidelidade.
+- **Os creeps especiais** (o retornado e outros personagens únicos que podem aparecer nos ramos da história principal,
+  nos atos I, II e III) **manipulam a ficha** para esconder a identidade e se disfarçar entre os creeps comuns de uma
+  tribo.
+- **O retornado, como exemplo:** quer salvar o mundo, mas sofre de ansiedade e tenta **apressar os atos em segredo**,
+  porque já sabe o que vai acontecer. Leva os times a se matarem na guerra ("escravos de deuses merecem morrer", para
+  ele, que está preso pelos poderes divinos e sempre volta no tempo até alcançar o fim da história principal; já chegou
+  perto algumas vezes, mas sempre volta para este cenário, que pode ser só o primeiro capítulo de uma história que ele
+  viveu milhares de vezes). Prefere agir sozinho ou com grupos pequenos e descartáveis, que lidera só para apressar o
+  ato III e liberar **o ramo do retornado da quest das tribos**, que se desenvolve diferente do ramo natural: o
+  retornado **dispara a salvação sozinho, mas não dá conta dela**, e cabe aos jogadores continuar a guerra ou salvar o
+  mundo.
+- **O final feliz tem de ser difícil.** Exemplo: **escoltar o xamã da tribo** para fazer o ritual em cada depósito
+  corrompido, abrindo uma **instância de quest neutra de sobreviver e proteger**, com ondas de monstros evoluídos do
+  ato III.
+- **Os creeps começam neutros e confusos**, mais fáceis de persuadir com sussurros baratos, e são **disputados pelos
+  deuses e demônios desde o começo**. O sussurro tem um valor de base, que sobe com os stats e a influência do creep.
+  Cada creep tem o seu **critério de alinhamento kármico e o seu temperamento**, que mudam as chances de persuasão,
+  conversão e domínio. Cada ação divina que gera uma crônica divina pesa diferente na fidelidade de cada creep.
+- **Demônio não é destruidor.** Ser demônio (temporário, para jogadores e bots que interpretam um deus maligno) não
+  quer dizer que o objetivo é destruir o mundo: deuses e demônios **estão se entretendo** ("que é a realidade, os
+  jogadores querem se divertir"). Cada um tem um **objetivo individual dinâmico**, pelo estilo, pelo kit e pela crônica
+  divina, que evolui com as ações, para cada partida ser única e o jogador sentir o poder se acumulando do ato I para o
+  II. O ato III é **a marcha para o fim do mundo**, e o mestre define (de forma limitada) um ramo apropriado para a
+  partida, **dentre o que a crônica permitir** (ex.: o retornado morto cancela um ramo).
+- **A lenda neutra do portal.** Primeiro: uma lenda por time, num portal perto dele; o primeiro creep (de qualquer
+  time) que interage com ela pode dialogar, persuadir, converter e as outras ações amigáveis, neutras ou hostis. A
+  lenda é **experiente**: não se converte fácil como um creep do Núcleo. Pelos traits e pela conversa, pode ficar
+  **hostil** (contra um creep ou contra um time inteiro) ou **converter-se** e virar fiel, trazendo **o seu item e as
+  suas habilidades únicas** ao time que a persuadiu. Isso só no primeiro diálogo, quando ela está totalmente neutra, ou
+  depois que ela aniquila o creep ou o time hostil. **Na luta, antes de se converter, ela ataca todos os times.** Os
+  outros neutros se afastam dela por instinto, menos os chefões e as elites. Convertida, ela **vira dominável**, com um
+  **kit de lenda** único (de início, ~6), e sorteia-se um **kit de quest** correspondente, que pode mudar o rumo do ato
+  III, talvez com um final feliz pela quest das lendas. **Depois, refletindo:** três lendas para três times é lenda
+  demais e conveniente demais; melhor **uma lenda só, no centro do mapa**, quando o portal abre no ato III.
+- **Pedir ou comprar informação** no diálogo do encontro, com neutros ou aliados. O informante oferece uma lista de
+  informações incompletas ("o creep X, pelo título mais recente ou de mais renome, foi visto há Y horas perto do lugar
+  Z", sem dizer os valores, só a dica do que pode ser comprado e o preço). O jogador compra, tenta uma **abordagem
+  agressiva** (que pode comprometer a diplomacia com uma tribo neutra) ou uma **persuasiva** (gastando recurso divino).
+- **Milagre ou maldição.** As intervenções divinas causam reações mistas em quem testemunha. Do ato II em diante, até
+  um sussurro pode ser visto como um **incômodo** e tirar influência, assim como pedir para ver a ficha ou oferecer
+  quests de pouca recompensa, quando o creep não tem fidelidade suficiente, quando o jogador não tem influência para
+  aquele creep, ou quando é um **único**, que não se comporta como os comuns.
+- **Os únicos** se convertem completando quests específicas durante a partida, e costumam vir com **um item que
+  complementa ou potencializa a habilidade nativa do DNA**. Viram alvo da disputa entre deuses, ou alvo a exterminar
+  quando a tribo é incompatível com o karma do deus, e podem ficar hostis contra os fiéis dele pela crônica. Ex.: o
+  karma é incompatível, mas a crônica tem um evento em que um fiel ajudou um creep da tribo, e o líder decide tratar o
+  deus como neutro; se ele perceber as intervenções divinas como incômodo, a hostilidade volta. **As crônicas pesam mais
+  na relação do que o karma.**
+
+### 13.2 A leitura fria [agente]
+
+**O que a leva acerta:**
+
+- **A ficha velada é a névoa da guerra aplicada às pessoas.** O jogo já tem o nunca visto, o lembrado e o visível no
+  mapa, e o servidor não manda o que o time não vê. A ficha com camadas é a mesma ideia nos creeps, e cabe no mesmo
+  lugar: a visão do time (`view.ts`) só leva as camadas que aquele deus abriu. É também um gancho de descoberta para
+  quem joga às cegas: cada camada aberta é uma pequena recompensa.
+- **O disfarce dá ao retornado uma forma jogável.** Na 7ª leva, ele "evolui em segredo", o que brigava com a ficha
+  legível (§11.2). A ficha que mente resolve isso por dentro: os números existem, mas a ficha mostra outros. O
+  segredo vira algo que se **descobre**, não algo que se esconde do jogador para sempre.
+- **"As crônicas pesam mais que o karma"** dá peso às ações e não ao rótulo. É coerente com o karma nascer das ações
+  (rodada 2, pergunta 18) e com "simbólico primeiro": a relação **é** a crônica que o creep viveu.
+- **O ramo do retornado e a escolta do xamã reusam o que já está decidido:** a escolta é uma instância de quest (uma
+  batalha com objetivo, rodada 1, pergunta 4), e as ondas são a entrada no meio da luta, que a batalha já tem (o
+  comando `join`). O ritual em cada depósito não "limpa" a corrupção gastando recurso: **é a quest que a detém**, e o
+  decidido da rodada 3 (pergunta 37) continua.
+- **Uma lenda no centro é a correção certa.** O mapa é espelhado: o centro é a única posição justa para uma peça só.
+  Uma por time vira um bônus garantido para cada um, e a disputa some.
+- **O ramo do ato III limitado pela crônica** já é o mestre decidido (escolhe o ramo de cada ato, dentro de limites).
+  "O retornado morto cancela o ramo dele" é só a regra natural: um ramo precisa dos atores vivos. O agente adota sem
+  pergunta (§13.5).
+
+**O que a leva mistura, e vale separar:**
+
+- **A fidelidade de quem, e para quê.** "Os creeps começam neutros e são disputados pelos deuses desde o começo" pode
+  querer dizer duas coisas. (1) **A relação:** cada creep tem uma fidelidade **por deus**, inclusive os do seu time, e
+  ela muda a ficha, os sussurros e as quests que ele aceita. (2) **A lealdade:** o creep pode **mudar de time**. A
+  primeira é uma camada nova sobre a estrutura; a segunda mexe na estrutura (os times fixos com Núcleo, §11.3, e o
+  regime do time). O agente recomenda a primeira: **o time é da estrutura, a fidelidade é da relação**, e só neutros e
+  únicos mudam de lado.
+- **O domínio.** "A fidelidade muda as chances de domínio" bate no decidido da rodada 2: "dominar um creep famoso
+  pede influência; **o domínio comum não muda**". O domínio é o verbo central da camada MOBA: falhar ao pegar o
+  controle no meio de uma batalha seria frustrante. O agente recomenda: **o domínio dos creeps do time continua
+  garantido**; a fidelidade muda o custo dos sussurros, as quests aceitas e a ficha. Os neutros, os únicos e a lenda só
+  se dominam **depois de convertidos**.
+- **A ficha inteira velada esconde o que é preciso para jogar.** Se o HP, a carga e as regras do próprio creep
+  ficassem velados, o jogador de 15 min não conseguiria configurar o time. O agente recomenda **camadas**: o
+  **operacional** (forma, HP, carga, regras, estado) sempre aberto ao time; o **pessoal** (trait, origem, laços, a
+  side-quest, os stats finos) por fidelidade.
+- **O incômodo pode matar o verbo.** Se do ato II em diante qualquer sussurro tirar influência, o jogador deixa de
+  sussurrar. A leva já limita: o incômodo vem quando falta fidelidade ou influência, ou quando o alvo é um único. O
+  agente reforça: **os fiéis nunca se incomodam com o básico**, e a repetição pesa mais que o primeiro pedido.
+- **O objetivo individual não pode virar placar por deus.** Se a ambição pessoal decidir quem "ganha", o time se
+  divide, e o pilar 1 (a economia ganha a guerra, do time) se perde. O agente recomenda: a ambição conta na **história
+  do fim e na influência**, sem decidir a guerra.
+- **"Demônio" é pele.** O deus cruel chamado de demônio enquanto o karma estiver lá embaixo cabe em qualquer moldura
+  do §11, e "estão se entretendo" aproxima a leitura C (os anfitriões). A moldura continua em análise; o nome é do
+  glossário, quando ela for escolhida.
+
+**Onde raspa no decidido** (cada um pede o OK do dono para mudar):
+
+| Ideia | O decidido | Onde está |
+|---|---|---|
+| A fidelidade muda as chances de domínio | "O domínio comum não muda" (só os famosos pedem influência) | Rodada 2, §10.1 |
+| Os creeps do time disputados pelos deuses | Dois times fixos com Núcleo; "o jogador domina qualquer creep do time" | M1, GDD 02 |
+| A ficha velada | "A ficha: poucos números no topo e a crônica embaixo, aberta sob demanda" (a direção da fatia "As fichas") | §8.6, ROADMAP |
+| A lenda única converte e vira dominável | As lendas dos portais como bots neutros (rodada 3, pergunta 36) | §12.7 |
+| O item do único potencializa a habilidade do DNA | "O DNA dá uma skill natural, os itens dão as outras" (o híbrido, rodada 1, pergunta 13) | §0 |
+
+A última não raspa de verdade: um item único que reforça a skill natural cabe no híbrido. Vale registrar que o item do
+único é **a exceção** a "o mesmo efeito para todos" (5ª leva, §2.2): ele é de um personagem, não da forja.
+
+**O custo escondido: a informação comprada.** O informante vende "o que viu". Hoje a memória do mundo é **por time**
+(`TeamMemory`, `world.ts`), não por creep. O agente recomenda o caminho barato: o informante vende **o que o lado dele
+lembra** (a tribo, o time aliado), e a informação comprada **entra na memória do time do comprador como um lembrado,
+com a idade** ("visto há 3 h"). É a névoa de hoje, sem uma memória nova por creep. Chega com as tribos (o lado neutro
+da fatia D), não antes.
+
+### 13.3 A fidelidade: um esboço [agente]
+
+Só para dar forma à discussão. Os nomes, os níveis e os números são ilustrativos.
+
+```mermaid
+flowchart LR
+    D["Desconfiado<br/>só o operacional;<br/>sussurros caros, incomodam"] --> C["Curioso<br/>o trait e o temperamento;<br/>aceita quests pequenas"]
+    C --> F["Fiel<br/>a origem e os laços;<br/>o recurso do deus nasce dos feitos dele"]
+    F --> V["Devoto<br/>a side-quest e os stats finos;<br/>o disfarce cai"]
+    V -.->|"a crônica: abandono,<br/>maldição testemunhada"| C
+    C -.->|"incômodo repetido"| D
+```
+
+- **O que move a fidelidade:** os eventos da crônica que o creep viveu ou testemunhou (a quest cumprida e paga, o
+  milagre que o salvou, a maldição que viu cair num aliado, o abandono numa batalha), cada um com o seu peso, mais o
+  **alinhamento** e o **temperamento** dele, que dão o ponto de partida e multiplicam os pesos. O karma do deus entra só
+  como o primeiro contato.
+- **O preço do sussurro:** uma base, mais a fama do creep, mais a distância entre o alinhamento dele e o karma do
+  deus. Barato no começo, com os creeps confusos; caro nos famosos, nos únicos e na lenda.
+- **Os níveis são poucos e simbólicos primeiro:** abrem camadas da ficha e as quests aceitas, e só mudam números
+  quando o playtest pedir.
+- **No `sim`:** a fidelidade é um inteiro em ‰ por par (creep, deus), num array ordenado por id. Os pesos e os limites
+  dos níveis vão para os `params`.
+
+### 13.4 A lenda do portal e o ramo do retornado [agente]
+
+```mermaid
+stateDiagram-v2
+    [*] --> Neutra: o portal abre no ato III, no centro
+    Neutra --> Fiel: o primeiro diálogo convence
+    Neutra --> Hostil: o diálogo falha (contra um creep ou um time)
+    Hostil --> Neutra: aniquila o hostil
+    Hostil --> Morta: cai em batalha
+    Neutra --> Morta: cai em batalha
+    Fiel --> Morta: cai em batalha
+    Fiel --> [*]: o kit de lenda e o kit de quest (um ramo especial do ato III)
+    Morta --> [*]: o ramo dela se fecha
+```
+
+- **Na luta, a lenda neutra ou hostil é um lado próprio**, hostil a todos: as batalhas de 2 a 4 lados já existem. Os
+  neutros comuns fogem dela pelo piloto; os chefões e as elites, não.
+- **Os ~6 kits de lenda** se sorteiam pela seed, cada um com o seu kit de quest. O kit de quest **é um dos "ramos
+  especiais do ato III"** decididos na rodada 3: não é um quarto caminho de salvação.
+- **O ramo do retornado:** ele apressa os atos pela guerra dos outros (empurra os times um contra o outro, lidera grupos
+  pequenos e descartáveis), dispara a quest das tribos pelo ramo dele, e **não termina sozinho**. A escolta do xamã é a
+  forma do final feliz: uma instância de quest por depósito corrompido, de sobreviver e proteger, com ondas que
+  entram no meio. Difícil de propósito: o número de depósitos é o comprimento da quest.
+- **A história dele** (os ciclos, o primeiro capítulo, os deuses que o prenderam) é pele, e entra na análise da moldura
+  (§11): conta bem na leitura B (a torre), em que ele já atravessou andares.
+
+### 13.5 O que o agente decide ou propõe sem perguntar [agente]
+
+- **A crônica limita os ramos do mestre:** um ramo precisa dos atores vivos; o retornado ou a lenda mortos fecham o
+  ramo deles. Coerente com o mestre decidido.
+- **A fatia "As fichas" nasce com camadas** no formato (o operacional e o pessoal), todas abertas ao próprio time,
+  até o tema "Os deuses" trazer a fidelidade. Assim a ficha velada não pede outra ficha.
+- **O disfarce nunca é perfeito:** o único tem a ficha falsa, mas o comportamento e a crônica deixam pistas ("um ▲ da
+  tribo que nunca erra o tiro"). É o "legível às cegas" (rodada 2, pergunta 31).
+- **Toda mecânica nova vem com o seu bot:** o deus-bot sussurra, compra informação e disputa a lenda, como o
+  estrategista faz hoje com as regras.
+- **A ordem dos temas:** a ficha com camadas (As fichas) → a fidelidade e o incômodo (Os deuses) → a informação (O
+  mundo vivo, com as tribos) → os únicos, o retornado e a lenda (O arco do mundo).
+
+### 13.6 As perguntas da rodada 4
+
+Só o que é decisão do dono, em três grupos:
+
+| # | Grupo | Pergunta | Recomendação do agente | Alternativas |
+|---|---|---|---|---|
+| 39 | A fidelidade | **Quem tem fidelidade, e ela muda o time?** | **Cada creep tem uma fidelidade por deus**, inclusive os do time; ela **não muda o time**: só neutros e únicos mudam de lado | Só neutros têm fidelidade; os creeps do time podem desertar |
+| 40 | A fidelidade | **A fidelidade e o domínio** | **O domínio dos creeps do time continua garantido**; a fidelidade muda os sussurros, as quests e a ficha. Neutros, únicos e a lenda só se dominam depois de convertidos | O domínio vira uma chance pela fidelidade, para todos |
+| 41 | A fidelidade | **A ficha velada** | **Em camadas:** o operacional sempre aberto ao time; o pessoal por fidelidade. Pedir para ver é uma ação, e pode incomodar | Tudo velado; nada velado, só os únicos mentem |
+| 42 | A fidelidade | **O disfarce dos únicos** | **A ficha mente, com pistas:** cai pela fidelidade alta, por uma quest ou por testemunhar um feito dele | O disfarce perfeito até a quest dele |
+| 43 | Os deuses | **O incômodo** | **Só com quem tem pouca fidelidade** (ou quando falta influência, ou com os únicos), crescendo com a repetição e com os atos; os fiéis não se incomodam com o básico | Para todos, do ato II em diante; sem incômodo |
+| 44 | Os deuses | **A relação: a crônica ou o karma** | **A crônica:** a relação de cada creep e tribo com um deus é a soma dos eventos que viveu ou testemunhou; o karma é só o primeiro contato | O karma como a base, e a crônica corrige |
+| 45 | Os deuses | **O demônio e a ambição** | **"Demônio" é a pele do karma cruel** (temporária); cada deus tem uma **ambição** pelo kit, pela conduta e pela crônica, que evolui e conta na **história do fim e na influência, sem decidir a guerra** | A ambição dá uma vitória individual (placar por deus); sem ambição |
+| 46 | O ato III | **A lenda do portal** | **Uma lenda só, no centro**, com as regras do dono (o primeiro diálogo; hostil a um creep ou a um time; ataca todos na luta; ~6 kits); o kit de quest dela **é um dos ramos especiais do ato III** | Uma por time, perto dele; uma por time, no centro |
+| 47 | O ato III | **A escolta do xamã** | **É a forma do final feliz das tribos nos dois ramos** (o natural e o do retornado); muda quem dispara e o que já está feito | Só no ramo do retornado; outra forma para o ramo natural |
+| 48 | O mundo vivo | **Comprar informação** | **O informante vende o que o lado dele lembra; a informação entra na memória do time como um lembrado com idade**; chega com as tribos | Só uma pista em texto, na crônica; uma memória por creep |
