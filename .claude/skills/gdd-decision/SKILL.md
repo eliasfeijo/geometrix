@@ -35,6 +35,8 @@ Fontes: `CLAUDE.md` (regras "Decidido × proposto × aberto", "Não invente game
 5. Procure a mesma pergunta em specs (`docs/specs/*/spec.md`, seção "Perguntas abertas") e em outros arquivos do
    GDD (`grep`), e atualize-os também.
 6. Se a decisão tiver impacto arquitetural, use a skill `adr`.
+7. Se a mecânica aparece no guia da partida (`docs/GAMEPLAY.md`), troque a marca dela (🟡 → 🟢, ou o texto, se a
+   decisão mudou a ideia). O guia não é fonte de verdade, mas fica desatualizado em silêncio se ninguém mexer.
 
 ## Acrescentar um sistema novo ao GDD
 
