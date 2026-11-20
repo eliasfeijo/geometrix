@@ -24,6 +24,16 @@
   - **A jungle que acorda:** as ondas de errantes e os chefões despertos são camadas do apocalipse, por cima da
     corrupção.
   - **Invasores de outros mundos:** lendas ([02](02-creeps-e-dominio.md)) invadem um mundo no fim, no M5 (As lendas).
+- **O mestre da mesa** (dono, 2026-11-20, na rodada do [consolidado](../brainstorm/2026-11-20-consolidado-depois-do-m2.md); tema "A jungle hostil"): um papel que
+  mantém a partida divertida para os dois times e domina creeps neutros. **É neutro e não mexe no placar:** cria
+  perigo e oportunidade iguais para quem está ativo, sem socorrer quem está perdendo (pilar 1). **Um diretor-bot
+  está sempre presente** (a curva dos errantes, crescida), **com a cadeira aberta a um humano.** Na fatia D, só uma
+  restrição: o ADR do lado neutro aceita um controlador. **Rodada 2:** o mestre também **conduz o arco do mundo**
+  (escolhe os presets, ajusta os gatilhos dentro de limites; [01](01-mundo.md)), e **o equilíbrio entre os deuses
+  cruéis e benevolentes vem das regras, medidas com bots**, não do julgamento do mestre. O cruel ganha recursos rápido
+  e **fecha portas**: as tribos ficam hostis, e o ramo do final feliz se fecha.
+- **Conversões e tributos** (dono, 2026-11-20, rodada 2): converter uma tribo é uma ação de diálogo; a tribo
+  convertida manda tributo ao **tesouro do time**, numa caravana física ([03](03-economia-e-logistica.md)).
 
 ## Proposta
 
@@ -52,6 +62,25 @@ A direção está em Decidido; o detalhe, no [brainstorm do fim do mundo](../bra
 - **Invasores:** um por time, com o mesmo orçamento de poder, cada um com o objetivo de destruir um dos times.
 - **Um lado que não é um time:** errantes, chefões, tribos e invasores. O ADR do lado neutro, na fatia D, lista
   esses quatro consumidores como restrições, sem construir nenhum antes da hora.
+
+### Reputação (ideia do dono, 2026-11-20, não aprovada)
+Detalhes no [brainstorm de itens, reputação e governança](../brainstorm/2026-11-20-itens-reputacao-governanca.md) §2.
+- **A ideia** (dono): com diálogo com neutros e quests, uma reputação que pesa nas diplomacias.
+- **Como fazer** (agente): uma leitura dos feitos da crônica, não um contador à parte, em duas camadas: a **fama**
+  de cada creep (sobe e cai; pesa no regime do time, [04](04-governanca.md)) e a **relação do time com cada tribo**
+  (a diplomacia desta seção). Extorquir derruba a relação com as tribos. Responde em parte a "como a relação com
+  uma tribo sobe ou desce" (abaixo).
+
+### O mestre da mesa: como fazer (agente, 2026-11-20; a direção está em Decidido)
+Detalhes no [brainstorm do mestre, das ligas e da arena](../brainstorm/2026-11-20-mestre-ligas-arena.md) §1.
+- **A ideia** (dono): um jogador "deus", como o mestre dos RPGs de mesa, que cuida de a partida ser equilibrada e
+  divertida para os dois times, cria oportunidades de interação quando o jogo parece lento para quem está ativo e
+  **domina creeps neutros** para lutar com as habilidades deles.
+- **Como fazer** (agente): começa como um **diretor-bot do lado neutro** (a curva dos errantes cresce até ele), com a
+  cadeira aberta a um humano; um orçamento físico que cresce quando nada acontece; ferramentas visíveis no mundo
+  (dominar um neutro, conduzir uma onda, acordar um chefão, uma caravana neutra disputável); o mandato é a interação,
+  não o placar (pilar 1). Seria um **quinto consumidor** do ADR do lado neutro. Tema "A jungle hostil" do banco
+  (proposta do ROADMAP). Aumenta o escopo do M2.
 
 ## Perguntas abertas
 - Onde exatamente fica cada chefão-buff "no caminho do inimigo": no lado do rio do inimigo, ou perto de um vau?

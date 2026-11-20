@@ -5,8 +5,9 @@ Jogo multiplayer de navegador: **mundo persistente de estratégia/economia (RTS 
 
 **Fase atual: M2 (A emboscada), fatias A (o encontro, `docs/specs/m2-encontro/`) e B (o laboratório de batalha,
 `docs/specs/m2-laboratorio/`, `packages/battle`, `apps/client/src/lab/`) concluídas.** A próxima frente é a fatia D
-(a junção), depois da proposta do ROADMAP depois do M2 que o dono aprova antes da spec dela (dashboard). O deploy e o
-playtest com pessoas novas não bloqueiam mais o M2 nem o M3: a diversão é julgada pelo dono nos playtests locais
+(a junção), com a arena mínima pelo encontro e as restrições de contrato da rodada do ROADMAP de 2026-11-20; a fatia C
+saiu do M2, e o próximo marco candidato é Os itens ([consolidado](docs/brainstorm/2026-11-20-consolidado-depois-do-m2.md)). O deploy e o
+playtest com pessoas novas não bloqueiam mais o M2 nem o marco seguinte: a diversão é julgada pelo dono nos playtests locais
 (ROADMAP, 2026-11-15); o deploy espera a junção (2026-11-20). O M1.5 está em `docs/specs/m1.5-rede/` e
 `docs/specs/m1.5-fog/`; o M1, em `docs/specs/m1-ciclo-da-riqueza/` (o histórico fica nos `tasks.md`; a estrutura do
 repositório, no `plan.md` §1 do M1).
@@ -85,7 +86,8 @@ funções transcendentais, `Date`, `for…in` e literais de ponto flutuante. Al�
   serem validados em playtest ou simulação.
 - **Primeiro o concreto, depois o genérico.** Nenhuma abstração de "engine" sem uma necessidade do jogo. O código
   deve ser modular para que partes possam virar biblioteca depois, mas sem generalização especulativa.
-- **Guarda de escopo.** Todo sistema novo entra no GDD com o marco do `ROADMAP.md` em que aparece. Avise quando
+- **Guarda de escopo.** Todo sistema novo entra no GDD com o marco do `ROADMAP.md` em que aparece, ou com o tema do
+  banco de ideias, se ainda não tem marco (o ROADMAP só numera o marco atual e o próximo). Avise quando
   uma ideia aumentar o escopo do marco atual em vez de só aceitá-la.
 - **ADRs:** ao detectar uma decisão arquitetural, rascunhe o ADR com status `Proposed`. Ele só vira `Accepted`
   com a aprovação do dono. Atualize `docs/adr/README.md`.

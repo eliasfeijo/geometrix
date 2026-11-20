@@ -104,6 +104,21 @@
       A predição no cliente pode entrar ([ROADMAP](../ROADMAP.md)).
   - **Chefão disputado** (M2.5): quando dois lados ferem o mesmo chefão, leva o buff ou o item quem dá o último
     golpe ([05](05-tribos-e-diplomacia.md)).
+  - **Rodada do consolidado depois do M2** (dono, 2026-11-20; [consolidado](../brainstorm/2026-11-20-consolidado-depois-do-m2.md)):
+    - **a arena pelo encontro, o mínimo na fatia D:** a arena é escolhida entre as três do laboratório pelo terreno
+      do encontro (perto de um vau, o corredor; de pedras, as pedras; senão, a aberta), e o snapshot leva o recorte
+      do terreno. A arena gerada pelo recorte e o tamanho por faixa de participantes ficam no tema "A batalha";
+    - **a direção no mundo vira posição na arena, nos três casos:** cada lado nasce na borda da direção em que
+      estava no mundo; quem entra no meio entra pela borda de onde vem; quem foge pela borda volta ao mundo do lado
+      correspondente do encontro. A distância mínima de hoje (a zona a 1/4 da borda) continua;
+    - **a quest com cenário é uma batalha com objetivo** (escoltar, segurar uma área, recuperar um item, sobreviver
+      a ondas), no mesmo pacote de batalha, com um modo de cenário no laboratório; tema "Cenários de quest",
+      depois dos itens;
+    - **as ligas lutam pelo piloto de grupo:** o humano controla o líder, os seguidores lutam pelos gambits na
+      formação, com até três ordens de liga ([02](02-creeps-e-dominio.md));
+    - **a fuga e a influência** (rodada 2): só a fuga do creep dominado que **abandona aliados que ainda lutam**
+      pesa contra a influência do deus. Recuar sozinho ou com o grupo continua legítimo, e a fuga de todos por
+      inatividade da batalha não conta.
 
 ## Proposta
 Ver [ADR-0001](../adr/0001-mundo-e-batalha-separados.md).
@@ -134,7 +149,10 @@ sequenceDiagram
   papel de estrategista ou comandante, como no combate do Mount & Blade: mesmo dominando um creep só, ele orquestra
   o time pela arena (emboscadas, o terreno a favor, de acordo com os recursos militares do time), e quem entra no
   meio da luta já entra seguindo a tática que o comandante do time definiu. Hoje cada creep tem só a própria lista
-  de gambits; a tática seria do time. Aumenta o escopo do M2: não entra antes de o dono aprovar o marco.
+  de gambits; a tática seria do time. Aumenta o escopo do M2: não entra antes de o dono aprovar o marco. **Mesma
+  família das ligas** (dono, 2026-11-20; [02](02-creeps-e-dominio.md)): cada jogador lidera uma liga, e o comandante
+  dá a tática por cima delas. Na batalha, a liga teria até três ordens por tecla (comigo, segurem, no meu alvo),
+  pela análise do agente no [brainstorm](../brainstorm/2026-11-20-mestre-ligas-arena.md) §2.
 - **Anúncios de abate e de fuga** (ideia do dono, 2026-11-19, no checkpoint da F5; **sem prioridade**, junto do som):
   ao estilo do DotA e do LoL ("double kill", "rampage"), para quem assiste. O sinal visual simples de morte e de
   fuga é da tela do laboratório (F7), não daqui.

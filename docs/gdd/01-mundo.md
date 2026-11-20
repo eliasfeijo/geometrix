@@ -60,6 +60,14 @@
   - **O fim mínimo no M2, fatia E:** a vitória pelo Núcleo encerra o mundo, e o fim ganha uma tela com o resultado e
     o resumo da crônica, e o replay, marcadores dos eventos principais. **Quando o relógio acaba sem Núcleo
     derrubado, é empate**, regra provisória até o apocalipse do M2.5 substituí-la.
+- **O arco do mundo, a main quest line secreta** (dono, 2026-11-20, rodada 2 do [consolidado](../brainstorm/2026-11-20-consolidado-depois-do-m2.md) §10.1; "deus" é o nome provisório do papel do jogador, a moldura
+  da saga está em análise, §11):
+  - o fim do mundo vira **o arco**, em atos, com **gatilhos** entre eles e **presets como ramos dentro da corrupção**
+    (o apocalipse continua um só); o ramo responde à conduta dos deuses ([02](02-creeps-e-dominio.md));
+  - **o mestre escolhe o preset de cada ato** até ele começar **e ajusta os gatilhos dentro dos limites** do preset;
+    cada ajuste é um comando no log, e **o arco é revelado no fim**, com cada escolha do mestre;
+  - **o segredo mora na instância**, não no conteúdo (o repositório é aberto): qual ramo, onde, quando e quem. **A
+    história principal tem de ser entendida por quem joga às cegas**, pelo que o jogo mostra.
 
 ## Proposta
 

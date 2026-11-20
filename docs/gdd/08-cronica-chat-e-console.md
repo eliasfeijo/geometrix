@@ -26,6 +26,14 @@
   [brainstorm do fim do mundo](../brainstorm/2026-11-15-fim-do-mundo.md) §0): a crônica conta o apocalipse durante
   a partida e o final ([01](01-mundo.md)), com **humor** na vitória pírrica; e **a invasão tem crônica**, para que
   o mundo invadido saiba quem chegou e por quê.
+- **Títulos na crônica** (dono, 2026-11-20, na rodada do [consolidado](../brainstorm/2026-11-20-consolidado-depois-do-m2.md); tema "Os personagens"): quests,
+  batalhas e a crônica de cada creep dão títulos, de início só simbólicos ("O Rei Batedor, Fulano"):
+  **conquistados** (permanentes, por um feito único) e **disputados** (do melhor do mundo num feito agora; a crônica
+  conta a troca). Os laços entre creeps também aparecem só na ficha e na crônica, por ora ([02](02-creeps-e-dominio.md)).
+- **O jogador na crônica** (dono, 2026-11-20, rodada 2 do [consolidado](../brainstorm/2026-11-20-consolidado-depois-do-m2.md) §10.1; "deus" é o nome provisório do papel do jogador, a moldura
+  da saga está em análise, §11): o deus entra na crônica do mundo pelo nome, com a influência e a conduta, e a
+  partida termina numa **história** que o revela, junto do arco e das escolhas do mestre ([01](01-mundo.md)).
+  Simbólico primeiro. **A história principal tem de ser entendida às cegas**, pela crônica e pelo narrador.
 
 ## Proposta
 - **Um verbo, um comando** (agente): cada verbo do console vira um comando do mesmo vocabulário versionado, com as
@@ -40,6 +48,13 @@
 - **A crônica da invasão: o enredo** (agente): quando um mundo está morrendo, a fronteira com os outros afina e as
   fendas se abrem no ato 3. O invasor chega apresentado pela ficha da lenda (nome, DNA, mundo de origem, feitos),
   com o alvo declarado; a morte dele fica na crônica dos dois mundos.
+- **A ficha e o painel do mestre** (agente, 2026-11-20; [consolidado](../brainstorm/2026-11-20-consolidado-depois-do-m2.md) §8.6): uma ficha só para o creep e o
+  deus, com 3 a 5 números no topo e a crônica embaixo, aberta sob demanda; o painel do mestre junta o estado do arco
+  e as fichas que pesam na decisão.
+- **Kits de crônica dos traits** (ideia do dono, 2026-11-20, não aprovada;
+  [brainstorm do recrutamento, dos laços e dos traits](../brainstorm/2026-11-20-recrutamento-lacos-traits.md) §3):
+  cada trait traz uma origem e um modelo de side-quest; a crônica também lê a fama e os laços dos creeps. Mesmo
+  formato do ADR-0007: o `sim` guarda os ids e os parâmetros resolvidos, e o texto fica nos modelos do cliente.
 - **O replay para mostrar aos amigos** (agente): marcadores dos eventos principais na linha do tempo (M2, fatia E),
   e depois uma velocidade que acelera nos trechos parados e desacelera nos eventos; tudo sai da lista de eventos.
 
