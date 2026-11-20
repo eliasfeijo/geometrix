@@ -7,59 +7,61 @@
 
 ## Agora
 
-**Atualizado:** 2026-11-17
+**Atualizado:** 2026-11-20
 
 | | |
 |---|---|
 | **Marco** | **M2 — A emboscada** ([ROADMAP](../ROADMAP.md)). M0, M1 e M1.5 ✅ |
-| **Fatia** | **A — O encontro** ([spec](../specs/m2-encontro/spec.md) · [plan](../specs/m2-encontro/plan.md) · [tasks](../specs/m2-encontro/tasks.md)): ✅ 2026-11-17 (F0 a F6; o checkpoint da F6 no plan §11.2) · **B — O laboratório de batalha** ([spec](../specs/m2-laboratorio/spec.md) · [plan](../specs/m2-laboratorio/plan.md) · [tasks](../specs/m2-laboratorio/tasks.md)): F0 a F3 ✅ (a F3: a IA e o auto-resolve) |
-| **Em execução** | Nenhuma fase nesta sessão |
-| **Próxima frente** | Escolha do dono (abaixo): as fatias do M2 seguem o grafo do [ROADMAP](../ROADMAP.md) |
-| **Pode andar em paralelo** | **B F4 — O laboratório**, branch `m2/laboratorio-f4-lab` a partir de `main` (que já tem a B F3), numa outra sessão, com worktree próprio em `.claude/worktrees/` (fora do Git; o ESLint o ignora). A B não edita o dashboard nem o `CLAUDE.md`. **A B F4 mexe no cliente e na config do Vite** (2ª entrada, `lab.html`). Medições de tempo com a outra sessão rodando testes saem distorcidas |
-| **Aguardando o dono** | Qual frente vem depois da fatia A (abaixo) |
+| **Fatia** | **A — O encontro** ([spec](../specs/m2-encontro/spec.md) · [plan](../specs/m2-encontro/plan.md) · [tasks](../specs/m2-encontro/tasks.md)): ✅ 2026-11-17 · **B — O laboratório de batalha** ([spec](../specs/m2-laboratorio/spec.md) · [plan](../specs/m2-laboratorio/plan.md) · [tasks](../specs/m2-laboratorio/tasks.md)): ✅ 2026-11-20 (F0 a F7; o checkpoint da F5 em duas partes, plan §15) |
+| **Em execução** | Nenhuma fase |
+| **Próxima frente** | **D — A junção** (dono, checkpoint do laboratório, C9: nenhuma regra nova de combate antes dela, "vamos juntar o que tem"), depois da rodada do ROADMAP (abaixo) |
+| **Pode andar em paralelo** | Nada em andamento |
+| **Aguardando o dono** | (1) A [proposta do ROADMAP depois do M2](../brainstorm/2026-11-20-roadmap-depois-do-m2.md) (3 perguntas), antes da spec da D. (2) O [ADR-0009](../adr/0009-predicao-no-laboratorio.md) (`Proposed`): a predição como opção de experimento do laboratório. (3) O `gambits.meleeBerthSteps` 3 (provisório), da F7. (4) Quando quiser: o grupo 7 do [PLAYTEST](../PLAYTEST.md) (as quatro opções de movimento a 0 e a 150 ms), que alimenta a decisão da predição na D |
 | **Bloqueios** | Nenhum |
 
 ### Próximos passos
 
-As fatias do M2 seguem o grafo de dependências do [ROADMAP](../ROADMAP.md), não uma fila. Com a A ✅:
-
-1. **A B F4** (`/implement-phase M2 B F4`), em paralelo numa outra sessão com worktree próprio, branch
-   `m2/laboratorio-f4-lab` a partir de `main`. O contexto dela está no [tasks.md da B](../specs/m2-laboratorio/tasks.md)
-   (os registros da F1 a F3 e as decisões do checkpoint da F3) e no plan da B; ela não edita este dashboard.
-2. **A escolher pelo dono**, nesta sessão:
-   - a rodada de design do **papel do cristal** (liberada pelo checkpoint da A F3). Toca no achado C14 da F6: depois
-     de explorar o mapa, não há o que fazer além de coletar, e em 2,6 h nenhum time juntou um creep novo;
-   - a rodada de design da **fatia E** (cerco e reparo): se o cerco passa pela instância de batalha, a E depende da
-     D; senão, pode vir antes dela;
-   - a **spec da fatia C** (chat, console e macros), que anda em paralelo à D;
-   - a **D** (a junção, com os errantes) depende da B pronta (F4 e F5).
-3. **Achados da sessão da F6** (plan §11.2, C14), para a rodada de design que tocar neles: a luta só com sorteio é
-   arriscada demais para o retorno (o combate de verdade vem da B e da D); a extorsão contra o bot é quase de graça
-   (o ▲ paga qualquer exigência, C8); o bot não emboscou o jogador em 2h38.
+1. **A rodada do ROADMAP** ([proposta](../brainstorm/2026-11-20-roadmap-depois-do-m2.md)): o dono responde às três
+   perguntas (o formato com o marco atual, o próximo e um banco de ideias por tema; a fatia C fica ou sai do M2; o
+   próximo marco agora ou no fim do M2), e o agente reescreve o ROADMAP e as etiquetas de marco do GDD num commit
+   `docs`.
+2. **A spec da D** (skill `spec-slice`, `docs/specs/m2-juncao/`): o encontro abre a instância de batalha no lugar do
+   sorteio, com dois ou mais lados, entrada no meio da luta, auto-resolve e os errantes. Perguntas que ela herda:
+   o contrato com entrada no meio da luta (um ADR, `Proposed`), o raio da "bolha" e o tempo do mundo durante a
+   batalha (GDD 06, perguntas abertas), a predição no cliente (o ADR-0008 item 9 e o ADR-0009, com o grupo 7 do
+   PLAYTEST) e o deploy de testes, que espera a junção colada (C10).
+3. **Em paralelo, quando o dono quiser:** as rodadas de design do **papel do cristal** e da **fatia E** (cerco e
+   reparo); a **C** (chat, console e macros), se continuar no M2.
+4. **Achados das sessões** para as rodadas que tocarem neles: a luta só com sorteio não compensa o risco (a D a
+   substitui); a extorsão contra o bot é quase de graça; o meio de jogo a ×6 fica vazio depois de explorar (A F6,
+   C14); a IA da batalha é previsível nos corredores (a proposta "IA que aprende", GDD 06).
 
 ### O que a próxima frente precisa saber do código
 
-- **o salteador** (F6, C11): `raiderRules` aborda só alvos com 10 ou mais de carga, para o jogador e o bot;
-  `SIM_VERSION` 9;
-- **a crônica no cliente** (F5): `GameStore.chronicle` (eventos do time, do mais velho ao mais novo) começa do
-  `welcome.chronicle` (o servidor manda 100) e recebe os `events` de cada delta (`chronicled`); um `welcome` novo
-  (resync) recomeça. O cliente guarda as últimas `CHRONICLE_KEEP` (300). O texto sai de
-  `chronicle/narrate.ts` + `templates.ts` (variante `(tick × 7919 + index) mod n`); `plainText(narrate(e))` dá a
-  frase em texto. O `SoakClient` guarda a crônica do mesmo jeito (F6), e o soak a compara com o SQLite;
-- **o replay** guarda os eventos de cada tick simulado uma vez (`ReplayPlayer.eventsBetween`) e mostra a crônica do
-  mundo inteiro;
-- **no mapa** (F5): barra de HP, despojo, perseguição, diálogo com a janela, luta com as rodadas e o rastro da fuga
-  (`map/combat-marks.ts`, `map/encounter-layer.tsx`); o clique direito num inimigo abre o menu de abordar
-  (`panels/approach-menu.tsx`), o creep dominado num encontro abre o painel de reação (`panels/reaction-panel.tsx`);
-  a lógica pura dos dois está em `encounter-actions.ts`;
-- **a sessão contra o bot:** `npm run dev:multi -- --bot` põe o bot no Laranja e todos os jogadores no Azul (F6);
-- **screenshot com cliques:** o Chromium headless do cache do Playwright aceita o CDP
-  (`--remote-debugging-port`), e o WebSocket nativo do Node 26 basta para navegar, clicar
-  (`Input.dispatchMouseEvent`), carregar um arquivo no replay (`DOM.setFileInputFiles`) e capturar
-  (`Page.captureScreenshot`). Mudar o `value` da barra do replay e disparar `change` não faz o seek: toque a
-  ×3600 e mude a velocidade perto do tick;
-- o replay de um mundo do servidor só abre depois que ele acaba; o `geo sim` grava um `replay.json` que a tela de
-  replay abre.
+- **O pacote de batalha** (`packages/battle`, ADR-0008): puro, determinístico e inteiro, sem dependência do `sim`.
+  `setupOf` + `createBattle` → `stepBattle(state, commands)` por tick (50 ms), com os eventos (`attacked`, `hit`,
+  `missed`, `died`, `dropped`, `picked`, `joined`, `escaped`, `controlChanged`, `ended`); `battleView` é a visão
+  (a única entrada dos gambits); `BattleLog` + `replayLog` refazem uma batalha; `BATTLE_VERSION` 4. Os comandos:
+  `intent` (direção, espaço e bolsa segurados), `attackOnce`, `face`, `drop`, `pickup`, `control` (humano ou IA),
+  `join` (entrada no meio, em lado novo ou existente) e `setGambits`. A contagem de 3 s descarta os toques e vale o
+  que está segurado no fim. Números em `params/battle.json` (stats por DNA, reação por nível, gambits).
+- **A IA:** gambits (condição → ação) por participante, presets por papel (linha de frente, atirador,
+  escaramuçador, portador) e os padrões por DNA; reação sorteada pelo `rng` da batalha. **O auto-resolve** é a
+  batalha inteira pela IA, sem página: o `geo battle sweep` roda 9 200 em ~45 s (o 3 × 3 custa ~41 ms por 2 400
+  ticks, alvo 50).
+- **O laboratório** (`apps/client/src/lab/`, `npm run lab`): a batalha num *worker* (`worker.ts`), um canal com RTT
+  e *jitter* simulados (`channel.ts`), o desenho em `arena-view.tsx` com os sinais (ataque, golpe, erro, morte,
+  fuga) e as opções de movimento (`motion.ts`), o teclado em `input.ts`, o registro da sessão e a sessão às cegas.
+  É o ponto de partida da tela de batalha da junção.
+- **O encontro no mundo** (`packages/sim/src/encounter.ts`): a luta hoje é o sorteio de `fightRound`, pelo HP × DNA;
+  é o que a D troca pela instância. A crônica, o painel de reação e o menu de abordar estão no cliente (A F5).
+- **Screenshot e cliques no Chromium:** o Chromium headless do cache do Playwright aceita o CDP
+  (`--remote-debugging-port`), e o WebSocket nativo do Node 26 basta para navegar, clicar, teclar
+  (`Input.dispatchKeyEvent`), carregar um arquivo (`DOM.setFileInputFiles`) e capturar (`Page.captureScreenshot`).
+  **Suba o Vite pelo binário** (`node_modules/.bin/vite`), não pelo `npx`: matar o `npx` deixa o Vite vivo na porta,
+  servindo o código velho na rodada seguinte (F7). No replay do mundo, mudar o `value` da barra não faz o seek.
+- **A sessão contra o bot:** `npm run dev:multi -- --bot`; o replay de um mundo do servidor só abre depois que ele
+  acaba; o `geo sim` grava um `replay.json` que a tela de replay abre.
 
 **Push:** o Git do WSL não tem credencial do GitHub; o dono faz o push pelo PowerShell (`git push origin main`).
 
@@ -75,17 +77,21 @@ Só o que ainda está aberto. Ao resolver, tire daqui e registre no Histórico.
   Azul) nenhuma emboscada do bot em 2h38. A patrulha fica para depois.
 - **Achados da sessão da A F6** (C14): a luta só com sorteio não compensa o risco; a extorsão contra o bot é quase
   de graça; o meio de jogo a ×6 fica vazio depois de explorar. Para as rodadas de design seguintes.
-- **Perguntas abertas do GDD 06 e 08 que a fatia A não cobre** (duração da batalha, tempo do mundo durante a luta,
-  canais e sintaxe do chat, macros, reparo): ficam para as fatias B a E.
-- **Deploy** (quando acontecer): quem cria o mundo escolhe a seed no lobby (N9) e criar mundo deixa de ser público;
-  o snapshot com a memória do fog (117 MB de SQLite num mundo de 3 dias) passa a ser guardado compactado, com o
-  `SIM_VERSION` seguinte; os snapshots antigos são podados; o cliente ganha um link para o código-fonte (a licença
+- **O laboratório (B):** o combate cru não se balanceia antes de skills, nível e stats (C1): o ■ perde 0/100 para o
+  ● no 1 × 1, o ▲ × ● nas pedras dá 87/13, e o espelho ■ × ■ acaba sem vencedor em 12–19%. Informativos; o *jitter*
+  da reação de cada nível fica como está (dono, 2026-11-20).
+- **Perguntas abertas do GDD 06 e 08 que as fatias A e B não cobrem** (o raio da bolha, o tempo do mundo durante a
+  luta, canais e sintaxe do chat, macros, reparo): ficam para as fatias C a E.
+- **Deploy** (depois da junção, C10): quem cria o mundo escolhe a seed no lobby (N9) e criar mundo deixa de ser
+  público; o snapshot com a memória do fog (117 MB de SQLite num mundo de 3 dias) passa a ser guardado compactado, com
+  o `SIM_VERSION` seguinte; os snapshots antigos são podados; o cliente ganha um link para o código-fonte (a licença
   é a AGPL-3.0, cuja seção 13 pede oferecer o código a quem usa pela rede).
 - **Olhos novos** (quando o dono achar o jogo divertido): o playtest com pessoas que nunca viram o jogo responde de
   novo à hipótese do M1.5 (o roteiro e as perguntas de névoa estão no [PLAYTEST.md](../PLAYTEST.md)); observar se
   travam num mundo só de humanos, em que ninguém explora sem ordem (regra D3).
-- **`SIM_VERSION` (hoje 9, desde a F6 do encontro):** mundos persistidos guardam a versão. Mudou o comportamento do
-  `sim`? Suba a versão; um mundo de outra versão não é recuperado (o servidor loga e o pula).
+- **`SIM_VERSION` (hoje 9, desde a F6 do encontro) e `BATTLE_VERSION` (hoje 4, desde a B F7):** mundos persistidos e
+  logs de batalha guardam a versão. Mudou o comportamento? Suba a versão (no `sim`, um mundo de outra versão não é
+  recuperado; na batalha, a *fixture* do laboratório é refeita com um export novo da página).
 - **Testes sensíveis a tempo com duas sessões rodando:** o alvo de CPU saiu do teste do `geo net` na A F5 (falhou
   de novo sob carga; o checkpoint do `geo net` o julga). Com load alto, testes do servidor ainda passam dos 5 s do
   Vitest (3 na A F5, verdes sozinhos e na rodada seguinte). Se virar rotina, dar timeout explícito a eles.
@@ -102,7 +108,7 @@ Só o que ainda está aberto. Ao resolver, tire daqui e registre no Histórico.
 | M0 — Design | ✅ |
 | M1 — O ciclo da riqueza | ✅ 2026-11-14 |
 | M1.5 — A névoa | ✅ 2026-11-14 (rede e fog of war) |
-| M2 — A emboscada | 🟡 Fatia A ✅ 2026-11-17 · Fatia B: F0–F3 ✅, F4–F5 ⬜ · Fatias C, D, E ⬜ |
+| M2 — A emboscada | 🟡 Fatia A ✅ 2026-11-17 · Fatia B ✅ 2026-11-20 · Fatias C, D, E ⬜ (o lugar da C e o planejamento depois do M2: [proposta](../brainstorm/2026-11-20-roadmap-depois-do-m2.md), aguardando o dono) |
 | M2.5 — A jungle hostil e o fim do mundo | ⬜ (fim do mundo decidido no GDD, 2026-11-15) |
 | M3 — O time · M4 — O mundo vivo · M5 — As lendas | ⬜ |
 
@@ -168,6 +174,10 @@ Só o que ainda está aberto. Ao resolver, tire daqui e registre no Histórico.
 | M2 A — F1 Identidade, HP e eventos | ✅ Concluída, merge em `main`. Params do encontro, nomes no `sim` pelo contador de nascimentos, HP em milésimos com regeneração e `kill`, `step` devolve os eventos (`born`) com o público e `eventsFor`, nome/HP/encontro do inimigo na visão, `SIM_VERSION` 6 | [tasks.md](../specs/m2-encontro/tasks.md) · `packages/sim/src/{names,hp,events}.ts` |
 | M2 B — F3 A IA e o auto-resolve | ✅ Concluída numa sessão paralela, merge em `main` (2026-11-17). `BattleView` e gambits, as ações (alinhar, manter distância, esquivar, proteger, fugir, largar, catar), os presets por papel e os padrões por DNA, `geo battle sweep` (a matriz) e `geo battle verify` no CI. **Checkpoint** (dono, depois de ver os replays): decisões C1–C3 no plan da B | [tasks.md](../specs/m2-laboratorio/tasks.md) (registro da F3) · `packages/battle/src/{ai,actions,mind,presets,view}.ts` · `apps/cli/src/battle*.ts` |
 | M2 A — F6 Soak e playtest | ✅ Concluída, merge em `main` (antes do checkpoint, a pedido do dono, para testar; o checkpoint num 2º merge). Fecha a fatia A. Salteador com `minCargo` 10 (C11), `SIM_VERSION` 9; soak com a crônica de cada cliente conferida contra o servidor; `dev:multi --bot`; a seção "Encontro (M2)" do PLAYTEST. **Checkpoint** (dono, sessão a ×6, 2026-11-17): a fatia cumpre o papel; decisões C12–C14 | [tasks.md](../specs/m2-encontro/tasks.md) · [PLAYTEST](../PLAYTEST.md) · `apps/server/src/soak*.ts` |
+| M2 B — F4 O laboratório | ✅ Concluída numa sessão paralela, merge em `main`. Arenas 2× (43 × 27) com zonas a 1/4, a reação por nível (fácil, normal, difícil), `lab.html` com o *worker*, o canal com RTT e *jitter*, a arena, o teclado e o atraso medido, o editor de gambits, o reforço e o export do log como *fixture* da CLI | [tasks.md](../specs/m2-laboratorio/tasks.md) (registro da F4) · `apps/client/src/lab/` |
+| M2 B — F5 Às cegas e o playtest | ✅ Concluída numa sessão paralela, merge em `main`. A contagem de 3 s, o Começar que já domina, o registro da sessão, a sessão às cegas (nota × RTT), o roteiro do PLAYTEST. **Checkpoint** (dono, em duas partes, 2026-11-18 e 2026-11-19/20): decisões C4–C15 no plan §15 | [tasks.md](../specs/m2-laboratorio/tasks.md) (registro da F5 e o checkpoint) · [PLAYTEST](../PLAYTEST.md) |
+| M2 B — F6 Os ajustes do checkpoint | ✅ Concluída numa sessão paralela, merge em `main`. O primeiro passo imediato, a inatividade da batalha inteira (15 s sem dano, todos fogem), o domínio que acaba com a batalha, a tela legível num notebook com os sinais de ataque, golpe e erro; `BATTLE_VERSION` 3 | [tasks.md](../specs/m2-laboratorio/tasks.md) (registro da F6) |
+| M2 B — F7 Os ajustes, 2ª parte | ✅ Concluída numa sessão paralela, merge em `main`. Fecha a fatia B. A contagem vale o que está segurado no fim (`BATTLE_VERSION` 4); o ▲ *kita* o ■ e quem atira desvia do corpo a corpo; quatro opções de movimento para comparar (ADR-0009, `Proposed`); os sinais de morte e de fuga; o medidor "sem dano" acima da arena; o Começar sobe a página | [tasks.md](../specs/m2-laboratorio/tasks.md) (registro da F7) · `runs/m2-laboratorio-f7/` (capturas, fora do Git) |
 | Fim do mundo — brainstorm | ✅ Respondido pelo dono (2026-11-15, rodada interativa). A duração termina num apocalipse: a corrupção dos depósitos de cristal esgotados, que não pode ser limpa e é vista de longe; só o final feliz das tribos (M4) a detém, e salva o mundo inteiro; vitória pírrica com humor; qualquer creep vivo no fim vira lenda; empate no relógio da fatia E. **ROADMAP:** fatias do M2 como grafo, M2.5 "A jungle hostil e o fim do mundo", M5 novo, "As lendas" | [brainstorm §0](../brainstorm/2026-11-15-fim-do-mundo.md) · [ROADMAP](../ROADMAP.md) |
 | M2.5, M3, M4, M5 | ⬜ Não iniciados | [ROADMAP](../ROADMAP.md) |
 
@@ -213,6 +223,61 @@ Um item por problema: o que a pessoa não entendeu ou não conseguiu, a tarefa o
 ## Registro das fases
 
 Medições, interpretações e decisões de cada fase, da mais recente para a mais antiga.
+
+- **M2 B F7 — Os ajustes do checkpoint, 2ª parte** ✅ (2026-11-20), numa sessão paralela (worktree `lab-f7`); fecha
+  a fatia B. 2 729 testes, `npm run check` verde; `geo battle verify` OK (seeds 1, 42, 649). O detalhe no
+  [registro da F7](../specs/m2-laboratorio/tasks.md).
+
+  **A contagem (C15, `BATTLE_VERSION` 4):** a intenção ganhou a bolsa segurada (`bag`), ao lado da direção e do
+  espaço; os toques da contagem são descartados, e no fim dela age o que está segurado (a IA pelo mesmo caminho).
+  **A IA (C12):** o escaramuçador *kita* o ■ (o `enemyWithin` ganhou um filtro de DNA); quem atira desvia, no
+  alinhar, das células a até `gambits.meleeBerthSteps` passos de um corpo a corpo inimigo (3, provisório), o que
+  tirou o ● da isca da esquina (golpes do ■ antes do tiro: de 12–18% das batalhas para 0%). No `sweep`: ■ × ▲ de
+  100/0 para 48/52, 52/48, 47/53; 1 × 1 de 18,4 para 20,4 s; 3 × 3 de 34,7 para 38,5 s; o custo do 3 × 3, 41 ms (alvo
+  50). **O movimento (C11):** quatro opções de desenho no laboratório (sem interpolar, 1 tick, o passo inteiro, prever
+  o meu creep), com o [ADR-0009](../adr/0009-predicao-no-laboratorio.md) (`Proposed`); medidas no Chromium, a
+  predição move o creep 15–43 ms depois da tecla a qualquer RTT, e o passo inteiro e a predição não param entre as
+  células (o 1 tick para ~200 ms). Uma versão da predição desenhava o creep para trás ao soltar; foi corrigida antes
+  do merge. **A tela (C13):** os sinais de morte e de fuga, o "sem dano" acima da arena e o Começar que sobe a página;
+  as capturas em `runs/m2-laboratorio-f7/` do checkout principal.
+
+  **Interpretações a validar:** a bolsa segurada na intenção; o filtro de DNA e a regra nova do escaramuçador; o
+  desvio só para quem atira e só no alinhar; o que o painel de atraso mede em cada opção de movimento; os sinais
+  duram 1,4 s.
+
+  **Fechamento da B:** a frente seguinte é a junção (D); antes da spec dela, a
+  [proposta do ROADMAP depois do M2](../brainstorm/2026-11-20-roadmap-depois-do-m2.md), pedida pelo dono.
+
+- **M2 B F5 — Checkpoint** (dono, 2026-11-18 e 2026-11-19/20, em duas partes; plan §15, C4–C15). A sessão no
+  laboratório em grupos ([PLAYTEST](../PLAYTEST.md)). **A regra de grade é divertida:** "gostei bastante do resultado
+  que alcançamos para o combate"; com os sinais da F6, as notas dos duelos foram de 3–4 para 5. **A micro importa:**
+  o dono venceu 7 de 9 duelos dominando (4 de 9 na 1ª parte) e virou o ■ × ● nas pedras com *bait* nas esquinas.
+  **A latência, às cegas** (29 batalhas, ▲ × ● nas pedras): nota mediana 4 ou mais até 100 ms, abaixo de 3 a partir
+  de 200 ms; o que incomodou foi "a pausa entre cada movimento" (a interpolação de 1 tick). **A IA** "cumpre seu
+  papel", com espaço para melhorar. **Decisões:** o primeiro passo imediato, a inatividade da batalha inteira, a tela
+  legível e o domínio que acaba com a batalha (C4–C7, na F6); o golpe crítico fica para o M2.5 (C8); nenhuma regra
+  nova antes da junção (C9); o deploy e a predição esperam a junção (C10); o movimento, a IA, a tela e a contagem na
+  F7 (C11–C13, C15); o comandante e os anúncios como propostas no GDD 06 (C14). O detalhe no
+  [tasks.md da B](../specs/m2-laboratorio/tasks.md) ("Checkpoint, 1ª parte" e "2ª parte").
+
+- **M2 B F6 — Os ajustes do checkpoint** ✅ (2026-11-18), numa sessão paralela. `BATTLE_VERSION` 3: o primeiro passo
+  imediato (parado, o creep anda no tick seguinte, e tocar nunca anda mais rápido que segurar) e a inatividade da
+  batalha (um relógio só; 15 s sem dano, todos fogem). A tela legível a 1366 × 768 (a arena com ~22 px por célula),
+  com o pulso de quem ataca, o clarão e o dano no atingido e a marca do tiro que erra (evento novo `missed`). `sweep`:
+  1 × 1 18,4 s, 3 × 3 34,7 s, inatividade do 3 × 3 de 2–19% para 0%. 2 701 testes. O detalhe no
+  [registro da F6](../specs/m2-laboratorio/tasks.md).
+
+- **M2 B F5 — Às cegas e o playtest** ✅ (2026-11-17), numa sessão paralela. `BATTLE_VERSION` 2: a contagem de 3 s
+  (só se vira). O Começar já domina; P, Esc e R pelo teclado; o registro da sessão (sobrevive a recarregar) e a
+  sessão às cegas, que esconde o RTT e o atraso até a nota e mostra a tabela nota × RTT no fim; o roteiro do
+  laboratório no PLAYTEST. 2 686 testes. O detalhe no [registro da F5](../specs/m2-laboratorio/tasks.md).
+
+- **M2 B F4 — O laboratório** ✅ (2026-11-17), numa sessão paralela. As arenas 2× (43 × 27, zonas a 1/4 da largura;
+  a aberta 3× só no relatório) e a reação por nível (C2, C3). A página `lab.html`: o *worker* com o relógio sem
+  deriva, ×1, ×4 e instantâneo; o canal com RTT e *jitter*; a arena; o teclado com o atraso medido; o formulário, o
+  reforço, o editor de gambits e o export do log, que entra como *fixture* do `geo battle verify --log`. `sweep`:
+  1 × 1 15,6 s, 3 × 3 28,3 s, custo do 3 × 3 38–39 ms; com espaço, o ● *kita* o ■ (0–2/98–100). 2 664 testes. O
+  detalhe no [registro da F4](../specs/m2-laboratorio/tasks.md).
 
 - **M2 A F6 — Soak e playtest** ✅ (2026-11-17); merge em `main` antes do checkpoint, a pedido do dono, para testar a
   partir dela (depois da B F3), e o checkpoint num 2º merge. Fecha a fatia A. 2 563 testes na branch (2 614 em

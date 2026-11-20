@@ -719,8 +719,91 @@ As decisões C9 a C15 do checkpoint (plan §15). Worktree: `.claude/worktrees/la
       barra e vai para cima da arena, discreto (o alerta vermelho dos últimos 5 s continua); **Começar** (e o
       Começar da sessão às cegas) rola a página até a arena, com as dicas e os controles visíveis. Conferir no
       Chromium headless a 1366 × 768, com capturas para o dono
-- [ ] O fechamento da fatia B: o registro da F7 aqui; o "Registro das fases" do dashboard com as fases da B; o
+- [x] O fechamento da fatia B: o registro da F7 aqui; o "Registro das fases" do dashboard com as fases da B; o
       "Agora" do dashboard com a frente seguinte (a **junção**, fatia D) e uma rodada de proposta do **ROADMAP
       depois do M2** (pedido do dono: reorganizar o planejamento macro), que o agente prepara e o dono aprova antes da
       spec da D; o `CLAUDE.md` com a fase atual. O merge como na F6: a mensagem no scratchpad e os comandos para o
       dono
+
+### Registro da F7 (2026-11-20)
+
+O registro fica aqui e entra no "Registro das fases" do dashboard com o fechamento da fatia B.
+
+**A contagem (C15; `BATTLE_VERSION` 4).** A escolha: **a intenção ganha a bolsa segurada** (`bag`: `drop` ou
+`pickup`, ao lado da direção e do espaço), em vez de a página repetir o pedido no fim da contagem. Nos ticks da
+contagem, o *worker* descarta os pedidos de um toque (o *latch* do espaço, `drop`, `pickup`); no último tick dela, a
+bolsa segurada vira o pedido, e o espaço e a direção segurados agem no primeiro tick da luta. Por quê: o Q segurado
+atravessa a rede com a mesma latência da direção segurada, sem depender do relógio da página (que não sabe quando a
+contagem acaba do lado do *worker*); e a IA usa o mesmo caminho, porque a intenção dela já guarda a bolsa da última
+decisão. O teclado manda o `bag` só enquanto Q ou E está segurado.
+
+**A IA (C12).** **O ▲ *kita* o ■:** o escaramuçador ganhou "quadrado inimigo a até 3 células → manter distância do
+quadrado", entre a esquiva e o ataque. Para isso, a condição `enemyWithin` ganhou um filtro de DNA opcional (`dna`;
+o editor, o seletor "de qualquer forma" ou uma forma): sem ele, o ▲ recuaria de triângulos e círculos também. **O ●
+nas esquinas:** a causa era o caminho, não o gambit: o caminho mais curto até a célula de tiro passava ao lado do ■
+parado na esquina. Agora o alinhar de quem atira desvia das células a até `gambits.meleeBerthSteps` passos (contorno
+de pedra) de um inimigo de corpo a corpo, e só passa por elas se não houver outro caminho (**3, provisório**; 0
+desliga). Na isca da esquina (o ■ em 39 células das pedras × 20 seeds, script no scratchpad): com o ■ parado, 12% das
+batalhas tinham um golpe do ■ antes e 0% depois; com o ■ que espreita, 18% → 0%; o ● vence todas. O que sobra é a
+previsibilidade (o ● ainda escolhe os mesmos corredores): registrada na proposta "IA que aprende" do GDD 06.
+
+O `geo battle sweep` (seeds 1–100, 9 200 batalhas em 48 s). Com só a contagem (v4), a matriz deu os mesmos números da
+F6: a IA não toca durante a contagem. A coluna da F7 é a final, com a IA nova:
+
+| O quê | Na F6 (e na v4 só com a contagem) | Na F7 |
+|---|---|---|
+| Duração do 1 × 1 (mediana) | 18,4 s | 20,4 s |
+| Duração do 3 × 3 (mediana) | 34,7 s | 38,5 s |
+| Custo do 3 × 3 por 2 400 ticks (mediana; alvo 50 ms) | 37–42 ms | 40,8 e 41,6 ms (duas rodadas) |
+| Quadrado × triângulo (A / B: aberta, pedras, corredor) | 100/0 nas três | 48/52, 52/48, 47/53 |
+| Triângulo × círculo, quadrado × círculo | 57/41, 87/13, 49/51; 0/100 | iguais |
+| 1 × 1 × 1 (■ / ▲ / ●: aberta, pedras, corredor) | 20/19/61, 16/24/60, 12/58/30 | 1/31/68, 2/34/64, 2/46/51 |
+| Saída pela borda no 3 × 3 (aberta, pedras, corredor) | 82%, 79%, 77% | 75%, 68%, 71% |
+| Fuga carregada (escapa) | 2–8% | 2–8% |
+
+A luta fica mais longa porque o ▲ recua do ■ em vez de trocar golpes; o ■ perde o 1 × 1 × 1 porque o ▲ não morre mais
+parado no corpo a corpo dele (o mole do grupo 3). O `geo battle verify` nas seeds 1, 42 e 649: OK.
+
+**O movimento (C11).** O seletor **Movimento** na "Rede simulada" (o "interpolar" virou uma das opções); a batalha não
+muda, só o desenho; o registro de cada batalha guarda a opção. A predição contraria o item 9 do ADR-0008: o
+[ADR-0009](../../adr/0009-predicao-no-laboratorio.md) (`Proposed`) a faz uma opção de experimento do laboratório,
+com a autoridade no *worker*. Medido no Chromium headless pelo CDP (o ▲ segurado para cima 1,2 s, seis vezes por
+opção, cada uma depois de um R; mediana):
+
+| Opção | Tecla → 1º movimento na tela (0 / 150 / 300 ms) | Parado enquanto segura | Painel "tecla → tela" (0 / 100 / 300 ms) |
+|---|---|---|---|
+| sem interpolar | 52 / 175 / 345 ms | 234–267 ms | 24 / 134 / 341 ms |
+| interpolar (1 tick) | 64 / 231 / 329 ms | 200–217 ms | 76 / 179 / 396 ms |
+| deslizar o passo inteiro | 60 / 239 / 354 ms | nenhum (1 quadro) | 276 / 379 / 590 ms |
+| prever o meu creep | 15 / 16 / 43 ms | nenhum | 71 / 180 / 378 ms (o dos quadros; o seu creep anda na hora) |
+
+O painel mede até o creep chegar à célula na tela; por isso o passo inteiro soma o passo do ▲ (250 ms), embora o
+creep comece a andar tão cedo quanto no 1 tick. A pausa de ~200 ms que o dono sentiu ("a pausa entre cada
+movimento") é a do 1 tick e a do sem interpolar; as outras duas não param. **Um achado da medição, corrigido:** a
+primeira versão da predição desenhava o creep para trás em toda tecla (0,7 a 0,9 célula a 0 ms; 0,2 a 0,4 a 150 e
+300 ms). A batalha entra em cada célula no começo do passo, e a predição deslizava à frente dela; solta a tecla, o
+creep voltava. Agora ela desliza até um passo atrás da batalha, nunca à frente, e solta espera os quadros onde está;
+medido de novo, nada para trás nas 36 teclas. O grupo 7 do [PLAYTEST](../../PLAYTEST.md) compara as quatro a 0 e
+150 ms.
+
+**A tela (C13).** Quem morre se desfaz em estilhaços onde o golpe o pegou ("‹nome› caiu"); quem foge deixa uma seta
+para fora da arena na última célula ("‹nome› fugiu", "(inatividade)" quando o relógio mandou todos embora). Os dois
+vêm dos eventos, com as células do quadro anterior. O medidor "sem dano" saiu da barra: é uma linha discreta logo
+acima da arena; o aviso vermelho dos últimos 5 s continua. O Começar (e o da sessão às cegas e o da próxima) sobe a
+página até o cabeçalho, com as dicas, os controles e a arena à vista; o R reinicia onde a página está. Conferido no
+Chromium headless a 1366 × 768; as capturas e as medições ficam em `runs/m2-laboratorio-f7/` do checkout principal
+(fora do Git).
+
+**A *fixture*** foi refeita com um log exportado da página no fim da F7 (v4, 300 ms de RTT): o Começar dominando o ■,
+um Q apertado e solto durante a contagem (o `drop` descartado) e uma direção segurada através dela, um ataque, um
+reforço num lado novo e os gambits do ● trocados pelo portador. Na CLI, dá o hash do *worker* (`25532f10…`). Testes:
+2 729 no total (eram 2 701 no fim da F6).
+
+**Interpretações a validar:**
+
+1. **A bolsa segurada na intenção** (acima), e a IA que segura a bolsa da última decisão na contagem.
+2. **O filtro de DNA no `enemyWithin`** e a regra nova do escaramuçador (antes do ataque, depois da esquiva).
+3. **O desvio do corpo a corpo** vale para quem atira (o ▲ e o ●) e só no alinhar; 3 passos é chute.
+4. **O que o painel mede** em cada opção de movimento (até o creep chegar à célula na tela) e a predição só no creep
+   dominado, até um passo atrás da batalha; na contagem, ela espera.
+5. **Os sinais de morte e fuga** duram 1,4 s no tempo da página; sem a célula (nenhum quadro antes), não há sinal.

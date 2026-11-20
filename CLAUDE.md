@@ -3,10 +3,11 @@
 Jogo multiplayer de navegador: **mundo persistente de estratégia/economia (RTS + sandbox + construção)** com
 **batalhas em tempo real estilo MOBA** como tempero. Visual 100% geométrico (SVG/Canvas, formas como linguagem).
 
-**Fase atual: M2 (A emboscada), fatia A (o encontro) concluída** (`docs/specs/m2-encontro/`; a próxima frente,
-escolhida pelo dono, no dashboard). A fatia B (laboratório de batalha,
-`docs/specs/m2-laboratorio/`, `packages/battle`) anda em paralelo, numa outra sessão (F1 a F3 concluídas). O deploy e o playtest com pessoas novas não
-bloqueiam mais o M2 nem o M3: a diversão é julgada pelo dono nos playtests locais (ROADMAP, 2026-11-15). O M1.5 está em `docs/specs/m1.5-rede/` e
+**Fase atual: M2 (A emboscada), fatias A (o encontro, `docs/specs/m2-encontro/`) e B (o laboratório de batalha,
+`docs/specs/m2-laboratorio/`, `packages/battle`, `apps/client/src/lab/`) concluídas.** A próxima frente é a fatia D
+(a junção), depois da proposta do ROADMAP depois do M2 que o dono aprova antes da spec dela (dashboard). O deploy e o
+playtest com pessoas novas não bloqueiam mais o M2 nem o M3: a diversão é julgada pelo dono nos playtests locais
+(ROADMAP, 2026-11-15); o deploy espera a junção (2026-11-20). O M1.5 está em `docs/specs/m1.5-rede/` e
 `docs/specs/m1.5-fog/`; o M1, em `docs/specs/m1-ciclo-da-riqueza/` (o histórico fica nos `tasks.md`; a estrutura do
 repositório, no `plan.md` §1 do M1).
 
@@ -39,6 +40,9 @@ Node 26 (`.nvmrc`). O Node roda `.ts` direto; só o cliente tem build (Vite).
 | `npm test -- --project @geometrix/sim` | Vitest num workspace só |
 | `npm run geo -- verify --seed 42` | Determinismo: 2 execuções + snapshot → restore têm de dar o mesmo hash |
 | `npm run geo -- net --seed 42 --days 3` | Banda e CPU dos deltas da visão contra os alvos da spec M1.5 §7, com a propriedade do diff em todo tick. Relatório em `runs/<id>/net.md` |
+| `npm run geo -- battle sweep` | A matriz de batalhas pela IA (presets × arenas × seeds 1–100, ~45 s): vitórias, duração, inatividade e o custo do 3 × 3 contra o alvo. Relatório em `runs/<id>/battle.md` |
+| `npm run geo -- battle verify` | Determinismo da batalha (seeds 1, 42, 649); `--log <arquivo>` refaz um log exportado pelo laboratório e confere o hash |
+| `npm run lab` | O laboratório de batalha (`lab.html`, Vite): a batalha num *worker*, rede simulada, sessão às cegas |
 | `npm run server` | Servidor em `http://localhost:8080` (`GEO_PORT`, `GEO_DB`, `GEO_PARAMS`); serve o build do cliente |
 | `npm run build` | Build do cliente (Vite) em `apps/client/dist`, que o servidor serve |
 | `npm run client` | Dev server do Vite (porta 5173) com proxy de `/api` e `/ws` para o servidor no `GEO_PORT` |
