@@ -385,7 +385,7 @@ convertida é a escala de cima.
 quest seja uma regra temporária no topo da lista, para não haver dois jeitos de mandar. Os times sem jogador têm um
 **deus-bot** (🟡).
 
-**A fidelidade** (🟢): cada creep tem uma fidelidade **por deus**, inclusive os do seu time. Ela abre as camadas da
+**A fidelidade** (🟢): cada creep tem uma fidelidade **por deus**, inclusive os do seu povo. Ela abre as camadas da
 ficha, decide as quests que ele aceita e o preço dos sussurros (baratos com os creeps confusos do começo, caros com
 os famosos e os únicos), mas **não muda o time dele**: só os neutros e os únicos mudam de lado.
 
@@ -420,13 +420,21 @@ incompletas com o preço (*"o Rei Batedor foi visto perto do vau; quer saber qua
 que o lado do informante lembra. Dá para tentar arrancar à força (e estragar a diplomacia) ou persuadir gastando o
 seu recurso.
 
-### 3.12 O time 🟢 a direção (pede humanos)
+### 3.12 Os pactos 🟢 a direção (pede humanos)
 
-Num time de 3 humanos, as decisões coletivas têm regras (pilar 5): impostos votados, o tesouro, a votação com níveis
-de autoridade (bots podem decidir / só humanos / unanimidade). Cada time escolhe o **regime**: a **democracia**
-(customizável, mais burocrática, com representante) ou a **meritocracia** (hierarquia **pela influência dos deuses**,
-menos burocrática, mais autoritária). Um **comandante** que dá a tática sobre as ligas é proposta (🟡). É o tema que o
-dono não testa sozinho: espera o deploy e olhos novos.
+**Um deus por povo** (🟢, rodada 5 da [estrutura](brainstorm/2026-11-20-estrutura-seu-time.md)): o seu povo (o
+Núcleo, o estoque e os creeps) tem um deus só, você. Dominar os creeps do seu povo é garantido; a fidelidade decide
+o quanto cada um se abre. Os deuses brigam pela **fronteira**: os neutros, as tribos, os únicos, o retornado, a lenda.
+
+Hoje o mundo tem **dois povos**, espelhados. Quando houver humanos para testar, **N povos** (3 ou 4, num mapa com
+simetria por rotação), e jogar junto passa a ser **pelos pactos**: alianças com regras entre deuses de povos
+diferentes, e as decisões coletivas (pilar 5) moram aí. As regras de um pacto (o que se compartilha, como se quebra, a
+vitória com aliados) ainda estão em aberto. O **panteão** (vários deuses num povo, com regime, votação e um
+comandante) ficou como ideia, não como base. É o tema que o dono não testa sozinho: espera o deploy e olhos novos.
+
+**Quando você sai** (🟢): valem o piloto dos seus creeps e o **piloto das decisões divinas** que você deixou (ainda a
+desenhar); se quiser, um **deus-bot regente**, com o perfil do seu kit, decide pelo povo, e a crônica marca o que foi
+dele.
 
 ### 3.13 O arco do mundo e o mestre 🟢
 
@@ -562,6 +570,9 @@ A distinção que ajuda: **a pele e a estrutura.**
 | **B. A torre** | Um deus que patrocina os creeps | **Convocados** de outros mundos; o Núcleo é o portal | Pouco (produzir vira convocar, só no texto) |
 | **C. Os anfitriões** | Quem monta o espetáculo para uma plateia | Atores | Pouco, mas muda o seu papel |
 | **D. Sem time no começo** | Quem escolhe quem patrocinar | Grupos teletransportados, confusos; os times nascem do jogo | **Muito** |
+
+**A pergunta estrutural foi respondida à parte** (rodada 5, §3.12): um deus por povo, o povo dado no Núcleo e confuso.
+A leitura D pura saiu da mesa; o povo convertido ficou como experimento.
 
 Um jeito de comparar é imaginar **os primeiros minutos de quem nunca leu o repositório** em cada leitura. Na B, por
 exemplo: *"O andar 7 se abre. Vinte formas caem do céu, sem lembrar de onde vieram."* Os creeps começam

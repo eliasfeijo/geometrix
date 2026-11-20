@@ -63,7 +63,7 @@ across a fogged jungle for days, even while you sleep. On the way, someone may s
 | **M1.5 · The fog** | Does hiding information create decisions without making the map unreadable? | ✅ Done |
 | **M2 · The ambush** | Can a fight change the course of the world without dominating the game? | 🟡 Building: the encounter ✅ and the battle lab ✅; next, battles joined to the world, then siege and repair |
 | **The items** | Does an item you can win and lose give a reason to fight and to come back? | Next milestone (candidate) |
-| **Theme bank** | Creeps with traits and titles, the players as gods in the chronicle, leagues led by a creep, the world's secret arc and its game master, living tribes, team governance, legends that invade other worlds | Ideas, not yet numbered |
+| **Theme bank** | Creeps with traits and titles, the players as gods in the chronicle, leagues led by a creep, the world's secret arc and its game master, living tribes, pacts between gods, legends that invade other worlds | Ideas, not yet numbered |
 
 Each milestone is a hypothesis tested in playtests before the next one starts; the other ideas wait in a theme bank
 until the owner picks the next milestone ([roadmap](docs/ROADMAP.md) and the illustrated

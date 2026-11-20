@@ -2,7 +2,20 @@
 
 ## Decidido
 - A partida é um **mundo persistente que dura dias**: sandbox, construção e a camada RTS vivem aqui.
-- Começa com times de 3 jogadores e pode crescer (o que leva a representantes, ver [04](04-governanca.md)).
+- ~~Começa com times de 3 jogadores e pode crescer (o que leva a representantes, ver [04](04-governanca.md)).~~
+  **Revisto na rodada 5 (abaixo):** um deus por povo.
+- **A estrutura: um deus por povo** (dono, 2026-11-20, rodada 5 da
+  [estrutura](../brainstorm/2026-11-20-estrutura-seu-time.md) §10.1; "povo" é o termo da análise para o que o código
+  chama de time: o Núcleo, o estoque e os creeps que nascem dele; o nome fica com a moldura da saga):
+  - **cada povo tem um deus só** (um jogador, ou o deus-bot), e essa é a base do design; os deuses disputam a fronteira
+    (os neutros, as tribos, os únicos, o retornado, a lenda), não os creeps do povo uns dos outros;
+  - **jogar junto é pelos pactos:** alianças com regras entre deuses de povos diferentes. O panteão (vários deuses num
+    povo) não é a base;
+  - **dois povos agora**, espelhados, até a junção e Os itens; **N povos (3 ou 4), com simetria por rotação, quando
+    houver humanos para testar**, no lugar do 3v3;
+  - **o povo nasce dado no Núcleo, confuso:** a confusão mora na fidelidade, que começa baixa
+    ([02](02-creeps-e-dominio.md)). O povo convertido (uma primeira geração neutra, espelhada em volta de cada
+    Núcleo) é um experimento a medir com bots na spec do tema "Os deuses", sem decisão.
 - **Vitória: destruir a base inimiga.** A definição será aprofundada.
 - **Direção de início de partida: "fundação"** (descrita abaixo). Os detalhes serão ajustados conforme os playtests
   revelarem o que é divertido.

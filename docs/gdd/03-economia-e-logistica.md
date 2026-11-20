@@ -6,6 +6,8 @@
   - **do time:** o tesouro público.
 - Todo recurso e moeda precisa ser **transportado fisicamente** até a base, por creeps ou mulas.
 - O "estado" da base cobra um **imposto**, com taxa votada pelo time, e o valor vai para o tesouro público.
+  *(A votação pressupunha vários jogadores no time; com um deus por povo, rodada 5, quem define a taxa é pergunta
+  aberta, abaixo.)*
 - O tesouro reflete os recursos de fato coletados e a diplomacia com as tribos.
 - A riqueza pode ser investida em upgrades, fortificações, itens individuais e na produção de creeps.
 - **Direção para o M1: dois recursos, matéria + cristal** (descritos abaixo). Os valores são provisórios.
@@ -120,6 +122,9 @@ Detalhes no [brainstorm de itens, reputação e governança](../brainstorm/2026-
   O dono quer considerar mais à frente; não entra no M1.
 
 ## Perguntas abertas
+- **Quem define a taxa do imposto com um deus por povo** (rodada 5 da
+  [estrutura](../brainstorm/2026-11-20-estrutura-seu-time.md), 2026-11-20)? O deus, sozinho; ou o imposto perde o
+  sentido dentro do povo e só volta com o panteão. Decidir quando impostos e comércio entrarem.
 - Validar os eixos de recurso.
 - Recurso × moeda: moeda cunhada, ou recurso e moeda são a mesma coisa? **Não bloqueia o M1**, que pode rodar
   só com matéria e cristal, sem moeda. Decidir quando impostos e comércio entrarem (M3).

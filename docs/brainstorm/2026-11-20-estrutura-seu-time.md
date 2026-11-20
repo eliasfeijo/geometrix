@@ -1,7 +1,8 @@
 # A estrutura: "seu time", quantos deuses por povo, quantos povos
 
-> **Status:** análise do agente (2026-11-20), pedida pelo dono, seguida das perguntas da **rodada 5** (§10). **Nada
-> aqui está decidido** até o OK do dono. Continua o [consolidado](2026-11-20-consolidado-depois-do-m2.md): a leitura D
+> **Status:** análise do agente (2026-11-20), pedida pelo dono, seguida das perguntas da **rodada 5** (§10).
+> **Rodada 5 respondida (§10.1):** o dono aceitou as sete recomendações, com uma ressalva na 54. Fora da §10.1, o
+> texto é a análise que levou às perguntas. Continua o [consolidado](2026-11-20-consolidado-depois-do-m2.md): a leitura D
 > (§11.3, "os times podem nascer do jogo?") e "seu time" e a saga da simetria (§13.8), com a pergunta 40 reaberta.
 > **Guarda de escopo:** nada desta análise muda a fatia D, a fatia E ou Os itens (conferido na §7).
 
@@ -294,3 +295,34 @@ Numeradas depois das 48 da rodada 4; a 40 volta para a mesa. Dois grupos: o segu
 | 40 | As consequências | **A fidelidade e o domínio** (reaberta) | (depende da 49) | — |
 | 53 | As consequências | **O pilar 5** | (depende da 49 e da 50) | — |
 | 54 | As consequências | **O povo sem o deus online** | **O piloto que o jogador deixou, por padrão; um deus-bot regente, se ele quiser** | Sempre o deus-bot; só o piloto |
+
+### 10.1 Respostas do dono (rodada 5, 2026-11-20)
+
+Dois formulários, com o contexto no chat antes. **O dono aceitou as recomendações nas sete perguntas; na 54, com uma
+ressalva.** As decisões foram para os [pilares](../PILLARS.md) (o pilar 5), o [ROADMAP](../ROADMAP.md) e os GDD 01,
+02, 03, 04, 06 e 07.
+
+| # | Pergunta | Resposta |
+|---|---|---|
+| 49 | Quantos deuses por povo | **Um deus por povo**, como a base do design |
+| 50 | Como se joga junto | **Pelos pactos** entre deuses de povos diferentes |
+| 51 | Quantos povos | **Dois agora; N (3 ou 4) quando houver humanos**, no lugar do 3v3 |
+| 52 | Como o povo nasce | **Dado no Núcleo, confuso;** o povo convertido é experimento do tema "Os deuses" |
+| 40 | A fidelidade e o domínio (reaberta na rodada 4) | **O domínio dos creeps do seu povo é garantido;** a fidelidade abre a ficha e as quests; os famosos pedem influência; neutros, únicos e a lenda só depois de convertidos |
+| 53 | O pilar 5 | **Entre os deuses:** os pactos, as alianças e a partilha do que se conquista junto; a votação dentro do povo fica para o panteão, se ele voltar |
+| 54 | O povo sem o deus online | **O piloto por padrão, com um deus-bot regente opcional.** Ressalva do dono: "esse 'piloto' é referente a decisões divinas, que ainda não desenhamos". Valem o piloto dos creeps (que existe) e **o piloto divino** que o jogador deixou, a desenhar no tema "Os deuses" |
+
+**Consequências que o agente registrou:**
+
+- **A rodada 4 continua inteira:** a 39 (a fidelidade por deus, que não muda o time) vale entre o povo e o seu deus, e
+  os outros deuses só disputam a fronteira; a 41 (a ficha velada) não pede revisão do ADR-0006, porque a visão do time é
+  a do deus.
+- **Ficam sem objeto dentro do povo** e passam a valer só no panteão: a meritocracia pela influência dos deuses (27), o
+  regime do time, a votação, os representantes, o comandante do time e "várias ligas por time". Ficam no tema que era
+  "O time" e virou **"Os pactos"** (proposta do agente, §9; o dono pode vetar o nome).
+- **O imposto votado** (GDD 03, decidido no M0) pressupunha vários jogadores no time: quem define a taxa com um deus por
+  povo virou pergunta aberta do GDD 03, para quando impostos e comércio entrarem.
+- **As regras dos pactos** (o que se compartilha, como se quebra, a vitória com aliados, o "dois contra um") viraram
+  pergunta aberta do GDD 04, para a spec do tema.
+- **Nada muda no código nem no M2:** `teams.maxHumans` continua 3 até uma spec mudá-lo (o dono joga sozinho contra o
+  bot de qualquer jeito); a D, a E e Os itens seguem como estão.

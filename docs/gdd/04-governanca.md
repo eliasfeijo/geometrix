@@ -1,6 +1,12 @@
 # 04 — Governança e votação
 
 ## Decidido
+- **O pilar 5 vale entre os deuses** (dono, 2026-11-20, rodada 5 da
+  [estrutura](../brainstorm/2026-11-20-estrutura-seu-time.md) §10.1): com **um deus por povo**
+  ([01](01-mundo.md)), as decisões coletivas com regras são **os pactos, as alianças e a partilha do que se conquista
+  junto**, entre deuses de povos diferentes, quando houver N povos. **A votação dentro do povo, os níveis de
+  autoridade, os representantes e o regime** (abaixo) ficam para o **panteão** (vários deuses num povo), se ele voltar.
+  Tema "Os pactos" (era "O time").
 - Decisões coletivas do time passam por **votação**, com regras que dependem do **nível de autoridade** exigido:
   bots podem decidir / só humanos / unanimidade.
 - A taxa de imposto e o uso do tesouro público são decisões coletivas.
@@ -10,7 +16,7 @@
   (votação, customizável, burocrática, com representante) ou uma **meritocracia** (hierarquia **pela influência dos
   deuses**, menos burocrática e mais autoritária; revisto na rodada 2: a fama dos creeps entra na influência de quem
   os dominou). Qual vem primeiro se decide quando houver times de humanos para testar. Tema
-  "O time".
+  "O time" (hoje "Os pactos"; com um deus por povo, vale só para o panteão, rodada 5).
 
 ## Proposta
 - Uma matriz **decisão × nível de autoridade** define as regras de cada tipo de decisão.
@@ -27,6 +33,9 @@
   peso pela fama) e quem define a tática do time (o comandante, [06](06-batalhas.md)).
 
 ## Perguntas abertas
+- **As regras dos pactos** (rodada 5): o que uma aliança compartilha (a visão, a passagem, a vitória), como se quebra
+  e o que custa quebrar, como fica a vitória pelo Núcleo com aliados, e como evitar o "dois contra um" e o
+  kingmaking. Para a spec do tema "Os pactos".
 - Quais decisões existem na v1? (imposto, gastos do tesouro, guerra/paz com tribos, …)
 - Em "bots podem decidir", quem é o bot: o piloto automático de um jogador ausente, ou os próprios creeps?
 - Quórum, prazo e desempate.

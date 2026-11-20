@@ -4,7 +4,8 @@
 - **Herói = creep aliado dominado.** Não existe herói fixo.
 - Cada jogador tem no máximo **1 domínio ativo**. Um creep só pode ser dominado por um jogador de cada vez.
 - Ao ser **liberado**, o creep mantém a configuração de piloto automático e continua obedecendo a ela. Ele fica
-  elegível para um novo domínio, pelo mesmo jogador ou por outro do time.
+  elegível para um novo domínio, pelo mesmo jogador ou por outro do time. *(Com um deus por povo, rodada 5 abaixo,
+  "outro do time" só existe se o panteão voltar.)*
 - **Creeps são produzidos com recursos.**
 - **DNA = a forma/arquétipo inato do creep:** quadrado = tank melee; círculo = glass cannon ranged; triângulo = vida
   média-alta, médio alcance.
@@ -84,8 +85,8 @@
     cumprida; a tribo convertida é a escala de cima ([05](05-tribos-e-diplomacia.md)).
 - **A fidelidade, a ficha e os deuses entre si** (dono, 2026-11-20, rodada 4 do [consolidado](../brainstorm/2026-11-20-consolidado-depois-do-m2.md) §13.7; "deus" continua o nome provisório):
   - **cada creep tem uma fidelidade por deus**, inclusive os do time, em ‰ no `sim`; ela **não muda o time**: só os
-    neutros e os únicos mudam de lado. O domínio comum continua como decidido na rodada 2 (a pergunta 40 está em
-    análise, abaixo);
+    neutros e os únicos mudam de lado. O domínio comum continua como decidido na rodada 2 (a pergunta 40 foi fechada na
+    rodada 5, abaixo: o domínio dos creeps do seu povo é garantido);
   - **a ficha velada, em camadas:** o operacional (forma, HP, carga, regras, estado) sempre aberto ao time; o pessoal
     (trait, origem, laços, side-quest, stats finos) se abre pela fidelidade. Pedir para ver é uma ação e pode
     incomodar ([08](08-cronica-chat-e-console.md));
@@ -99,6 +100,11 @@
   - **o demônio e a ambição:** "demônio" é a pele do karma cruel, temporária. Cada deus tem uma **ambição** pelo kit,
     pela conduta e pela crônica, que evolui com as ações e conta na história do fim e na influência, **sem decidir a
     guerra**.
+- **"Seu time" e o domínio** (dono, 2026-11-20, rodada 5 da [estrutura](../brainstorm/2026-11-20-estrutura-seu-time.md)
+  §10.1; fecha a pergunta 40 da rodada 4): **um deus por povo** ([01](01-mundo.md)), e **o domínio dos creeps do seu
+  povo é garantido**. A fidelidade abre a ficha e as quests, e os famosos pedem influência (rodada 2). Os neutros, os
+  únicos e a lenda só se dominam depois de convertidos. A fidelidade por deus (rodada 4) continua: entre o povo e o
+  seu deus, e disputada pelos outros deuses só na fronteira.
 
 ## Proposta
 - Dominar só troca **quem emite os comandos** do creep. Ver [ADR-0002](../adr/0002-tudo-e-comando.md).
@@ -159,10 +165,6 @@
   depois do playtest do M3.
 
 ## Perguntas abertas
-- **O conceito de "seu time"** (dono, 2026-11-20, rodada 4, pergunta 40, em análise; [consolidado](../brainstorm/2026-11-20-consolidado-depois-do-m2.md) §13.8): os
-  times fixos com Núcleo ou tribos e creeps que começam neutros, convertidos pelos deuses? A dúvida do dono é a
-  justiça do começo (a primeira geração vem da seed); o que puxa para o outro lado é a saga dos deuses que disputam
-  creeps descartáveis. Até lá, vale o domínio comum da rodada 2.
 - Dominar tem custo, cooldown ou restrição de distância?
 - As skills e a ultimate valem para todo creep, ou só a partir de certo level?
 - Um creep pode mudar de forma ao evoluir, ou o DNA é fixo para sempre?
