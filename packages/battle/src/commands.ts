@@ -16,14 +16,25 @@ import {
 } from "./setup.ts";
 import {
   findParticipant,
+  type Bag,
   type BattleState,
   type Controller,
   type Participant,
 } from "./state.ts";
 
 export type BattleCommand =
-  /** Persistent intent (plan P4): walk towards `move` while not null, attack while `attack`. */
-  | { type: "intent"; id: number; move: Dir | null; attack: boolean }
+  /**
+   * Persistent intent (plan P4): walk towards `move` while not null, attack
+   * while `attack`; `bag` is the bag key held (absent: none), which acts at
+   * the end of the countdown (spec S-4).
+   */
+  | {
+      type: "intent";
+      id: number;
+      move: Dir | null;
+      attack: boolean;
+      bag?: Bag | null;
+    }
   /** Fires the next possible attack once, even if the key is already up. */
   | { type: "attackOnce"; id: number }
   /** Turns without walking, to aim. */
@@ -58,6 +69,8 @@ const LAB_COMMANDS: readonly string[] = ["control", "setGambits", "join"];
 const CONTROLLERS: readonly Controller[] = ["gambits", "human"];
 
 const isDir = (value: unknown): value is Dir => DIRS.includes(value as Dir);
+
+const BAGS: readonly Bag[] = ["drop", "pickup"];
 
 /** Why a join cannot happen now (spec E-1), or null. */
 function joinIssue(
@@ -145,6 +158,10 @@ export function validateCommand(
       return "move must be a direction or null";
     }
     if (typeof command.attack !== "boolean") return "attack must be a boolean";
+    const { bag } = command;
+    if (bag !== undefined && bag !== null && !BAGS.includes(bag as Bag)) {
+      return "bag must be drop, pickup or null";
+    }
   }
   if (type === "face" && !isDir(command.dir)) return "dir must be a direction";
   return null;
@@ -167,6 +184,7 @@ function setController(
     attackLatch: false,
     drop: false,
     pickup: false,
+    bag: null,
   };
   participant.ai = { nextDecisionTick: state.tick, target: null };
   emit(log, {
@@ -203,6 +221,7 @@ export function applyCommand(
     case "intent":
       participant.intent.move = command.move;
       participant.intent.attack = command.attack;
+      participant.intent.bag = command.bag ?? null;
       return;
     case "attackOnce":
       participant.intent.attackLatch = true;
