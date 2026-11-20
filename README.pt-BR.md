@@ -65,7 +65,7 @@ cobrar pedágio.
 | **M1.5 · A névoa** | Esconder informação cria decisões sem tornar o mapa ilegível? | ✅ Concluído |
 | **M2 · A emboscada** | A luta muda o rumo do mundo sem dominar o jogo? | 🟡 Em construção: o encontro ✅ e o laboratório de batalha ✅; a seguir, as batalhas juntas ao mundo, depois cerco e reparo |
 | **Os itens** | Um item que se ganha e se perde dá motivo para lutar e para voltar ao jogo? | Próximo marco (candidato) |
-| **Banco de ideias** | Creeps com traits e títulos, os jogadores como deuses na crônica, ligas lideradas por um creep, o arco secreto do mundo e o seu mestre, tribos vivas, a governança do time, lendas que invadem outros mundos | Ideias, ainda sem número |
+| **Banco de ideias** | Creeps com traits e títulos, os jogadores como deuses na crônica, ligas lideradas por um creep, o arco secreto do mundo e o seu mestre, tribos vivas, os pactos entre deuses, lendas que invadem outros mundos | Ideias, ainda sem número |
 
 Cada marco é uma hipótese testada em playtest antes do próximo começar; as outras ideias esperam num banco por tema
 até o dono escolher o próximo marco ([roadmap](docs/ROADMAP.md) e o [guia ilustrado da partida](docs/GAMEPLAY.md)).

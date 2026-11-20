@@ -34,7 +34,10 @@
    −1 a +1, o fiel, as metas por ato medidas com bots de perfil, os portais com lendas da seed, três caminhos de
    salvação e os sem-Núcleo com o arco. **A 9ª leva** (a fidelidade, a ficha velada, os únicos, a lenda do portal,
    comprar informação) teve a **rodada 4** respondida (consolidado §13.7), com "seu time" e a saga da simetria **em
-   análise** (§13.8). Nada muda no M2.
+   análise** (§13.8). **A rodada 5, a estrutura** ([análise](../brainstorm/2026-11-20-estrutura-seu-time.md) §10.1),
+   respondeu "seu time": **um deus por povo**, o co-op pelos pactos, dois povos agora e N depois, o povo dado no
+   Núcleo e confuso, o domínio do próprio povo garantido (fecha a 40), o pilar 5 entre os deuses, e o piloto divino
+   (a desenhar) com um regente opcional; o tema "O time" virou "Os pactos". Nada muda no M2.
 2. **🐞 O preset construtor de estrada não funciona para o jogador** (dono, 2026-11-20, nos testes desde antes da
    fatia A): pede o ponto no mapa, mas nada acontece ao clicar nem ao mexer o mouse (sem a prévia da estrada e do
    custo); só dá para construir dominando um creep, no modo estrada. Os bots constroem com o mesmo preset, então o

@@ -72,7 +72,7 @@ critério mais forte para a ordem.
 | **O mundo vivo** | Tribos e diplomacia, a relação do time com cada tribo, as **conversões** e os **tributos** (no tesouro do time, numa caravana física), o final feliz secreto (o ramo benevolente do arco), construção ampla | Não |
 | **Comunicação e automação** | Chat, console e macros de cliente (a antiga fatia C), piloto scriptável, macros no servidor | Em parte |
 | **A apresentação** | Som, anúncios de abate e de fuga, a tela de fim e o replay além do mínimo | Não |
-| **O time** | 3v3, impostos, **o regime do time** (democracia ou meritocracia pela influência dos deuses, a escolher quando houver times de humanos), votação, o comandante do time, várias ligas por time, genética | **Sim** |
+| **Os pactos** (era "O time") | **N povos (3 ou 4)**, um deus cada, num mapa com simetria por rotação; **os pactos**: alianças com regras entre deuses (o que se compartilha, como se quebra, a vitória com aliados, o "dois contra um"); a diplomacia entre humanos. **O panteão** (vários deuses num povo) como ideia, não como base: o regime (democracia ou meritocracia pela influência dos deuses), a votação, os representantes, o comandante do time, várias ligas por povo. Impostos (quem define a taxa com um deus por povo está em aberto), genética | **Sim** |
 | **As lendas e o deploy** | Invasões entre mundos (as lendas reais; as da seed entram pelos portais do arco), contas (o control plane em Go), presets da comunidade e ranking, deploy de testes, olhos novos; **a moldura da saga** (em análise: a torre, a convocação, os mundos como capítulos) | **Sim** |
 
 **As dependências** (para escolher o próximo marco vendo o que cada tema destrava):
@@ -95,7 +95,7 @@ flowchart TD
     D --> FM
     JH --> MV["O mundo vivo"]
     QC --> MV
-    DEP["Deploy e olhos novos"] --> TM["O time"]
+    DEP["Deploy e olhos novos"] --> TM["Os pactos<br/>(N povos, alianças)"]
     LG --> TM
     MV --> LE["As lendas e o deploy"]
     FM --> LE
@@ -175,3 +175,13 @@ vem só de quem tem pouca fidelidade; a relação é a crônica, não o karma; "
 decide a guerra; uma lenda só, no portal do centro; a escolta do xamã é o final feliz das tribos; a informação
 comprada vira um lembrado. **"Seu time" e a saga** (a simetria questionada, os episódios entre mundos) ficaram em
 análise (§13.8). Nada muda no M2 nem no próximo marco.
+
+**A estrutura: um deus por povo** (dono, 2026-11-20, rodada 5 da
+[estrutura](brainstorm/2026-11-20-estrutura-seu-time.md) §10.1): as decisões estruturais do M0 (dois times fixos, times
+de 3 jogadores, um Núcleo por time, qualquer jogador domina qualquer creep do time) foram reavaliadas à luz dos deuses.
+**Cada povo (o que o código chama de time) tem um deus só**; jogar junto é pelos **pactos** entre deuses de povos
+diferentes; **dois povos agora, N (3 ou 4) quando houver humanos**, no lugar do 3v3; o povo nasce dado no Núcleo,
+confuso (o povo convertido é experimento do tema "Os deuses"); o domínio dos creeps do seu povo é garantido (fecha a
+pergunta 40); **o pilar 5 vale entre os deuses**; ausente, valem o piloto dos creeps e o piloto divino que o jogador
+deixou (a desenhar), com um deus-bot regente opcional. O tema "O time" virou **"Os pactos"**, e o panteão ficou como
+ideia dentro dele. Nada muda no M2 nem em Os itens: a batalha só conhece lados, e `teams.maxHumans` já aceita 1.

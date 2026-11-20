@@ -144,7 +144,7 @@ sequenceDiagram
 - **Som da batalha** (pedido do dono, 2026-11-18, no checkpoint da F5, **sem marco**): um sinal sonoro para o
   disparo e o golpe, além do sinal visual que o laboratório ganha na F6. O jogo ainda não tem som nenhum: é um
   sistema novo, que só entra com um marco escolhido pelo dono.
-- **O comandante: a tática do time** (ideia do dono, 2026-11-20, no checkpoint da F5; **candidato ao M3, O time**,
+- **O comandante: a tática do time** (ideia do dono, 2026-11-20, no checkpoint da F5; **candidato ao M3, O time**; *com um deus por povo, rodada 5, só existe no panteão, dentro do tema "Os pactos"*,
   pela análise do agente: o M3 já trata do 3v3 e da autoridade dentro do time). Nas batalhas em grupo (3 × 3), um
   papel de estrategista ou comandante, como no combate do Mount & Blade: mesmo dominando um creep só, ele orquestra
   o time pela arena (emboscadas, o terreno a favor, de acordo com os recursos militares do time), e quem entra no

@@ -55,6 +55,13 @@
   escaramuçador, portador), editáveis no laboratório. A IA decide com um **tempo de reação** (250 ms ± 100 ms,
   provisório; plan do laboratório, P12): sem ele, ela desviaria de todo projétil.
 
+- **O povo sem o deus online** (dono, 2026-11-20, rodada 5 da
+  [estrutura](../brainstorm/2026-11-20-estrutura-seu-time.md) §10.1; com um deus por povo, ninguém do time cobre a
+  ausência): por padrão, valem o piloto dos creeps e **o piloto das decisões divinas que o jogador deixou** (o pilar 4).
+  **O piloto divino ainda não foi desenhado** (que quests, sussurros e escolhas do povo ele cobre é do tema "Os
+  deuses"). Se o jogador quiser, **um deus-bot regente**, com o perfil do kit dele, decide pelo povo enquanto ele está
+  fora; a crônica marca o que foi decisão do regente.
+
 ## Proposta
 - Humanos, macros, piloto automático e bots emitem os **mesmos comandos** ([ADR-0002](../adr/0002-tudo-e-comando.md)).
   Um script nunca tem mais poder do que um humano.

@@ -3,7 +3,8 @@
 > **Status:** consolidação do agente (2026-11-20), pedida pelo dono. **Rodada 1 respondida (§0); rodada 2 respondida
 > (§10.1); a moldura da saga está em análise, sem decisão (§11); rodada 3 (o papel do jogador) respondida
 > (§12.7); rodada 4 (a fidelidade, os únicos e as lendas) respondida (§13.7), com "seu time" e a saga em análise
-> (§13.8).** O documento junta a
+> (§13.8); "seu time" respondido na rodada 5, num arquivo próprio ([a estrutura](2026-11-20-estrutura-seu-time.md)
+> §10.1): um deus por povo.** O documento junta a
 > [proposta do ROADMAP](2026-11-20-roadmap-depois-do-m2.md) e as quatro levas de ideias do dia, registra a 5ª leva
 > e faz a análise fria pedida: expectativa × realidade, benefícios × trade-offs e uma recomendação por ideia. **As
 > perguntas foram refeitas aqui** (§7), em quatro grupos, só com o que é decisão do dono. As perguntas numeradas das
@@ -1054,7 +1055,7 @@ ele reabriu**, questionando o próprio conceito de "seu time" (§13.8).
 | # | Pergunta | Resposta |
 |---|---|---|
 | 39 | A fidelidade | **Cada creep tem uma fidelidade por deus**, inclusive os do time; ela **não muda o time**: só neutros e únicos mudam de lado |
-| 40 | A fidelidade e o domínio | **Em análise** (§13.8): "acho que temos que rever esse conceito de 'seu time'". Até lá, vale o decidido na rodada 2: o domínio comum não muda |
+| 40 | A fidelidade e o domínio | **Em análise** (§13.8): "acho que temos que rever esse conceito de 'seu time'". Até lá, vale o decidido na rodada 2: o domínio comum não muda. **Fechada na rodada 5** ([a estrutura](2026-11-20-estrutura-seu-time.md) §10.1): um deus por povo, e o domínio dos creeps do seu povo é garantido |
 | 41 | A ficha velada | **Em camadas:** o operacional (forma, HP, carga, regras, estado) sempre aberto ao time; o pessoal (trait, origem, laços, side-quest, stats finos) por fidelidade. Pedir para ver é uma ação, e pode incomodar |
 | 42 | O disfarce dos únicos | **A ficha mente, com pistas:** o disfarce cai pela fidelidade alta, por uma quest ou por testemunhar um feito dele |
 | 43 | O incômodo | **Só com quem tem pouca fidelidade** (ou quando falta influência para aquele creep, ou com os únicos), crescendo com a repetição e com os atos; os fiéis não se incomodam com o básico |
@@ -1136,6 +1137,7 @@ ele reabriu**, questionando o próprio conceito de "seu time" (§13.8).
 **Para seguir a análise** (sem prazo; nada do M2 depende disto):
 
 1. **"Seu time": uma página comparando (a), (b) e (c)**, com os primeiros minutos de cada um às cegas e o espelho da
-   primeira geração no (c).
+   primeira geração no (c). **Feita, e ampliada para a estrutura inteira** (quantos deuses por povo, quantos povos,
+   como o povo nasce), com as perguntas da rodada 5: [a estrutura e "seu time"](2026-11-20-estrutura-seu-time.md).
 2. **O episódio 1:** uma página de pitch com a simetria como pergunta central: o que o jogador vê, o que a crônica
    conta, o que a corrupção quebra.

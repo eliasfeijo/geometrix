@@ -10,8 +10,10 @@ Filtro para toda decisão de design: uma feature que não serve a nenhum pilar p
    faz evoluir esse creep, e depois o libera.
 4. **O mundo não espera você.** A partida dura dias. Quando você está ausente, valem as configurações de piloto
    automático que você deixou.
-5. **Decisões coletivas têm regras.** O time se governa: votações, níveis de autoridade, impostos, tesouro público,
-   representantes.
+5. **Decisões coletivas têm regras.** Entre os deuses: os pactos, as alianças e a partilha do que se conquista junto
+   têm regras. *(Revisto pelo dono em 2026-11-20, rodada 5 da
+   [estrutura](brainstorm/2026-11-20-estrutura-seu-time.md): com um deus por povo, a votação dentro do time, os níveis
+   de autoridade e os representantes ficam para o panteão, vários deuses num povo, se ele voltar.)*
 6. **A geometria é a linguagem visual.** Forma comunica papel (quadrado = tank melee, círculo = glass cannon
    ranged, triângulo = meio-termo de médio alcance). SVG e formas no lugar de arte rasterizada.
 
