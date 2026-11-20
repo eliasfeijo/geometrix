@@ -2,7 +2,8 @@
 // role (pillar 6). They are what the lab and the CLI start a participant from;
 // the setup carries the list itself, so changing a preset never changes how
 // an exported log replays. The thresholds (250‰ to flee, an enemy within 4
-// for the carrier) are data of the rule, not params (spec section 6).
+// for the carrier, a square within 3 for the skirmisher to kite) are data of
+// the rule, not params (spec section 6).
 
 import { copyGambits, type Gambit } from "./gambits.ts";
 import type { Dna } from "./params.ts";
@@ -52,10 +53,18 @@ const PRESETS: Record<PresetId, readonly Gambit[]> = {
       then: { type: "attack", target: { by: "weakest" } },
     },
   ],
-  /** Escaramuçador (triangle): flee when low, dodge, shoot the nearest. */
+  /**
+   * Escaramuçador (triangle): flee when low, dodge, kite the melee square
+   * that comes close (checkpoint C12: it stood and took the square's blows),
+   * shoot the nearest.
+   */
   skirmisher: [
     fleeWhenLow,
     dodge,
+    {
+      when: { type: "enemyWithin", cells: 3, dna: "square" },
+      then: { type: "keepDistance", target: { by: "dna", dna: "square" } },
+    },
     {
       when: { type: "always" },
       then: { type: "attack", target: { by: "nearest" } },

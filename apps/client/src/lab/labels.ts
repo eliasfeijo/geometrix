@@ -117,7 +117,9 @@ export function conditionText(condition: Condition): string {
     case "carryAbove":
       return `${label} ${condition.permille / 10}%`;
     case "enemyWithin":
-      return `${label} ${condition.cells} células`;
+      return condition.dna === undefined
+        ? `${label} ${condition.cells} células`
+        : `${DNA_LABELS[condition.dna]} inimigo a até ${condition.cells} células`;
     case "allyHpBelow":
       return `${label} ${condition.permille / 10}% a até ${condition.cells} células`;
     default:

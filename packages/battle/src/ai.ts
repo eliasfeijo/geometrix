@@ -41,6 +41,9 @@ export function conditionHolds(mind: Mind, condition: Condition): boolean {
       return hpBelow(state, self, condition.permille);
     case "enemyWithin":
       return mind.enemies.some((e) => {
+        if (condition.dna !== undefined && e.dna !== condition.dna) {
+          return false;
+        }
         const steps = stepsTo(mind, e.cell);
         return steps >= 0 && steps <= condition.cells;
       });
