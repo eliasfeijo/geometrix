@@ -1,7 +1,8 @@
 # Consolidado: as ideias e o planejamento depois do M2
 
 > **Status:** consolidação do agente (2026-11-20), pedida pelo dono. **Rodada 1 respondida (§0); rodada 2 respondida
-> (§10.1); a moldura da saga está em análise, sem decisão (§11).** O documento junta a
+> (§10.1); a moldura da saga está em análise, sem decisão (§11); a 8ª leva (o papel do jogador) está analisada,
+> com as perguntas da rodada 3 à espera do OK do dono (§12).** O documento junta a
 > [proposta do ROADMAP](2026-11-20-roadmap-depois-do-m2.md) e as quatro levas de ideias do dia, registra a 5ª leva
 > e faz a análise fria pedida: expectativa × realidade, benefícios × trade-offs e uma recomendação por ideia. **As
 > perguntas foram refeitas aqui** (§7), em quatro grupos, só com o que é decisão do dono. As perguntas numeradas das
@@ -14,6 +15,9 @@
 | 3ª | [itens-reputacao-governanca](2026-11-20-itens-reputacao-governanca.md) | O teto da liga, a reputação e o Núcleo, a skill que vem do item, o regime do time |
 | 4ª | [recrutamento-lacos-traits](2026-11-20-recrutamento-lacos-traits.md) | O recrutamento por diálogo, os laços, os traits com kits de crônica |
 | 5ª | este arquivo, §2 | A liga por creep líder e o símbolo, os itens iguais para todos, os títulos, a instância de quest, o laboratório |
+| 6ª | este arquivo, §8 | Os deuses (Black & White), o karma, a main quest line secreta, os tributos e a influência |
+| 7ª | este arquivo, §11 | A moldura da saga: a torre, a convocação, os sussurros, o retornado |
+| 8ª | este arquivo, §12 | O papel do jogador: os kits divinos por estilo, o ritmo dos três dias, os portais, salvar o mundo perdendo a guerra |
 
 ## 0. Respostas do dono (rodada interativa, 2026-11-20)
 
@@ -641,3 +645,161 @@ Quando o dono quiser retomar (sem prazo; nada do M2 depende disto):
    decididos.
 3. **O retornado como um caso de teste:** escrever a ficha e a crônica de um retornado em cada leitura mostra rápido
    qual delas conta melhor a história.
+
+# Rodada 3: o papel do jogador
+
+## 12. A 8ª leva: os kits divinos, o ritmo dos três dias e o fim (análise; perguntas para a rodada 3)
+
+> **Nada aqui está decidido.** O dono trouxe a leva dizendo "acho que precisamos definir o papel e identidade do
+> jogador". A análise abaixo separa o que dá para decidir agora (o papel **mecânico**) do que continua em análise (a
+> **pele**, §11), e termina nas perguntas da rodada 3 (§12.6), a rodar com o OK do dono.
+
+### 12.1 O pedido [dono]
+
+- **Definir o papel e a identidade do jogador**, que pode interpretar um deus do bem ou maligno.
+- **Kits de evolução individual do jogador**, de acordo com o karma e com as decisões que afetam a crônica individual
+  dele na história. Os kits são uma **especialização do jeito de jogar** do deus:
+  1. "quero jogar ativamente": kits que favorecem esse estilo;
+  2. "estou aprendendo": kits equilibrados, com menos micro;
+  3. "quero jogar, mas só tenho 15 min por dia": kits de **automação e suporte passivo**. O jogador não participa
+     das batalhas, mas continua contribuindo com o time offline, com um bom setup (ex.: coletores e construtores de
+     estrada).
+- **O ritmo de uma partida x1 de 3 dias reais:**
+  - **fim do dia 1:** o jogador, intuitivamente, converteu **pelo menos 1 fiel** e gerou **pelo menos 1 crônica
+    divina individual**;
+  - **dia 2:** já progride com algumas quests, constrói uma liga ou faz parte de uma, e participa ativamente dos
+    combates na jungle;
+  - **dia 3:** **os portais aparecem e trazem lendas** (de início, bots neutros). Quem avançou as quests e a relação
+    com alguma tribo, com o retornado, ou ativou algum ramo especial do ato III, tem a chance de **salvar o mundo,
+    ganhando ou perdendo a guerra**. **Os creeps que sobrevivem ao cerco do Núcleo podem continuar jogando até o fim
+    do mundo**, quando ainda existe esperança de salvação pela crônica do mundo, e viram lendas se sobreviverem até o
+    final.
+- **Um bug** (dono, testes no mundo desde antes da entrega da fatia A): o preset construtor de estrada não funciona
+  como esperado. Ele pede uma ação, mas nada acontece ao clicar ou ao mexer o mouse pelo mapa (não aparece a prévia
+  da estrada com o custo). O único jeito de construir estrada é dominar um creep e usar a ação de construir. Registrado
+  no [dashboard](../dashboard/current-status.md) para revisão (§12.5).
+
+### 12.2 A leitura fria [agente]
+
+**O que a leva acerta:**
+
+- **Os kits por estilo resolvem uma tensão que já existe.** O pilar 4 promete que o mundo não espera ninguém, e o
+  [guia da partida](../GAMEPLAY.md) §5 já mostra dois jogadores (quem entra 15 min, quem fica horas) jogando o mesmo
+  mundo. Hoje, a diferença entre eles é só quanto cada um mexe nas regras. Um kit dá ao jogador de 15 min uma
+  **identidade e um jeito próprio de contribuir**, em vez de ser "o ativo, só que pior".
+- **As metas por dia são critérios de design testáveis.** "Converter 1 fiel até o fim do dia 1" é o mesmo tipo de
+  critério que a viabilidade da rede do M1.5 teve: um número que o harness mede. Dá para medir com **bots com
+  perfil** (o ativo, o aprendiz, o de 15 min), como a rodada 2 decidiu medir o cruel × o benevolente (pergunta 26).
+- **Continuar depois do cerco dá motivo para não desistir.** Hoje, o time que perde o Núcleo perde tudo. Se os
+  creeps que sobram ainda podem salvar o mundo, quem está perdendo a guerra tem um objetivo até o fim, e a vitória
+  pírrica (já decidida) ganha o seu espelho: **a derrota que salva o mundo**.
+- **Os portais no ato III encaixam no que existe:** as lendas e a invasão por bots já estavam em camadas na proposta
+  do GDD 02 ("registrar as lendas, a invasão por bots, depois a invasão por jogadores com contas"), e o lado neutro da
+  fatia D já lista os invasores como consumidor. Os portais também servem à leitura B (a torre) do §11, sem depender
+  dela.
+
+**O que a leva mistura, e vale separar:**
+
+- **Dois eixos no mesmo kit: o estilo e a conduta.** O estilo (quanto tempo, quanta micro) é uma **escolha** do
+  jogador. A conduta (do benevolente ao cruel) **nasce das ações** (decidido, pergunta 18). Se o kit vier do karma, o
+  jogador de 15 min não controla qual kit recebe, e o kit de automação pode não chegar a quem precisa dele. O agente
+  recomenda: **o kit é escolhido pelo estilo, e a conduta dá o sabor e as portas** (cada poder tem uma versão
+  benevolente e uma cruel, e o cruel fecha portas, como na pergunta 21). As crônicas individuais contam as duas coisas.
+- **O "fiel" ainda não tem definição.** A rodada 2 fala em conversões **de tribos** (perguntas 19 e o GDD 05) e no
+  recurso que nasce dos **feitos dos fiéis** (pergunta 28), mas não diz quem é um fiel. Com o mistério do §11 (os
+  creeps não sabem dos deuses no começo), o primeiro fiel pode ser **o primeiro creep que ouve o deus**: o que aceita
+  e cumpre a primeira quest. É o momento de ensino ideal para quem joga às cegas ("Taro ouve uma voz"). As tribos
+  convertidas seriam a escala de cima.
+- **"Por dia" ou "por ato".** As metas estão em dias reais, mas os playtests do dono rodam a ×6 ou a ×36, e o arco
+  já tem atos com gatilhos. O agente recomenda escrever as metas **por ato, com a duração esperada de cerca de um dia a
+  ×1**: assim valem em qualquer multiplicador, e o mestre ajusta os gatilhos. **Atenção:** hoje o cristal do mapa
+  inteiro se esgota em ~10 h de 72 (GDD 03); se o esgotamento dispara o ato II, ele chegaria no meio do dia 1. A
+  rodada do papel do cristal precisa desta meta.
+
+**Onde raspa no decidido** (cada um pede o OK do dono para mudar):
+
+| Ideia | O decidido | Onde está |
+|---|---|---|
+| Salvar o mundo pelo retornado ou por um ramo especial do ato III | "A corrupção não pode ser limpa. **Só o final feliz das tribos a detém**" | GDD 01 e 05 (2026-11-15) |
+| O retornado como caminho de salvação | O retornado "tenta sempre adiantar o fim do mundo" (em análise, não decidido) | GDD 02, proposta (§11.2) |
+| Os creeps sem Núcleo continuam até o fim do mundo | "**A vitória pelo Núcleo encerra o mundo**" (o fim mínimo da fatia E) | GDD 01 (2026-11-15) |
+| Os portais trazem lendas no dia 3 | As lendas invasoras estavam no tema "As lendas", com contas entre mundos | ROADMAP, GDD 02 |
+
+O agente recomenda **não mexer na fatia E**: o Núcleo encerra o mundo no M2, como decidido, porque sem o arco não há
+fim do mundo para esperar. A continuação depois do cerco entra com o tema "O arco do mundo", que é quando passa a
+existir uma esperança de salvação.
+
+### 12.3 Os kits: um esboço [agente]
+
+Só para dar forma à discussão. Os nomes, os poderes e os números são ilustrativos.
+
+| Kit | Para quem | O que favorece | Com a conduta benevolente | Com a conduta cruel |
+|---|---|---|---|---|
+| **O campeão** (ativo) | Quem domina creeps e entra nas lutas | Dominar os famosos com menos influência, sussurros de batalha, títulos disputados, a liga maior | Inspira: os aliados perto do dominado lutam melhor | Aterroriza: os inimigos fogem mais cedo, e as tribos desconfiam |
+| **O aprendiz** (equilibrado) | Quem está começando | Presets claros, poderes simples e baratos, dicas da crônica, quests curtas | — | — |
+| **O guardião** (15 min por dia) | Quem entra pouco | Quests longas (de horas), bênçãos passivas para coletores e construtores, rituais que correm offline, o resumo "enquanto você esteve fora" ao entrar | A bênção da colheita: os coletores rendem um pouco mais | O chicote: rende mais, e os creeps e as tribos ressentem |
+
+Propostas do agente que o dono pode vetar sem pergunta:
+
+- **O aprendiz é o kit padrão**, e o jogo sugere trocar quando o jogador mostra um padrão (domina muito → o campeão;
+  entra pouco → o guardião). A troca é livre na virada de cada ato.
+- **O kit é da partida**, não da conta. A evolução entre partidas fica com as lendas e as contas (tema "As lendas e o
+  deploy").
+- **O equilíbrio entre os kits se mede com bots de perfil:** um time com um guardião não pode perder por isso, nem
+  ganhar sem jogar. O pilar 1 ajuda: a guerra se ganha na macro, e o guardião é macro.
+- **O kit do guardião depende de presets que funcionam.** O bug do construtor de estrada (§12.5) bloqueia justamente
+  esse estilo, e por isso sobe de prioridade.
+
+### 12.4 O ritmo dos três dias [agente]
+
+```mermaid
+flowchart LR
+    D1["Ato I · ~dia 1<br/>a fundação; o primeiro fiel<br/>ouve o deus; a 1ª crônica divina"] --> D2["Ato II · ~dia 2<br/>quests, a primeira liga,<br/>as lutas na jungle; a corrupção começa"]
+    D2 --> D3["Ato III · ~dia 3<br/>os portais e as lendas neutras;<br/>os caminhos de salvação se abrem"]
+    D3 --> FIM["O fim do mundo<br/>salvo ou não, com a guerra<br/>ganha ou perdida"]
+    D2 -.->|"um Núcleo cai"| SN["Os sem-Núcleo<br/>continuam até o fim,<br/>se houver esperança"]
+    D3 -.->|"um Núcleo cai"| SN
+    SN -.-> FIM
+```
+
+| Meta (do dono) | Como medir | O que falta para existir |
+|---|---|---|
+| Fim do ato I: ≥ 1 fiel e ≥ 1 crônica divina | Bots de perfil no harness; no playtest do dono, a ×6 | O fiel definido (§12.2), as quests do deus, a crônica do deus (a fatia "As fichas") |
+| Ato II: quests, uma liga, lutas na jungle | A fração dos jogadores-bot com uma liga e com lutas, por perfil | Os itens, as ligas, a junção (fatia D) |
+| Ato III: portais; salvar o mundo ganhando ou perdendo | Quantas partidas de bots terminam salvas, por perfil e por conduta | O arco do mundo, os ramos, as tribos ou o retornado |
+
+### 12.5 O bug do construtor de estrada [agente]
+
+Leitura do código, sem reproduzir (o conserto fica para uma sessão de implementação, como manda o fluxo):
+
+- **O lado do `sim` funciona:** os bots constroem estradas com o mesmo preset (`roadBuilderRules`, usado pelo
+  estrategista), e há testes dele.
+- **O fluxo do cliente:** o botão "Construtor de estrada…" põe o mapa no modo de escolher uma célula
+  (`rules-editor.tsx`); o clique esquerdo chama `select()`, que entrega a célula ao preset e manda o `applyPreset`
+  (`interaction.ts`).
+- **Hipóteses a conferir numa repro:**
+  1. **Sem prévia no modo de escolher:** a prévia da estrada com o custo só existe no modo estrada, o do creep
+     dominado (`road-preview-layer.tsx`). No modo do preset, mexer o mouse não mostra nada, e o clique não dá retorno
+     visível. Isso explica "nada acontece ao mexer o mouse".
+  2. **O alvo é aceito sem conferir se dá estrada:** o comando aceita qualquer célula do mapa, mas o piloto só
+     constrói se a célula aceita estrada, se há caminho conhecido e se o estoque paga (`buildRoadFor`, em
+     `autopilot.ts`). Senão, o creep cai na regra seguinte (coletar matéria) **em silêncio**, e parece que o preset
+     não fez nada.
+  3. **O creep dominado não roda regras:** se o preset foi aplicado a um creep dominado, ele só começa a construir
+     depois de liberado.
+- **O conserto provável é de interface:** a prévia e o custo no modo do preset; recusar (ou avisar) um alvo onde não
+  dá estrada; um aviso quando o creep está dominado.
+
+### 12.6 As perguntas da rodada 3
+
+Só o que é decisão do dono, em três grupos:
+
+| # | Grupo | Pergunta | Recomendação do agente | Alternativas |
+|---|---|---|---|---|
+| 32 | O papel | **O eixo do kit:** estilo, conduta, ou os dois? | **O estilo escolhe o kit; a conduta dá o sabor e as portas** | O kit vem do karma; uma árvore só, com ramos por estilo e por conduta |
+| 33 | O papel | **O que é um fiel?** | **Um creep (do time ou neutro) que reconhece o deus:** o primeiro nasce da primeira quest cumprida; a tribo convertida é a escala de cima | Só creeps neutros convertidos; só tribos |
+| 34 | O papel | **Definir agora o papel mecânico e deixar a pele para depois?** | **Sim:** kits, fiéis, influência e conduta, com "deus" como nome provisório; a moldura (§11) continua em análise | Fechar a moldura antes de definir o papel |
+| 35 | O ritmo | **As metas dos três dias** | **Viram metas de design por ato** (cerca de um dia cada a ×1), medidas com bots de perfil | Metas em dias reais; metas só para o playtest do dono |
+| 36 | O ritmo | **Os portais do ato III** | **Lendas geradas pela seed, como neutros**, até existirem lendas de mundos anteriores | Esperar as lendas reais (com contas) |
+| 37 | O fim | **Os caminhos de salvação** | **As tribos, o retornado e os ramos especiais do ato III**, todos como ramos do arco; "não se limpa a corrupção gastando recurso" e "salva o mundo inteiro" continuam (revê "só as tribos") | Só as tribos, como decidido |
+| 38 | O fim | **Os sem-Núcleo continuam até o fim do mundo** | **Sim, com o tema "O arco do mundo";** na fatia E, o Núcleo continua encerrando o mundo, como decidido | Já na fatia E; nunca |

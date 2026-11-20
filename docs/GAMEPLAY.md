@@ -412,6 +412,13 @@ fica horas.
 Os dois jogam **as mesmas regras**: o bot da casa, o script e o humano mandam os mesmos comandos, validados do mesmo
 jeito.
 
+🔮 **Os kits divinos** (a 8ª leva, [consolidado](brainstorm/2026-11-20-consolidado-depois-do-m2.md) §12, perguntas da
+rodada 3): o deus escolheria uma especialização pelo jeito de jogar (**o campeão**, para quem joga ativamente; **o
+aprendiz**, equilibrado e com menos micro; **o guardião**, para quem tem 15 minutos por dia, com automação e suporte
+passivo), e a conduta daria a cada poder uma versão benevolente e uma cruel. Junto vem um ritmo esperado para os três
+dias: o primeiro fiel e a primeira crônica divina no dia 1; quests, ligas e lutas na jungle no dia 2; os portais, as
+lendas e os caminhos de salvação no dia 3, até para quem perdeu o Núcleo.
+
 ## 6. A moldura da saga (em análise)
 
 🔮 **Nada aqui está decidido.** O dono trouxe receitas de manhwa, manhua e mangá (a torre dos deuses, a convocação de
