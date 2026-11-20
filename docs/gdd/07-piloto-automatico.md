@@ -65,7 +65,9 @@
 - A mesma interface serve aos **bots de teste**: partidas inteiras rodando sem interface, para balanceamento.
 
 ## Perguntas abertas
-- Onde fica o piloto automático: por creep, por grupo de creeps, ou por jogador?
+- Onde fica o piloto automático: por creep, por grupo de creeps, ou por jogador? (Em parte respondida em 2026-11-20:
+  a liga é um **piloto de grupo**, "seguir o líder" numa vaga da formação, [02](02-creeps-e-dominio.md); o resto
+  continua por creep.)
 - A complexidade permitida (número de regras, CPU do script) é uma mecânica de progressão?
 - Qual é a diferença entre uma macro de cliente (só quando você está online) e o piloto automático (no servidor)?
 - **Depósito lembrado como vazio** (M2 encontro, checkpoint da F3, 2026-11-17): o piloto só escolhe um depósito

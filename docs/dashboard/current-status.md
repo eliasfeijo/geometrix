@@ -14,17 +14,17 @@
 | **Marco** | **M2 — A emboscada** ([ROADMAP](../ROADMAP.md)). M0, M1 e M1.5 ✅ |
 | **Fatia** | **A — O encontro** ([spec](../specs/m2-encontro/spec.md) · [plan](../specs/m2-encontro/plan.md) · [tasks](../specs/m2-encontro/tasks.md)): ✅ 2026-11-17 · **B — O laboratório de batalha** ([spec](../specs/m2-laboratorio/spec.md) · [plan](../specs/m2-laboratorio/plan.md) · [tasks](../specs/m2-laboratorio/tasks.md)): ✅ 2026-11-20 (F0 a F7; o checkpoint da F5 em duas partes, plan §15) |
 | **Em execução** | Nenhuma fase |
-| **Próxima frente** | **D — A junção** (dono, checkpoint do laboratório, C9: nenhuma regra nova de combate antes dela, "vamos juntar o que tem"), depois da rodada do ROADMAP (abaixo) |
+| **Próxima frente** | **D — A junção** (dono, checkpoint do laboratório, C9: nenhuma regra nova de combate antes dela, "vamos juntar o que tem"); a rodada do ROADMAP foi respondida (2026-11-20), e a D herda a arena mínima pelo encontro e as restrições de contrato |
 | **Pode andar em paralelo** | Nada em andamento |
-| **Aguardando o dono** | (1) A [proposta do ROADMAP depois do M2](../brainstorm/2026-11-20-roadmap-depois-do-m2.md) (3 perguntas), antes da spec da D. (2) O [ADR-0009](../adr/0009-predicao-no-laboratorio.md) (`Proposed`): a predição como opção de experimento do laboratório. (3) O `gambits.meleeBerthSteps` 3 (provisório), da F7. (4) Quando quiser: o grupo 7 do [PLAYTEST](../PLAYTEST.md) (as quatro opções de movimento a 0 e a 150 ms), que alimenta a decisão da predição na D |
+| **Aguardando o dono** | (1) O [ADR-0009](../adr/0009-predicao-no-laboratorio.md) (`Proposed`): a predição como opção de experimento do laboratório. (2) O `gambits.meleeBerthSteps` 3 (provisório), da F7. (3) Quando quiser: o grupo 7 do [PLAYTEST](../PLAYTEST.md) (as quatro opções de movimento a 0 e a 150 ms), que alimenta a decisão da predição na D |
 | **Bloqueios** | Nenhum |
 
 ### Próximos passos
 
-1. **A rodada do ROADMAP** ([proposta](../brainstorm/2026-11-20-roadmap-depois-do-m2.md)): o dono responde às três
-   perguntas (o formato com o marco atual, o próximo e um banco de ideias por tema; a fatia C fica ou sai do M2; o
-   próximo marco agora ou no fim do M2), e o agente reescreve o ROADMAP e as etiquetas de marco do GDD num commit
-   `docs`.
+1. ✅ **A rodada do ROADMAP** (dono, 2026-11-20): o [consolidado](../brainstorm/2026-11-20-consolidado-depois-do-m2.md)
+   §0 respondido; o [ROADMAP](../ROADMAP.md) virou marco atual + próximo (Os itens, candidato) + banco por tema; a
+   fatia C saiu do M2. A D herda a arena mínima pelo encontro, a direção nos três casos e três restrições de contrato
+   (GDD 06; ROADMAP, fatia D).
 2. **A spec da D** (skill `spec-slice`, `docs/specs/m2-juncao/`): o encontro abre a instância de batalha no lugar do
    sorteio, com dois ou mais lados, entrada no meio da luta, auto-resolve e os errantes. Perguntas que ela herda:
    o contrato com entrada no meio da luta (um ADR, `Proposed`), o raio da "bolha" e o tempo do mundo durante a
@@ -108,7 +108,7 @@ Só o que ainda está aberto. Ao resolver, tire daqui e registre no Histórico.
 | M0 — Design | ✅ |
 | M1 — O ciclo da riqueza | ✅ 2026-11-14 |
 | M1.5 — A névoa | ✅ 2026-11-14 (rede e fog of war) |
-| M2 — A emboscada | 🟡 Fatia A ✅ 2026-11-17 · Fatia B ✅ 2026-11-20 · Fatias C, D, E ⬜ (o lugar da C e o planejamento depois do M2: [proposta](../brainstorm/2026-11-20-roadmap-depois-do-m2.md), aguardando o dono) |
+| M2 — A emboscada | 🟡 Fatia A ✅ 2026-11-17 · Fatia B ✅ 2026-11-20 · Fatias D, E ⬜ · Fatia C saiu do M2 para o banco (dono, 2026-11-20; [consolidado](../brainstorm/2026-11-20-consolidado-depois-do-m2.md)) |
 | M2.5 — A jungle hostil e o fim do mundo | ⬜ (fim do mundo decidido no GDD, 2026-11-15) |
 | M3 — O time · M4 — O mundo vivo · M5 — As lendas | ⬜ |
 
@@ -179,7 +179,7 @@ Só o que ainda está aberto. Ao resolver, tire daqui e registre no Histórico.
 | M2 B — F6 Os ajustes do checkpoint | ✅ Concluída numa sessão paralela, merge em `main`. O primeiro passo imediato, a inatividade da batalha inteira (15 s sem dano, todos fogem), o domínio que acaba com a batalha, a tela legível num notebook com os sinais de ataque, golpe e erro; `BATTLE_VERSION` 3 | [tasks.md](../specs/m2-laboratorio/tasks.md) (registro da F6) |
 | M2 B — F7 Os ajustes, 2ª parte | ✅ Concluída numa sessão paralela, merge em `main`. Fecha a fatia B. A contagem vale o que está segurado no fim (`BATTLE_VERSION` 4); o ▲ *kita* o ■ e quem atira desvia do corpo a corpo; quatro opções de movimento para comparar (ADR-0009, `Proposed`); os sinais de morte e de fuga; o medidor "sem dano" acima da arena; o Começar sobe a página | [tasks.md](../specs/m2-laboratorio/tasks.md) (registro da F7) · `runs/m2-laboratorio-f7/` (capturas, fora do Git) |
 | Fim do mundo — brainstorm | ✅ Respondido pelo dono (2026-11-15, rodada interativa). A duração termina num apocalipse: a corrupção dos depósitos de cristal esgotados, que não pode ser limpa e é vista de longe; só o final feliz das tribos (M4) a detém, e salva o mundo inteiro; vitória pírrica com humor; qualquer creep vivo no fim vira lenda; empate no relógio da fatia E. **ROADMAP:** fatias do M2 como grafo, M2.5 "A jungle hostil e o fim do mundo", M5 novo, "As lendas" | [brainstorm §0](../brainstorm/2026-11-15-fim-do-mundo.md) · [ROADMAP](../ROADMAP.md) |
-| M2.5, M3, M4, M5 | ⬜ Não iniciados | [ROADMAP](../ROADMAP.md) |
+| Depois do M2 | Próximo marco candidato: **Os itens** (a skill vem do item, modelo híbrido; forja e cofre no Núcleo). O resto é o banco de ideias por tema, sem número (dono, 2026-11-20); os antigos M2.5 a M5 viraram temas | [ROADMAP](../ROADMAP.md) · [consolidado](../brainstorm/2026-11-20-consolidado-depois-do-m2.md) |
 
 ## Achados do playtest
 

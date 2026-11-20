@@ -11,7 +11,8 @@
 - Progressão própria por creep: level, alocação de stats, DNA (inato) × evolução individual.
 - Cada creep tem um **inventário**. A capacidade varia com level, stats e DNA.
 - **A morte é permanente.** A exceção é uma eventual skill, magia ou ultimate de reviver.
-- *(Do conceito inicial)* 3 skills base + 1 ultimate desbloqueada por level-up.
+- *(Do conceito inicial)* 3 skills base + 1 ultimate desbloqueada por level-up. **Revisto em 2026-11-20:** o modelo
+  híbrido (abaixo).
 - **M1** (2026-11-13): dominar é livre (custo, cooldown e distância existem como parâmetros, em 0). O custo sai do
   estoque do time; o cooldown é por jogador; a distância vai do Núcleo do time ao creep. O creep dominado só muda
   de ordem por comando de quem o domina. Detalhes na [spec M1 §5](../specs/m1-ciclo-da-riqueza/spec.md).
@@ -50,6 +51,25 @@
   mundo vira lenda**, inclusive do time derrotado. Se o apocalipse não deixa ninguém vivo, ninguém leva lenda,
   nem os vencedores. Uma lenda pode invadir outro mundo (M5, As lendas; [01](01-mundo.md)).
 
+- **Rodada do consolidado depois do M2** (dono, 2026-11-20; [consolidado](../brainstorm/2026-11-20-consolidado-depois-do-m2.md) §0). Direções para os temas do
+  banco ([ROADMAP](../ROADMAP.md)); os detalhes ficam para a spec de cada tema:
+  - **A progressão é híbrida** (revê "3 skills base + 1 ultimate desbloqueada por level-up", acima): **o DNA dá uma
+    skill natural ao creep, os itens dão as outras**, e o level do creep continua, com peso menor. Tema "Os itens",
+    o próximo marco candidato.
+  - **Cada item faz o mesmo efeito para todos os DNAs**, e alguns têm efeitos simbióticos com DNAs específicos. Os
+    bots têm presets de itens, que viram a dica da interface para o jogador casual (uma nota curta e amigável); os
+    presets da comunidade e o ranking ficam com o deploy (dono, 5ª leva).
+  - **A liga é de um creep líder:** o jogador domina um creep para formá-la; solto, o líder continua pelos gambits.
+    Um jogador pode formar várias ligas ao longo da partida. **Piloto de grupo:** o jogador controla o líder, os
+    seguidores ficam na formação pelo DNA e lutam pelos gambits, com até três ordens de liga. **Recrutamento por
+    diálogo**, dominando o líder: a maioria aceita pela fama do líder ou pelo laço, alguns pedem algo simples, e a
+    side-quest pessoal fica para os traits raros. **O símbolo é só identidade**, por ora (o estandarte físico, com os
+    itens). Tema "As ligas".
+  - **Laços simbólicos primeiro:** a camaradagem aparece na ficha e na crônica; os buffs e a reação à morte de um
+    amigo entram quando o playtest mostrar que o jogador se importa. **Títulos conquistados** (permanentes, por um
+    feito único) **e disputados** (do melhor do mundo num feito agora, passam para quem superar), de início só
+    simbólicos, na crônica. Tema "Os personagens".
+
 ## Proposta
 - Dominar só troca **quem emite os comandos** do creep. Ver [ADR-0002](../adr/0002-tudo-e-comando.md).
 - **A população precisa de um limitador.** Num mundo de dias, sem limite, o número de creeps cresce sem parar e
@@ -73,6 +93,16 @@
   poder escala para o mundo invadido, para evitar *power creep* entre partidas. Em camadas: registrar as lendas no
   fim do mundo (M2.5), a invasão por bots e a invasão por jogadores com contas entre mundos (M5, com o control
   plane).
+
+- **Os itens e os personagens: como fazer** (agente, 2026-11-20, não aprovado; [consolidado](../brainstorm/2026-11-20-consolidado-depois-do-m2.md) §2 e §3,
+  com o detalhe nas levas): o creep guarda a identidade (nome, trait, fama, títulos, laços) e uma maestria pequena; o
+  item evolui pelo uso, tem durabilidade e cai no despojo. **Traits** de um catálogo pequeno de presets, cada um com
+  a postura, a exigência de recrutamento, a reação à morte de um amigo, a voz e um **kit de crônica** (origem e
+  modelo de side-quest), sorteados no nascimento pelo `state.rng`, com o texto no cliente. A **fama** em duas
+  camadas (a do creep e a relação do time com cada tribo, [05](05-tribos-e-diplomacia.md)), que cai com as
+  derrotas. O teto da liga começa em 1 seguidor e cresce com o level do líder. Se o líder morre, os membros voltam às
+  próprias regras, e a liga e o símbolo ficam para quem assumir. Os **laços**, quando ganharem efeito, seriam buffs
+  pequenos de coordenação, e a morte de um amigo, fúria, luto ou vingança, conforme o trait.
 
 ## Ideias em incubação (não entram antes do M3)
 - **Reprodução e gerações:** creeps M/F, idade, morte natural, herança de DNA. Seria um limitador de população

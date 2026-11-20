@@ -42,6 +42,9 @@
   vira um foco de **corrupção**, que envenena quem está perto e cresce até cobrir o mapa (M2.5, [01](01-mundo.md)).
   Quantos depósitos se esgotaram decide se o fim já é inevitável. A corrupção **não pode ser limpa** pelos
   jogadores, nem gastando recurso.
+- **O Núcleo é a forja e o cofre** (dono, 2026-11-20, na rodada do [consolidado](../brainstorm/2026-11-20-consolidado-depois-do-m2.md); tema "Os itens"): os itens
+  se fazem e evoluem no Núcleo, com material carregado até lá; o item guardado no Núcleo não se perde quando o creep
+  morre. Detalhes (receitas, custo, o papel exato do cristal) na spec do tema.
 
 ## Proposta
 
@@ -94,6 +97,13 @@ A direção está em Decidido; o detalhe, no [brainstorm do fim do mundo](../bra
   cristal no M2 deve removê-lo nem fazê-lo regenerar sem considerar esta proposta.
 - **Risco** (agente): os bots esgotam o cristal em ~9,7 h, o que dispararia o fim total em toda partida; o esgotamento
   precisa ser rebalanceado junto, com o `geo sweep`.
+
+### Itens e o Núcleo (ideias do dono, 2026-11-20, não aprovadas)
+Detalhes no [brainstorm de itens, reputação e governança](../brainstorm/2026-11-20-itens-reputacao-governanca.md) §2 e §3.
+- **Itens como fonte das skills** ([02](02-creeps-e-dominio.md)): o agente propõe que se façam com material físico,
+  com o **cristal como ingrediente** (o papel que falta a ele), e que a **durabilidade** seja o sumidouro que esta
+  seção procura. A forja puxa a mineração, e a mineração puxa a corrupção.
+- **A forja e o cofre no Núcleo** foram decididos (acima, 2026-11-20).
 
 ## Ideias em incubação (sem marco definido)
 - **Pontes e construções no rio:** um conceito próprio de travessia construída, que deixaria a estrada cruzar o rio.
