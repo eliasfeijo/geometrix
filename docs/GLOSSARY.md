@@ -33,8 +33,12 @@
 | **Crônica** | O narrador do mundo: o `sim` emite os eventos, e o cliente os conta em frases, com a voz de cada creep. |
 | **Liga** | Um grupo de creeps liderado por um **creep** (não por um jogador), com símbolo próprio; na batalha, o líder pelo humano e os seguidores na formação, pelos gambits (tema "As ligas"). |
 | **Mestre da mesa** | O papel neutro que mantém a partida viva e conduz o arco do mundo, sem mexer no placar. Um bot sempre, com a cadeira aberta a um humano. |
-| **Deus** | *(Nome provisório)* O papel do jogador na crônica, com a **influência** (o peso que abre portas), a **conduta** (do benevolente ao cruel, nascida das ações) e um recurso próprio. A moldura da saga pode renomeá-lo. |
+| **Deus** | *(Nome provisório)* O papel do jogador na crônica, com a **influência** (o peso que abre portas), a **conduta** (o karma, de −1 cruel a +1 benevolente, nascido das ações) e um recurso próprio. A moldura da saga pode renomeá-lo. |
 | **Arco do mundo** | A história principal secreta da partida, em atos com gatilhos, que termina no fim do mundo. O mestre escolhe os ramos; tudo é revelado no fim. |
 | **Corrupção** | O apocalipse do arco: cada depósito de cristal esgotado apodrece e cresce até cobrir o mapa. Ninguém a limpa. |
 | **Ponto sem volta** | O momento em que tantos depósitos se esgotaram que o fim do mundo já é inevitável. |
 | **Lenda** | Um creep vivo no fim do mundo, de qualquer time. Mais adiante, pode invadir outro mundo. |
+| **Kit divino** | A especialização do deus, escolhida pelo estilo de jogo (ex.: quem joga ativamente, quem está aprendendo, quem tem 15 minutos por dia); a conduta dá o sabor de cada poder. |
+| **Neutralidade kármica** | A faixa do karma perto de zero, com benefícios e trade-offs próprios, entre o cruel e o benevolente. |
+| **Fiel** | Um creep (do time ou neutro) que reconhece o deus; o primeiro nasce da primeira quest do deus cumprida. |
+| **Portal** | A passagem do ato III por onde chegam as lendas: de início, geradas pela seed, como bots neutros. |

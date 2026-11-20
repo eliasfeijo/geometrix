@@ -29,15 +29,25 @@
    sem decisão**, a pedido do dono (consolidado §11, com os próximos passos em §11.7). Nada do M2 depende dela.
    O [guia da partida](../GAMEPLAY.md) conta a partida esperada com todas essas ideias, marcando o que já se joga, o
    que está decidido, o que é proposta e o que está em análise; a [visão geral](../OVERVIEW.md) foi atualizada para o
-   fim da fatia B.
-2. **A spec da D** (skill `spec-slice`, `docs/specs/m2-juncao/`): o encontro abre a instância de batalha no lugar do
+   fim da fatia B. **A 8ª leva** (o papel do jogador: os kits divinos por estilo, o ritmo dos três dias, os portais,
+   salvar o mundo perdendo a guerra) teve a **rodada 3** respondida (consolidado §12.7): o kit pelo estilo, o karma de
+   −1 a +1, o fiel, as metas por ato medidas com bots de perfil, os portais com lendas da seed, três caminhos de
+   salvação e os sem-Núcleo com o arco. Nada muda no M2.
+2. **🐞 O preset construtor de estrada não funciona para o jogador** (dono, 2026-11-20, nos testes desde antes da
+   fatia A): pede o ponto no mapa, mas nada acontece ao clicar nem ao mexer o mouse (sem a prévia da estrada e do
+   custo); só dá para construir dominando um creep, no modo estrada. Os bots constroem com o mesmo preset, então o
+   `sim` funciona. Hipóteses e arquivos no consolidado §12.5: o modo de escolher não tem prévia nem retorno; o alvo é
+   aceito sem conferir se dá estrada, e o creep cai em "coletar matéria" em silêncio; o creep dominado não roda
+   regras. **Uma sessão curta de conserto** (repro, teste, correção), antes da D ou junto dela: o estilo "15 min por
+   dia" depende dos presets.
+3. **A spec da D** (skill `spec-slice`, `docs/specs/m2-juncao/`): o encontro abre a instância de batalha no lugar do
    sorteio, com dois ou mais lados, entrada no meio da luta, auto-resolve e os errantes. Perguntas que ela herda:
    o contrato com entrada no meio da luta (um ADR, `Proposed`), o raio da "bolha" e o tempo do mundo durante a
    batalha (GDD 06, perguntas abertas), a predição no cliente (o ADR-0008 item 9 e o ADR-0009, com o grupo 7 do
    PLAYTEST) e o deploy de testes, que espera a junção colada (C10).
-3. **Em paralelo, quando o dono quiser:** as rodadas de design do **papel do cristal** e da **fatia E** (cerco e
-   reparo); a **C** (chat, console e macros), se continuar no M2.
-4. **Achados das sessões** para as rodadas que tocarem neles: a luta só com sorteio não compensa o risco (a D a
+4. **Em paralelo, quando o dono quiser:** as rodadas de design do **papel do cristal** e da **fatia E** (cerco e
+   reparo).
+5. **Achados das sessões** para as rodadas que tocarem neles: a luta só com sorteio não compensa o risco (a D a
    substitui); a extorsão contra o bot é quase de graça; o meio de jogo a ×6 fica vazio depois de explorar (A F6,
    C14); a IA da batalha é previsível nos corredores (a proposta "IA que aprende", GDD 06).
 

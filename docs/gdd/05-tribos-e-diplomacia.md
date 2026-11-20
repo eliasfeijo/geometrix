@@ -20,7 +20,9 @@
 - **Fim do mundo** (dono, 2026-11-15; registro no
   [brainstorm do fim do mundo](../brainstorm/2026-11-15-fim-do-mundo.md) §0):
   - **O final feliz secreto:** a única forma de não morrer no apocalipse ([01](01-mundo.md)) é seguir a quest das
-    tribos neutras. Ele **salva o mundo inteiro**, inclusive o time inimigo. Entra no M4, com as tribos.
+    tribos neutras. Ele **salva o mundo inteiro**, inclusive o time inimigo. Entra no M4, com as tribos. **Revisto na
+    rodada 3 (2026-11-20):** as tribos são um dos três caminhos de salvação, com o retornado e os ramos especiais
+    do ato III ([01](01-mundo.md)).
   - **A jungle que acorda:** as ondas de errantes e os chefões despertos são camadas do apocalipse, por cima da
     corrupção.
   - **Invasores de outros mundos:** lendas ([02](02-creeps-e-dominio.md)) invadem um mundo no fim, no M5 (As lendas).
