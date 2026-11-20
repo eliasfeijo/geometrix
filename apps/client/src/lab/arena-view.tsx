@@ -166,12 +166,61 @@ const DAMAGE_SHIFT: [number, number][] = [
   [-1, 0.4],
 ];
 
-/** One signal of the attack, drawn at `now` (spec L-8, plan C6). */
+/** The way out of the arena from `at`: towards its nearest edge. */
+function outward(at: Point, width: number, height: number): Dir {
+  const gaps: [Dir, number][] = [
+    ["up", at.y],
+    ["down", height - 1 - at.y],
+    ["left", at.x],
+    ["right", width - 1 - at.x],
+  ];
+  return gaps.reduce((a, b) => (b[1] < a[1] ? b : a))[0];
+}
+
+/**
+ * Who fell or fled, where its name was (under the cell; over it on the
+ * bottom rows), kept inside the arena at the sides, fading at the end.
+ */
+function Notice(props: {
+  cx: number;
+  cy: number;
+  p: number;
+  color: string;
+  text: string;
+  width: number;
+  height: number;
+}) {
+  const fade = props.p < 0.7 ? 1 : 1 - (props.p - 0.7) / 0.3;
+  const edge = 4;
+  const [x, anchor] =
+    props.cx < edge
+      ? [0.2, "start"]
+      : props.cx > props.width - edge
+        ? [props.width - 0.2, "end"]
+        : [props.cx, "middle"];
+  const y = props.cy > props.height - 2 ? props.cy - 1.2 : props.cy + 1.25;
+  return (
+    <text
+      class="lab-notice"
+      x={x}
+      y={y}
+      text-anchor={anchor}
+      fill={props.color}
+      opacity={fade}
+    >
+      {props.text}
+    </text>
+  );
+}
+
+/** One signal of the attack, drawn at `now` (spec L-8, plan C6, C13). */
 function EffectMark({
   effect,
   now,
   at,
   slot,
+  width,
+  height,
 }: {
   effect: Effect;
   now: number;
@@ -179,10 +228,104 @@ function EffectMark({
   at: Point;
   /** Earlier hits on the same target still showing: their numbers step aside. */
   slot: number;
+  width: number;
+  height: number;
 }) {
   const p = effectProgress(effect, now);
   const cx = at.x + 0.5;
   const cy = at.y + 0.5;
+  if (effect.kind === "death") {
+    // The shape bursts: its outline grows and fades, and shards fly out.
+    const color = sideColor(effect.side);
+    const shards = [0, 1, 2, 3, 4, 5].map((k) => {
+      const a = (k * Math.PI) / 3 + Math.PI / 6;
+      const r0 = 0.35 + 0.7 * p;
+      return (
+        <line
+          key={k}
+          x1={cx + Math.cos(a) * r0}
+          y1={cy + Math.sin(a) * r0}
+          x2={cx + Math.cos(a) * (r0 + 0.3)}
+          y2={cy + Math.sin(a) * (r0 + 0.3)}
+          stroke={color}
+          stroke-width={0.12}
+          stroke-linecap="round"
+        />
+      );
+    });
+    return (
+      <g class="lab-effect" data-kind={effect.kind}>
+        <g opacity={1 - p}>
+          <DnaShape
+            dna={effect.dna}
+            cx={cx}
+            cy={cy}
+            r={0.47 + 0.4 * p}
+            stroke={color}
+            strokeWidth={0.12}
+          />
+          {shards}
+        </g>
+        <Notice
+          cx={cx}
+          cy={cy}
+          p={p}
+          color={color}
+          text={`${effect.name} caiu`}
+          width={width}
+          height={height}
+        />
+      </g>
+    );
+  }
+  if (effect.kind === "escape") {
+    // An arrow out of the arena, sliding the way out inside its last cell
+    // (it is on the ring, the arena's edge) and fading.
+    const color = sideColor(effect.side);
+    const [dx, dy] = STEP[outward(at, width, height)];
+    const ox = cx + dx * (-0.9 + 0.3 * p);
+    const oy = cy + dy * (-0.9 + 0.3 * p);
+    const text =
+      effect.reason === "idle"
+        ? `${effect.name} fugiu (inatividade)`
+        : `${effect.name} fugiu`;
+    return (
+      <g class="lab-effect" data-kind={effect.kind}>
+        <g opacity={1 - p}>
+          <DnaShape
+            dna={effect.dna}
+            cx={cx}
+            cy={cy}
+            r={0.47}
+            stroke={color}
+            strokeWidth={0.08}
+          />
+          <line
+            x1={ox - dx * 0.5}
+            y1={oy - dy * 0.5}
+            x2={ox + dx * 0.3}
+            y2={oy + dy * 0.3}
+            stroke={color}
+            stroke-width={0.16}
+            stroke-linecap="round"
+          />
+          <polygon
+            points={`${ox + dx * 0.6},${oy + dy * 0.6} ${ox + dx * 0.2 - dy * 0.3},${oy + dy * 0.2 - dx * 0.3} ${ox + dx * 0.2 + dy * 0.3},${oy + dy * 0.2 + dx * 0.3}`}
+            fill={color}
+          />
+        </g>
+        <Notice
+          cx={cx}
+          cy={cy}
+          p={p}
+          color={color}
+          text={text}
+          width={width}
+          height={height}
+        />
+      </g>
+    );
+  }
   if (effect.kind === "attack") {
     // A ring that grows and fades around the attacker, and a burst on the
     // side it strikes towards: a slash for melee, a muzzle flash for a shot.
@@ -317,6 +460,9 @@ export function ArenaView(props: Props) {
 
   /** Where an effect stands: on its creep while it is there, else its cell. */
   const effectAt = (effect: Effect): Point | null => {
+    if (effect.kind === "death" || effect.kind === "escape") {
+      return cellPoint(arena.width, effect.cell);
+    }
     if (effect.kind !== "miss") {
       const creep = drawn.participants.get(effect.id);
       if (creep !== undefined) return creep;
@@ -504,6 +650,8 @@ export function ArenaView(props: Props) {
             now={now}
             at={at}
             slot={slot}
+            width={arena.width}
+            height={arena.height}
           />
         );
       })}
