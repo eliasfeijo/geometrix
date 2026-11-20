@@ -19,7 +19,9 @@ com participantes montados à mão. Ela pergunta:
 2. **A micro importa e o DNA não decide sozinho** (GDD 06): dominando um creep, o dono vence confrontos que a IA
    perde no mesmo setup; e nenhum confronto 1 × 1 entre DNAs, de HP cheio, está decidido de antemão.
 3. **Quanta latência a regra de grade aguenta sem predição?** É a pergunta que trava o deploy (ROADMAP,
-   2026-11-15): o laboratório a responde localmente, às cegas.
+   2026-11-15): o laboratório a responde localmente, às cegas. **Checkpoint da F5 (dono, 2026-11-20):** até 100 ms
+   a nota fica em 4 ou mais, e abaixo de 3 a partir de 200 ms; o deploy e a predição no cliente esperam a junção
+   (plan §15, C10).
 4. **A IA de gambits serve de adversário e de auto-resolve:** joga de um jeito crível, é rápida e é determinística.
 
 Depois desta fatia, a junção (D) liga o encontro do mundo (A) à instância de batalha, no lugar do sorteio
@@ -95,7 +97,7 @@ chutes.
 A junção com o mundo: o encontro abrindo a batalha, a bolha, o tempo do mundo durante a luta, os participantes
 vindos do mundo, a tradução dos eventos para o `sim` (fatia D); os errantes e o lado neutro (D); a regra **livre**
 (MOBA-lite) e a camada de **forja**, que o dono decide no checkpoint depois de ver a grade; predição no cliente
-(volta à mesa se a grade não aguentar a latência do deploy); skills, energia, level e XP (M2.5); fog dentro da
+(volta à mesa na junção, dono, 2026-11-20; a F7 só experimenta desenhar o próprio creep adiantado, plan §15, C11); skills, energia, level e XP (M2.5); fog dentro da
 batalha; terreno pelo entorno, rio, vau, árvores e estruturas na arena; fogo amigo; alianças entre lados; o
 transporte real pela rede (WebSocket) e o servidor de batalha; a crônica narrada; replay de batalha na página.
 
@@ -170,7 +172,8 @@ Formato: *Quando [gatilho], o sistema deve [resposta].*
 - **L-2** O humano deve poder dominar um participante, trocar de participante ou não dominar nenhum a qualquer
   momento (D12), e jogar pelo teclado (D13).
 - **L-3** Toda entrada do humano deve atravessar o canal simulado até o *worker*, e a página deve renderizar só o que
-  volta pelo canal, sem predição (D17).
+  volta pelo canal, sem predição (D17). **Checkpoint da F5 (2ª parte):** uma opção de experimento pode desenhar o
+  creep dominado adiantado (C11); a simulação continua só no *worker*.
 - **L-4** O seletor de RTT e o *jitter* devem valer na hora; o atraso medido entre a tecla e o efeito deve aparecer
   na tela.
 - **L-5** No modo às cegas, o RTT de cada batalha deve ser sorteado do seletor e ficar escondido até o dono dar a

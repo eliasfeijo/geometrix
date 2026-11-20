@@ -583,3 +583,140 @@ da F5).
 
 **Para a retomada do checkpoint** (acima): os grupos 1 a 3 refeitos com as regras e a tela novas, depois os
 grupos 4 a 8. Continuam pendentes as interpretações 1 a 8 da F5 e o *jitter* da reação de cada nível (F4).
+
+### Checkpoint, 2ª parte (dono, 2026-11-19 e 20): a retomada, grupos 1 a 8
+
+Com o `main` da F6 (`BATTLE_VERSION` 3), o registro limpo e o lab no Vite (5173). Os grupos 1 a 3 refeitos, depois
+do 4 ao 8. O export é o `sessao-lab-2026-11-19-23-13.json` (71 batalhas: 9 do grupo 1, 27 do 2, 2 do 3, 4 do 4 e 29
+às cegas; o grupo 7 ficou fora do export, sem nota), na pasta Downloads do dono, fora do repo.
+
+**Grupo 1** (9 duelos dominando, RTT 0, IA normal, seed 1):
+
+| Você × IA | pedras | aberta | corredor |
+|---|---|---|---|
+| ■ × ● | venceu (61,6 s): "precisei me esconder e me posicionar para fazer *bait* nas esquinas" | perdeu, "pelo menos consegui dar 1 hit" | perdeu (84,3 s), "acertei alguns hits" |
+| ▲ × ● | venceu: "agora o triângulo ficou forte" | venceu: "legal", a IA do ● "deu alguns moles" | venceu (27,1 s): "correu safado" (o registro não guarda o motivo do fim) |
+| ● × ■ | venceu: "a IA do quadrado não sabe usar o terreno" | venceu | venceu |
+
+7 de 9 (na 1ª parte, 4 de 9). Notas: **F1 5, F2 5, F5 5** (na 1ª parte, 3, 3 e 4). "Agora melhorou muito com
+feedback visual"; "os feedbacks visuais melhoraram 1000% a experiência do combate, mesmo apenas com ataques
+básicos"; o movimento "bem fluido", desvia com mais facilidade; nada travou nem confundiu, "100% estável". ■ e ▲ os
+mais divertidos; a melhor luta, o ■ baitando o ● nas pedras; na aberta e no corredor, o ■ quase não vence o ●.
+
+**Grupo 2** (27 IA × IA instantâneas, 3 seeds sorteadas por confronto): nenhum número surpreendeu.
+
+| Confronto (você no A) | pedras | aberta | corredor |
+|---|---|---|---|
+| ■ × ● | você 1/1 · IA 0/3 | 0/1 · 0/3 | 0/1 · 0/3 |
+| ▲ × ● | 1/1 · 3/3 | 1/1 · 2/3 | 1/1 · 3/3 |
+| ● × ■ | 1/1 · 3/3 | 1/1 · 3/3 | 1/1 · 3/3 |
+
+Só um confronto que a IA perde virou com a micro do dono: o ■ × ● nas pedras, pelo terreno (uma batalha só, um
+sinal).
+
+**Grupo 3** (assistir; as duas batalhas rodaram no **corredor** por engano, não nas pedras e na aberta, e não foram
+refeitas: o grupo julga a tela e a IA, e o sweep da F6 já mediu a inatividade do 3 × 3 nas pedras em 0%). **F3 ok:**
+tudo legível; do relógio de inatividade, ele só viu o alerta vermelho dos últimos 5 s, "e pra mim é suficiente"; o
+medidor "sem dano: … · fogem em …" na barra passou despercebido. **F4:** a IA "ainda tá bem bobinha, tem espaço pra
+melhorar, mas cumpre o papel". No 1 × 1 × 1, o ● esperou o ■ matar o ▲ no corpo a corpo ("não entendi o mole que o
+triângulo deu pra ser solado no melee") e depois venceu o ■. O 3 × 3, "mais ou menos", o normal para quem assiste de
+fora uma luta em grupo: é preciso focar num creep. Faltou um sinal (visual; som depois) de quem morre ou foge, e
+anúncios como os do DotA e do LoL. Ideia: um **comandante** nas batalhas em grupo (GDD 06, proposta).
+
+**Grupo 4** (corredor, ▲ × ▲, assistindo): o editor existe, mas os presets bastam, e "acho difícil o jogador
+conseguir editar a regra dos creeps durante o combate" (pode mudar com a tática do comandante). **A esquiva fez
+muita diferença:** "palmas para a esquiva da IA média, o azul aguentou bastante tempo 1vs2" (o ▲ do lado A, depois
+do reforço ● no lado B). **A IA do ▲ fica parada no corpo a corpo do ■**, tomando golpe, quando poderia *kitar*
+como o ● (2ª vez: no grupo 3 também). O medidor "sem dano" de novo não ficou na memória: "talvez essa barra esteja
+mal posicionada e passa despercebida".
+
+**Grupos 5 e 6** (às cegas, ▲ você × ● normal nas pedras, interpolar ligado, 29 batalhas: uma de 150 ms se perdeu
+quando um atalho fechou a aba). Vitórias: 28 de 29 (a derrota, a 300 ms). Duração mediana: 25,3 s.
+
+| RTT | 0 | 50 | 100 | 150 | 200 | 300 |
+|---|---|---|---|---|---|---|
+| Notas | 4 5 3 3 4 | 5 5 3 5 3 | 5 3 3 5 4 | 4 3 2 4 | 3 2 2 2 2 | 2 2 2 2 2 |
+| Mediana | 4 | 5 | 4 | 3,5 | 2 | 2 |
+| Atraso medido (mediana) | 78 ms | 125 | 184 | 234 | 282 | 386 |
+
+**Veredito:** nota em 4 ou mais até **100 ms**; abaixo de 3 a partir de **200 ms**. O dono: "acima de 100 ms começa
+a ficar perceptível"; nenhuma nota abaixo de 2; faltou testar lutas maiores e longas (um cerco de fim de jogo). No
+começo ele ainda calibrava o senso de latência; separadas as 15 primeiras das 14 últimas, a diferença é ruído (2 ou
+3 notas por RTT em cada metade), e 200 e 300 ms dão 2 nas duas. Contra o bot, o atraso "é previsível": depois de
+algumas partidas, ele antecipa o tiro e acerta. O que incomoda não é bem a latência, é **"a pausa entre cada
+movimento"**, que o leva a soltar e apertar a tecla várias vezes: "revisitar a implementação do movimento (pelo
+menos no combate) para ficar mais fluido, menos engessado". **Causa provável:** a interpolação desliza só um tick
+(50 ms, plan P8), e o ▲ anda 4 células por segundo (250 ms por célula): segurando, ele desliza 50 ms e fica ~200 ms
+parado em cada célula. Isso explica as notas 3 a 0 ms.
+
+**Grupo 7** (300 ms, o mesmo setup): **F6: sem interpolar sente melhor**, "fica mais fácil de sincronizar o
+movimento com a latência". A 0 ms, sem interpolar, a pausa continua, mas ele vê que o creep andou no mesmo tick da
+ação: "ajuda a mitigar o problema, mas não acho que seja a melhor solução". Ele perguntou por um meio-termo: uma
+interpolação que não pause quando o input seguinte continua o movimento.
+
+**Grupo 8** (fechamento):
+
+1. **A regra de grade é divertida?** Sim: "gostei bastante do resultado que alcançamos para o combate".
+2. **A micro importa?** Sim: "esculachei" o ■ × ● nas pedras graças aos sinais, que mostram o alcance do tiro de
+   cada creep e deixam calibrar o timing do golpe. **O exploit do ●:** nas pedras, baitando de um canto para o
+   outro, os golpes são quase garantidos contra o ●, que não se aproxima e sempre passa pelos mesmos corredores,
+   andando reto mesmo com o dono esperando na esquina. Ele acha que vale contra qualquer IA, com qualquer DNA
+   ("humanos aprendem sozinhos").
+3. **A latência:** "esquece deploy por enquanto". O deploy, mesmo o de testes, espera a junção colada (o mundo cria a
+   instância, o canal fica aberto para reforços e terceiros, o resultado volta ao mundo); "podemos muito bem acabar
+   decidindo colocar predição no client".
+4. **A IA serve?** "Cumpre seu papel."
+5. **A próxima regra:** nenhuma antes da junção: "vamos juntar o que tem".
+6. **O movimento:** experimentar as opções antes de pedir uma decisão ("não tenho a base comparativa").
+7. **A F7:** sim, com a rolagem até a arena ao clicar em Começar (pedido do dono).
+8. **O comandante:** "o Mount & Blade inspira de várias formas, não só na conversa", sem comparar a escala. O dono
+   pediu para **reorganizar o planejamento macro depois do M2**: "tem muita coisa com marco".
+9. **Anúncios e som:** não são prioridade. O dono pediu que o agente analise e proponha onde cada ideia cabe, e
+   pergunte só o que o repo não responde.
+
+**As interpretações** (F4 a F6): aceitas, salvo duas. **(a) A contagem com várias ações** (F5, interpretação 1): o
+dono perguntou o que vale quando há vários comandos durante a contagem (andar para o norte, depois largar a bolsa);
+a resposta está na F7 (abaixo), com a decisão dele. **(b) O elogio da esquiva** foi no ▲ × ▲ do grupo 4, não no
+duelo contra o ●. O *jitter* da reação (fácil 600 ± 250 ms, normal 250 ± 100, difícil 100 ± 50) fica como está até
+a F7 mexer na IA.
+
+**Decisões** (plan §15, C9 a C14): a próxima regra é nenhuma (a fatia B fecha depois da F7; a frente seguinte é a
+junção); o deploy e a predição esperam a junção; o movimento se experimenta no laboratório antes de virar regra; a
+IA do ▲ e do ● se ajusta; a tela ganha o sinal de morte e de fuga; o comandante e os anúncios viram propostas no
+GDD 06.
+
+## F7 — Os ajustes do checkpoint da F5, 2ª parte (`m2/laboratorio-f7-ajustes`)
+
+As decisões C9 a C14 do checkpoint (plan §15). Worktree: `.claude/worktrees/lab-f7`. A F7 fecha a fatia B.
+
+- [x] As decisões no GDD 06, no ROADMAP, no brainstorm, na spec e no plan; o registro da 2ª parte do checkpoint
+      (acima) (2026-11-20)
+- [ ] **A contagem com várias ações** (resposta ao dono; a decisão dele fica aqui antes de mexer em código). Hoje
+      (`step.ts`, `commands.ts`): andar é uma intenção que dura enquanto a tecla está segurada, então no fim da
+      contagem anda quem ainda segura a direção; um toque de movimento dado e solto durante a contagem se perde
+      (só o espaço tem *latch*). Largar e catar são um pedido que espera: o último dos dois vale, e sai no primeiro
+      tick da luta. No exemplo do dono (norte, depois largar): **segurando o norte, as duas coisas**, no mesmo tick
+      (primeiro o passo, depois a bolsa, na célula nova); **tendo soltado o norte, só largar**
+- [ ] **O movimento, para comparar** (C11): ao lado do "interpolar" e do "sem interpolar" de hoje, duas opções de
+      desenho na "Rede simulada": **deslizar o passo inteiro** (o creep desliza na velocidade do DNA, sem a pausa,
+      desenhado até um passo atrás) e **prever o meu creep** (enquanto a tecla está segurada e a frente está livre
+      no último quadro, a página continua deslizando o creep dominado para a próxima célula, sem esperar o quadro;
+      o quadro do *worker* corrige). A simulação não muda (a autoridade continua no *worker*). O ADR-0008, item 9,
+      diz "sem predição": rascunhar a emenda (`Proposed`, skill `adr`), uma opção de experimento do laboratório. O
+      atraso medido de cada opção (o CDP, a 0, 100 e 300 ms), e um grupo novo no PLAYTEST para o dono comparar as
+      quatro a 0 e a 150 ms
+- [ ] **A IA do ▲ contra o corpo a corpo** (C12): o ▲ *kita* o ■, como o ● (recua quando o inimigo de corpo a corpo
+      está perto, e atira de longe). Primeiro os gambits do preset; código novo só se a condição ou a ação não
+      existir. Medido no `geo battle sweep` (▲ × ■ hoje 0/100; informativo, C1)
+- [ ] **O ● nas esquinas** (C12): investigar por que o ● anda reto para a esquina onde o inimigo espera (o caminho
+      sempre igual nas pedras) e ajustar o que for gambit ou escolha de caminho; se a solução pedir uma IA que
+      aprende, registrar na proposta do GDD 06 em vez de implementar
+- [ ] **A tela** (C13): um sinal de morte e um de fuga na arena (a partir dos eventos); o medidor "sem dano" sai da
+      barra e vai para cima da arena, discreto (o alerta vermelho dos últimos 5 s continua); **Começar** (e o
+      Começar da sessão às cegas) rola a página até a arena, com as dicas e os controles visíveis. Conferir no
+      Chromium headless a 1366 × 768, com capturas para o dono
+- [ ] O fechamento da fatia B: o registro da F7 aqui; o "Registro das fases" do dashboard com as fases da B; o
+      "Agora" do dashboard com a frente seguinte (a **junção**, fatia D) e uma rodada de proposta do **ROADMAP
+      depois do M2** (pedido do dono: reorganizar o planejamento macro), que o agente prepara e o dono aprova antes da
+      spec da D; o `CLAUDE.md` com a fase atual. O merge como na F6: a mensagem no scratchpad e os comandos para o
+      dono

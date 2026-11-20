@@ -393,6 +393,19 @@ O checkpoint da F5 continua depois da F6, que implementa estas decisões (regist
 | C7 | **O domínio acaba com a batalha** no laboratório: o "instantâneo" não fica travado depois do fim, e dominar o creep que já é seu não marca a batalha como "trocou de domínio" |
 | C8 | **Golpe crítico** fica como pergunta aberta no GDD 06, para o M2.5 (stats e skills); não entra no M2 |
 
+### Decisões do checkpoint da F5, 2ª parte (dono, 2026-11-19 e 20, na retomada)
+
+A F7 implementa estas decisões (registro no [tasks.md](tasks.md), F5 e F7).
+
+| # | Decisão |
+|---|---|
+| C9 | **Nenhuma regra nova antes da junção** (nem a livre, nem a forja): a grade é divertida e boa o bastante para ver o combate numa partida. A fatia B fecha depois da F7; a frente seguinte é a junção (D) |
+| C10 | **O deploy e a predição esperam a junção:** a grade aguentou até 100 ms às cegas (nota mediana 4 ou mais; abaixo de 3 a partir de 200 ms), mas o deploy, mesmo o de testes, só depois do ciclo colado; a predição no cliente pode entrar |
+| C11 | **O movimento se experimenta antes de virar regra:** a "pausa" entre as células (a interpolação de um tick, P8) fica engessada. A F7 acrescenta duas opções de desenho para comparar (deslizar o passo inteiro; prever o próprio creep); o dono escolhe depois de jogar |
+| C12 | **A IA:** o ▲ *kita* o corpo a corpo, como o ●; o ● deixa de cair sempre no mesmo *bait* das esquinas nas pedras (ajuste de gambits; uma IA que aprende continua proposta) |
+| C13 | **A tela:** um sinal de morte e de fuga; o medidor de inatividade visível sobre a arena (o alerta continua); Começar rola a página até a arena |
+| C14 | **Propostas no GDD 06:** o comandante (a tática do time, candidato ao M3) e os anúncios de abate (sem prioridade, com o som). O Mount & Blade inspira de várias formas, não só a conversa |
+
 ## 16. Pontos de contato com a fatia A
 
 A B anda em paralelo e mora num pacote novo. Os arquivos que as duas tocam, e que pedem atenção no merge:
