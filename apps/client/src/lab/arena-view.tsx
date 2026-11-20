@@ -5,8 +5,9 @@
 // the escape count on the ring; then the signals of the attack (effects.ts):
 // who attacks pulses, whoever is hit flashes with the damage rising over it,
 // and a shot that vanishes leaves a spark. The battle's idle clock shows over
-// the arena when it is close to running out. Positions glide over one tick
-// (interpolate.ts) unless the page turns that off. During the start
+// the arena when it is close to running out. Positions glide by the page's
+// motion option (motion.ts): over one tick (interpolate.ts), over a whole
+// step, not at all, or with the dominated creep predicted. During the start
 // countdown (spec D21) its seconds stand over the arena.
 
 import type { Arena, BattleParams, BattleView, Dir } from "@geometrix/battle";
@@ -16,6 +17,12 @@ import { DnaShape } from "../map/creep-shape.tsx";
 import { arcDash } from "../map/shapes.ts";
 import { effectProgress, liveEffects, type Effect } from "./effects.ts";
 import { cellPoint, glideProgress, positions } from "./interpolate.ts";
+import {
+  stepTicks,
+  type MotionMode,
+  type Predictor,
+  type StepGlides,
+} from "./motion.ts";
 import { sideLetter } from "./labels.ts";
 
 /** Side colors: the world's two teams, then two more for 3 and 4 sides. */
@@ -64,8 +71,13 @@ type Props = {
   previous: BattleView | null;
   current: BattleView;
   arrivedAt: number;
+  /** One tick on the page's clock (at the battle's speed). */
   glideMs: number;
-  interpolate: boolean;
+  motion: MotionMode;
+  /** The step option's glides, fed by the page at each frame. */
+  stepGlides: StepGlides;
+  /** The predict option's dominated creep, fed by the page. */
+  predictor: Predictor;
   /** The signals of the attack of the last frames (effects.ts). */
   effects: readonly Effect[];
   dominated: number | null;
@@ -260,9 +272,14 @@ function EffectMark({
 export function ArenaView(props: Props) {
   const { arena, params, previous, current, arrivedAt, glideMs } = props;
   const [now, setNow] = useState(() => performance.now());
-  const t = glideProgress(arrivedAt, now, glideMs, props.interpolate);
+  const { motion, stepGlides, predictor, dominated } = props;
+  const t = glideProgress(arrivedAt, now, glideMs, motion !== "instant");
   const effects = liveEffects(props.effects, now);
-  const animating = t < 1 || effects.length > 0;
+  const animating =
+    t < 1 ||
+    effects.length > 0 ||
+    (motion === "step" && stepGlides.until > now) ||
+    (motion === "predict" && predictor.active);
   // Redraw every animation frame while a glide or a signal is under way.
   useEffect(() => {
     if (!animating) return;
@@ -273,6 +290,28 @@ export function ArenaView(props: Props) {
 
   const staticLayer = useMemo(() => <StaticArena arena={arena} />, [arena]);
   const drawn = positions(arena.width, previous, current, t);
+  if (motion === "step") {
+    for (const p of current.participants) {
+      const at = stepGlides.position(p.id, now);
+      if (at !== undefined) drawn.participants.set(p.id, at);
+    }
+  }
+  if (motion === "predict" && dominated !== null) {
+    const creep = current.participants.find((p) => p.id === dominated);
+    const framed = drawn.participants.get(dominated);
+    if (creep !== undefined && framed !== undefined) {
+      const stepMs = stepTicks(params, creep) * glideMs;
+      const at: Point | undefined = predictor.position(
+        arena,
+        current,
+        dominated,
+        now,
+        stepMs,
+        framed,
+      );
+      if (at !== undefined) drawn.participants.set(dominated, at);
+    }
+  }
   const tps = params.tick.ticksPerSecond;
   const dwellTicks = (params.exit.dwellMs * tps) / 1000;
 

@@ -66,6 +66,11 @@ export class KeyboardInput {
   /** The last intent sent, to send only changes. */
   private sent: Sent = { move: null, attack: false, bag: null };
 
+  /** The direction held to walk (the last pressed), or null. */
+  get moving(): Dir | null {
+    return this.held.at(-1) ?? null;
+  }
+
   /** A key pressed; `id` is the dominated participant, if any. */
   down(key: KeyLike, id: number | null): KeyResult {
     if (withModifier(key)) return IGNORED;
