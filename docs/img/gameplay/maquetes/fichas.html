@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <title>Maquete: as fichas</title>
+    <link rel="stylesheet" href="base.css" />
+    <style>
+      .wrap {
+        display: grid;
+        grid-template-columns: 420px 380px;
+        gap: 18px;
+        align-items: start;
+      }
+      .head {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .glyph {
+        width: 44px;
+        height: 44px;
+        display: grid;
+        place-items: center;
+        border-radius: 10px;
+        background: var(--panel-2);
+        border: 1px solid var(--line);
+      }
+      .title {
+        color: var(--gold);
+        font-size: 13px;
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px 18px;
+        margin: 14px 0;
+      }
+      .stats b {
+        display: block;
+        font-size: 15px;
+      }
+      .chron {
+        margin: 6px 0 0;
+        padding: 0;
+        list-style: none;
+        border-top: 1px solid var(--line);
+      }
+      .chron li {
+        padding: 8px 0;
+        border-bottom: 1px solid var(--line);
+        font-size: 13px;
+      }
+      .chron time {
+        color: var(--muted);
+        font-size: 11px;
+        margin-right: 8px;
+      }
+      .karma {
+        position: relative;
+        height: 14px;
+        border-radius: 7px;
+        margin: 22px 0 6px;
+        background: linear-gradient(
+          90deg,
+          var(--cruel),
+          #6b3a44 30%,
+          var(--panel-2) 37.5%,
+          var(--panel-2) 62.5%,
+          #2f5f59 70%,
+          var(--kind)
+        );
+      }
+      .karma .band {
+        position: absolute;
+        left: 37.5%;
+        width: 25%;
+        top: -4px;
+        bottom: -4px;
+        border: 1px dashed var(--neutral);
+        border-radius: 4px;
+      }
+      .karma .pin {
+        position: absolute;
+        left: 70%;
+        top: -7px;
+        width: 4px;
+        height: 28px;
+        background: var(--text);
+        border-radius: 2px;
+        box-shadow: 0 0 8px var(--kind);
+      }
+      .ticks {
+        display: flex;
+        justify-content: space-between;
+        font-size: 11px;
+        color: var(--muted);
+      }
+      .row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-top: 12px;
+      }
+      .banner {
+        width: 18px;
+        height: 18px;
+        vertical-align: -4px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="frame">
+      <span class="stamp">MAQUETE · AINDA NÃO EXISTE NO JOGO</span>
+      <div class="wrap">
+        <section class="panel">
+          <div class="head">
+            <div class="glyph">
+              <svg width="26" height="26" viewBox="0 0 26 26">
+                <circle cx="13" cy="13" r="11" fill="#4ea8ff" />
+              </svg>
+            </div>
+            <div>
+              <h2 style="color: var(--team-0)">Soma</h2>
+              <div class="title game">O Rei Batedor · título disputado</div>
+            </div>
+          </div>
+          <div class="stats">
+            <div><span class="label">Trait</span><b>Cauteloso</b></div>
+            <div>
+              <span class="label">Fama</span><b>Alta</b>
+              <div class="bar">
+                <i style="width: 78%; background: var(--gold)"></i>
+              </div>
+            </div>
+            <div><span class="label">Laço</span><b>Camarada de ▲ Rila</b></div>
+            <div>
+              <span class="label">HP</span><b>120 / 120</b>
+              <div class="bar">
+                <i style="width: 100%; background: var(--materia)"></i>
+              </div>
+            </div>
+            <div>
+              <span class="label">Liga</span>
+              <b>
+                <svg class="banner" viewBox="0 0 18 18">
+                  <path d="M3 2h12v10l-6 4-6-4z" fill="#4ea8ff" />
+                  <circle cx="9" cy="8" r="3" fill="#111317" />
+                </svg>
+                Os Olhos do Vau
+              </b>
+            </div>
+            <div><span class="label">Fiel de</span><b>Você</b></div>
+          </div>
+          <span class="label">Da crônica</span>
+          <ul class="chron">
+            <li>
+              <time>dia 1 · 07:40</time>Primeiro do Azul a ver o Núcleo laranja.
+            </li>
+            <li>
+              <time>dia 1 · 19:12</time>Ouviu uma voz no vau e seguiu-a até o
+              norte.
+            </li>
+            <li>
+              <time>dia 2 · 03:05</time>Fugiu da terceira emboscada sem largar a
+              bolsa e tomou o título de Duna.
+            </li>
+          </ul>
+        </section>
+
+        <section class="panel">
+          <div class="head">
+            <div
+              class="glyph game"
+              style="color: var(--team-0); font-size: 20px"
+            >
+              ◇
+            </div>
+            <div>
+              <h2>Você</h2>
+              <div class="muted small">deus do Azul · kit: o guardião</div>
+            </div>
+          </div>
+          <div class="row">
+            <span class="label">Influência</span><b class="game">412</b>
+          </div>
+          <div class="bar">
+            <i style="width: 55%; background: var(--team-0)"></i>
+          </div>
+          <div class="row">
+            <span class="label">Recurso do deus</span><b class="game">37</b>
+          </div>
+          <div class="row">
+            <span class="label">Fiéis</span
+            ><b class="game">3 creeps · 1 tribo</b>
+          </div>
+          <div class="row" style="margin-top: 18px">
+            <span class="label">Karma</span
+            ><b class="game" style="color: var(--kind)">+0,40</b>
+          </div>
+          <div class="karma">
+            <span class="band"></span><span class="pin"></span>
+          </div>
+          <div class="ticks">
+            <span>−1 cruel</span><span>neutro</span><span>benevolente +1</span>
+          </div>
+          <div class="row">
+            <span class="label">Crônica divina</span>
+          </div>
+          <ul class="chron">
+            <li>
+              <time>dia 1 · 19:12</time>Taro ouviu a sua voz pela primeira vez.
+            </li>
+            <li>
+              <time>dia 2 · 11:30</time>A tribo do vale aceitou o seu nome e
+              mandou o primeiro tributo.
+            </li>
+          </ul>
+        </section>
+      </div>
+      <p class="caption">
+        A ficha do creep e a do deus (a fatia "As fichas" e o tema "Os deuses"):
+        poucos números no topo e a crônica embaixo. Nomes, frases e números são
+        ilustrativos.
+      </p>
+    </div>
+  </body>
+</html>

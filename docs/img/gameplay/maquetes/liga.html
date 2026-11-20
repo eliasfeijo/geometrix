@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <title>Maquete: a liga em formação</title>
+    <link rel="stylesheet" href="base.css" />
+    <style>
+      .layout {
+        display: grid;
+        grid-template-columns: 860px 260px;
+        gap: 16px;
+      }
+      svg text {
+        font-family: var(--font-game);
+        font-weight: 600;
+      }
+      .orders {
+        display: flex;
+        gap: 8px;
+        margin-top: 10px;
+      }
+      .key {
+        border: 1px solid var(--line);
+        background: var(--panel);
+        border-radius: 6px;
+        padding: 6px 10px;
+        font-size: 13px;
+      }
+      .key b {
+        color: var(--gold);
+        margin-right: 6px;
+        font-family: var(--font-game);
+      }
+      .key.on {
+        border-color: var(--team-0);
+        box-shadow: 0 0 0 1px var(--team-0) inset;
+      }
+      .member {
+        display: flex;
+        justify-content: space-between;
+        padding: 6px 0;
+        border-bottom: 1px solid var(--line);
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="frame">
+      <span class="stamp">MAQUETE · AINDA NÃO EXISTE NO JOGO</span>
+      <div class="layout">
+        <div>
+          <svg width="860" height="540" viewBox="0 0 860 540" id="arena"></svg>
+          <div class="orders">
+            <span class="key on"><b>1</b>comigo</span>
+            <span class="key"><b>2</b>segurem</span>
+            <span class="key"><b>3</b>no meu alvo</span>
+            <span
+              class="muted small"
+              style="align-self: center; margin-left: 8px"
+            >
+              Você controla o líder; os seguidores mantêm a formação pelos
+              gambits.
+            </span>
+          </div>
+        </div>
+        <aside class="panel">
+          <span class="label">A liga</span>
+          <h3 style="margin: 4px 0 10px; color: var(--team-0)">
+            Os Olhos do Vau
+          </h3>
+          <div class="member">
+            <span>● Soma · líder</span><span class="muted">você</span>
+          </div>
+          <div class="member">
+            <span>■ Taro</span><span class="muted">frente</span>
+          </div>
+          <div class="member">
+            <span>■ Ruvo</span><span class="muted">frente</span>
+          </div>
+          <div class="member">
+            <span>▲ Rila</span><span class="muted">meio</span>
+          </div>
+          <div class="member">
+            <span>● Suki</span><span class="muted">trás</span>
+          </div>
+          <p class="small muted" style="margin: 12px 0 0">
+            O teto cresce com o level do líder: 4 seguidores.
+          </p>
+        </aside>
+      </div>
+      <p class="caption">
+        Uma liga em formação na arena de grade (tema "As ligas"): o símbolo
+        acima do líder, os ■ na frente, as ordens de liga por tecla. A arena e
+        os creeps seguem o desenho do laboratório; a liga, o símbolo e as ordens
+        são ilustrativos.
+      </p>
+    </div>
+    <script>
+      const svg = document.getElementById("arena");
+      const C = 20;
+      const W = 43;
+      const H = 27;
+      const ns = "http://www.w3.org/2000/svg";
+      const el = (tag, attrs, parent = svg) => {
+        const e = document.createElementNS(ns, tag);
+        for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+        parent.appendChild(e);
+        return e;
+      };
+      el("rect", {
+        x: 0,
+        y: 0,
+        width: 860,
+        height: 540,
+        fill: "#14171c",
+        rx: 6,
+      });
+      for (let x = 0; x <= W; x++)
+        el("line", {
+          x1: x * C,
+          y1: 0,
+          x2: x * C,
+          y2: H * C,
+          stroke: "#1c2027",
+        });
+      for (let y = 0; y <= H; y++)
+        el("line", {
+          x1: 0,
+          y1: y * C,
+          x2: W * C,
+          y2: y * C,
+          stroke: "#1c2027",
+        });
+      const rock = (x, y) =>
+        el("rect", {
+          x: x * C + 1,
+          y: y * C + 1,
+          width: C - 2,
+          height: C - 2,
+          fill: "#2f3238",
+          stroke: "#5c616c",
+        });
+      for (const [x, y] of [
+        [20, 9],
+        [20, 10],
+        [20, 11],
+        [21, 11],
+        [22, 11],
+        [20, 15],
+        [21, 15],
+        [22, 15],
+        [22, 16],
+        [22, 17],
+      ])
+        rock(x, y);
+      const unit = (dna, x, y, color, name, hp = 1, face = [1, 0]) => {
+        const cx = x * C + C / 2;
+        const cy = y * C + C / 2;
+        if (dna === "square")
+          el("rect", {
+            x: cx - 8,
+            y: cy - 8,
+            width: 16,
+            height: 16,
+            fill: color,
+            rx: 2,
+          });
+        if (dna === "circle") el("circle", { cx, cy, r: 8, fill: color });
+        if (dna === "triangle")
+          el("polygon", {
+            points: `${cx},${cy - 9} ${cx + 9},${cy + 7} ${cx - 9},${cy + 7}`,
+            fill: color,
+          });
+        el("line", {
+          x1: cx,
+          y1: cy,
+          x2: cx + face[0] * 13,
+          y2: cy + face[1] * 13,
+          stroke: "#fff",
+          "stroke-width": 2,
+        });
+        el("rect", {
+          x: cx - 13,
+          y: cy - 19,
+          width: 26,
+          height: 4,
+          fill: "#22262e",
+        });
+        el("rect", {
+          x: cx - 13,
+          y: cy - 19,
+          width: 26 * hp,
+          height: 4,
+          fill: "#7fdba0",
+        });
+        const t = el("text", {
+          x: cx,
+          y: cy + 24,
+          fill: color,
+          "font-size": 11,
+          "text-anchor": "middle",
+        });
+        t.textContent = name;
+      };
+      const blue = "#4ea8ff";
+      const orange = "#ff8c42";
+      // formation lines
+      el("path", {
+        d: `M ${10 * C + 10} ${12 * C + 10} L ${16 * C + 10} ${10 * C + 10} M ${10 * C + 10} ${12 * C + 10} L ${16 * C + 10} ${15 * C + 10} M ${10 * C + 10} ${12 * C + 10} L ${13 * C + 10} ${13 * C + 10} M ${10 * C + 10} ${12 * C + 10} L ${10 * C + 10} ${15 * C + 10}`,
+        stroke: blue,
+        "stroke-opacity": 0.25,
+        "stroke-dasharray": "4 4",
+        fill: "none",
+      });
+      unit("square", 16, 10, blue, "Taro");
+      unit("square", 16, 15, blue, "Ruvo", 0.8);
+      unit("triangle", 13, 13, blue, "Rila");
+      unit("circle", 10, 15, blue, "Suki");
+      unit("circle", 10, 12, blue, "Soma");
+      // leader ring and banner
+      el("circle", {
+        cx: 10 * C + 10,
+        cy: 12 * C + 10,
+        r: 14,
+        fill: "none",
+        stroke: "#f2c94c",
+        "stroke-width": 1.5,
+      });
+      el("path", {
+        d: `M ${10 * C + 2} ${12 * C - 34} h 16 v 12 l -8 5 l -8 -5 z`,
+        fill: blue,
+        stroke: "#111317",
+      });
+      el("circle", { cx: 10 * C + 10, cy: 12 * C - 27, r: 3, fill: "#111317" });
+      el("line", {
+        x1: 10 * C + 10,
+        y1: 12 * C - 17,
+        x2: 10 * C + 10,
+        y2: 12 * C - 9,
+        stroke: blue,
+      });
+      // enemies
+      unit("square", 27, 12, orange, "Duna", 0.6, [-1, 0]);
+      unit("triangle", 29, 14, orange, "Eco", 1, [-1, 0]);
+      unit("circle", 32, 13, orange, "Faísca", 0.9, [-1, 0]);
+      // a projectile and a hit number
+      el("circle", { cx: 18 * C + 10, cy: 13 * C + 10, r: 3, fill: blue });
+      const hit = el("text", {
+        x: 27 * C + 10,
+        y: 11 * C,
+        fill: "#f2c94c",
+        "font-size": 14,
+        "text-anchor": "middle",
+      });
+      hit.textContent = "−20";
+      // border exits
+      el("rect", {
+        x: 1,
+        y: 1,
+        width: 858,
+        height: 538,
+        fill: "none",
+        stroke: "#333844",
+        "stroke-dasharray": "8 6",
+        rx: 6,
+      });
+    </script>
+  </body>
+</html>

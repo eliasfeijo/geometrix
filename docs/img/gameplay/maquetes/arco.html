@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <title>Maquete: o arco do mundo</title>
+    <link rel="stylesheet" href="base.css" />
+    <style>
+      svg text {
+        font-family: var(--font-game);
+        font-weight: 600;
+      }
+      .acts {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 4px;
+        margin-top: 12px;
+        width: 960px;
+      }
+      .act {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        padding: 8px 12px;
+        font-size: 12px;
+      }
+      .act b {
+        display: block;
+        font-family: var(--font-game);
+        font-size: 13px;
+      }
+      .act.now {
+        border-color: var(--cristal);
+        box-shadow: 0 0 0 1px var(--cristal) inset;
+      }
+      .narrator {
+        width: 960px;
+        margin-top: 10px;
+        padding: 10px 14px;
+        border-left: 3px solid var(--cristal);
+        background: var(--panel);
+        font-style: italic;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="frame">
+      <span class="stamp">MAQUETE · AINDA NÃO EXISTE NO JOGO</span>
+      <svg width="960" height="560" viewBox="0 0 960 560" id="map">
+        <defs>
+          <radialGradient id="rot" r="0.5">
+            <stop offset="0" stop-color="#9b4dff" stop-opacity="0.75" />
+            <stop offset="0.6" stop-color="#5a1f8f" stop-opacity="0.45" />
+            <stop offset="1" stop-color="#5a1f8f" stop-opacity="0" />
+          </radialGradient>
+          <radialGradient id="portal" r="0.5">
+            <stop offset="0" stop-color="#ffffff" />
+            <stop offset="0.35" stop-color="#f2c94c" />
+            <stop offset="1" stop-color="#f2c94c" stop-opacity="0" />
+          </radialGradient>
+          <pattern
+            id="grid"
+            width="15"
+            height="15"
+            patternUnits="userSpaceOnUse"
+          >
+            <path
+              d="M 15 0 L 0 0 0 15"
+              fill="none"
+              stroke="#21352a"
+              stroke-width="1"
+            />
+          </pattern>
+        </defs>
+      </svg>
+      <div class="acts">
+        <div class="act">
+          <b>Ato I · A fundação</b
+          ><span class="muted">~dia 1 · o primeiro fiel</span>
+        </div>
+        <div class="act">
+          <b>Ato II · A corrupção</b
+          ><span class="muted">~dia 2 · quests, ligas, a jungle</span>
+        </div>
+        <div class="act now">
+          <b>Ato III · Os portais</b
+          ><span class="muted">~dia 3 · as lendas e a salvação</span>
+        </div>
+      </div>
+      <div class="narrator">
+        "Um portal se abre ao norte do vau. Formas que não são deste mundo
+        atravessam, e a podridão do cristal já toca a estrada do Azul."
+      </div>
+      <p class="caption">
+        O ato III sobre o mapa (tema "O arco do mundo"): a corrupção cresce dos
+        depósitos de cristal esgotados e brilha através da névoa; um portal traz
+        lendas neutras; a tribo é um dos caminhos de salvação. Ilustrativo: o
+        mapa, as cores da corrupção e a frase do narrador.
+      </p>
+    </div>
+    <script>
+      const svg = document.getElementById("map");
+      const ns = "http://www.w3.org/2000/svg";
+      const el = (tag, attrs) => {
+        const e = document.createElementNS(ns, tag);
+        for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+        svg.appendChild(e);
+        return e;
+      };
+      const label = (x, y, text, color, size = 12) => {
+        const t = el("text", {
+          x,
+          y,
+          fill: color,
+          "font-size": size,
+          "text-anchor": "middle",
+        });
+        t.textContent = text;
+      };
+      el("rect", { width: 960, height: 560, fill: "#16241c" });
+      el("rect", { width: 960, height: 560, fill: "url(#grid)" });
+      // river with fords
+      el("path", {
+        d: "M 0 300 C 200 260 320 330 480 290 S 760 250 960 280",
+        stroke: "#1d4870",
+        "stroke-width": 34,
+        fill: "none",
+      });
+      for (const [x, y] of [
+        [300, 302],
+        [655, 272],
+      ])
+        el("rect", {
+          x: x - 18,
+          y: y - 20,
+          width: 36,
+          height: 40,
+          fill: "#2b6a8f",
+          opacity: 0.9,
+        });
+      // rocks
+      for (const [x, y, w, h] of [
+        [180, 120, 60, 18],
+        [700, 430, 70, 18],
+        [420, 140, 18, 60],
+        [530, 380, 18, 60],
+      ])
+        el("rect", {
+          x,
+          y,
+          width: w,
+          height: h,
+          fill: "#2f3238",
+          stroke: "#5c616c",
+        });
+      // roads
+      el("path", {
+        d: "M 120 470 L 300 470 L 300 302 L 420 240",
+        stroke: "#8a7b5a",
+        "stroke-width": 7,
+        fill: "none",
+        opacity: 0.8,
+      });
+      el("path", {
+        d: "M 840 90 L 655 90 L 655 272 L 560 320",
+        stroke: "#8a7b5a",
+        "stroke-width": 7,
+        fill: "none",
+        opacity: 0.8,
+      });
+      // fog edge (the corruption shows through)
+      el("rect", {
+        x: 600,
+        y: 0,
+        width: 360,
+        height: 560,
+        fill: "#050608",
+        opacity: 0.55,
+      });
+      label(780, 40, "névoa · a corrupção brilha através", "#8b92a1", 11);
+      // corruption around depleted crystal
+      for (const [x, y, r] of [
+        [430, 210, 120],
+        [560, 360, 100],
+        [250, 380, 70],
+      ]) {
+        el("circle", { cx: x, cy: y, r, fill: "url(#rot)" });
+        el("polygon", {
+          points: `${x},${y - 9} ${x + 8},${y} ${x},${y + 9} ${x - 8},${y}`,
+          fill: "#3a2152",
+          stroke: "#9b4dff",
+        });
+      }
+      label(430, 190, "cristal esgotado", "#c48cff", 11);
+      // live crystal
+      el("polygon", {
+        points: "760,180 770,190 760,200 750,190",
+        fill: "#c48cff",
+      });
+      // cores
+      el("polygon", {
+        points: "120,450 140,462 140,486 120,498 100,486 100,462",
+        fill: "none",
+        stroke: "#4ea8ff",
+        "stroke-width": 4,
+      });
+      label(120, 525, "Núcleo Azul", "#4ea8ff");
+      el("polygon", {
+        points: "840,70 860,82 860,106 840,118 820,106 820,82",
+        fill: "none",
+        stroke: "#ff8c42",
+        "stroke-width": 4,
+      });
+      label(840, 140, "Núcleo Laranja", "#ff8c42");
+      // tribe village
+      for (const [x, y] of [
+        [790, 470],
+        [812, 482],
+        [800, 500],
+      ])
+        el("polygon", {
+          points: `${x},${y - 10} ${x + 9},${y + 6} ${x - 9},${y + 6}`,
+          fill: "#7fdba0",
+          opacity: 0.85,
+        });
+      label(800, 530, "a tribo do vale · caminho de salvação", "#7fdba0", 11);
+      // portal with legends
+      el("circle", { cx: 360, cy: 70, r: 46, fill: "url(#portal)" });
+      el("ellipse", {
+        cx: 360,
+        cy: 70,
+        rx: 18,
+        ry: 30,
+        fill: "none",
+        stroke: "#fff",
+        "stroke-width": 2,
+      });
+      label(360, 135, "portal · lendas neutras", "#f2c94c", 11);
+      for (const [x, y, s] of [
+        [410, 100, "■"],
+        [330, 118, "▲"],
+        [400, 40, "●"],
+      ])
+        label(x, y, s, "#f2c94c", 16);
+      // creeps
+      for (const [x, y, s, c] of [
+        [300, 440, "■", "#4ea8ff"],
+        [330, 302, "●", "#4ea8ff"],
+        [655, 150, "▲", "#ff8c42"],
+        [700, 240, "■", "#ff8c42"],
+      ])
+        label(x, y, s, c, 16);
+    </script>
+  </body>
+</html>

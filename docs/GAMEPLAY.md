@@ -18,6 +18,11 @@
 | 🟡 **Proposta** | Sugestão registrada no GDD ou num brainstorm, sem a aprovação do dono |
 | 🔮 **Em análise** | O dono pediu para estudar antes de decidir |
 
+**As imagens** são de dois tipos, e a legenda de cada uma diz qual: **📷 captura**, o jogo de hoje rodando
+(um mundo bot × bot visto pelo Azul, ou o laboratório de batalha), e **🎨 maquete**, um desenho em HTML e CSS do
+que ainda não existe, com o carimbo "maquete" na própria imagem. As maquetes ilustram propostas e decisões ainda
+sem forma: a tela de verdade pode sair diferente.
+
 O jogador ainda não tem nome na história. Este guia diz **"você"** e, quando fala do papel dele na crônica,
 **"deus"**, o nome provisório ([§6](#6-a-moldura-da-saga-em-análise) explica por quê).
 
@@ -53,6 +58,11 @@ flowchart LR
     H --> E
     A --> E
 ```
+
+![Time-lapse de três dias de mundo: as estradas do Azul e do Laranja crescem até se encontrar no vau](img/gameplay/mundo-tres-dias.gif)
+
+*📷 Captura: um mundo de três dias em 25 quadros (seed 42, ×360, um bot em cada time, visto pelo Azul). As estradas
+saem dos dois Núcleos, descem e se encontram no vau; a névoa abre por onde os creeps passam.*
 
 Hoje se joga a fundação, a expansão e os encontros (✅). O cerco e o fim mínimo são a fatia E do M2 (🟢). Os atos,
 a corrupção e os finais são o tema "O arco do mundo" (🟢 a direção, sem marco ainda).
@@ -98,6 +108,11 @@ Siga um time, o **Azul**, contra o **Laranja**. No Azul, três creeps vão apare
 Você abre o mundo e vê o Núcleo azul no meio do negro. Fora do raio dele (8 células), não se conhece nada: nem o
 terreno, nem os depósitos, nem onde está o inimigo.
 
+![O mundo no dia 1, 04:45: o Núcleo azul no alto, a névoa, as primeiras estradas e a crônica aberta](img/gameplay/mundo-inicio.png)
+
+*📷 Captura: o dia 1, 04:45. À esquerda, o painel do Núcleo (estoque, população, produção, upgrade); no centro, o mapa
+com o nunca visto em negro e o lembrado sob um véu; embaixo à direita, a crônica.*
+
 Os primeiros creeps nascem coletores. Cada um segue uma **lista de regras**, de cima para baixo, e a primeira que vale
 vira a ordem, como os *gambits* do Final Fantasy XII:
 
@@ -122,6 +137,11 @@ flowchart LR
     R -->|"viagem 2× mais rápida"| T
     U -->|"mais por viagem"| T
 ```
+
+![Os coletores do Azul indo e vindo pelas estradas em volta do Núcleo](img/gameplay/mundo-nucleo.gif)
+
+*📷 Captura: o vaivém em volta do Núcleo azul, no dia 1. Os creeps cheios voltam pela estrada, e cada entrega sobe como
+um número verde.*
 
 ### 3.2 Explorar e lembrar ✅
 
@@ -159,6 +179,12 @@ Na manhã seguinte, a crônica conta (exemplo):
 
 > *No vau do norte, Taro pagou oito cristais a Ruvo e seguiu para casa de bolsa leve.*
 
+![Zoom no vau no fim do dia 2: creeps azuis e laranja se cruzando na estrada sobre o rio](img/gameplay/mundo-vau.png)
+
+*📷 Captura: o vau no fim do dia 2, com zoom. A estrada do Azul desce, a do Laranja sobe, e os dois times se cruzam
+sobre o rio, cada creep com o nome embaixo. É aqui que os encontros acontecem. Na crônica do dia 1 (a primeira captura
+do §3.1), Jasper intercepta Velta: "Taxa de passagem: 12 matéria. Recibo não tem."*
+
 **Hoje, a luta no mundo ainda é um sorteio descartável**, pelo HP e pela forma. A batalha de verdade já existe no
 laboratório e entra no mundo na fatia D.
 
@@ -195,6 +221,15 @@ onde vem, e quem foge pela borda volta ao mundo do lado correspondente.
 - **sem relógio de duração**: se ninguém der nem levar dano por 15 s, todos fogem ao mesmo tempo, sem vencedor. A
   luta acaba quando sobra no máximo um lado;
 - **de 2 a 4 lados**, hostis entre si (times, errantes, tribos), e dá para **entrar no meio** de uma luta.
+
+![Uma batalha 3 × 3 na arena de pedras do laboratório, só com a IA](img/gameplay/lab-pedras-3x3.gif)
+
+*📷 Captura: o laboratório, 3 × 3 na arena de **pedras** (seed 7), só com a IA. Os ■ seguram a frente, os ● e os ▲
+atiram projéteis que andam célula a célula.*
+
+![Uma batalha de três lados no corredor do laboratório, só com a IA](img/gameplay/lab-corredor-3-lados.gif)
+
+*📷 Captura: três lados de dois creeps no **corredor** (seed 11), hostis entre si.*
 
 Quem você não domina luta pelos **gambits**: condição → ação, com presets por papel (linha de frente, atirador,
 escaramuçador, portador). **Sem nenhum humano, a batalha inteira roda sozinha, pela mesma simulação** (o
@@ -268,6 +303,11 @@ no topo e a crônica embaixo. Um exemplo:
 | **HP** | 120 / 120 |
 | **Da crônica** | *Primeiro a ver o Núcleo laranja. Fugiu de três emboscadas no vau sem largar a bolsa.* |
 
+![Maquete da ficha de Soma e da ficha do deus, com a escala do karma](img/gameplay/maquete-fichas.png)
+
+*🎨 Maquete: a ficha de Soma ao lado da sua, de deus (§3.10). Poucos números no topo, a crônica embaixo. A liga, o
+símbolo e os números são ilustrativos.*
+
 ### 3.9 As ligas 🟢 a direção · 🟡 os detalhes
 
 No terceiro dia, Soma tem fama bastante para **liderar**. A liga é **de um creep líder**, não sua:
@@ -290,6 +330,11 @@ flowchart LR
     S --> C1["● atrás"]
     O{{"Ordens da liga<br/>comigo · segurem · no meu alvo"}} -.-> S
 ```
+
+![Maquete de uma liga de cinco creeps em formação na arena de grade, com as três ordens por tecla](img/gameplay/maquete-liga.png)
+
+*🎨 Maquete: a liga de Soma na arena de grade do laboratório. O símbolo sobre o líder, os ■ na frente, Rila no meio,
+Suki atrás, e as três ordens (🟡) nas teclas 1, 2 e 3.*
 
 ### 3.10 Você na crônica: os deuses 🟢 a direção · 🟡 o como
 
@@ -320,6 +365,11 @@ conduta dá a cada poder a sua versão.
 | **O campeão** | Quem joga ativamente | Dominar os famosos, sussurros de batalha, títulos disputados, uma liga maior | Inspira os aliados perto do dominado | Aterroriza os inimigos; as tribos desconfiam |
 | **O aprendiz** | Quem está aprendendo | Presets claros, poderes simples, dicas da crônica, menos micro | — | — |
 | **O guardião** | Quem tem 15 minutos por dia | Quests longas, bênçãos passivas para coletores e construtores, rituais que correm offline, o resumo "enquanto você esteve fora" | A bênção da colheita | O chicote: rende mais, e os creeps e as tribos ressentem |
+
+![Maquete da escolha do kit divino e da escala do karma de −1 a +1](img/gameplay/maquete-kits.png)
+
+*🎨 Maquete: a escolha do kit e a escala do karma, com a faixa neutra tracejada e os três pontos absolutos (★). Os
+nomes e os poderes são o esboço da tabela acima.*
 
 **Os fiéis** (🟢): um fiel é um creep, do seu time ou neutro, que **reconhece o deus**. No começo, os creeps não
 sabem dos deuses; o primeiro fiel nasce da primeira quest sua que alguém cumpre (*"Taro ouve uma voz"*). A tribo
@@ -372,6 +422,11 @@ stateDiagram-v2
     Apocalipse --> [*]: a vitória pírrica
 ```
 
+![Maquete do mapa no ato III: corrupção roxa em volta dos depósitos esgotados, um portal com lendas e a tribo](img/gameplay/maquete-arco.png)
+
+*🎨 Maquete: o mapa no ato III. A corrupção cresce dos depósitos de cristal esgotados e brilha através da névoa, um
+portal traz lendas neutras, e a tribo do vale é um caminho de salvação. O narrador fala embaixo.*
+
 **A guerra corre por cima** dos atos: um Núcleo pode cair em qualquer um deles. Na fatia E, isso encerra o mundo; com
 o arco, os sobreviventes do time derrotado seguem até o fim (§3.6).
 
@@ -404,6 +459,12 @@ influência e a conduta de cada um. **Qualquer creep vivo no fim vira lenda**, i
 sem-Núcleo que aguentaram até lá. Mais
 adiante, as lendas **invadem outros mundos** no fim deles (🟢 tema "As lendas"); a proposta é que a morte permanente
 valha também ali, e invadir arrisque perder a lenda (🟡).
+
+![O mundo no dia 3, 23:16: as estradas cruzam o mapa e a crônica conta as saídas do Núcleo](img/gameplay/mundo-fim.png)
+
+*📷 Captura: como um mundo termina hoje, no dia 3, 23:16. As duas redes de estradas cobrem a trilha central, o Azul
+está no teto de 30 creeps, e a crônica ainda é a de cada creep. A história do fim, o arco e as lendas são o que
+falta.*
 
 ## 4. Como os ciclos se alimentam
 
@@ -498,5 +559,7 @@ Ideias registradas que ainda não têm marco (o [ROADMAP](ROADMAP.md) tem o banc
 | Milhares de batalhas sem tela | `npm run geo -- battle sweep` | Vitórias, duração e inatividade da IA nas três arenas |
 | Um mundo inteiro em segundos | `npm run geo -- sim --seed 42 --days 3` | Três dias de mundo bot × bot, com um relatório em `runs/` |
 
-As imagens do mundo de hoje estão no [README](../README.pt-BR.md). As prévias do que ainda não existe (a ficha, a
-liga em formação, a corrupção avançando) podem virar maquetes em HTML e CSS quando o texto não bastar.
+As capturas e as maquetes deste guia saem de scripts em [`img/gameplay/captura/`](img/gameplay/captura/README.md),
+que dirigem um Chromium headless contra um servidor local; as fontes das maquetes ficam em
+[`img/gameplay/maquetes/`](img/gameplay/maquetes/). Quando uma mecânica mudar, dá para refazer a imagem em vez de
+redesenhá-la.

@@ -1,0 +1,127 @@
+/* Shared look of the gameplay mockups: the client's dark theme
+   (apps/client/src/styles.css) and its game font. Mockups only: none of this
+   is game code. */
+@font-face {
+  font-family: "Chakra Petch";
+  font-weight: 600;
+  src: url("../../../../apps/client/src/fonts/chakra-petch-latin-600-normal.woff2")
+    format("woff2");
+}
+
+:root {
+  --font-game: "Chakra Petch", ui-sans-serif, system-ui, sans-serif;
+  --bg: #111317;
+  --panel: #1a1d23;
+  --panel-2: #22262e;
+  --line: #333844;
+  --text: #e6e8ec;
+  --muted: #8b92a1;
+  --team-0: #4ea8ff;
+  --team-1: #ff8c42;
+  --materia: #7fdba0;
+  --cristal: #c48cff;
+  --danger: #ff6b6b;
+  --gold: #f2c94c;
+  --cruel: #e0525e;
+  --kind: #6fd3c1;
+  --neutral: #b7bcc8;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 28px;
+  background: var(--bg);
+  color: var(--text);
+  font:
+    14px/1.45 ui-sans-serif,
+    system-ui,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
+  width: max-content;
+}
+
+.frame {
+  position: relative;
+}
+
+.stamp {
+  position: absolute;
+  top: -14px;
+  right: 0;
+  font: 600 11px var(--font-game);
+  letter-spacing: 0.14em;
+  color: var(--gold);
+  border: 1px dashed var(--gold);
+  border-radius: 4px;
+  padding: 3px 8px;
+  background: var(--bg);
+}
+
+.game {
+  font-family: var(--font-game);
+  font-weight: 600;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.small {
+  font-size: 12px;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-family: var(--font-game);
+  font-weight: 600;
+}
+
+.label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.bar {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--panel-2);
+  overflow: hidden;
+}
+
+.bar > i {
+  display: block;
+  height: 100%;
+}
+
+.chip {
+  display: inline-block;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 1px 9px;
+  font-size: 12px;
+  background: var(--panel-2);
+}
+
+.caption {
+  margin-top: 14px;
+  font-size: 12px;
+  color: var(--muted);
+  max-width: 760px;
+}
