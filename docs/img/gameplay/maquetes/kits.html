@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <title>Maquete: os kits divinos</title>
+    <link rel="stylesheet" href="base.css" />
+    <style>
+      .kits {
+        display: grid;
+        grid-template-columns: repeat(3, 300px);
+        gap: 16px;
+      }
+      .kit h2 {
+        font-size: 20px;
+      }
+      .kit .who {
+        margin: 2px 0 12px;
+      }
+      .kit ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+      .kit li {
+        margin: 3px 0;
+      }
+      .flavors {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-top: 14px;
+      }
+      .flavor {
+        border-radius: 6px;
+        padding: 8px 10px;
+        font-size: 12px;
+        background: var(--panel-2);
+      }
+      .flavor.kind {
+        border-left: 3px solid var(--kind);
+      }
+      .flavor.cruel {
+        border-left: 3px solid var(--cruel);
+      }
+      .chosen {
+        outline: 2px solid var(--team-0);
+      }
+      .chosen {
+        position: relative;
+      }
+      .tag {
+        position: absolute;
+        top: 12px;
+        right: 14px;
+        font: 600 11px var(--font-game);
+        color: var(--team-0);
+      }
+      .scale {
+        margin-top: 26px;
+      }
+      .track {
+        position: relative;
+        height: 18px;
+        border-radius: 9px;
+        margin: 30px 0 10px;
+        background: linear-gradient(
+          90deg,
+          var(--cruel),
+          #6b3a44 30%,
+          var(--panel-2) 37.5%,
+          var(--panel-2) 62.5%,
+          #2f5f59 70%,
+          var(--kind)
+        );
+      }
+      .band {
+        position: absolute;
+        left: 37.5%;
+        width: 25%;
+        top: -6px;
+        bottom: -6px;
+        border: 1px dashed var(--neutral);
+        border-radius: 5px;
+      }
+      .point {
+        position: absolute;
+        top: -26px;
+        transform: translateX(-50%);
+        text-align: center;
+        font-size: 11px;
+        color: var(--gold);
+        white-space: nowrap;
+      }
+      .point::after {
+        content: "★";
+        display: block;
+        font-size: 14px;
+        margin-top: -2px;
+      }
+      .legend {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        font-size: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="frame">
+      <span class="stamp">MAQUETE · AINDA NÃO EXISTE NO JOGO</span>
+      <h1 style="font-size: 18px; margin-bottom: 14px">
+        Escolha o seu kit divino
+      </h1>
+      <div class="kits">
+        <section class="panel kit">
+          <h2>⚔ O campeão</h2>
+          <div class="who muted">para quem joga ativamente</div>
+          <ul>
+            <li>dominar os famosos com menos influência</li>
+            <li>sussurros de batalha</li>
+            <li>disputar títulos</li>
+            <li>uma liga maior</li>
+          </ul>
+          <div class="flavors">
+            <div class="flavor kind">Inspira os aliados perto do dominado</div>
+            <div class="flavor cruel">Aterroriza: as tribos desconfiam</div>
+          </div>
+        </section>
+        <section class="panel kit">
+          <h2>✦ O aprendiz</h2>
+          <div class="who muted">para quem está aprendendo</div>
+          <ul>
+            <li>presets claros, com dicas da crônica</li>
+            <li>poderes simples e baratos</li>
+            <li>quests curtas</li>
+            <li>menos micro</li>
+          </ul>
+          <div class="flavors">
+            <div class="flavor kind muted">Benevolente: ainda sem versão</div>
+            <div class="flavor cruel muted">Cruel: ainda sem versão</div>
+          </div>
+        </section>
+        <section class="panel kit chosen">
+          <span class="tag">escolhido</span>
+          <h2>◈ O guardião</h2>
+          <div class="who muted">para quem tem 15 minutos por dia</div>
+          <ul>
+            <li>quests longas, de horas</li>
+            <li>bênçãos para coletores e construtores</li>
+            <li>rituais que correm offline</li>
+            <li>"enquanto você esteve fora"</li>
+          </ul>
+          <div class="flavors">
+            <div class="flavor kind">A bênção da colheita</div>
+            <div class="flavor cruel">O chicote: rende mais, e ressentem</div>
+          </div>
+        </section>
+      </div>
+
+      <section class="panel scale">
+        <span class="label">O karma nasce das ações</span>
+        <div class="track">
+          <span class="band"></span>
+          <span
+            class="point"
+            style="left: 0%; transform: none; text-align: left"
+            >cruel extremo</span
+          >
+          <span class="point" style="left: 50%">neutro absoluto</span>
+          <span
+            class="point"
+            style="left: 100%; transform: translateX(-100%); text-align: right"
+            >benevolente extremo</span
+          >
+        </div>
+        <div class="legend muted">
+          <span>−1 · ganha rápido e fecha portas</span>
+          <span style="text-align: center"
+            >−0,25 a +0,25 · a neutralidade kármica</span
+          >
+          <span style="text-align: right">abre portas · +1</span>
+        </div>
+        <p class="small muted" style="margin: 10px 0 0">
+          ★ Os três pontos absolutos dão um buff enquanto se mantiverem.
+        </p>
+      </section>
+      <p class="caption">
+        O estilo escolhe o kit; a conduta dá a cada poder a sua versão (rodada
+        3, pergunta 32). Nomes e poderes são o esboço do agente, não decididos.
+      </p>
+    </div>
+  </body>
+</html>
