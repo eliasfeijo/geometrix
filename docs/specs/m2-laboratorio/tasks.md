@@ -709,7 +709,7 @@ As decisões C9 a C15 do checkpoint (plan §15). Worktree: `.claude/worktrees/la
       diz "sem predição": rascunhar a emenda (`Proposed`, skill `adr`), uma opção de experimento do laboratório. O
       atraso medido de cada opção (o CDP, a 0, 100 e 300 ms), e um grupo novo no PLAYTEST para o dono comparar as
       quatro a 0 e a 150 ms
-- [ ] **A IA do ▲ contra o corpo a corpo** (C12): o ▲ *kita* o ■, como o ● (recua quando o inimigo de corpo a corpo
+- [x] **A IA do ▲ contra o corpo a corpo** (C12): o ▲ *kita* o ■, como o ● (recua quando o inimigo de corpo a corpo
       está perto, e atira de longe). Primeiro os gambits do preset; código novo só se a condição ou a ação não
       existir. Medido no `geo battle sweep` (▲ × ■ hoje 0/100; informativo, C1)
 - [ ] **O ● nas esquinas** (C12): investigar por que o ● anda reto para a esquina onde o inimigo espera (o caminho

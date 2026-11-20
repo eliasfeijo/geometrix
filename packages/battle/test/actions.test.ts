@@ -94,6 +94,18 @@ describe("conditions (spec D14)", () => {
     expect(holds(state, 1, { type: "enemyWithin", cells: 6 })).toBe(true);
   });
 
+  test("enemy of a DNA within N cells: the others do not count", () => {
+    const state = battleOn(FIELD, [["triangle"], ["circle", "square"]]);
+    put(state, 1, 3, 3);
+    put(state, 2, 4, 3); // the circle, next to it
+    put(state, 3, 7, 1); // the square, 6 steps away
+    const near = (dna: "circle" | "square", cells: number) =>
+      holds(state, 1, { type: "enemyWithin", cells, dna });
+    expect(near("circle", 1)).toBe(true);
+    expect(near("square", 5)).toBe(false);
+    expect(near("square", 6)).toBe(true);
+  });
+
   test("enemy aligned within range, with a clear line", () => {
     const state = battleOn(WALL, [["triangle"], ["circle"]]);
     put(state, 1, 2, 3);
