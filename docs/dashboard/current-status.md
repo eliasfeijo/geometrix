@@ -27,6 +27,9 @@
    (GDD 06; ROADMAP, fatia D). **Rodada 2** (os deuses e o arco do mundo) respondida no mesmo dia (consolidado
    §10.1); **a moldura da saga** (a torre, a convocação, os anfitriões, os times que nascem do jogo) ficou **em análise,
    sem decisão**, a pedido do dono (consolidado §11, com os próximos passos em §11.7). Nada do M2 depende dela.
+   O [guia da partida](../GAMEPLAY.md) conta a partida esperada com todas essas ideias, marcando o que já se joga, o
+   que está decidido, o que é proposta e o que está em análise; a [visão geral](../OVERVIEW.md) foi atualizada para o
+   fim da fatia B.
 2. **A spec da D** (skill `spec-slice`, `docs/specs/m2-juncao/`): o encontro abre a instância de batalha no lugar do
    sorteio, com dois ou mais lados, entrada no meio da luta, auto-resolve e os errantes. Perguntas que ela herda:
    o contrato com entrada no meio da luta (um ADR, `Proposed`), o raio da "bolha" e o tempo do mundo durante a

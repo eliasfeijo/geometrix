@@ -5,7 +5,7 @@ Como rodar uma sessão de playtest do geometrix. Hoje cobre o **playtest de legi
 fog §8](specs/m1.5-fog/spec.md)), o **do encontro do M2** (seção "Encontro (M2)", [spec do encontro
 §8](specs/m2-encontro/spec.md)) e o **do laboratório de batalha do M2** (seção "Laboratório de batalha (M2)",
 [spec do laboratório §8](specs/m2-laboratorio/spec.md)). O playtest de diversão com pessoas novas, com deploy e
-túnel, não bloqueia mais o M2 nem o M3 (dono, 2026-11-15, no [ROADMAP](ROADMAP.md)): entra aqui quando o dono achar
+túnel, não bloqueia mais o M2 nem o marco seguinte (dono, 2026-11-15, no [ROADMAP](ROADMAP.md)): entra aqui quando o dono achar
 o jogo divertido o suficiente.
 
 ## Objetivo

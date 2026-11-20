@@ -18,6 +18,7 @@ repositório, no `plan.md` §1 do M1).
 |---|---|
 | **Onde estamos e próximos passos** | `docs/dashboard/current-status.md` (leia primeiro) |
 | O que o jogo é e não é | `docs/PILLARS.md` |
+| Como uma partida deve correr (guia ilustrado, com o estado de cada mecânica; não é fonte de verdade) | `docs/GAMEPLAY.md` |
 | Vocabulário | `docs/GLOSSARY.md` |
 | Design por sistema | `docs/gdd/` (um arquivo por sistema) |
 | Brainstorms (ideias antes de virar GDD) | `docs/brainstorm/` |
