@@ -691,7 +691,7 @@ As decisões C9 a C15 do checkpoint (plan §15). Worktree: `.claude/worktrees/la
 
 - [x] As decisões no GDD 06, no ROADMAP, no brainstorm, na spec e no plan; o registro da 2ª parte do checkpoint
       (acima) (2026-11-20)
-- [ ] **A contagem: vale o que está apertado no fim** (C15; spec D21, S-4; GDD 06). Hoje (`step.ts`,
+- [x] **A contagem: vale o que está apertado no fim** (C15; spec D21, S-4; GDD 06). Hoje (`step.ts`,
       `commands.ts`), largar e catar são um pedido que espera, e o toque no espaço arma o *latch*: apertar e soltar
       durante a contagem ainda larga ou ataca no primeiro tick da luta (um Q sem querer derruba a bolsa). **Decidido:**
       no fim da contagem, vale só o que está apertado naquele instante: a direção segurada anda, o espaço segurado
