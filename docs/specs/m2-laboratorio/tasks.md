@@ -715,7 +715,7 @@ As decisões C9 a C15 do checkpoint (plan §15). Worktree: `.claude/worktrees/la
 - [x] **O ● nas esquinas** (C12): investigar por que o ● anda reto para a esquina onde o inimigo espera (o caminho
       sempre igual nas pedras) e ajustar o que for gambit ou escolha de caminho; se a solução pedir uma IA que
       aprende, registrar na proposta do GDD 06 em vez de implementar
-- [ ] **A tela** (C13): um sinal de morte e um de fuga na arena (a partir dos eventos); o medidor "sem dano" sai da
+- [x] **A tela** (C13): um sinal de morte e um de fuga na arena (a partir dos eventos); o medidor "sem dano" sai da
       barra e vai para cima da arena, discreto (o alerta vermelho dos últimos 5 s continua); **Começar** (e o
       Começar da sessão às cegas) rola a página até a arena, com as dicas e os controles visíveis. Conferir no
       Chromium headless a 1366 × 768, com capturas para o dono

@@ -170,6 +170,9 @@ export function Lab() {
   const arenaRef = useRef<Arena | null>(null);
   arenaRef.current = arena;
   const stepGlides = useRef(new StepGlides());
+  /** The last frame's view: where a creep that died or fled stood (C13). */
+  const lastView = useRef<BattleView | null>(null);
+  const top = useRef<HTMLElement | null>(null);
   const predictor = useRef(new Predictor());
 
   useEffect(() => {
@@ -188,7 +191,10 @@ export function Lab() {
           }));
           if (frame.events.length > 0) {
             setEvents((old) => [...old, ...frame.events].slice(-MAX_EVENTS));
-            const signals = effectsOf(frame.events, at, params);
+            const cells = new Map(
+              (lastView.current?.participants ?? []).map((p) => [p.id, p.cell]),
+            );
+            const signals = effectsOf(frame.events, at, params, cells);
             if (signals.length > 0) {
               setEffects((old) => [...liveEffects(old, at), ...signals]);
             }
@@ -205,6 +211,7 @@ export function Lab() {
               }
             }
           }
+          lastView.current = frame.view;
           // The effect is on the screen now, or once the glide ends: one
           // tick, or the dominated creep's step with the step option (C11).
           const { motion: mode, speed: s, dominated: you } = live.current;
@@ -379,6 +386,7 @@ export function Lab() {
     you: number | null,
     arenaName: string,
     blindRttMs: number | null = null,
+    scroll = true,
   ) {
     const connection = conn.current;
     if (connection === null) return;
@@ -400,6 +408,10 @@ export function Lab() {
     input.current = new KeyboardInput();
     stepGlides.current.reset();
     predictor.current.reset();
+    lastView.current = null;
+    // Começar takes the page up to the battle, with the keys' hints and the
+    // controls in sight (C13); R restarts where the page is.
+    if (scroll) top.current?.scrollIntoView({ block: "start" });
     lastSetup.current = setup;
     lastYou.current = you;
     lastArena.current = arenaName;
@@ -454,10 +466,11 @@ export function Lab() {
         lastYou.current,
         lastArena.current,
         battle.rttMs,
+        false,
       );
       return;
     }
-    start(lastSetup.current, lastYou.current, lastArena.current);
+    start(lastSetup.current, lastYou.current, lastArena.current, null, false);
   }
 
   /** The owner took or let go of someone: the battle is neither's to count. */
@@ -614,7 +627,7 @@ export function Lab() {
 
   return (
     <div class="lab">
-      <header class="lab-top">
+      <header class="lab-top" ref={top}>
         <h1>Laboratório de batalha</h1>
         <p class="lab-hint">
           Setas ou WASD andam · Shift + seta vira · espaço ataca · Q larga a
@@ -671,24 +684,20 @@ export function Lab() {
             >
               Exportar log
             </button>
-            {running && current.countdownTicks === 0 && (
-              <span
-                class={
-                  idleWarning(current, params)
-                    ? "lab-idle-meter lab-idle-meter-warn"
-                    : "lab-idle-meter"
-                }
-                title="Sem dano em ninguém por esse tempo, todos fogem (D9)"
-              >
-                sem dano: {(current.idleTicks / TPS).toFixed(0)} s · fogem em{" "}
-                {idleSecondsLeft(current, params)} s
-              </span>
-            )}
             <span class="lab-clock">
               {current === null ? "—" : `${(current.tick / TPS).toFixed(1)} s`}
             </span>
           </div>
           {error !== null && <p class="lab-error">Setup recusado: {error}</p>}
+          <p
+            class="lab-idle-meter"
+            title="Sem dano em ninguém por esse tempo, todos fogem (D9)"
+          >
+            {running &&
+              current.countdownTicks === 0 &&
+              !idleWarning(current, params) &&
+              `sem dano há ${(current.idleTicks / TPS).toFixed(0)} s · todos fogem em ${idleSecondsLeft(current, params)} s`}
+          </p>
           <div
             class={current === null ? "lab-stage lab-stage-empty" : "lab-stage"}
           >

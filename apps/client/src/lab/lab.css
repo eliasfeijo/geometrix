@@ -203,14 +203,15 @@
   color: var(--muted);
 }
 
+/* The battle's idle clock, quiet, just above the arena (C13); the warning
+   over the arena takes over in its last seconds. */
 .lab-idle-meter {
   font-variant-numeric: tabular-nums;
   color: var(--muted);
-}
-
-.lab-idle-meter-warn {
-  color: var(--danger);
-  font-weight: 700;
+  font-size: 0.8rem;
+  margin: 0;
+  min-height: 1.2em;
+  text-align: right;
 }
 
 .lab-stage {
@@ -227,7 +228,7 @@
 
 /* What the header, the controls and the gaps take of the window's height. */
 .lab {
-  --lab-chrome: 118px;
+  --lab-chrome: 138px;
 }
 
 .lab-arena {
@@ -436,6 +437,17 @@
   paint-order: stroke;
   stroke: #0d0f12;
   stroke-width: 0.15px;
+  pointer-events: none;
+}
+
+/* Who fell or fled, over its last cell (C13). */
+.lab-notice {
+  font-family: var(--font-game);
+  font-size: 0.75px;
+  font-weight: 700;
+  paint-order: stroke;
+  stroke: #0d0f12;
+  stroke-width: 0.14px;
   pointer-events: none;
 }
 
