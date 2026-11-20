@@ -13,7 +13,8 @@ export type Target =
 export type Condition =
   | { type: "always" }
   | { type: "hpBelow"; permille: number }
-  | { type: "enemyWithin"; cells: number }
+  /** An enemy within `cells` steps; of that DNA only, when `dna` is given. */
+  | { type: "enemyWithin"; cells: number; dna?: Dna }
   /** An enemy within range, with a clear line. */
   | { type: "enemyAligned" }
   /** An enemy projectile whose line passes through me. */
@@ -71,7 +72,11 @@ function copyCondition(c: unknown): Condition | null {
         ? { type: c.type, permille: c.permille }
         : null;
     case "enemyWithin":
-      return isCount(c.cells) ? { type: c.type, cells: c.cells } : null;
+      if (!isCount(c.cells)) return null;
+      if (c.dna === undefined) return { type: c.type, cells: c.cells };
+      return DNAS.includes(c.dna as Dna)
+        ? { type: c.type, cells: c.cells, dna: c.dna as Dna }
+        : null;
     case "allyHpBelow":
       return isPermille(c.permille) && isCount(c.cells)
         ? { type: c.type, permille: c.permille, cells: c.cells }

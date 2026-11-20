@@ -13,9 +13,12 @@
 // During the countdown at the start (spec D21, S-4), stages 1, 2 and the turn
 // run, so the human and the AI can aim, and the rest waits: nobody attacks,
 // walks, drops or picks up, and the exit count and the idle clock only start
-// when it is over. What was asked meanwhile (a held key, a latch, a drop)
-// acts on the first tick of the fight. Whoever joins during the countdown
-// waits for it too; whoever joins later gets no countdown of its own.
+// when it is over. At its end only what is held acts: the direction and the
+// attack of the intent, and the bag key held (`intent.bag`; for the AI, its
+// last decision). A tap asked and let go meanwhile (the latch, a drop, a
+// pickup) is discarded at the end of each countdown tick. Whoever joins
+// during the countdown waits for it too; whoever joins later gets no
+// countdown of its own.
 //
 // The caller passes the commands that arrived during the previous tick, in
 // arrival order (plan P5): the lab's worker queues them, the log keeps them
@@ -31,6 +34,28 @@ import { moveParticipants, turnToIntent } from "./movement.ts";
 import { countdownTicks } from "./params.ts";
 import type { BattleState } from "./state.ts";
 
+/** End of a countdown tick: the taps asked during it are gone (spec S-4). */
+function discardTaps(state: BattleState): void {
+  for (const { intent } of state.participants) {
+    intent.attackLatch = false;
+    intent.drop = false;
+    intent.pickup = false;
+  }
+}
+
+/** First tick of the fight after a countdown: the bag key held acts. */
+function releaseHeldBag(state: BattleState): void {
+  for (const { intent } of state.participants) {
+    if (intent.bag === "drop") {
+      intent.drop = true;
+      intent.pickup = false;
+    } else if (intent.bag === "pickup") {
+      intent.pickup = true;
+      intent.drop = false;
+    }
+  }
+}
+
 /** Advances the battle one tick, in place, and returns what happened. */
 export function stepBattle(
   state: BattleState,
@@ -43,7 +68,9 @@ export function stepBattle(
   applyCommands(state, log, commands);
   runGambits(state, log);
   turnToIntent(state);
-  const fighting = state.tick >= countdownTicks(state.params);
+  const countdown = countdownTicks(state.params);
+  const fighting = state.tick >= countdown;
+  if (countdown > 0 && state.tick === countdown) releaseHeldBag(state);
   if (fighting) {
     attack(state, log, hits);
     moveParticipants(state);
@@ -53,6 +80,8 @@ export function stepBattle(
   if (fighting) {
     dropAndPickUp(state, log);
     leaveArena(state, log);
+  } else {
+    discardTaps(state);
   }
   checkEnd(state, log);
   state.tick += 1;

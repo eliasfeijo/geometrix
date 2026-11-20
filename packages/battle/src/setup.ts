@@ -221,6 +221,7 @@ export function placeParticipant(
       attackLatch: false,
       drop: false,
       pickup: false,
+      bag: null,
     },
     // Whoever is born or joins has stood still: its first step is ready (D22).
     movePoints: CELL_COST,

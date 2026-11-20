@@ -87,6 +87,34 @@ describe("presets (spec D15, G-3)", () => {
     });
   });
 
+  test("skirmisher: backs off from the square's melee and shoots (C12)", () => {
+    const state = battleOn(FIELD, [
+      [member("triangle", { gambits: presetGambits("skirmisher") })],
+      ["square"],
+    ]);
+    byId(state, 2).controller = "human";
+    put(state, 1, 3, 3);
+    put(state, 2, 4, 3);
+    const events = run(state, 40);
+    const [x] = xyOf(state, 1);
+    expect(4 - x).toBeGreaterThanOrEqual(3);
+    expect(events.some((e) => e.type === "hit")).toBe(true);
+    expect(byId(state, 1).hp).toBe(200);
+  });
+
+  test("skirmisher: holds its ground next to a shooter", () => {
+    const state = battleOn(FIELD, [
+      [member("triangle", { gambits: presetGambits("skirmisher") })],
+      ["circle"],
+    ]);
+    byId(state, 2).controller = "human";
+    put(state, 1, 3, 3);
+    put(state, 2, 4, 3);
+    const events = run(state, 10);
+    expect(xyOf(state, 1)).toEqual([3, 3]);
+    expect(events.some((e) => e.type === "attacked")).toBe(true);
+  });
+
   test("carrier: drops the bag with an enemy near, then runs", () => {
     const state = battleOn(FIELD, [
       [

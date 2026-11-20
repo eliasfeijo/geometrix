@@ -14,6 +14,7 @@ import type { BattleParams, BattleSetup, Outcome } from "@geometrix/battle";
 import type { KeyValueStore } from "../session.ts";
 import { DNA_GLYPHS } from "./labels.ts";
 import type { LatencySummary } from "./latency.ts";
+import type { MotionMode } from "./motion.ts";
 
 /** Battles per RTT in a blind session (spec section 8: at least 5). */
 export const BLIND_PER_RTT = 5;
@@ -49,6 +50,8 @@ export type BattleRecord = {
   winnerSide: number | null;
   ticks: number;
   measured: LatencySummary;
+  /** How the page drew the movement (F7, C11); absent in older records. */
+  motion?: MotionMode;
   /** The blind mode's grade ("is it playable?"), null outside it. */
   grade: Grade | null;
   hash: string | null;

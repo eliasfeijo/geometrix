@@ -65,6 +65,7 @@ describe("applyCommands", () => {
       move: "left",
       attack: true,
       attackLatch: true,
+      bag: null,
       drop: false,
       pickup: false,
     });

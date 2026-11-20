@@ -106,7 +106,10 @@ describe("setGambits (spec L-7)", () => {
       then: { type: "attack", target: { by: "nearest" } },
     },
     { when: { type: "hpBelow", permille: 250 }, then: { type: "flee" } },
-    { when: { type: "enemyWithin", cells: 4 }, then: { type: "drop" } },
+    {
+      when: { type: "enemyWithin", cells: 4, dna: "circle" },
+      then: { type: "drop" },
+    },
     {
       when: { type: "enemyAligned" },
       then: { type: "approach", target: { by: "weakest" } },
@@ -158,6 +161,15 @@ describe("setGambits (spec L-7)", () => {
     ],
     [
       [{ when: { type: "enemyWithin", cells: -1 }, then: { type: "flee" } }],
+      "gambit 0: invalid condition",
+    ],
+    [
+      [
+        {
+          when: { type: "enemyWithin", cells: 3, dna: "hexagon" },
+          then: { type: "flee" },
+        },
+      ],
       "gambit 0: invalid condition",
     ],
     [

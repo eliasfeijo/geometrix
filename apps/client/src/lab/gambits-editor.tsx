@@ -140,6 +140,29 @@ function ConditionFields(props: {
           onChange={(n) => props.onChange({ ...c, cells: n })}
         />
       )}
+      {c.type === "enemyWithin" && (
+        <select
+          id={`${props.id}-dna`}
+          aria-label="De que forma"
+          value={c.dna ?? ""}
+          onChange={(e) => {
+            const { cells } = c;
+            const dna = e.currentTarget.value as (typeof DNAS)[number] | "";
+            props.onChange(
+              dna === ""
+                ? { type: c.type, cells }
+                : { type: c.type, cells, dna },
+            );
+          }}
+        >
+          <option value="">de qualquer forma</option>
+          {DNAS.map((dna) => (
+            <option key={dna} value={dna}>
+              {DNA_LABELS[dna]}
+            </option>
+          ))}
+        </select>
+      )}
     </span>
   );
 }

@@ -3,7 +3,8 @@
 // the view of the start of the stage, takes the first rule whose condition
 // holds and whose action can be done now, and that rule's commands go
 // through the same validation as the human's. With no such rule it stands
-// still. Between decisions it keeps its intent; the next decision comes
+// still. Between decisions it keeps its intent (and the bag it asked for,
+// which acts at the end of the countdown, spec S-4); the next decision comes
 // `decisionMs` ± `decisionJitterMs` later, drawn by the rng (the reaction
 // time, P12), by the participant's reaction level (spec D20). Participants decide in id order, each one's rng calls in a
 // fixed order: the rule's, then the reaction.
@@ -40,6 +41,9 @@ export function conditionHolds(mind: Mind, condition: Condition): boolean {
       return hpBelow(state, self, condition.permille);
     case "enemyWithin":
       return mind.enemies.some((e) => {
+        if (condition.dna !== undefined && e.dna !== condition.dna) {
+          return false;
+        }
         const steps = stepsTo(mind, e.cell);
         return steps >= 0 && steps <= condition.cells;
       });
@@ -98,9 +102,14 @@ export function runGambits(state: BattleState, log: BattleEventLog): void {
     if (participant.controller !== "gambits") continue;
     if (state.tick < participant.ai.nextDecisionTick) continue;
     view ??= battleView(state);
+    // The decision is held until the next one, the bag too (spec S-4).
+    participant.intent.bag = null;
     for (const command of decide(state, view, participant)) {
       if (validateCommand(state, command, "gambits") === null) {
         applyCommand(state, log, command);
+        if (command.type === "drop" || command.type === "pickup") {
+          participant.intent.bag = command.type;
+        }
       }
     }
     participant.ai.nextDecisionTick =
