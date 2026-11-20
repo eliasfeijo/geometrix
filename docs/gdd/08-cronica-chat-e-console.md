@@ -36,6 +36,10 @@
   Simbólico primeiro. **A história principal tem de ser entendida às cegas**, pela crônica e pelo narrador.
 - **A crônica divina** (dono, 2026-11-20, rodada 3 do [consolidado](../brainstorm/2026-11-20-consolidado-depois-do-m2.md) §12.7; "deus" continua o nome provisório): cada deus tem a própria crônica individual, com as decisões que contam a história
   dele; a meta do fim do ato I é o jogador ter gerado pelo menos uma entrada ([01](01-mundo.md)).
+- **A ficha em camadas** (dono, 2026-11-20, rodada 4 do [consolidado](../brainstorm/2026-11-20-consolidado-depois-do-m2.md) §13.7): o operacional sempre aberto ao
+  time, o pessoal pela fidelidade do creep ao deus; a ficha dos únicos pode mentir, com pistas
+  ([02](02-creeps-e-dominio.md)). A fatia "As fichas" nasce com as camadas, todas abertas ao time até a fidelidade
+  existir.
 
 ## Proposta
 - **Um verbo, um comando** (agente): cada verbo do console vira um comando do mesmo vocabulário versionado, com as

@@ -2,7 +2,8 @@
 
 > **Status:** consolidação do agente (2026-11-20), pedida pelo dono. **Rodada 1 respondida (§0); rodada 2 respondida
 > (§10.1); a moldura da saga está em análise, sem decisão (§11); rodada 3 (o papel do jogador) respondida
-> (§12.7); rodada 4 (a fidelidade, os únicos e as lendas) em §13.** O documento junta a
+> (§12.7); rodada 4 (a fidelidade, os únicos e as lendas) respondida (§13.7), com "seu time" e a saga em análise
+> (§13.8).** O documento junta a
 > [proposta do ROADMAP](2026-11-20-roadmap-depois-do-m2.md) e as quatro levas de ideias do dia, registra a 5ª leva
 > e faz a análise fria pedida: expectativa × realidade, benefícios × trade-offs e uma recomendação por ideia. **As
 > perguntas foram refeitas aqui** (§7), em quatro grupos, só com o que é decisão do dono. As perguntas numeradas das
@@ -1044,3 +1045,97 @@ Só o que é decisão do dono, em três grupos:
 | 46 | O ato III | **A lenda do portal** | **Uma lenda só, no centro**, com as regras do dono (o primeiro diálogo; hostil a um creep ou a um time; ataca todos na luta; ~6 kits); o kit de quest dela **é um dos ramos especiais do ato III** | Uma por time, perto dele; uma por time, no centro |
 | 47 | O ato III | **A escolta do xamã** | **É a forma do final feliz das tribos nos dois ramos** (o natural e o do retornado); muda quem dispara e o que já está feito | Só no ramo do retornado; outra forma para o ramo natural |
 | 48 | O mundo vivo | **Comprar informação** | **O informante vende o que o lado dele lembra; a informação entra na memória do time como um lembrado com idade**; chega com as tribos | Só uma pista em texto, na crônica; uma memória por creep |
+
+### 13.7 Respostas do dono (rodada 4, 2026-11-20)
+
+Três formulários, um por grupo, com o contexto no chat antes. **O dono aceitou as recomendações em 9 das 10; a 40
+ele reabriu**, questionando o próprio conceito de "seu time" (§13.8).
+
+| # | Pergunta | Resposta |
+|---|---|---|
+| 39 | A fidelidade | **Cada creep tem uma fidelidade por deus**, inclusive os do time; ela **não muda o time**: só neutros e únicos mudam de lado |
+| 40 | A fidelidade e o domínio | **Em análise** (§13.8): "acho que temos que rever esse conceito de 'seu time'". Até lá, vale o decidido na rodada 2: o domínio comum não muda |
+| 41 | A ficha velada | **Em camadas:** o operacional (forma, HP, carga, regras, estado) sempre aberto ao time; o pessoal (trait, origem, laços, side-quest, stats finos) por fidelidade. Pedir para ver é uma ação, e pode incomodar |
+| 42 | O disfarce dos únicos | **A ficha mente, com pistas:** o disfarce cai pela fidelidade alta, por uma quest ou por testemunhar um feito dele |
+| 43 | O incômodo | **Só com quem tem pouca fidelidade** (ou quando falta influência para aquele creep, ou com os únicos), crescendo com a repetição e com os atos; os fiéis não se incomodam com o básico |
+| 44 | A relação | **A crônica:** a relação de cada creep e de cada tribo com um deus é a soma dos eventos que viveu ou testemunhou; o karma é só o primeiro contato |
+| 45 | O demônio e a ambição | **"Demônio" é a pele do karma cruel**, temporária; cada deus tem uma **ambição** pelo kit, pela conduta e pela crônica, que evolui e conta na história do fim e na influência, **sem decidir a guerra** |
+| 46 | A lenda do portal | **Uma lenda só, no centro do mapa**, quando o portal abre no ato III, com as regras do dono (§13.1); o kit de quest dela é um dos ramos especiais do ato III |
+| 47 | A escolta do xamã | **É a forma do final feliz das tribos nos dois ramos**, o natural e o do retornado; muda quem dispara e o que já está feito |
+| 48 | Comprar informação | **O informante vende o que o lado dele lembra; a informação entra na memória do time do comprador como um lembrado, com a idade.** Chega com as tribos |
+
+**Consequências que o agente registrou:**
+
+- **A 39 vale para a estrutura de hoje** (dois times com Núcleo). Se a análise da §13.8 mudar a estrutura, a 39 e
+  a 40 voltam juntas para a mesa.
+- **A fidelidade vai em ‰ no `sim`**, por par (creep, deus), num array ordenado por id; os pesos dos eventos e os
+  limites das camadas vão para os `params`. Números e níveis saem da spec do tema "Os deuses", medidos com bots.
+- **A fatia "As fichas" nasce com as camadas** (o operacional e o pessoal), todas abertas ao próprio time, até a
+  fidelidade existir (§13.5).
+- **Os portais viram um portal:** "os portais do ato III trazem lendas" (rodada 3, pergunta 36) passa a ser **um
+  portal no centro, com uma lenda só**, gerada pela seed. A maquete do arco no [guia](../GAMEPLAY.md) foi refeita.
+- **Comprar informação depende das tribos** (o lado neutro da fatia D e o tema "O mundo vivo").
+- **Nada muda no M2 nem em Os itens.**
+
+### 13.8 A saga e o "seu time" (em análise, sem decisão)
+
+> **O dono reabriu a pergunta 40** e trouxe a saga por trás do mundo. Esta seção só registra e analisa.
+
+**O que o dono trouxe** [dono]:
+
+- **Rever o conceito de "seu time".** Experimentar, por exemplo, **"todas as tribos começam neutras"**, e cada deus
+  escolhe com cuidado onde gastar os seus poucos recursos divinos.
+- **O kit do aprendiz** pode trazer uma **skill utilitária inicial que deixa "espiar" a ficha** de cada creep (alguns
+  únicos conseguem esconder ou manipular o que ela mostra), com limitações que se superam a cada evolução do kit. Esse
+  seria o ponto de partida. Os outros kits têm de **persuadir cada creep** para ver a ficha, sem garantia de sucesso,
+  e ainda gastam **fé** (o recurso divino), que pode ser escassa e difícil de acumular no começo.
+- **A dúvida:** a primeira geração de creeps do mundo (e as seguintes) é determinística pela seed, então o começo pode
+  ser **excepcionalmente difícil** para alguns jogadores, que não conseguem persuadir um creep compatível nos primeiros
+  minutos. "Então não sei se vale a pena seguir nessa direção de times neutros."
+- **O que puxa para o outro lado:** começar com times definidos tira um pouco da narrativa da saga, a de **deuses
+  brincando e se entretendo com creeps descartáveis num mundo destinado ao apocalipse**, ou à chance de criar lendas
+  que avançam para o próximo capítulo da história.
+- **A saga entre mundos:** quem já avançou consegue, às vezes, **voltar** (como as lendas que chegam pelo portal no
+  ato III), e isso pode virar parte de um enredo que se desvenda jogando **uma sequência de mundos com uma história
+  compartilhada**. Ex.: o mundo gerado proceduralmente, como hoje, é **o primeiro episódio da primeira saga oficial**,
+  com a história de cada tribo neutra, de cada chefão e de **personagens únicos que guiam o destino do universo sem
+  jurar fidelidade a deuses nem a demônios**. Os deuses e os demônios são os únicos que disputam os creeps com
+  potencial de lenda, e jogam os seus fiéis numa batalha sangrenta, só por diversão, é o que parece para muitos.
+  **Mas as entidades divinas, boas ou más, se justificam:** precisam acelerar a seleção natural dos guerreiros
+  destinados a alcançar o **Capítulo Finale** e ver a salvação ou o fim do universo, que ameaça a existência delas.
+  Elas sentem o perigo iminente: **"no universo geometrix, a simetria, que era verdade absoluta, começou a ser
+  questionada."**
+
+**A leitura fria** [agente]:
+
+- **É a leitura D do §11 de novo, agora com o custo nomeado pelo próprio dono:** sem times fixos, a justiça do começo
+  depende de a seed oferecer a cada deus um creep compatível perto dele. Três caminhos para analisar, sem decidir:
+
+  | Caminho | Como fica | O que custa | As respostas da rodada 4 |
+  |---|---|---|---|
+  | **(a) Os times na estrutura, a saga na pele** | O Núcleo agrupa os creeps; os deuses "adotam" um grupo (a leitura B, a torre) | Quase nada: é texto | Valem todas |
+  | **(b) Os times fixos, a disputa pela fidelidade** | O time é fixo, mas a fidelidade começa baixa e é disputada entre os deuses do time e pelos neutros e únicos; os deuses "brincando" aparecem na disputa | O que a rodada 4 já decidiu | Valem todas |
+  | **(c) Sem time no começo** | As tribos e os creeps começam neutros; os times nascem das conversões | **A estrutura:** dois Núcleos, a economia do time, o regime, o espelho | A 39 e a 40 voltam para a mesa |
+
+- **A dúvida do dono tem um remédio conhecido: o espelho.** O mapa já é espelhado. Se a primeira geração também for
+  espelhada por região (cada deus tem os mesmos candidatos à mesma distância), o começo fica justo mesmo no caminho
+  (c). O custo do (c) continua sendo a estrutura, não a justiça.
+- **"A simetria começou a ser questionada" é o melhor gancho de enredo até aqui.** Liga a identidade visual (formas
+  geométricas, mapa espelhado) ao enredo, sem custo de estrutura:
+  - **a corrupção pode ser a quebra da simetria**, visível no mapa. O espelho entre os dois lados se desfaz conforme
+    os depósitos apodrecem, e o jogador às cegas **vê** o problema antes de ler sobre ele;
+  - **os únicos e o retornado** seriam os que percebem a assimetria; os deuses, os que a temem;
+  - a pergunta do mundo ("será que é possível salvar o mundo?") ganha a forma do jogo: **a simetria pode ser
+    restaurada?**
+- **A saga entre mundos é conteúdo autoral** (a história de cada tribo, chefão e único), o oposto do mundo procedural
+  de hoje. Cabe como **pele sobre a seed**: o episódio 1 é um conjunto de modelos de crônica e de ramos do arco, e a
+  seed escolhe e combina. Mora no tema "As lendas e o deploy", com a moldura, e não pesa no MVP.
+- **Um cuidado de identidade** (§11.5): os personagens de outras obras (o Elminster do Baldur's Gate, como antes os
+  dokkaebis) ficam como referência interna, não como vocabulário do jogo.
+
+**Para seguir a análise** (sem prazo; nada do M2 depende disto):
+
+1. **"Seu time": uma página comparando (a), (b) e (c)**, com os primeiros minutos de cada um às cegas e o espelho da
+   primeira geração no (c).
+2. **O episódio 1:** uma página de pitch com a simetria como pergunta central: o que o jogador vê, o que a crônica
+   conta, o que a corrupção quebra.

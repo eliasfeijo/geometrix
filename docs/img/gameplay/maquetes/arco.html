@@ -86,14 +86,14 @@
         </div>
       </div>
       <div class="narrator">
-        "Um portal se abre ao norte do vau. Formas que não são deste mundo
-        atravessam, e a podridão do cristal já toca a estrada do Azul."
+        "Um portal se abre sobre o vau do meio. Uma forma que não é deste mundo
+        atravessa, e a podridão do cristal já toca a estrada do Azul."
       </div>
       <p class="caption">
         O ato III sobre o mapa (tema "O arco do mundo"): a corrupção cresce dos
-        depósitos de cristal esgotados e brilha através da névoa; um portal traz
-        lendas neutras; a tribo é um dos caminhos de salvação. Ilustrativo: o
-        mapa, as cores da corrupção e a frase do narrador.
+        depósitos de cristal esgotados e brilha através da névoa; o portal do
+        centro traz uma lenda só, neutra; a tribo é um dos caminhos de salvação.
+        Ilustrativo: o mapa, as cores da corrupção e a frase do narrador.
       </p>
     </div>
     <script>
@@ -178,7 +178,7 @@
       label(780, 40, "névoa · a corrupção brilha através", "#8b92a1", 11);
       // corruption around depleted crystal
       for (const [x, y, r] of [
-        [430, 210, 120],
+        [330, 150, 110],
         [560, 360, 100],
         [250, 380, 70],
       ]) {
@@ -189,7 +189,7 @@
           stroke: "#9b4dff",
         });
       }
-      label(430, 190, "cristal esgotado", "#c48cff", 11);
+      label(330, 130, "cristal esgotado", "#c48cff", 11);
       // live crystal
       el("polygon", {
         points: "760,180 770,190 760,200 750,190",
@@ -222,24 +222,19 @@
           opacity: 0.85,
         });
       label(800, 530, "a tribo do vale · caminho de salvação", "#7fdba0", 11);
-      // portal with legends
-      el("circle", { cx: 360, cy: 70, r: 46, fill: "url(#portal)" });
+      // the portal at the centre, with one legend
+      el("circle", { cx: 480, cy: 280, r: 46, fill: "url(#portal)" });
       el("ellipse", {
-        cx: 360,
-        cy: 70,
+        cx: 480,
+        cy: 280,
         rx: 18,
         ry: 30,
         fill: "none",
         stroke: "#fff",
         "stroke-width": 2,
       });
-      label(360, 135, "portal · lendas neutras", "#f2c94c", 11);
-      for (const [x, y, s] of [
-        [410, 100, "■"],
-        [330, 118, "▲"],
-        [400, 40, "●"],
-      ])
-        label(x, y, s, "#f2c94c", 16);
+      label(480, 345, "portal · a lenda, no centro", "#f2c94c", 11);
+      label(522, 262, "▲", "#f2c94c", 18);
       // creeps
       for (const [x, y, s, c] of [
         [300, 440, "■", "#4ea8ff"],

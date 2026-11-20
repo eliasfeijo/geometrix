@@ -5,7 +5,7 @@
 > [GDD](gdd/README.md) é, e cada seção aponta para ele. Os números são provisórios, e os exemplos (nomes, frases da
 > crônica, fichas) são ilustrações, não texto do jogo.
 >
-> **Retrato de 2026-11-20**, depois da fatia B do M2 e das três rodadas do
+> **Retrato de 2026-11-20**, depois da fatia B do M2 e das quatro rodadas do
 > [consolidado depois do M2](brainstorm/2026-11-20-consolidado-depois-do-m2.md). Para a arquitetura, os custos e
 > as decisões técnicas, veja a [visão geral](OVERVIEW.md).
 
@@ -292,7 +292,12 @@ Com o tempo, alguns creeps deixam de ser "um ●" e viram **alguém**:
   playtest mostrar que você se importa.
 
 **A ficha** (🟡; a fatia paralela "As fichas" do ROADMAP): uma página por creep, aberta sob demanda, com poucos números
-no topo e a crônica embaixo. Um exemplo:
+no topo e a crônica embaixo. **Ela é velada, em camadas** (🟢), como a "tela do sistema" dos manhwas: o
+**operacional** (forma, HP, carga, regras, estado) fica sempre aberto ao time, e o **pessoal** (trait, origem, laços,
+side-quest, stats finos) só aparece conforme a **fidelidade** do creep a você (§3.10). Pedir para ver é uma ação, e
+quem mal te conhece pode se incomodar. **Os únicos** (o retornado e outros personagens dos ramos da história) podem
+ter a ficha **mentindo** (🟢), para se disfarçar entre os creeps comuns de uma tribo, mas o comportamento e a crônica
+deixam pistas. Um exemplo de ficha de quem já é fiel a você:
 
 | Soma ● | |
 |---|---|
@@ -380,6 +385,22 @@ convertida é a escala de cima.
 quest seja uma regra temporária no topo da lista, para não haver dois jeitos de mandar. Os times sem jogador têm um
 **deus-bot** (🟡).
 
+**A fidelidade** (🟢): cada creep tem uma fidelidade **por deus**, inclusive os do seu time. Ela abre as camadas da
+ficha, decide as quests que ele aceita e o preço dos sussurros (baratos com os creeps confusos do começo, caros com
+os famosos e os únicos), mas **não muda o time dele**: só os neutros e os únicos mudam de lado.
+
+**O incômodo** (🟢): sussurrar, pedir para ver a ficha ou dar uma quest fraca a quem tem **pouca fidelidade** (ou a
+um creep acima da sua influência, ou a um único) custa influência, cada vez mais com a repetição e com os atos. Os
+fiéis não se incomodam com o básico.
+
+**A relação é a crônica** (🟢): o que um creep ou uma tribo pensa de você é a soma do que viveu ou testemunhou (a
+quest paga, o milagre que o salvou, a maldição que viu cair num aliado). O seu karma é só o primeiro contato. Uma
+tribo de karma incompatível pode te tratar como neutro porque um fiel seu ajudou um dos dela.
+
+**O demônio e a ambição** (🟢): enquanto o karma está do lado cruel, você é um **demônio**, o que é pele, não
+objetivo: deuses e demônios estão se entretendo. Cada um tem uma **ambição** própria, pelo kit, pela conduta e pela
+crônica, que evolui com as ações e conta na história do fim e na influência, **sem decidir a guerra**.
+
 Tudo isso é **simbólico primeiro** (🟢): a influência e a conduta aparecem na ficha, na crônica e na história do fim
 antes de mudar qualquer número.
 
@@ -392,6 +413,12 @@ que converteu ganha influência.
 As **quests** das tribos são **batalhas com objetivo** (🟢, tema "Cenários de quest"): escoltar, segurar uma área,
 recuperar um item, sobreviver a ondas, na mesma batalha de grade. E elas são um dos caminhos do **final feliz
 secreto**, que detém a corrupção e **salva o mundo inteiro, inclusive o inimigo** (os outros caminhos estão na §3.13).
+
+**Comprar informação** (🟢, com as tribos): no diálogo com um neutro ou um aliado, o informante oferece dicas
+incompletas com o preço (*"o Rei Batedor foi visto perto do vau; quer saber quando?"*). Comprada, a informação
+**aparece no seu mapa como um lembrado, com a idade** ("visto há 3 h"): é a mesma névoa de sempre, alimentada pelo
+que o lado do informante lembra. Dá para tentar arrancar à força (e estragar a diplomacia) ou persuadir gastando o
+seu recurso.
 
 ### 3.12 O time 🟢 a direção (pede humanos)
 
@@ -422,10 +449,10 @@ stateDiagram-v2
     Apocalipse --> [*]: a vitória pírrica
 ```
 
-![Maquete do mapa no ato III: corrupção roxa em volta dos depósitos esgotados, um portal com lendas e a tribo](img/gameplay/maquete-arco.png)
+![Maquete do mapa no ato III: corrupção roxa em volta dos depósitos esgotados, o portal do centro com uma lenda e a tribo](img/gameplay/maquete-arco.png)
 
-*🎨 Maquete: o mapa no ato III. A corrupção cresce dos depósitos de cristal esgotados e brilha através da névoa, um
-portal traz lendas neutras, e a tribo do vale é um caminho de salvação. O narrador fala embaixo.*
+*🎨 Maquete: o mapa no ato III. A corrupção cresce dos depósitos de cristal esgotados e brilha através da névoa, o
+portal do centro traz uma lenda, e a tribo do vale é um caminho de salvação. O narrador fala embaixo.*
 
 **A guerra corre por cima** dos atos: um Núcleo pode cair em qualquer um deles. Na fatia E, isso encerra o mundo; com
 o arco, os sobreviventes do time derrotado seguem até o fim (§3.6).
@@ -440,8 +467,15 @@ o arco, os sobreviventes do time derrotado seguem até o fim (§3.6).
 - **O ritmo esperado** (🟢, medido com bots de perfil): no fim do ato I, você converteu pelo menos 1 fiel e gerou
   pelo menos 1 crônica divina; no ato II, progride com quests, forma uma liga ou entra numa e luta na jungle; no ato
   III, abrem-se os portais e os caminhos de salvação. Cada ato dura cerca de um dia a ×1.
-- **Os portais** (🟢) se abrem no ato III e trazem **lendas**: de início, geradas pela seed, como bots neutros; mais
-  adiante, as lendas reais de outros mundos.
+- **O portal** (🟢) se abre **no centro do mapa** no ato III e traz **uma lenda só**: de início, gerada pela seed;
+  mais adiante, as lendas reais de outros mundos. Ela é experiente e neutra: **na luta, ataca todos**, e os neutros
+  comuns fogem dela. O primeiro creep que a aborda pode dialogar; **ela se converte no primeiro diálogo** (ou depois
+  de aniquilar quem a hostilizou) ou fica hostil a um creep ou a um time inteiro. Convertida, vira dominável, com um
+  **kit de lenda** único e um **kit de quest** que é um dos ramos especiais do ato III.
+- **A escolta do xamã** (🟢) é a forma do final feliz das tribos: levar o xamã da tribo a cada depósito corrompido
+  para o ritual, numa **instância de sobreviver e proteger** com ondas do ato III. Vale no ramo natural e no ramo do
+  **retornado**, que apressa os atos em segredo para disparar a quest e não dá conta dela sozinho (🟡 a história
+  dele).
 - **Três caminhos de salvação** (🟢), como ramos do arco: **as tribos**, **o retornado** e **os ramos especiais do
   ato III**. Ninguém limpa a corrupção gastando recurso, e salvar salva o mundo inteiro, **ganhando ou perdendo a
   guerra**.
@@ -538,6 +572,14 @@ Por isso este guia diz "deus" e "mestre da mesa": são os nomes provisórios, e 
 seções 1 a 5. Junto da moldura está **o retornado** (🔮): um creep que já viveu um fim, evolui em segredo, só aceita
 ser dominado se você aceitar a quest dele, e tenta adiantar o apocalipse com uma pequena liga independente. Decidido já está que **a relação com ele é um dos
 caminhos de salvação** (🟢).
+
+**"Seu time" e a saga** (🔮, [consolidado](brainstorm/2026-11-20-consolidado-depois-do-m2.md) §13.8): o dono
+questionou se os times devem começar definidos. Sem times, as tribos e os creeps começariam neutros e cada deus
+escolheria onde gastar a pouca fé, o que conta melhor a saga dos deuses brincando com creeps descartáveis, mas pode
+dar um começo injusto (a primeira geração vem da seed). Por trás de tudo, uma pergunta: **"no universo geometrix, a
+simetria, que era verdade absoluta, começou a ser questionada."** Os deuses aceleram a seleção dos guerreiros rumo ao
+Capítulo Finale porque sentem o perigo. Num mapa espelhado, a corrupção pode ser **a própria quebra da simetria**,
+visível antes de qualquer texto. O mundo de hoje seria o **primeiro episódio** de uma saga que continua entre mundos.
 
 ## 7. No banco, sem marco
 
