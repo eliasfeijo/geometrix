@@ -5,7 +5,7 @@
 > [GDD](gdd/README.md) é, e cada seção aponta para ele. Os números são provisórios, e os exemplos (nomes, frases da
 > crônica, fichas) são ilustrações, não texto do jogo.
 >
-> **Retrato de 2026-11-20**, depois da fatia B do M2 e das duas rodadas do
+> **Retrato de 2026-11-20**, depois da fatia B do M2 e das três rodadas do
 > [consolidado depois do M2](brainstorm/2026-11-20-consolidado-depois-do-m2.md). Para a arquitetura, os custos e
 > as decisões técnicas, veja a [visão geral](OVERVIEW.md).
 
@@ -45,7 +45,7 @@ flowchart LR
     F["Ato I · A fundação<br/>Núcleo, névoa, coletores,<br/>as primeiras estradas"] --> X["A expansão<br/>explorar, disputar o cristal,<br/>os primeiros encontros"]
     X --> C["Ato II · A corrupção<br/>o cristal esgotado apodrece,<br/>a jungle acorda"]
     C --> P{"O ponto<br/>sem volta"}
-    P -->|"ainda dá"| H["O final feliz<br/>as tribos salvam<br/>o mundo inteiro"]
+    P -->|"ainda dá"| H["A salvação<br/>pelas tribos, pelo retornado<br/>ou por um ramo do ato III"]
     P -->|"já era"| A["Ato III · O apocalipse<br/>a vitória pírrica:<br/>ninguém vira lenda"]
     X --> N["O cerco<br/>um Núcleo cai"]
     C --> N
@@ -214,6 +214,10 @@ inimigo vence a guerra.** Se o relógio acaba sem Núcleo derrubado, é empate (
 O fim ganha uma tela com o resultado e o resumo da crônica, e o replay ganha marcadores dos eventos principais. Como o
 cerco funciona (leva horas? avisa o atacado?) pede uma rodada de design própria.
 
+**Com o arco do mundo** (🟢), a queda do Núcleo deixa de encerrar a partida para quem sobrevive: os creeps do time
+derrotado seguem jogando até o fim do mundo, enquanto houver esperança de salvação, e viram lendas se chegarem vivos
+ao fim. Na fatia E, o Núcleo continua encerrando o mundo.
+
 ### 3.7 Os itens 🟢 (o próximo marco candidato)
 
 No segundo dia, o cristal deixa de ser só preço de creep: ele vira **ingrediente**.
@@ -295,7 +299,7 @@ Três coisas suas, diferentes da riqueza do time:
 | | O que é | Como se ganha | Para que serve |
 |---|---|---|---|
 | **Influência** (🟢) | Um peso, a sua reputação | A fama dos creeps que você dominou e os feitos deles; as tribos que você converteu | **Abre portas:** dominar um creep famoso pede influência. O domínio comum não muda |
-| **Conduta** (🟢) | Do benevolente ao cruel | Nasce das suas ações; ninguém escolhe numa lista | Decide quais portas se abrem e quais se fecham |
+| **Conduta** (🟢) | O karma, numa escala de −1 (cruel) a +1 (benevolente) | Nasce das suas ações; ninguém escolhe numa lista | Decide quais portas se abrem e quais se fecham, e dá o sabor dos poderes |
 | **O recurso do deus** (🟢) | Um recurso seu, que se acumula e se gasta | Dos **feitos dos fiéis** (as quests que você deu, cumpridas), acelerado por **oferendas e rituais**, que tomam o tempo dos creeps e têm risco | **Sussurros** (o resultado depende da abordagem), **poderes no mundo** e **investir** em creeps promissores |
 
 **O que pesa contra a influência:** ficar inativo dominando um creep, e fugir de uma batalha **abandonando aliados que
@@ -303,6 +307,23 @@ ainda lutam**. Recuar sozinho ou com o grupo é legítimo.
 
 **Cruel × benevolente:** o deus cruel **ganha recursos rápido e fecha portas** (as tribos ficam hostis, e o caminho
 do final feliz se fecha). O equilíbrio vem das regras, medidas com bots, não do julgamento de ninguém.
+
+**O karma não é binário** (🟢): perto de zero (entre −0,25 e +0,25, provisório) fica a **neutralidade kármica**, com
+benefícios e trade-offs próprios. Os três pontos absolutos (o neutro absoluto, 0; o cruel extremo, −1; o benevolente
+extremo, +1) **dão um buff enquanto se mantiverem**: ficar lá é difícil de propósito.
+
+**Os kits divinos** (🟢 a direção · 🟡 o esboço): você escolhe uma especialização **pelo seu jeito de jogar**, e a
+conduta dá a cada poder a sua versão.
+
+| Kit (🟡 nomes de exemplo) | Para quem | O que favorece | Benevolente | Cruel |
+|---|---|---|---|---|
+| **O campeão** | Quem joga ativamente | Dominar os famosos, sussurros de batalha, títulos disputados, uma liga maior | Inspira os aliados perto do dominado | Aterroriza os inimigos; as tribos desconfiam |
+| **O aprendiz** | Quem está aprendendo | Presets claros, poderes simples, dicas da crônica, menos micro | — | — |
+| **O guardião** | Quem tem 15 minutos por dia | Quests longas, bênçãos passivas para coletores e construtores, rituais que correm offline, o resumo "enquanto você esteve fora" | A bênção da colheita | O chicote: rende mais, e os creeps e as tribos ressentem |
+
+**Os fiéis** (🟢): um fiel é um creep, do seu time ou neutro, que **reconhece o deus**. No começo, os creeps não
+sabem dos deuses; o primeiro fiel nasce da primeira quest sua que alguém cumpre (*"Taro ouve uma voz"*). A tribo
+convertida é a escala de cima.
 
 **A quest do deus para o creep** (🟡): em vez de editar a lista de regras, você diz **o quê** ("traga 20 cristais",
 "explore o norte"), e as regras do creep cuidam do **como**. Pode ser o jeito casual de comandar. A proposta é que a
@@ -319,8 +340,8 @@ convertida manda **tributo** ao tesouro do time, numa **caravana física** (que 
 que converteu ganha influência.
 
 As **quests** das tribos são **batalhas com objetivo** (🟢, tema "Cenários de quest"): escoltar, segurar uma área,
-recuperar um item, sobreviver a ondas, na mesma batalha de grade. E só elas levam ao **final feliz secreto**: a única
-forma de deter a corrupção, que **salva o mundo inteiro, inclusive o inimigo**.
+recuperar um item, sobreviver a ondas, na mesma batalha de grade. E elas são um dos caminhos do **final feliz
+secreto**, que detém a corrupção e **salva o mundo inteiro, inclusive o inimigo** (os outros caminhos estão na §3.13).
 
 ### 3.12 O time 🟢 a direção (pede humanos)
 
@@ -337,20 +358,22 @@ Por trás de tudo corre uma **história principal secreta**: o arco do mundo.
 ```mermaid
 stateDiagram-v2
     [*] --> AtoI
-    AtoI: Ato I · A fundação
-    AtoII: Ato II · A corrupção
-    AtoIII: Ato III · O apocalipse
-    Feliz: O final feliz
-    Guerra: Um Núcleo cai
+    AtoI: Ato I · A fundação (~dia 1)
+    AtoII: Ato II · A corrupção (~dia 2)
+    AtoIII: Ato III · Os portais (~dia 3)
+    Salvo: O mundo salvo
+    Apocalipse: O apocalipse
     AtoI --> AtoII: gatilho, ex. os primeiros depósitos de cristal esgotados
-    AtoII --> AtoIII: o ponto sem volta
-    AtoII --> Feliz: a quest das tribos
-    AtoI --> Guerra
-    AtoII --> Guerra
-    AtoIII --> [*]: a vitória pírrica
-    Feliz --> [*]: o mundo salvo
-    Guerra --> [*]: o vencedor
+    AtoII --> AtoIII: gatilho
+    AtoIII --> Salvo: as tribos, o retornado ou um ramo especial
+    AtoII --> Apocalipse: o ponto sem volta
+    AtoIII --> Apocalipse: o ponto sem volta
+    Salvo --> [*]: ganhando ou perdendo a guerra
+    Apocalipse --> [*]: a vitória pírrica
 ```
+
+**A guerra corre por cima** dos atos: um Núcleo pode cair em qualquer um deles. Na fatia E, isso encerra o mundo; com
+o arco, os sobreviventes do time derrotado seguem até o fim (§3.6).
 
 - **A corrupção** nasce de cada depósito de cristal esgotado: envenena quem está perto e cresce até cobrir o mapa.
   Ninguém a limpa, nem gastando recurso. Ela **brilha**: o time vê a borda mesmo fora da visão, para o fim nunca
@@ -359,6 +382,14 @@ stateDiagram-v2
   inimigo vence a guerra, mas não salva ninguém: **nenhum creep sobrevive para virar lenda**.
 - **Os ramos:** o apocalipse é um só, mas tem **ramos dentro da corrupção** (presets) que respondem à conduta dos
   deuses. A jungle acorda por cima: ondas de errantes, chefões despertos.
+- **O ritmo esperado** (🟢, medido com bots de perfil): no fim do ato I, você converteu pelo menos 1 fiel e gerou
+  pelo menos 1 crônica divina; no ato II, progride com quests, forma uma liga ou entra numa e luta na jungle; no ato
+  III, abrem-se os portais e os caminhos de salvação. Cada ato dura cerca de um dia a ×1.
+- **Os portais** (🟢) se abrem no ato III e trazem **lendas**: de início, geradas pela seed, como bots neutros; mais
+  adiante, as lendas reais de outros mundos.
+- **Três caminhos de salvação** (🟢), como ramos do arco: **as tribos**, **o retornado** e **os ramos especiais do
+  ato III**. Ninguém limpa a corrupção gastando recurso, e salvar salva o mundo inteiro, **ganhando ou perdendo a
+  guerra**.
 - **O mestre da mesa** escolhe o ramo de cada ato antes de ele começar e **ajusta os gatilhos dentro de limites**.
   Ele é **neutro**: cria perigo e oportunidade para quem está ativo, sem socorrer quem está perdendo. Cada ajuste é
   um comando no log, e **tudo é revelado no fim**.
@@ -369,7 +400,8 @@ stateDiagram-v2
 ### 3.14 O fim e as lendas 🟢
 
 O mundo termina numa **história**: a crônica do fim conta o arco, as escolhas do mestre e os deuses pelo nome, com a
-influência e a conduta de cada um. **Qualquer creep vivo no fim vira lenda**, inclusive do time derrotado. Mais
+influência e a conduta de cada um. **Qualquer creep vivo no fim vira lenda**, inclusive do time derrotado e os
+sem-Núcleo que aguentaram até lá. Mais
 adiante, as lendas **invadem outros mundos** no fim deles (🟢 tema "As lendas"); a proposta é que a morte permanente
 valha também ali, e invadir arrisque perder a lenda (🟡).
 
@@ -412,12 +444,9 @@ fica horas.
 Os dois jogam **as mesmas regras**: o bot da casa, o script e o humano mandam os mesmos comandos, validados do mesmo
 jeito.
 
-🔮 **Os kits divinos** (a 8ª leva, [consolidado](brainstorm/2026-11-20-consolidado-depois-do-m2.md) §12, perguntas da
-rodada 3): o deus escolheria uma especialização pelo jeito de jogar (**o campeão**, para quem joga ativamente; **o
-aprendiz**, equilibrado e com menos micro; **o guardião**, para quem tem 15 minutos por dia, com automação e suporte
-passivo), e a conduta daria a cada poder uma versão benevolente e uma cruel. Junto vem um ritmo esperado para os três
-dias: o primeiro fiel e a primeira crônica divina no dia 1; quests, ligas e lutas na jungle no dia 2; os portais, as
-lendas e os caminhos de salvação no dia 3, até para quem perdeu o Núcleo.
+**Os kits divinos** (🟢, §3.10) dão a cada um desses jeitos a sua especialização: **o campeão** para quem fica
+horas, **o guardião** para quem entra 15 minutos, **o aprendiz** para quem está começando. Um time com um guardião
+não pode perder por isso nem ganhar sem jogar: o equilíbrio se mede com bots de perfil.
 
 ## 6. A moldura da saga (em análise)
 
@@ -446,7 +475,8 @@ Ou salvem-no."*
 
 Por isso este guia diz "deus" e "mestre da mesa": são os nomes provisórios, e trocar a pele não muda nada das
 seções 1 a 5. Junto da moldura está **o retornado** (🔮): um creep que já viveu um fim, evolui em segredo, só aceita
-ser dominado se você aceitar a quest dele, e tenta adiantar o apocalipse com uma pequena liga independente.
+ser dominado se você aceitar a quest dele, e tenta adiantar o apocalipse com uma pequena liga independente. Decidido já está que **a relação com ele é um dos
+caminhos de salvação** (🟢).
 
 ## 7. No banco, sem marco
 

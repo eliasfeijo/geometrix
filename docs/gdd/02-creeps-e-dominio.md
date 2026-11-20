@@ -74,6 +74,14 @@
   influência a inatividade dominando um creep e a fuga que abandona aliados que ainda lutam ([06](06-batalhas.md)).
   A **conduta** do deus (do benevolente ao cruel) nasce das ações. Influência e conduta são **simbólicas primeiro**
   (na ficha, na crônica, na história do fim).
+- **O papel do jogador** (dono, 2026-11-20, rodada 3 do [consolidado](../brainstorm/2026-11-20-consolidado-depois-do-m2.md) §12.7; "deus" continua o nome provisório):
+  - **os kits divinos:** o deus escolhe uma especialização **pelo estilo de jogo** (ex.: quem joga ativamente, quem
+    está aprendendo, quem tem 15 minutos por dia); a conduta dá o sabor e as portas;
+  - **o karma é uma escala de −1 (cruel) a +1 (benevolente)**, em ‰ no `sim`. Perto de zero (ex.: entre −0,25 e +0,25)
+    é a **neutralidade kármica**, com benefícios e trade-offs próprios; os pontos absolutos (0, −1 e +1) **dão um buff
+    enquanto se mantiverem**. Números provisórios;
+  - **o fiel é um creep (do time ou neutro) que reconhece o deus.** O primeiro nasce da primeira quest do deus
+    cumprida; a tribo convertida é a escala de cima ([05](05-tribos-e-diplomacia.md)).
 
 ## Proposta
 - Dominar só troca **quem emite os comandos** do creep. Ver [ADR-0002](../adr/0002-tudo-e-comando.md).
@@ -114,7 +122,8 @@
   preço, às vezes age por conta própria mesmo dominado, e tenta adiantar o fim do mundo com uma pequena **liga
   independente** de elite. Creeps especiais nascem da seed, no começo ou durante a partida, e podem nascer neutros.
   Raspa no decidido "o creep dominado só muda de ordem por comando de quem o domina" (M1) e no espelho entre os
-  times. O agente nota que ele pode ser uma lenda de um mundo anterior.
+  times. O agente nota que ele pode ser uma lenda de um mundo anterior. **Rodada 3 (decidido):** a relação com o
+  retornado é um dos caminhos de salvação do arco ([01](01-mundo.md)).
 - **Investir no creep** (dono, rodada 2): o deus investe o recurso dele em upgrades de creeps qualificados e colhe
   influência quando eles evoluem e espalham a influência pela crônica.
 

@@ -30,8 +30,9 @@
    O [guia da partida](../GAMEPLAY.md) conta a partida esperada com todas essas ideias, marcando o que já se joga, o
    que está decidido, o que é proposta e o que está em análise; a [visão geral](../OVERVIEW.md) foi atualizada para o
    fim da fatia B. **A 8ª leva** (o papel do jogador: os kits divinos por estilo, o ritmo dos três dias, os portais,
-   salvar o mundo perdendo a guerra) está analisada no consolidado §12, com as **perguntas 32 a 38 da rodada 3** à
-   espera do OK do dono para o formulário.
+   salvar o mundo perdendo a guerra) teve a **rodada 3** respondida (consolidado §12.7): o kit pelo estilo, o karma de
+   −1 a +1, o fiel, as metas por ato medidas com bots de perfil, os portais com lendas da seed, três caminhos de
+   salvação e os sem-Núcleo com o arco. Nada muda no M2.
 2. **🐞 O preset construtor de estrada não funciona para o jogador** (dono, 2026-11-20, nos testes desde antes da
    fatia A): pede o ponto no mapa, mas nada acontece ao clicar nem ao mexer o mouse (sem a prévia da estrada e do
    custo); só dá para construir dominando um creep, no modo estrada. Os bots constroem com o mesmo preset, então o

@@ -50,7 +50,8 @@
     camadas por cima ([05](05-tribos-e-diplomacia.md)). Variedade por seed só se o playtest pedir.
   - **Ponto sem volta:** dependendo de quantos depósitos de cristal se esgotaram, o fim já é inevitável.
   - **A corrupção não pode ser limpa** pelos jogadores. Só o final feliz das tribos a detém, e ele **salva o mundo
-    inteiro**, inclusive o inimigo ([05](05-tribos-e-diplomacia.md), M4).
+    inteiro**, inclusive o inimigo ([05](05-tribos-e-diplomacia.md), M4). **Revisto na rodada 3 (2026-11-20):**
+    as tribos são um dos três caminhos de salvação (abaixo).
   - **A corrupção é vista de longe:** ela brilha, e o time vê a borda mesmo fora da própria visão. É uma exceção ao
     fog, para avisar o fim (pilar 4).
   - **Vitória pírrica, com humor:** derrubar o Núcleo inimigo vence a guerra, mas não salva o mundo. Se o fim já é
@@ -68,6 +69,19 @@
     cada ajuste é um comando no log, e **o arco é revelado no fim**, com cada escolha do mestre;
   - **o segredo mora na instância**, não no conteúdo (o repositório é aberto): qual ramo, onde, quando e quem. **A
     história principal tem de ser entendida por quem joga às cegas**, pelo que o jogo mostra.
+- **O ritmo e o fim** (dono, 2026-11-20, rodada 3 do [consolidado](../brainstorm/2026-11-20-consolidado-depois-do-m2.md) §12.7; "deus" continua o nome provisório):
+  - **as metas de ritmo são por ato**, com a duração esperada de cerca de um dia a ×1 cada, medidas no harness com
+    bots de perfil (o ativo, o aprendiz, o de 15 min): no fim do ato I, o jogador converteu pelo menos 1 fiel e gerou
+    pelo menos 1 crônica divina; no ato II, progride com quests, forma uma liga ou faz parte de uma e luta na jungle;
+    no ato III, abrem-se os portais e os caminhos de salvação;
+  - **os portais do ato III** trazem lendas geradas pela seed, como bots neutros, até existirem as lendas de mundos
+    anteriores ([02](02-creeps-e-dominio.md));
+  - **três caminhos de salvação, como ramos do arco:** as tribos ([05](05-tribos-e-diplomacia.md)), o retornado
+    ([02](02-creeps-e-dominio.md)) e os ramos especiais do ato III. Ninguém limpa a corrupção gastando recurso, e
+    salvar salva o mundo inteiro, **ganhando ou perdendo a guerra**;
+  - **os sem-Núcleo continuam:** com o arco, os creeps que sobrevivem à queda do próprio Núcleo seguem jogando até o
+    fim do mundo, enquanto houver esperança de salvação, e viram lendas se sobreviverem. **Na fatia E, a queda do
+    Núcleo continua encerrando o mundo**, como decidido.
 
 ## Proposta
 

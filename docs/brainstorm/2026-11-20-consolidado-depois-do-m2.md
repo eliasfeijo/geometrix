@@ -1,8 +1,8 @@
 # Consolidado: as ideias e o planejamento depois do M2
 
 > **Status:** consolidação do agente (2026-11-20), pedida pelo dono. **Rodada 1 respondida (§0); rodada 2 respondida
-> (§10.1); a moldura da saga está em análise, sem decisão (§11); a 8ª leva (o papel do jogador) está analisada,
-> com as perguntas da rodada 3 à espera do OK do dono (§12).** O documento junta a
+> (§10.1); a moldura da saga está em análise, sem decisão (§11); rodada 3 (o papel do jogador) respondida
+> (§12.7).** O documento junta a
 > [proposta do ROADMAP](2026-11-20-roadmap-depois-do-m2.md) e as quatro levas de ideias do dia, registra a 5ª leva
 > e faz a análise fria pedida: expectativa × realidade, benefícios × trade-offs e uma recomendação por ideia. **As
 > perguntas foram refeitas aqui** (§7), em quatro grupos, só com o que é decisão do dono. As perguntas numeradas das
@@ -803,3 +803,32 @@ Só o que é decisão do dono, em três grupos:
 | 36 | O ritmo | **Os portais do ato III** | **Lendas geradas pela seed, como neutros**, até existirem lendas de mundos anteriores | Esperar as lendas reais (com contas) |
 | 37 | O fim | **Os caminhos de salvação** | **As tribos, o retornado e os ramos especiais do ato III**, todos como ramos do arco; "não se limpa a corrupção gastando recurso" e "salva o mundo inteiro" continuam (revê "só as tribos") | Só as tribos, como decidido |
 | 38 | O fim | **Os sem-Núcleo continuam até o fim do mundo** | **Sim, com o tema "O arco do mundo";** na fatia E, o Núcleo continua encerrando o mundo, como decidido | Já na fatia E; nunca |
+
+### 12.7 Respostas do dono (rodada 3, 2026-11-20)
+
+Três formulários, um por grupo, com o contexto no chat antes. **O dono aceitou as recomendações em 6 das 7; na 32,
+refinou o karma.**
+
+| # | Pergunta | Resposta |
+|---|---|---|
+| 32 | O eixo do kit | **O estilo escolhe o kit**, e o karma não é binário: **uma escala finita de −1 a +1**, em que o sinal diz a afinidade (cruel ou benevolente) e **perto de zero** (ex.: entre −0,25 e +0,25) é a **neutralidade kármica**, com benefícios e trade-offs próprios. Os pontos absolutos (o neutro absoluto, 0; o cruel extremo, −1; o benevolente extremo, +1) **dão um buff enquanto se mantiverem** |
+| 33 | O fiel | **Um creep (do time ou neutro) que reconhece o deus**; o primeiro nasce da primeira quest cumprida; a tribo convertida é a escala de cima |
+| 34 | Papel × pele | **O papel mecânico agora** (kits, fiéis, influência, conduta), com "deus" como nome provisório; a moldura (§11) continua em análise |
+| 35 | As metas | **Por ato**, com a duração esperada de cerca de um dia a ×1 cada, **medidas com bots de perfil** (o ativo, o aprendiz, o de 15 min) |
+| 36 | Os portais | **Lendas geradas pela seed, como bots neutros**, até existirem as lendas de mundos anteriores |
+| 37 | A salvação | **Os três como ramos do arco:** as tribos, o retornado e os ramos especiais do ato III. Ninguém limpa a corrupção gastando recurso, e salvar salva o mundo inteiro (revê "só o final feliz das tribos a detém") |
+| 38 | Os sem-Núcleo | **Continuam até o fim do mundo, com o tema "O arco do mundo"**, e viram lendas se sobreviverem; na fatia E, a queda do Núcleo continua encerrando o mundo |
+
+**Consequências que o agente registrou:**
+
+- **O karma no `sim` vai em ‰** (de −1000 a +1000), como todo número do `sim`; a faixa neutra seria ±250‰
+  (provisório). "Manter-se no absoluto" é uma condição estreita de propósito; se ela vale para o valor exato ou para
+  uma faixa mínima, e quanto vale cada buff, fica para a spec do tema "Os deuses", medido com bots.
+- **As metas por ato viram critérios do harness:** o tema "Os deuses" precisa de bots com perfil de jogador, como a
+  viabilidade da rede do M1.5 teve os seus números. O conflito com o esgotamento do cristal (~10 h) vai para a rodada
+  do papel do cristal.
+- **Os portais são mais um consumidor do lado neutro** (o ADR da fatia D já lista os invasores). As lendas reais,
+  com contas entre mundos, continuam no tema "As lendas e o deploy".
+- **O retornado ganha um segundo papel:** ele adianta o fim, e a relação com ele também pode salvar o mundo. O
+  retornado como creep continua em análise (§11.2).
+- **Nada muda no M2:** a fatia D e a E seguem como estão, e o próximo marco candidato continua Os itens.

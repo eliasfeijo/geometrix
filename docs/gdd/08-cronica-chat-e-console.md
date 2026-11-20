@@ -34,6 +34,8 @@
   da saga está em análise, §11): o deus entra na crônica do mundo pelo nome, com a influência e a conduta, e a
   partida termina numa **história** que o revela, junto do arco e das escolhas do mestre ([01](01-mundo.md)).
   Simbólico primeiro. **A história principal tem de ser entendida às cegas**, pela crônica e pelo narrador.
+- **A crônica divina** (dono, 2026-11-20, rodada 3 do [consolidado](../brainstorm/2026-11-20-consolidado-depois-do-m2.md) §12.7; "deus" continua o nome provisório): cada deus tem a própria crônica individual, com as decisões que contam a história
+  dele; a meta do fim do ato I é o jogador ter gerado pelo menos uma entrada ([01](01-mundo.md)).
 
 ## Proposta
 - **Um verbo, um comando** (agente): cada verbo do console vira um comando do mesmo vocabulário versionado, com as
