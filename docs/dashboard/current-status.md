@@ -24,7 +24,9 @@
 1. ✅ **A rodada do ROADMAP** (dono, 2026-11-20): o [consolidado](../brainstorm/2026-11-20-consolidado-depois-do-m2.md)
    §0 respondido; o [ROADMAP](../ROADMAP.md) virou marco atual + próximo (Os itens, candidato) + banco por tema; a
    fatia C saiu do M2. A D herda a arena mínima pelo encontro, a direção nos três casos e três restrições de contrato
-   (GDD 06; ROADMAP, fatia D).
+   (GDD 06; ROADMAP, fatia D). **Rodada 2** (os deuses e o arco do mundo) respondida no mesmo dia (consolidado
+   §10.1); **a moldura da saga** (a torre, a convocação, os anfitriões, os times que nascem do jogo) ficou **em análise,
+   sem decisão**, a pedido do dono (consolidado §11, com os próximos passos em §11.7). Nada do M2 depende dela.
 2. **A spec da D** (skill `spec-slice`, `docs/specs/m2-juncao/`): o encontro abre a instância de batalha no lugar do
    sorteio, com dois ou mais lados, entrada no meio da luta, auto-resolve e os errantes. Perguntas que ela herda:
    o contrato com entrada no meio da luta (um ADR, `Proposed`), o raio da "bolha" e o tempo do mundo durante a

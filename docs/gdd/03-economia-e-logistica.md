@@ -45,6 +45,16 @@
 - **O Núcleo é a forja e o cofre** (dono, 2026-11-20, na rodada do [consolidado](../brainstorm/2026-11-20-consolidado-depois-do-m2.md); tema "Os itens"): os itens
   se fazem e evoluem no Núcleo, com material carregado até lá; o item guardado no Núcleo não se perde quando o creep
   morre. Detalhes (receitas, custo, o papel exato do cristal) na spec do tema.
+- **Tributos e o recurso do deus** (dono, 2026-11-20, rodada 2 do [consolidado](../brainstorm/2026-11-20-consolidado-depois-do-m2.md) §10.1; "deus" é o nome provisório do papel do jogador, a moldura
+  da saga está em análise, §11):
+  - **os tributos** das tribos convertidas vão para o **tesouro do time**, numa caravana física; o deus que converteu
+    ganha influência;
+  - **o recurso individual do deus** é separado da influência: acumula-se e se gasta. **É híbrido:** nasce dos
+    feitos dos fiéis (as quests do deus para o creep, cumpridas) e é **acelerado por oferendas e rituais**, que tomam
+    o tempo dos creeps e têm risco. Gasta-se em sussurros, poderes no mundo e investimento em creeps
+    ([02](02-creeps-e-dominio.md)). A parte que nasce dos feitos não está no mapa: é uma exceção ao pilar 2, a
+    escrever com limites (não se rouba, não se troca, não compra nada material) quando o tema "Os deuses" tiver
+    marco.
 
 ## Proposta
 

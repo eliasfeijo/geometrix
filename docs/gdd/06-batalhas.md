@@ -115,7 +115,10 @@
       a ondas), no mesmo pacote de batalha, com um modo de cenário no laboratório; tema "Cenários de quest",
       depois dos itens;
     - **as ligas lutam pelo piloto de grupo:** o humano controla o líder, os seguidores lutam pelos gambits na
-      formação, com até três ordens de liga ([02](02-creeps-e-dominio.md)).
+      formação, com até três ordens de liga ([02](02-creeps-e-dominio.md));
+    - **a fuga e a influência** (rodada 2): só a fuga do creep dominado que **abandona aliados que ainda lutam**
+      pesa contra a influência do deus. Recuar sozinho ou com o grupo continua legítimo, e a fuga de todos por
+      inatividade da batalha não conta.
 
 ## Proposta
 Ver [ADR-0001](../adr/0001-mundo-e-batalha-separados.md).

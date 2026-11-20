@@ -46,8 +46,9 @@ itens dão as outras, e o level do creep continua, com peso menor ([GDD 02](gdd/
 laboratório (itens e skills na batalha, contra o bot), depois no mundo: a **forja e o cofre no Núcleo**, o cristal
 como ingrediente, a durabilidade, o item que cai no despojo, os presets do bot como a dica da interface.
 
-**Em paralelo, se o dono quiser,** uma fatia pequena de **identidade simbólica**: traits na voz da crônica, fama e
-títulos (conquistados e disputados). Só depende do encontro e não mexe no combate.
+**Em paralelo, se o dono quiser,** uma fatia pequena, **As fichas**: a identidade simbólica dos creeps e dos deuses
+(traits na voz da crônica, fama, títulos conquistados e disputados, a influência e a conduta do jogador, a ficha com
+o resumo no topo). Só depende do encontro, não tem efeito mecânico e serve a qualquer moldura da saga.
 
 **Por que este** (análise no [consolidado](brainstorm/2026-11-20-consolidado-depois-do-m2.md) §5): é o pré-requisito
 para balancear o combate ("não se balanceia combate cru antes de skills, nível e stats"); dá ao cristal um papel e um
@@ -61,17 +62,18 @@ critério mais forte para a ordem.
 | Tema | O que entra | Pede humanos? |
 |---|---|---|
 | **Os itens** | (o próximo marco candidato, acima) O laboratório de itens, os presets da comunidade e o ranking ficam com o deploy | Não |
-| **Os personagens** | Traits com kits de crônica (origem e side-quest), fama, títulos, laços (simbólicos primeiro: na ficha e na crônica; os buffs e o luto quando o playtest pedir), side-quests pessoais, renomear | Não |
+| **Os personagens** | Traits com kits de crônica (origem e side-quest), fama, títulos, laços (simbólicos primeiro: na ficha e na crônica; os buffs e o luto quando o playtest pedir), side-quests pessoais, renomear; **creeps especiais da seed** (ex.: o retornado, em análise) | Não |
+| **Os deuses** (nome provisório do papel do jogador) | **Influência** (um peso: dominar creeps famosos pede influência; pesa contra a inatividade dominando e a fuga que abandona aliados); **conduta** (nasce das ações; o cruel ganha rápido e fecha portas; o equilíbrio pelas regras, medido com bots); **o recurso do deus** (híbrido: nasce dos feitos dos fiéis, acelerado por oferendas e rituais), gasto em **sussurros** (o resultado depende da abordagem), **poderes no mundo** e **investimento em creeps qualificados**; as **quests do deus para o creep**; o **deus-bot**; a ficha do deus e o nome na história do mundo. Simbólicos primeiro | Não |
 | **As ligas** | A liga é de um creep líder (dominado para formar, continua pelos gambits quando solto); piloto de grupo com a formação pelo DNA e até 3 ordens; recrutamento por diálogo, quase sempre pela fama; símbolo como identidade (o estandarte físico, com os itens); o teto que cresce (o level do líder, com o modelo híbrido); até 10 × 10 × 10 | Não (uma liga contra o bot) |
 | **A batalha** | A arena gerada pelo recorte do mundo e o tamanho por faixa de participantes, a IA que aprende, regras novas (a livre), acampamentos e torres | Não |
 | **Cenários de quest** | A quest como **batalha com objetivo** (escoltar, segurar uma área, recuperar um item, sobreviver a ondas), com um modo de cenário no laboratório; depois dos itens | Não |
-| **A jungle hostil** | Chefões com buff e artefato, árvores destrutíveis, a curva dos errantes por ato, **o mestre da mesa** (neutro, sem mexer no placar; um diretor-bot sempre, com a cadeira aberta a um humano), a 3ª ação do encontro por DNA | Não (o mestre humano, sim) |
-| **O fim do mundo** | A corrupção do cristal esgotado, o ponto sem volta, a vitória pírrica, a crônica do fim, o registro das lendas | Não |
-| **O mundo vivo** | Tribos e diplomacia, a reputação com as tribos, o final feliz secreto, construção ampla | Não |
+| **A jungle hostil** | Chefões com buff e artefato, árvores destrutíveis, a curva dos errantes por ato, a 3ª ação do encontro por DNA | Não |
+| **O arco do mundo** (era "O fim do mundo") | **A main quest line secreta:** o arco em atos, com gatilhos e **presets como ramos dentro da corrupção** (um apocalipse só); a corrupção do cristal esgotado, o ponto sem volta, a vitória pírrica, a crônica do fim, o registro das lendas; **o mestre da mesa** (neutro, sem mexer no placar; um diretor-bot sempre, com a cadeira aberta a um humano), que escolhe os presets e ajusta os gatilhos dentro de limites, por comandos, com o arco revelado no fim; o painel do mestre; o segredo na instância e a história legível às cegas; a liga independente (em análise) | Não (o mestre humano, sim) |
+| **O mundo vivo** | Tribos e diplomacia, a relação do time com cada tribo, as **conversões** e os **tributos** (no tesouro do time, numa caravana física), o final feliz secreto (o ramo benevolente do arco), construção ampla | Não |
 | **Comunicação e automação** | Chat, console e macros de cliente (a antiga fatia C), piloto scriptável, macros no servidor | Em parte |
 | **A apresentação** | Som, anúncios de abate e de fuga, a tela de fim e o replay além do mínimo | Não |
-| **O time** | 3v3, impostos, **o regime do time** (democracia ou meritocracia, a escolher quando houver times de humanos), votação, o comandante do time, várias ligas por time, genética | **Sim** |
-| **As lendas e o deploy** | Invasões entre mundos, contas (o control plane em Go), presets da comunidade e ranking, deploy de testes, olhos novos | **Sim** |
+| **O time** | 3v3, impostos, **o regime do time** (democracia ou meritocracia pela influência dos deuses, a escolher quando houver times de humanos), votação, o comandante do time, várias ligas por time, genética | **Sim** |
+| **As lendas e o deploy** | Invasões entre mundos, contas (o control plane em Go), presets da comunidade e ranking, deploy de testes, olhos novos; **a moldura da saga** (em análise: a torre, a convocação, os mundos como capítulos) | **Sim** |
 
 **As dependências** (para escolher o próximo marco vendo o que cada tema destrava):
 
@@ -79,15 +81,18 @@ critério mais forte para a ordem.
 flowchart TD
     D["M2 · D<br/>a junção"] --> E["M2 · E<br/>o fim mínimo"]
     D --> IT["Os itens"]
-    A["M2 · A (feito)<br/>o encontro e a crônica"] --> ID["Os personagens<br/>(identidade simbólica)"]
+    A["M2 · A (feito)<br/>o encontro e a crônica"] --> ID["As fichas<br/>(creeps e deuses, simbólicos)"]
     IT --> LG["As ligas"]
     ID --> LG
     LG --> PS["Os personagens<br/>(laços e kits mecânicos)"]
     IT --> JH["A jungle hostil"]
     D --> JH
     IT --> QC["Cenários de quest"]
-    E --> FM["O fim do mundo"]
+    E --> FM["O arco do mundo<br/>(e o mestre)"]
     IT --> FM
+    ID --> DE["Os deuses<br/>(mecânicos)"]
+    DE --> FM
+    D --> FM
     JH --> MV["O mundo vivo"]
     QC --> MV
     DEP["Deploy e olhos novos"] --> TM["O time"]
@@ -151,3 +156,9 @@ hostil", "O fim do mundo" e a progressão, que virou "Os itens" e "Os personagen
 marco candidato é **Os itens**. Cinco levas de ideias do dia (o mestre da mesa, as ligas, a arena pelo encontro, os
 itens, a reputação, o regime, o recrutamento, os laços, os traits, os títulos, os cenários de quest) estão no
 consolidado, com a análise fria de cada uma.
+
+**Os deuses e o arco do mundo** (dono, 2026-11-20, rodada 2 do [consolidado](brainstorm/2026-11-20-consolidado-depois-do-m2.md) §10.1): o jogador entra na
+crônica como um deus (nome provisório), com influência, conduta e um recurso próprio; o tema "O fim do mundo" vira
+"O arco do mundo", a main quest line secreta que o mestre conduz; nasce o tema "Os deuses"; a fatia paralela vira
+"As fichas". **A moldura da saga** (a torre, a convocação, os anfitriões, os times que nascem do jogo) ficou em
+análise, sem decisão, a pedido do dono (§11 do consolidado). O próximo marco continua Os itens.

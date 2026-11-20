@@ -69,6 +69,11 @@
     amigo entram quando o playtest mostrar que o jogador se importa. **Títulos conquistados** (permanentes, por um
     feito único) **e disputados** (do melhor do mundo num feito agora, passam para quem superar), de início só
     simbólicos, na crônica. Tema "Os personagens".
+- **O deus e o domínio** (dono, 2026-11-20, rodada 2 do [consolidado](../brainstorm/2026-11-20-consolidado-depois-do-m2.md) §10.1; "deus" é o nome provisório do papel do jogador, a moldura
+  da saga está em análise, §11): **dominar um creep famoso pede influência**; o domínio comum não muda. Pesam contra a
+  influência a inatividade dominando um creep e a fuga que abandona aliados que ainda lutam ([06](06-batalhas.md)).
+  A **conduta** do deus (do benevolente ao cruel) nasce das ações. Influência e conduta são **simbólicas primeiro**
+  (na ficha, na crônica, na história do fim).
 
 ## Proposta
 - Dominar só troca **quem emite os comandos** do creep. Ver [ADR-0002](../adr/0002-tudo-e-comando.md).
@@ -103,6 +108,15 @@
   derrotas. O teto da liga começa em 1 seguidor e cresce com o level do líder. Se o líder morre, os membros voltam às
   próprias regras, e a liga e o símbolo ficam para quem assumir. Os **laços**, quando ganharem efeito, seriam buffs
   pequenos de coordenação, e a morte de um amigo, fúria, luto ou vingança, conforme o trait.
+
+- **O retornado e os creeps especiais da seed** (ideia do dono, 2026-11-20, em análise; [consolidado](../brainstorm/2026-11-20-consolidado-depois-do-m2.md) §11.2):
+  um creep que evolui em segredo e mais rápido, só aceita ser dominado se o deus aceitar a quest dele e pagar o
+  preço, às vezes age por conta própria mesmo dominado, e tenta adiantar o fim do mundo com uma pequena **liga
+  independente** de elite. Creeps especiais nascem da seed, no começo ou durante a partida, e podem nascer neutros.
+  Raspa no decidido "o creep dominado só muda de ordem por comando de quem o domina" (M1) e no espelho entre os
+  times. O agente nota que ele pode ser uma lenda de um mundo anterior.
+- **Investir no creep** (dono, rodada 2): o deus investe o recurso dele em upgrades de creeps qualificados e colhe
+  influência quando eles evoluem e espalham a influência pela crônica.
 
 ## Ideias em incubação (não entram antes do M3)
 - **Reprodução e gerações:** creeps M/F, idade, morte natural, herança de DNA. Seria um limitador de população

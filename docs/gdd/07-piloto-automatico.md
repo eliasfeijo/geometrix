@@ -64,6 +64,12 @@
   memória. Referências: Screeps, Gladiabots.
 - A mesma interface serve aos **bots de teste**: partidas inteiras rodando sem interface, para balanceamento.
 
+- **A quest do deus para o creep** (ideia do dono, 2026-11-20, em análise; [consolidado](../brainstorm/2026-11-20-consolidado-depois-do-m2.md) §11.2): o deus dá ao
+  creep um objetivo ("traga 20 cristais", "explore o norte"), e as regras do creep cuidam do como; pode substituir
+  parte dos gambits e do piloto, e ser mais casual que editar regras. O agente propõe que a quest seja uma regra
+  temporária no topo da lista, com recompensa, para não haver dois jeitos de comandar. **O deus-bot** (o
+  estrategista dos bots com o papel de deus) tem de existir para os times sem jogador.
+
 ## Perguntas abertas
 - Onde fica o piloto automático: por creep, por grupo de creeps, ou por jogador? (Em parte respondida em 2026-11-20:
   a liga é um **piloto de grupo**, "seguir o líder" numa vaga da formação, [02](02-creeps-e-dominio.md); o resto

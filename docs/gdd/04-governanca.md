@@ -7,8 +7,9 @@
 - Times maiores que 3v3 podem ter **representantes** formais.
 
 - **Cada time escolhe o seu regime** (dono, 2026-11-20, como direção; [consolidado](../brainstorm/2026-11-20-consolidado-depois-do-m2.md)): uma **democracia**
-  (votação, customizável, burocrática, com representante) ou uma **meritocracia** (hierarquia pela fama dos creeps,
-  menos burocrática e mais autoritária). Qual vem primeiro se decide quando houver times de humanos para testar. Tema
+  (votação, customizável, burocrática, com representante) ou uma **meritocracia** (hierarquia **pela influência dos
+  deuses**, menos burocrática e mais autoritária; revisto na rodada 2: a fama dos creeps entra na influência de quem
+  os dominou). Qual vem primeiro se decide quando houver times de humanos para testar. Tema
   "O time".
 
 ## Proposta

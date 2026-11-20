@@ -28,7 +28,12 @@
   mantém a partida divertida para os dois times e domina creeps neutros. **É neutro e não mexe no placar:** cria
   perigo e oportunidade iguais para quem está ativo, sem socorrer quem está perdendo (pilar 1). **Um diretor-bot
   está sempre presente** (a curva dos errantes, crescida), **com a cadeira aberta a um humano.** Na fatia D, só uma
-  restrição: o ADR do lado neutro aceita um controlador.
+  restrição: o ADR do lado neutro aceita um controlador. **Rodada 2:** o mestre também **conduz o arco do mundo**
+  (escolhe os presets, ajusta os gatilhos dentro de limites; [01](01-mundo.md)), e **o equilíbrio entre os deuses
+  cruéis e benevolentes vem das regras, medidas com bots**, não do julgamento do mestre. O cruel ganha recursos rápido
+  e **fecha portas**: as tribos ficam hostis, e o ramo do final feliz se fecha.
+- **Conversões e tributos** (dono, 2026-11-20, rodada 2): converter uma tribo é uma ação de diálogo; a tribo
+  convertida manda tributo ao **tesouro do time**, numa caravana física ([03](03-economia-e-logistica.md)).
 
 ## Proposta
 
