@@ -106,28 +106,55 @@ describe("the predict option (C11)", () => {
     expect(freeAhead(arena, v, 1, at(2, 2), "left")).toBe(2);
   });
 
-  test("runs ahead while held, at the step time, up to what is free", () => {
+  test("glides while held from the key on, at the step time, up to what is free", () => {
     const p = new Predictor();
     const v = view([creep(1, at(2, 2))]);
     p.hold("right", 0, W, at(2, 2));
     const framed = { x: 2, y: 2 };
-    // The first step starts at once.
+    // It starts at once, without waiting for a frame.
     expect(p.position(arena, v, 1, 100, 200, framed)).toEqual({ x: 2.5, y: 2 });
     expect(p.position(arena, v, 1, 400, 200, framed)).toEqual({ x: 4, y: 2 });
     // The rock at (6, 2): it stops at (5, 2).
     expect(p.position(arena, v, 1, 2000, 200, framed)).toEqual({ x: 5, y: 2 });
   });
 
-  test("released, it glides to where the frames draw it", () => {
+  test("released, it waits for the frames, then glides to them (F7)", () => {
     const p = new Predictor();
     const v = view([creep(1, at(2, 2))]);
     p.hold("right", 0, W, at(2, 2));
-    p.position(arena, v, 1, 400, 200, { x: 2, y: 2 });
-    p.hold(null, 400, W, at(3, 2));
-    const framed = { x: 3, y: 2 };
-    expect(p.position(arena, v, 1, 500, 200, framed)).toEqual({ x: 3.5, y: 2 });
-    expect(p.position(arena, v, 1, 600, 200, framed)).toBeUndefined();
+    p.position(arena, v, 1, 300, 200, { x: 2, y: 2 });
+    // Drawn at 3.5; the frames, a round trip late, still at 3.
+    p.hold(null, 300, W, at(3, 2), 250);
+    expect(p.position(arena, v, 1, 400, 200, { x: 3, y: 2 })).toEqual({
+      x: 3.5,
+      y: 2,
+    });
+    // They get to 4 (the battle had entered it): it glides on to them.
+    expect(p.position(arena, v, 1, 450, 200, { x: 4, y: 2 })).toEqual({
+      x: 3.5,
+      y: 2,
+    });
+    expect(p.position(arena, v, 1, 550, 200, { x: 4, y: 2 })).toEqual({
+      x: 3.75,
+      y: 2,
+    });
+    expect(p.position(arena, v, 1, 650, 200, { x: 4, y: 2 })).toBeUndefined();
     expect(p.active).toBe(false);
+  });
+
+  test("released and the frames never get there: back after the round trip", () => {
+    const p = new Predictor();
+    const v = view([creep(1, at(2, 2))]);
+    p.hold("right", 0, W, at(2, 2));
+    p.position(arena, v, 1, 300, 200, { x: 2, y: 2 });
+    p.hold(null, 300, W, at(2, 2), 250);
+    const framed = { x: 2, y: 2 };
+    expect(p.position(arena, v, 1, 500, 200, framed)).toEqual({ x: 3.5, y: 2 });
+    expect(p.position(arena, v, 1, 550, 200, framed)).toEqual({ x: 3.5, y: 2 });
+    expect(p.position(arena, v, 1, 650, 200, framed)).toEqual({
+      x: 2.75,
+      y: 2,
+    });
   });
 
   test("the countdown holds the run until its end", () => {
@@ -162,12 +189,21 @@ describe("the predict option (C11)", () => {
     });
   });
 
-  test("never drawn behind the frames on its way", () => {
+  test("never ahead of the battle, and at most a step behind the frames", () => {
+    // The battle entered (2, 3) at once: a frame at 100 ms does not push the
+    // glide past it.
     const p = new Predictor();
     p.hold("right", 0, W, at(1, 3));
-    p.frame(W, view([creep(1, at(3, 3))]), 1, 100, 200, 2);
-    const v = view([creep(1, at(3, 3))]);
-    expect(p.position(arena, v, 1, 100, 200, { x: 3, y: 3 })).toEqual({
+    p.frame(W, view([creep(1, at(2, 3))]), 1, 100, 200, 2);
+    const v = view([creep(1, at(2, 3))]);
+    expect(p.position(arena, v, 1, 100, 200, { x: 2, y: 3 })).toEqual({
+      x: 1.5,
+      y: 3,
+    });
+    // Frames two cells further than the glide: it catches up to one behind.
+    p.frame(W, view([creep(1, at(4, 3))]), 1, 200, 200, 2);
+    const w = view([creep(1, at(4, 3))]);
+    expect(p.position(arena, w, 1, 200, 200, { x: 4, y: 3 })).toEqual({
       x: 3,
       y: 3,
     });

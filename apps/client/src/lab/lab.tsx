@@ -546,7 +546,19 @@ export function Lab() {
       return;
     }
     const dir = input.current.moving;
-    predictor.current.hold(dir, performance.now(), arena.width, mine.cell);
+    predictor.current.hold(
+      dir,
+      performance.now(),
+      arena.width,
+      mine.cell,
+      releaseWaitMs(),
+    );
+  }
+
+  /** How long a released prediction waits for the frames: a round trip. */
+  function releaseWaitMs(): number {
+    const { rtt: r, blindRtt: b, speed: s } = live.current;
+    return (b ?? r) + 2 * tickMsAt(s);
   }
 
   // The listeners are added once and call the handler of the latest render.
@@ -555,7 +567,7 @@ export function Lab() {
   const blurHandler = useRef(() => {});
   blurHandler.current = () => {
     for (const c of input.current.releaseAll(dominated)) send(c);
-    predictor.current.hold(null, performance.now(), 0, -1);
+    predictor.current.hold(null, performance.now(), 0, -1, releaseWaitMs());
   };
   useEffect(() => {
     const down = (e: KeyboardEvent) => keyHandler.current(e, true);
