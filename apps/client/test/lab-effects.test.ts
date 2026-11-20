@@ -9,7 +9,12 @@ import { describe, expect, test } from "vitest";
 import paramsJson from "../../../packages/battle/test/params.json?raw";
 import { LAB_ARENAS } from "../src/lab/assets.ts";
 import { idleWarning } from "../src/lab/arena-view.tsx";
-import { defaultDraft, setupOf } from "../src/lab/draft.ts";
+import {
+  defaultDraft,
+  member,
+  setupOf,
+  type SetupDraft,
+} from "../src/lab/draft.ts";
 import {
   EFFECT_MS,
   effectProgress,
@@ -19,12 +24,9 @@ import {
 
 const params = parseBattleParams(JSON.parse(paramsJson));
 
-/** The events of a default 1 × 1 on the rocks, until it ends. */
-function battleEvents(): BattleEvent[] {
-  const state = createBattle(
-    setupOf(defaultDraft(), params, LAB_ARENAS.pedras),
-    params,
-  );
+/** The events of a 1 × 1 on the rocks (the default one), until it ends. */
+function battleEvents(draft: SetupDraft = defaultDraft()): BattleEvent[] {
+  const state = createBattle(setupOf(draft, params, LAB_ARENAS.pedras), params);
   const events: BattleEvent[] = [];
   while (state.ended === null) events.push(...stepBattle(state, []));
   return events;
@@ -45,11 +47,20 @@ describe("the signals of the attack (spec L-8, plan C6)", () => {
       count("missed").length,
     );
     expect(effects.every((e) => e.at === 1000)).toBe(true);
-    // The square strikes in melee, the circle shoots.
+    // The circle shoots (and keeps out of the square's reach, C12); two
+    // squares strike in melee.
     const attacks = effects.filter((e) => e.kind === "attack");
-    expect(new Set(attacks.map((e) => e.melee))).toEqual(
-      new Set([true, false]),
+    expect(attacks.length).toBeGreaterThan(0);
+    expect(attacks.every((e) => !e.melee)).toBe(true);
+    const squares = {
+      ...defaultDraft(),
+      sides: [[member("square")], [member("square")]],
+    };
+    const melee = effectsOf(battleEvents(squares), 1000, params).filter(
+      (e) => e.kind === "attack",
     );
+    expect(melee.length).toBeGreaterThan(0);
+    expect(melee.every((e) => e.melee)).toBe(true);
   });
 
   test("a blow carries the damage it took and where it landed", () => {

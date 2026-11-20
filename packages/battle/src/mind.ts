@@ -168,20 +168,55 @@ export function projectileIncoming(mind: Mind): boolean {
 }
 
 /**
+ * The cells within `gambits.meleeBerthSteps` steps (around rock) of a melee
+ * enemy (a kit with no projectile): where it hits at once or after a step or
+ * two. A ranged action walks around them when it can (checkpoint C12: the
+ * circle took the shortest way to its firing cell, past the square that
+ * waited at the corner). The cell self stands on is left out, so it can step
+ * away from there.
+ */
+export function meleeReach(mind: Mind): Set<number> {
+  const { arena, params } = mind.state;
+  const berth = params.gambits.meleeBerthSteps;
+  const cells = new Set<number>();
+  if (berth === 0) return cells;
+  for (const enemy of mind.enemies) {
+    if (params.dna[enemy.dna].projectileCellsPerSecond !== 0) continue;
+    const steps = rockStepsFrom(arena, enemy.cell);
+    for (let cell = 0; cell < steps.length; cell++) {
+      if (steps[cell]! >= 1 && steps[cell]! <= berth) cells.add(cell);
+    }
+  }
+  cells.delete(mind.self.cell);
+  return cells;
+}
+
+/**
  * The first step towards the nearest of `goals` (plan section 9): "here" when
  * self stands on one, null when none can be reached. The path goes around
- * rock and around the others' bodies, to goals nobody else stands on; when
- * bodies close every way, it heads on as if they were not there (it will wait
- * at them). First steps that tie ask the rng.
+ * rock and around the others' bodies, to goals nobody else stands on, and
+ * around the `avoid` cells too, when given (and goals there are left out);
+ * when that closes every way, it goes as if `avoid` were not there, and when
+ * bodies close every way, as if they were not there either (it will wait at
+ * them). First steps that tie ask the rng.
  */
 export function towards(
   mind: Mind,
   goals: readonly number[],
+  avoid: ReadonlySet<number> | null = null,
 ): Dir | "here" | null {
   const { self, state, occupied } = mind;
   if (goals.includes(self.cell)) return "here";
-  const free = goals.filter((cell) => !occupied.has(cell));
-  let steps = stepsFrom(state.arena, free, occupied, self.cell);
+  let steps: Int32Array | null = null;
+  if (avoid !== null && avoid.size > 0) {
+    const blocked = new Set([...occupied, ...avoid]);
+    const free = goals.filter((cell) => !blocked.has(cell));
+    steps = stepsFrom(state.arena, free, blocked, self.cell);
+  }
+  if (steps === null || steps[self.cell] === -1) {
+    const free = goals.filter((cell) => !occupied.has(cell));
+    steps = stepsFrom(state.arena, free, occupied, self.cell);
+  }
   if (steps[self.cell] === -1) {
     steps = stepsFrom(state.arena, goals, null, self.cell);
   }

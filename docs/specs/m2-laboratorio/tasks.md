@@ -712,7 +712,7 @@ As decisões C9 a C15 do checkpoint (plan §15). Worktree: `.claude/worktrees/la
 - [x] **A IA do ▲ contra o corpo a corpo** (C12): o ▲ *kita* o ■, como o ● (recua quando o inimigo de corpo a corpo
       está perto, e atira de longe). Primeiro os gambits do preset; código novo só se a condição ou a ação não
       existir. Medido no `geo battle sweep` (▲ × ■ hoje 0/100; informativo, C1)
-- [ ] **O ● nas esquinas** (C12): investigar por que o ● anda reto para a esquina onde o inimigo espera (o caminho
+- [x] **O ● nas esquinas** (C12): investigar por que o ● anda reto para a esquina onde o inimigo espera (o caminho
       sempre igual nas pedras) e ajustar o que for gambit ou escolha de caminho; se a solução pedir uma IA que
       aprende, registrar na proposta do GDD 06 em vez de implementar
 - [ ] **A tela** (C13): um sinal de morte e um de fuga na arena (a partir dos eventos); o medidor "sem dano" sai da

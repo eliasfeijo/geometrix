@@ -1,16 +1,31 @@
 import { describe, expect, test } from "vitest";
 import {
   actionCommands,
+  alignedDir,
   battleView,
   conditionHolds,
+  createBattle,
   createMind,
+  meleeReach,
+  presetGambits,
   stepBattle,
+  towards,
   type Action,
   type BattleState,
   type Condition,
   type Gambit,
 } from "@geometrix/battle";
-import { battleOn, FIELD, member, put, run, xyOf } from "./helpers.ts";
+import {
+  battleOn,
+  FIELD,
+  member,
+  paramsWith,
+  put,
+  readArenaRows,
+  run,
+  setupOf,
+  xyOf,
+} from "./helpers.ts";
 
 const byId = (state: BattleState, id: number) =>
   state.participants.find((p) => p.id === id)!;
@@ -351,4 +366,105 @@ describe("actions (spec D14)", () => {
     state.piles.push({ id: state.nextId++, cell: 0, materia: 1, cristal: 0 });
     expect(commandsOf(state, 1, { type: "pickup" })).toBeNull();
   });
+});
+
+/** Two lanes around a wall: the top one passes under the square's cell. */
+const LANES = [
+  ".............",
+  ".............",
+  ".1.#######.2.",
+  ".1.........2.",
+  ".............",
+];
+
+describe("the melee berth (checkpoint C12)", () => {
+  test("the reach: cells within the berth of a melee enemy, around rock", () => {
+    const state = battleOn(LANES, [["circle"], ["square", "triangle"]]);
+    put(state, 1, 1, 3);
+    put(state, 2, 6, 0);
+    put(state, 3, 11, 3); // a shooter has no reach
+    const reach = meleeReach(mindOf(state, 1));
+    expect(reach.has(cellOf(6, 1, 13))).toBe(true); // 1 step
+    expect(reach.has(cellOf(9, 0, 13))).toBe(true); // 3 steps
+    expect(reach.has(cellOf(10, 0, 13))).toBe(false); // 4 steps
+    expect(reach.has(cellOf(6, 0, 13))).toBe(false); // the square itself
+    expect(reach.has(cellOf(10, 3, 13))).toBe(false);
+  });
+
+  test("a ranged way goes around the reach when it can", () => {
+    const state = battleOn(LANES, [["circle"], ["square"]]);
+    put(state, 1, 2, 1);
+    put(state, 2, 6, 0);
+    const goal = [cellOf(11, 1, 13)];
+    const mind = mindOf(state, 1);
+    // The top lane is shorter, but passes next to the square.
+    expect(towards(mind, goal)).toBe("right");
+    expect(towards(mind, goal, meleeReach(mind))).toBe("down");
+  });
+
+  test("with every way through the reach, it goes as before", () => {
+    const state = battleOn(LANES, [["circle"], ["square", "square"]]);
+    put(state, 1, 2, 1);
+    put(state, 2, 6, 0);
+    put(state, 3, 6, 4); // the bottom lane is in a reach too
+    const mind = mindOf(state, 1);
+    expect(towards(mind, [cellOf(11, 1, 13)], meleeReach(mind))).toBe("right");
+  });
+
+  test("a berth of 0 turns it off", () => {
+    const params = paramsWith((p) => {
+      p.gambits.meleeBerthSteps = 0;
+    });
+    const state = createBattle(
+      setupOf(LANES, [[member("circle")], [member("square")]]),
+      params,
+    );
+    put(state, 2, 6, 0);
+    expect(meleeReach(mindOf(state, 1)).size).toBe(0);
+  });
+
+  test("the circle does not walk into a square waiting at a corner", () => {
+    // The owner's bait on the rocks: a square standing next to rock, hitting
+    // only what comes next to it. The marksman comes from its zone.
+    const rows = readArenaRows("pedras");
+    for (const [x, y] of [
+      [21, 10],
+      [20, 14],
+      [21, 18],
+    ] as const) {
+      for (const seed of [1, 2, 3]) {
+        const state = createBattle(
+          setupOf(
+            rows,
+            [
+              [member("square")],
+              [member("circle", { gambits: presetGambits("marksman") })],
+            ],
+            seed,
+          ),
+          paramsWith(() => {}),
+        );
+        const square = byId(state, 1);
+        square.controller = "human";
+        put(state, 1, x, y);
+        let blows = 0;
+        while (state.ended === null && state.tick < 1200) {
+          const circle = byId(state, 2);
+          const dir = alignedDir(state.arena, square.cell, circle.cell, 1);
+          const commands =
+            dir === null
+              ? [{ type: "intent", id: 1, move: null, attack: false }]
+              : [
+                  { type: "face", id: 1, dir },
+                  { type: "intent", id: 1, move: null, attack: true },
+                ];
+          for (const e of stepBattle(state, commands)) {
+            if (e.type === "hit" && e.by.id === 1) blows += 1;
+          }
+        }
+        expect({ x, y, seed, blows }).toEqual({ x, y, seed, blows: 0 });
+        expect(state.ended?.winnerSide).toBe(1);
+      }
+    }
+  }, 30_000);
 });

@@ -141,7 +141,11 @@ sequenceDiagram
 - **IA que aprende** (ideia do dono, 2026-11-17, **sem marco**): o bot começa burro e vai ficando mais esperto, até
   um "modo pesadelo". Um caminho concreto (agente): uma busca offline por listas de gambits que vençam a melhor
   lista anterior, com o auto-resolve (centenas de lutas por segundo), gerando níveis de bot. Aumenta o escopo do
-  M2: só entra com um marco escolhido pelo dono.
+  M2: só entra com um marco escolhido pelo dono. **Achado do checkpoint da F5 do laboratório** (2026-11-20): o
+  dono explorou o ● nas esquinas das pedras ("humanos aprendem sozinhos"). A F7 tirou a parte de caminho (o ● não
+  passa mais ao lado de um ■ parado na esquina); o que sobra é a previsibilidade: o ● ainda escolhe os mesmos
+  corredores, e um humano aprende o trajeto. Variar o trajeto conforme o adversário é o tipo de coisa que uma IA
+  que aprende resolveria.
 
 ### Brainstorm de 2026-11-15 (não aprovado)
 Detalhes e análise no [brainstorm M2–M3](../brainstorm/2026-11-15-m2-m3.md) §2 e §6.
