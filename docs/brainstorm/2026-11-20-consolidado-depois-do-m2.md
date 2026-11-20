@@ -1136,6 +1136,7 @@ ele reabriu**, questionando o próprio conceito de "seu time" (§13.8).
 **Para seguir a análise** (sem prazo; nada do M2 depende disto):
 
 1. **"Seu time": uma página comparando (a), (b) e (c)**, com os primeiros minutos de cada um às cegas e o espelho da
-   primeira geração no (c).
+   primeira geração no (c). **Feita, e ampliada para a estrutura inteira** (quantos deuses por povo, quantos povos,
+   como o povo nasce), com as perguntas da rodada 5: [a estrutura e "seu time"](2026-11-20-estrutura-seu-time.md).
 2. **O episódio 1:** uma página de pitch com a simetria como pergunta central: o que o jogador vê, o que a crônica
    conta, o que a corrupção quebra.
