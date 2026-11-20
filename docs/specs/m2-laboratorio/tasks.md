@@ -674,29 +674,33 @@ interpolação que não pause quando o input seguinte continua o movimento.
 9. **Anúncios e som:** não são prioridade. O dono pediu que o agente analise e proponha onde cada ideia cabe, e
    pergunte só o que o repo não responde.
 
-**As interpretações** (F4 a F6): aceitas, salvo duas. **(a) A contagem com várias ações** (F5, interpretação 1): o
-dono perguntou o que vale quando há vários comandos durante a contagem (andar para o norte, depois largar a bolsa);
-a resposta está na F7 (abaixo), com a decisão dele. **(b) O elogio da esquiva** foi no ▲ × ▲ do grupo 4, não no
+**As interpretações** (F4 a F6): aceitas, salvo duas. **(a) A contagem com várias ações** (F5, interpretação 1): apertar Q e
+soltar durante a contagem ainda larga a bolsa no fim dela (o pedido espera), e o dono não quer isso: **decidido
+(C15):** no fim da contagem vale só o que está apertado naquele instante (F7, abaixo). **(b) O elogio da esquiva** foi no ▲ × ▲ do grupo 4, não no
 duelo contra o ●. O *jitter* da reação (fácil 600 ± 250 ms, normal 250 ± 100, difícil 100 ± 50) fica como está até
 a F7 mexer na IA.
 
-**Decisões** (plan §15, C9 a C14): a próxima regra é nenhuma (a fatia B fecha depois da F7; a frente seguinte é a
+**Decisões** (plan §15, C9 a C15): a contagem vale o que está apertado no fim; a próxima regra é nenhuma (a fatia B fecha depois da F7; a frente seguinte é a
 junção); o deploy e a predição esperam a junção; o movimento se experimenta no laboratório antes de virar regra; a
 IA do ▲ e do ● se ajusta; a tela ganha o sinal de morte e de fuga; o comandante e os anúncios viram propostas no
 GDD 06.
 
 ## F7 — Os ajustes do checkpoint da F5, 2ª parte (`m2/laboratorio-f7-ajustes`)
 
-As decisões C9 a C14 do checkpoint (plan §15). Worktree: `.claude/worktrees/lab-f7`. A F7 fecha a fatia B.
+As decisões C9 a C15 do checkpoint (plan §15). Worktree: `.claude/worktrees/lab-f7`. A F7 fecha a fatia B.
 
 - [x] As decisões no GDD 06, no ROADMAP, no brainstorm, na spec e no plan; o registro da 2ª parte do checkpoint
       (acima) (2026-11-20)
-- [ ] **A contagem com várias ações** (resposta ao dono; a decisão dele fica aqui antes de mexer em código). Hoje
-      (`step.ts`, `commands.ts`): andar é uma intenção que dura enquanto a tecla está segurada, então no fim da
-      contagem anda quem ainda segura a direção; um toque de movimento dado e solto durante a contagem se perde
-      (só o espaço tem *latch*). Largar e catar são um pedido que espera: o último dos dois vale, e sai no primeiro
-      tick da luta. No exemplo do dono (norte, depois largar): **segurando o norte, as duas coisas**, no mesmo tick
-      (primeiro o passo, depois a bolsa, na célula nova); **tendo soltado o norte, só largar**
+- [ ] **A contagem: vale o que está apertado no fim** (C15; spec D21, S-4; GDD 06). Hoje (`step.ts`,
+      `commands.ts`), largar e catar são um pedido que espera, e o toque no espaço arma o *latch*: apertar e soltar
+      durante a contagem ainda larga ou ataca no primeiro tick da luta (um Q sem querer derruba a bolsa). **Decidido:**
+      no fim da contagem, vale só o que está apertado naquele instante: a direção segurada anda, o espaço segurado
+      ataca, o Q ou o E segurado larga ou cata; um pedido feito e solto durante a contagem é descartado. O virar
+      continua valendo durante a contagem. Vale para a IA (a intenção dela no fim da contagem) e para quem entra
+      durante a contagem. A página passa a mandar o estado segurado do Q e do E (ou o *worker* descarta os pedidos
+      da contagem e a página repete o que está segurado no fim: escolha da F7, com o porquê no registro). Mesmo log,
+      outro resultado: a `BATTLE_VERSION` sobe para 4, com o hash de referência, o `sweep` e o `verify` de novo e a
+      *fixture* do laboratório refeita (um log exportado da página no fim da F7, com as outras mudanças)
 - [ ] **O movimento, para comparar** (C11): ao lado do "interpolar" e do "sem interpolar" de hoje, duas opções de
       desenho na "Rede simulada": **deslizar o passo inteiro** (o creep desliza na velocidade do DNA, sem a pausa,
       desenhado até um passo atrás) e **prever o meu creep** (enquanto a tecla está segurada e a frente está livre

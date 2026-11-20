@@ -405,6 +405,7 @@ A F7 implementa estas decisões (registro no [tasks.md](tasks.md), F5 e F7).
 | C12 | **A IA:** o ▲ *kita* o corpo a corpo, como o ●; o ● deixa de cair sempre no mesmo *bait* das esquinas nas pedras (ajuste de gambits; uma IA que aprende continua proposta) |
 | C13 | **A tela:** um sinal de morte e de fuga; o medidor de inatividade visível sobre a arena (o alerta continua); Começar rola a página até a arena |
 | C14 | **Propostas no GDD 06:** o comandante (a tática do time, candidato ao M3) e os anúncios de abate (sem prioridade, com o som). O Mount & Blade inspira de várias formas, não só a conversa |
+| C15 | **A contagem vale o que está apertado no fim** (spec D21, S-4): a direção, o espaço, o Q e o E segurados no fim da contagem agem no primeiro tick da luta; o que foi apertado e solto durante ela é descartado (um Q sem querer não derruba a bolsa). Vale para a IA e para quem entra durante a contagem. `BATTLE_VERSION` 4 |
 
 ## 16. Pontos de contato com a fatia A
 

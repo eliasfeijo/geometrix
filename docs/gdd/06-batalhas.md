@@ -77,7 +77,9 @@
   - **A contagem no começo da batalha** (dono, 2026-11-17, depois de jogar o laboratório): a batalha começa com uma
     **contagem de 3 s** (provisório), em que todos ficam parados: podem virar, mas não andar nem atacar, e a IA
     também. É **regra da batalha**: vale no laboratório, no mundo e no auto-resolve. Dá ao humano tempo de se
-    preparar antes da luta.
+    preparar antes da luta. **No fim da contagem, vale só o que está apertado naquele instante** (dono, 2026-11-20,
+    no checkpoint da F5): a direção segurada já anda, o ataque segurado já ataca, largar ou catar segurado já age; o
+    que foi apertado e solto durante a contagem não fica guardado (apertar sem querer não derruba a bolsa).
   - **Checkpoint da F5 do laboratório** (dono, 2026-11-18, na sessão livre;
     [tasks do laboratório](../specs/m2-laboratorio/tasks.md)):
     - **o primeiro passo é imediato:** parado, o creep anda já no tick seguinte ao comando, e depois segue no ritmo
