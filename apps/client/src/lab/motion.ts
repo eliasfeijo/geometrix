@@ -158,33 +158,56 @@ export function freeAhead(
 }
 
 /**
- * The predict option for the dominated creep. While a direction is held
- * it is drawn ahead of the frames, from an anchor cell, at its step time;
- * released, it glides back to where the frames draw it.
+ * The predict option for the dominated creep. While a direction is held it
+ * glides from an anchor cell at its step time from the key on, without
+ * waiting for the frames. The battle enters each cell at the start of its
+ * step (the first one at once), so the glide stays up to one step behind
+ * it, never ahead: let go, the creep has nothing to undo. Released, it
+ * stays where it is drawn until the frames get there (they come a round
+ * trip late), then glides to them.
  */
 export class Predictor {
   private dir: Dir | null = null;
   private anchor = -1;
   private since = 0;
-  /** Where it was drawn when let go, gliding to the frames' place. */
-  private settle: { from: Point; start: number } | null = null;
+  /**
+   * Let go: where it was drawn, the way it went, until when it waits for the
+   * frames, and when it started gliding to them.
+   */
+  private settle: {
+    from: Point;
+    dir: Dir;
+    until: number;
+    glide: number | null;
+  } | null = null;
   private last: Point | null = null;
 
   /**
    * The direction held changed (null: none). `cell` is where the frames
-   * have the creep now, used when it was not running ahead already.
+   * have the creep now, used when it was not running ahead already;
+   * `waitMs`, how long a release waits for the frames (the round trip).
    */
-  hold(dir: Dir | null, now: number, width: number, cell: number): void {
+  hold(
+    dir: Dir | null,
+    now: number,
+    width: number,
+    cell: number,
+    waitMs = 0,
+  ): void {
     if (dir === this.dir) return;
     const here = this.last;
     if (dir === null) {
+      this.settle =
+        here === null || this.dir === null
+          ? null
+          : { from: here, dir: this.dir, until: now + waitMs, glide: null };
       this.dir = null;
-      this.settle = here === null ? null : { from: here, start: now };
       return;
     }
-    // Turning while ahead: from the cell it is drawn nearest to.
+    // Turning, or held again while settling: from the cell it is drawn
+    // nearest to.
     this.anchor =
-      this.dir !== null && here !== null
+      here !== null && (this.dir !== null || this.settle !== null)
         ? Math.round(here.y) * width + Math.round(here.x)
         : cell;
     this.dir = dir;
@@ -196,7 +219,8 @@ export class Predictor {
    * A frame arrived. During the countdown nobody walks: the run waits for
    * its end. Then the frames' cell has to be on the way ahead: if it is not
    * (blocked, or the frames went elsewhere), or the drawn creep is more than
-   * `leadCells` ahead of it, the run starts again from the frames' cell.
+   * `leadCells` ahead of it, the run starts again from the frames' cell. A
+   * glide more than a step behind the frames catches up to one step.
    */
   frame(
     width: number,
@@ -226,9 +250,8 @@ export class Predictor {
     if (!onWay || ran - k > leadCells + 1) {
       this.anchor = creep.cell;
       this.since = now;
-    } else if (k > ran) {
-      // The frames got there first: no drawing behind them.
-      this.since = now - k * stepMs;
+    } else if (k - 1 > ran) {
+      this.since = now - (k - 1) * stepMs;
     }
   }
 
@@ -247,7 +270,17 @@ export class Predictor {
     if (this.dir === null) {
       const s = this.settle;
       if (s === null) return undefined;
-      const t = Math.min((now - s.start) / stepMs, 1);
+      if (s.glide === null) {
+        const d = STEP[s.dir];
+        const behind =
+          (framed.x - s.from.x) * d.x + (framed.y - s.from.y) * d.y;
+        if (behind < 0 && now < s.until) {
+          this.last = s.from;
+          return s.from;
+        }
+        s.glide = now;
+      }
+      const t = Math.min((now - s.glide) / stepMs, 1);
       if (t >= 1) {
         this.settle = null;
         this.last = null;

@@ -23,8 +23,10 @@ Isso contradiz o item 9 ao pé da letra, embora a simulação não mude.
 - **A. Uma opção de experimento, só de desenho, no laboratório** (recomendada).
   - O que é: no seletor "Movimento" da "Rede simulada", ao lado de "sem interpolar", "interpolar (1 tick)" e
     "deslizar o passo inteiro", a opção "prever o meu creep": enquanto uma direção está segurada e as células à frente
-    estão livres no último quadro, a página desliza o creep dominado na velocidade do DNA, sem esperar o quadro; cada
-    quadro o puxa de volta se ele correu demais ou saiu do caminho. A autoridade continua no *worker*: os comandos, o
+    estão livres no último quadro, a página desliza o creep dominado na velocidade do DNA, sem esperar o quadro, até
+    um passo atrás da batalha (que entra em cada célula no começo do passo), nunca à frente dela; cada quadro o puxa
+    de volta se ele correu demais ou saiu do caminho. Solto, ele fica onde está desenhado até os quadros chegarem
+    (uma ida e volta) e desliza até eles. A autoridade continua no *worker*: os comandos, o
     log, o hash e o resultado não mudam, e os outros creeps continuam desenhados só pelos quadros.
   - Prós: o dono compara as quatro opções na mesma página, às cegas se quiser, com o atraso medido; não cria
     código de rede nem de simulação novo; não decide nada para o jogo.
