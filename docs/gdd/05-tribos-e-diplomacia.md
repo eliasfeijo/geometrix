@@ -22,7 +22,11 @@
   - **O final feliz secreto:** a única forma de não morrer no apocalipse ([01](01-mundo.md)) é seguir a quest das
     tribos neutras. Ele **salva o mundo inteiro**, inclusive o time inimigo. Entra no M4, com as tribos. **Revisto na
     rodada 3 (2026-11-20):** as tribos são um dos três caminhos de salvação, com o retornado e os ramos especiais
-    do ato III ([01](01-mundo.md)).
+    do ato III ([01](01-mundo.md)). **Rodada 4 (2026-11-20):** o final feliz das tribos tem a forma de **escoltar o
+    xamã** da tribo até cada depósito corrompido, para o ritual: cada depósito abre uma **instância de quest neutra de
+    sobreviver e proteger**, com ondas dos monstros do ato III que entram no meio. Vale **nos dois ramos**, o natural
+    e o do retornado (que dispara a quest e não dá conta dela sozinho); muda quem dispara e o que já está feito. O
+    ritual não limpa a corrupção gastando recurso: é a quest que a detém. Difícil de propósito.
   - **A jungle que acorda:** as ondas de errantes e os chefões despertos são camadas do apocalipse, por cima da
     corrupção.
   - **Invasores de outros mundos:** lendas ([02](02-creeps-e-dominio.md)) invadem um mundo no fim, no M5 (As lendas).
@@ -36,6 +40,15 @@
   e **fecha portas**: as tribos ficam hostis, e o ramo do final feliz se fecha.
 - **Conversões e tributos** (dono, 2026-11-20, rodada 2): converter uma tribo é uma ação de diálogo; a tribo
   convertida manda tributo ao **tesouro do time**, numa caravana física ([03](03-economia-e-logistica.md)).
+- **A relação e a informação** (dono, 2026-11-20, rodada 4 do [consolidado](../brainstorm/2026-11-20-consolidado-depois-do-m2.md) §13.7):
+  - **a relação de uma tribo com um deus é a crônica**, não o karma: a soma dos eventos que a tribo viveu ou
+    testemunhou (ex.: um fiel que ajudou um creep da tribo faz o líder tratar o deus como neutro, mesmo com o karma
+    incompatível; as intervenções vistas como incômodo trazem a hostilidade de volta). O karma é só o primeiro contato
+    ([02](02-creeps-e-dominio.md));
+  - **comprar informação** no diálogo com neutros ou aliados: o informante oferece dicas incompletas, com o preço
+    ("o creep X foi visto há Y horas perto de Z", sem os valores). Ele **vende o que o lado dele lembra**, e a compra
+    **entra na memória do time do comprador como um lembrado, com a idade**. Também dá para tentar a abordagem
+    agressiva (pesa na diplomacia) ou a persuasiva (gasta recurso divino). Chega com as tribos.
 
 ## Proposta
 

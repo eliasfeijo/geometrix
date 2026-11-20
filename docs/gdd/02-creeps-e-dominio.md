@@ -82,6 +82,23 @@
     enquanto se mantiverem**. Números provisórios;
   - **o fiel é um creep (do time ou neutro) que reconhece o deus.** O primeiro nasce da primeira quest do deus
     cumprida; a tribo convertida é a escala de cima ([05](05-tribos-e-diplomacia.md)).
+- **A fidelidade, a ficha e os deuses entre si** (dono, 2026-11-20, rodada 4 do [consolidado](../brainstorm/2026-11-20-consolidado-depois-do-m2.md) §13.7; "deus" continua o nome provisório):
+  - **cada creep tem uma fidelidade por deus**, inclusive os do time, em ‰ no `sim`; ela **não muda o time**: só os
+    neutros e os únicos mudam de lado. O domínio comum continua como decidido na rodada 2 (a pergunta 40 está em
+    análise, abaixo);
+  - **a ficha velada, em camadas:** o operacional (forma, HP, carga, regras, estado) sempre aberto ao time; o pessoal
+    (trait, origem, laços, side-quest, stats finos) se abre pela fidelidade. Pedir para ver é uma ação e pode
+    incomodar ([08](08-cronica-chat-e-console.md));
+  - **o disfarce dos únicos:** a ficha deles pode mentir, com pistas no comportamento e na crônica; o disfarce cai
+    pela fidelidade alta, por uma quest ou por testemunhar um feito dele;
+  - **o incômodo:** sussurros, pedidos para ver a ficha e quests fracas custam influência **só com quem tem pouca
+    fidelidade**, quando falta influência para aquele creep, ou com os únicos; cresce com a repetição e com os atos.
+    Os fiéis não se incomodam com o básico;
+  - **a relação é a crônica:** a relação de cada creep (e de cada tribo, [05](05-tribos-e-diplomacia.md)) com um deus
+    é a soma dos eventos que ele viveu ou testemunhou, com pesos; o karma do deus é só o primeiro contato;
+  - **o demônio e a ambição:** "demônio" é a pele do karma cruel, temporária. Cada deus tem uma **ambição** pelo kit,
+    pela conduta e pela crônica, que evolui com as ações e conta na história do fim e na influência, **sem decidir a
+    guerra**.
 
 ## Proposta
 - Dominar só troca **quem emite os comandos** do creep. Ver [ADR-0002](../adr/0002-tudo-e-comando.md).
@@ -124,6 +141,15 @@
   Raspa no decidido "o creep dominado só muda de ordem por comando de quem o domina" (M1) e no espelho entre os
   times. O agente nota que ele pode ser uma lenda de um mundo anterior. **Rodada 3 (decidido):** a relação com o
   retornado é um dos caminhos de salvação do arco ([01](01-mundo.md)).
+- **Os únicos** (ideia do dono, 2026-11-20, rodada 4, não aprovada; [consolidado](../brainstorm/2026-11-20-consolidado-depois-do-m2.md) §13.1): personagens dos
+  ramos da história principal (o retornado e outros) que se disfarçam entre os creeps comuns de uma tribo, se
+  convertem completando quests específicas e trazem **um item que reforça a skill natural do DNA** (a exceção a "o
+  mesmo efeito para todos": o item é de um personagem, não da forja). Viram alvo da disputa entre os deuses. **O
+  retornado** apressa os atos em segredo pela guerra dos outros, liderando grupos pequenos e descartáveis, para
+  disparar o ramo dele da quest das tribos, que não termina sozinho ([05](05-tribos-e-diplomacia.md)).
+- **O aprendiz espia a ficha** (ideia do dono, 2026-11-20, rodada 4, em análise; [consolidado](../brainstorm/2026-11-20-consolidado-depois-do-m2.md) §13.8): o kit do
+  aprendiz traz uma skill utilitária de espiar a ficha de qualquer creep, com limites que caem a cada evolução do kit;
+  os outros kits persuadem cada creep, sem garantia, gastando fé.
 - **Investir no creep** (dono, rodada 2): o deus investe o recurso dele em upgrades de creeps qualificados e colhe
   influência quando eles evoluem e espalham a influência pela crônica.
 
@@ -133,6 +159,10 @@
   depois do playtest do M3.
 
 ## Perguntas abertas
+- **O conceito de "seu time"** (dono, 2026-11-20, rodada 4, pergunta 40, em análise; [consolidado](../brainstorm/2026-11-20-consolidado-depois-do-m2.md) §13.8): os
+  times fixos com Núcleo ou tribos e creeps que começam neutros, convertidos pelos deuses? A dúvida do dono é a
+  justiça do começo (a primeira geração vem da seed); o que puxa para o outro lado é a saga dos deuses que disputam
+  creeps descartáveis. Até lá, vale o domínio comum da rodada 2.
 - Dominar tem custo, cooldown ou restrição de distância?
 - As skills e a ultimate valem para todo creep, ou só a partir de certo level?
 - Um creep pode mudar de forma ao evoluir, ou o DNA é fixo para sempre?

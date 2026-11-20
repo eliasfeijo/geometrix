@@ -32,7 +32,9 @@
    fim da fatia B. **A 8ª leva** (o papel do jogador: os kits divinos por estilo, o ritmo dos três dias, os portais,
    salvar o mundo perdendo a guerra) teve a **rodada 3** respondida (consolidado §12.7): o kit pelo estilo, o karma de
    −1 a +1, o fiel, as metas por ato medidas com bots de perfil, os portais com lendas da seed, três caminhos de
-   salvação e os sem-Núcleo com o arco. Nada muda no M2.
+   salvação e os sem-Núcleo com o arco. **A 9ª leva** (a fidelidade, a ficha velada, os únicos, a lenda do portal,
+   comprar informação) teve a **rodada 4** respondida (consolidado §13.7), com "seu time" e a saga da simetria **em
+   análise** (§13.8). Nada muda no M2.
 2. **🐞 O preset construtor de estrada não funciona para o jogador** (dono, 2026-11-20, nos testes desde antes da
    fatia A): pede o ponto no mapa, mas nada acontece ao clicar nem ao mexer o mouse (sem a prévia da estrada e do
    custo); só dá para construir dominando um creep, no modo estrada. Os bots constroem com o mesmo preset, então o

@@ -41,4 +41,9 @@
 | **Kit divino** | A especialização do deus, escolhida pelo estilo de jogo (ex.: quem joga ativamente, quem está aprendendo, quem tem 15 minutos por dia); a conduta dá o sabor de cada poder. |
 | **Neutralidade kármica** | A faixa do karma perto de zero, com benefícios e trade-offs próprios, entre o cruel e o benevolente. |
 | **Fiel** | Um creep (do time ou neutro) que reconhece o deus; o primeiro nasce da primeira quest do deus cumprida. |
-| **Portal** | A passagem do ato III por onde chegam as lendas: de início, geradas pela seed, como bots neutros. |
+| **Portal** | A passagem que se abre no centro do mapa no ato III, por onde chega uma lenda: de início, gerada pela seed, como um bot neutro que se pode converter. |
+| **Fidelidade** | O quanto um creep reconhece um deus; uma por par (creep, deus). Abre as camadas da ficha e as quests aceitas; não muda o time. |
+| **Ficha** | A página de um creep ou de um deus: o operacional sempre aberto ao time, o pessoal pela fidelidade. A ficha de um único pode mentir. |
+| **Único** | Um personagem dos ramos da história principal (ex.: o retornado), que pode se disfarçar entre os creeps comuns. |
+| **Ambição** | O objetivo próprio de um deus, pelo kit, pela conduta e pela crônica; conta na história do fim, sem decidir a guerra. |
+| **Demônio** | *(Pele)* O deus enquanto o karma está do lado cruel. |

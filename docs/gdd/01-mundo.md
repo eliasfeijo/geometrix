@@ -75,13 +75,22 @@
     pelo menos 1 crônica divina; no ato II, progride com quests, forma uma liga ou faz parte de uma e luta na jungle;
     no ato III, abrem-se os portais e os caminhos de salvação;
   - **os portais do ato III** trazem lendas geradas pela seed, como bots neutros, até existirem as lendas de mundos
-    anteriores ([02](02-creeps-e-dominio.md));
+    anteriores ([02](02-creeps-e-dominio.md)). **Revisto na rodada 4 (2026-11-20):** um portal só, no centro, com
+    uma lenda (abaixo);
   - **três caminhos de salvação, como ramos do arco:** as tribos ([05](05-tribos-e-diplomacia.md)), o retornado
     ([02](02-creeps-e-dominio.md)) e os ramos especiais do ato III. Ninguém limpa a corrupção gastando recurso, e
     salvar salva o mundo inteiro, **ganhando ou perdendo a guerra**;
   - **os sem-Núcleo continuam:** com o arco, os creeps que sobrevivem à queda do próprio Núcleo seguem jogando até o
     fim do mundo, enquanto houver esperança de salvação, e viram lendas se sobreviverem. **Na fatia E, a queda do
     Núcleo continua encerrando o mundo**, como decidido.
+- **A lenda do portal** (dono, 2026-11-20, rodada 4 do [consolidado](../brainstorm/2026-11-20-consolidado-depois-do-m2.md) §13.7): **uma lenda só, gerada pela seed,
+  chega por um portal no centro do mapa** quando o ato III abre (o centro é a posição justa no mapa espelhado). É
+  experiente e não se converte fácil: o primeiro creep que interage com ela (de qualquer time) pode dialogar,
+  persuadir, converter ou hostilizar. Ela converte **no primeiro diálogo**, quando está totalmente neutra, **ou depois
+  de aniquilar** o creep ou o time contra quem ficou hostil. Antes de se converter, **ataca todos na luta**, como um
+  lado próprio; os neutros comuns se afastam dela, menos os chefões e as elites. Convertida, **vira dominável**, com
+  um **kit de lenda** único (de início, ~6) e um **kit de quest** correspondente, que **é um dos ramos especiais do ato
+  III**. Morta, o ramo dela se fecha.
 
 ## Proposta
 

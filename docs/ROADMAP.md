@@ -168,3 +168,10 @@ pelo estilo de jogo, e o karma vira uma escala de −1 a +1, com a neutralidade 
 reconhece o deus; as metas de ritmo dos três dias valem por ato, medidas com bots de perfil; os portais do ato III
 trazem lendas da seed; o mundo se salva pelas tribos, pelo retornado ou por um ramo especial, ganhando ou perdendo a
 guerra, e os sem-Núcleo seguem até o fim com o arco. Nada muda no M2 nem no próximo marco.
+
+**A fidelidade e a lenda do portal** (dono, 2026-11-20, rodada 4 do [consolidado](brainstorm/2026-11-20-consolidado-depois-do-m2.md) §13.7): cada creep tem
+uma fidelidade por deus, que abre as camadas da ficha sem mudar o time; os únicos se disfarçam com pistas; o incômodo
+vem só de quem tem pouca fidelidade; a relação é a crônica, não o karma; "demônio" é pele, e a ambição do deus não
+decide a guerra; uma lenda só, no portal do centro; a escolta do xamã é o final feliz das tribos; a informação
+comprada vira um lembrado. **"Seu time" e a saga** (a simetria questionada, os episódios entre mundos) ficaram em
+análise (§13.8). Nada muda no M2 nem no próximo marco.
