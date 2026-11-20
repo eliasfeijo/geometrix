@@ -119,14 +119,12 @@ describe("geo battle verify (spec R-2, R-3)", () => {
   });
 
   test("a log exported by the lab's page reaches the worker's hash (spec R-3)", () => {
-    // Exported by the lab in Chromium (F6, BATTLE_VERSION 3: the first step
-    // at once and the battle's idle clock), its hash redone in node for
-    // BATTLE_VERSION 4 (the countdown keeps only what is held) until a new
-    // export replaces it: the worker hashed it with Web Crypto; here
-    // node:crypto hashes the replay. A real session at 300 ms of
-    // RTT: the owner's keys on the square the start dominated (some during
-    // the countdown), a reinforcement on a new side and the circle's gambits
-    // swapped for the carrier preset.
+    // Exported by the lab in Chromium (F7, BATTLE_VERSION 4: the countdown
+    // keeps only what is held): the worker hashed it with Web Crypto; here
+    // node:crypto hashes the replay. A real session at 300 ms of RTT: the
+    // owner's keys on the square the start dominated (a Q let go and a
+    // direction held during the countdown), a reinforcement on a new side
+    // and the circle's gambits swapped for the carrier preset.
     const file = fileURLToPath(
       new URL("fixtures/lab-battle.json", import.meta.url),
     );
@@ -142,6 +140,7 @@ describe("geo battle verify (spec R-2, R-3)", () => {
     expect([...kinds].sort()).toEqual([
       "attackOnce",
       "control",
+      "drop",
       "intent",
       "join",
       "setGambits",
