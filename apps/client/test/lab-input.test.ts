@@ -55,13 +55,31 @@ describe("the keyboard (spec D13, plan P4)", () => {
     ]);
   });
 
-  test("Q drops the bag and E picks up", () => {
+  test("Q drops the bag and E picks up, and the held key rides on the intent", () => {
     const input = new KeyboardInput();
     expect(input.down(key("KeyQ"), 1).commands).toEqual([
       { type: "drop", id: 1 },
+      { type: "intent", id: 1, move: null, attack: false, bag: "drop" },
     ]);
+    expect(input.down(key("KeyQ", { repeat: true }), 1).commands).toEqual([]);
     expect(input.down(key("KeyE"), 1).commands).toEqual([
       { type: "pickup", id: 1 },
+      { type: "intent", id: 1, move: null, attack: false, bag: "pickup" },
+    ]);
+    // Releasing the newer one goes back to the one still held, then to none.
+    expect(input.up(key("KeyE"), 1).commands).toEqual([
+      { type: "intent", id: 1, move: null, attack: false, bag: "drop" },
+    ]);
+    expect(input.up(key("KeyQ"), 1).commands).toEqual([
+      { type: "intent", id: 1, move: null, attack: false },
+    ]);
+  });
+
+  test("losing the keyboard lets go of the bag key too (spec S-4)", () => {
+    const input = new KeyboardInput();
+    input.down(key("KeyQ"), 1);
+    expect(input.releaseAll(1)).toEqual([
+      { type: "intent", id: 1, move: null, attack: false },
     ]);
   });
 

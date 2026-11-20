@@ -100,16 +100,101 @@ describe("the start countdown (spec D21, S-4)", () => {
     expect(last.filter((e) => e.type === "escaped")).toHaveLength(2);
   });
 
-  test("a drop asked during the countdown acts on the first tick of the fight", () => {
+  test("a drop asked and let go during the countdown is discarded (C15)", () => {
     const state = humans(
       battle([
         [member("square", { carry: { materia: 12, cristal: 0 } })],
         [member("circle")],
       ]),
     );
-    expect(run(state, COUNTDOWN, [{ type: "drop", id: 1 }])).toEqual([]);
+    // Q pressed and released: the drop and an intent with the bag, then one
+    // without it.
+    stepBattle(state, [
+      { type: "drop", id: 1 },
+      { type: "intent", id: 1, move: null, attack: false, bag: "drop" },
+    ]);
+    stepBattle(state, [{ type: "intent", id: 1, move: null, attack: false }]);
+    expect(run(state, COUNTDOWN - 2)).toEqual([]);
+    expect(run(state, 10)).toEqual([]);
     expect(state.piles).toEqual([]);
+    expect(state.participants[0]!.carry.materia).toBe(12);
+  });
+
+  test("the bag key held at the end acts on the first tick of the fight", () => {
+    const state = humans(
+      battle([
+        [member("square", { carry: { materia: 12, cristal: 0 } })],
+        [member("circle")],
+      ]),
+    );
+    const events = run(state, COUNTDOWN, [
+      { type: "drop", id: 1 },
+      { type: "intent", id: 1, move: null, attack: false, bag: "drop" },
+    ]);
+    expect(events).toEqual([]);
     expect(stepBattle(state, []).map((e) => e.type)).toEqual(["dropped"]);
+    // Held on, it does not drop again: the bag acts once, at the end.
+    expect(run(state, 10).map((e) => e.type)).not.toContain("dropped");
+  });
+
+  test("a tap on attack during the countdown is discarded; a held one fires", () => {
+    const tapped = humans(battle());
+    run(tapped, COUNTDOWN, [
+      { type: "attackOnce", id: 1 },
+      { type: "intent", id: 1, move: null, attack: false },
+    ]);
+    expect(stepBattle(tapped, [])).toEqual([]);
+
+    const held = humans(battle());
+    run(held, COUNTDOWN, [
+      { type: "attackOnce", id: 1 },
+      { type: "intent", id: 1, move: null, attack: true },
+    ]);
+    expect(stepBattle(held, []).map((e) => e.type)).toEqual(["attacked"]);
+  });
+
+  test("a tap on the first tick of the fight acts as usual", () => {
+    const state = humans(
+      battle([
+        [member("square", { carry: { materia: 12, cristal: 0 } })],
+        [member("circle")],
+      ]),
+    );
+    run(state, COUNTDOWN);
+    const first = stepBattle(state, [{ type: "drop", id: 1 }]);
+    expect(first.map((e) => e.type)).toEqual(["dropped"]);
+  });
+
+  test("the AI's last decision holds its bag to the end", () => {
+    // A carrier with an enemy near decides to drop during the countdown, and
+    // decides it again at every reaction: the drop waits for the end.
+    const state = battle([
+      [
+        member("square", {
+          carry: { materia: 12, cristal: 0 },
+          gambits: presetGambits("carrier"),
+        }),
+      ],
+      [member("circle")],
+    ]);
+    humans(state).participants[0]!.controller = "gambits";
+    put(state, 1, 5, 5);
+    put(state, 2, 7, 5);
+    expect(run(state, COUNTDOWN)).toEqual([]);
+    expect(state.participants[0]!.intent.bag).toBe("drop");
+    expect(stepBattle(state, []).map((e) => e.type)).toEqual(["dropped"]);
+  });
+
+  test("the bag of an intent is validated", () => {
+    const state = humans(battle());
+    stepBattle(state, [
+      { type: "intent", id: 1, move: null, attack: false, bag: "throw" },
+    ]);
+    expect(state.participants[0]!.intent.bag).toBeNull();
+    stepBattle(state, [
+      { type: "intent", id: 1, move: null, attack: false, bag: "pickup" },
+    ]);
+    expect(state.participants[0]!.intent.bag).toBe("pickup");
   });
 
   test("who joins during the countdown waits; who joins later gets none", () => {

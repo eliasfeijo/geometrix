@@ -10,7 +10,7 @@ import type { RngState } from "./rng.ts";
  * Bumped when the same log starts giving another result (plan section 11).
  * Snapshots and logs of another version are refused.
  */
-export const BATTLE_VERSION = 3;
+export const BATTLE_VERSION = 4;
 
 export type Carry = { materia: number; cristal: number };
 
@@ -20,7 +20,9 @@ export type Controller = "gambits" | "human";
  * What the creep keeps doing until told otherwise (plan P4): walk towards
  * `move` while it is not null, attack whenever the cooldown allows while
  * `attack`. `attackLatch` fires the next possible attack once, even if the key
- * was already released; `drop` and `pickup` act on the next tick.
+ * was already released; `drop` and `pickup` act on the next tick. `bag` is
+ * the bag key held (Q or E), which only matters at the end of the countdown
+ * (spec S-4): there, what is held acts and what was asked and let go is gone.
  */
 export type Intent = {
   move: Dir | null;
@@ -28,7 +30,11 @@ export type Intent = {
   attackLatch: boolean;
   drop: boolean;
   pickup: boolean;
+  bag: Bag | null;
 };
+
+/** The bag key held: drop (Q) or pick up (E). */
+export type Bag = "drop" | "pickup";
 
 export type Participant = {
   id: number;
