@@ -19,7 +19,9 @@ com participantes montados à mão. Ela pergunta:
 2. **A micro importa e o DNA não decide sozinho** (GDD 06): dominando um creep, o dono vence confrontos que a IA
    perde no mesmo setup; e nenhum confronto 1 × 1 entre DNAs, de HP cheio, está decidido de antemão.
 3. **Quanta latência a regra de grade aguenta sem predição?** É a pergunta que trava o deploy (ROADMAP,
-   2026-11-15): o laboratório a responde localmente, às cegas.
+   2026-11-15): o laboratório a responde localmente, às cegas. **Checkpoint da F5 (dono, 2026-11-20):** até 100 ms
+   a nota fica em 4 ou mais, e abaixo de 3 a partir de 200 ms; o deploy e a predição no cliente esperam a junção
+   (plan §15, C10).
 4. **A IA de gambits serve de adversário e de auto-resolve:** joga de um jeito crível, é rápida e é determinística.
 
 Depois desta fatia, a junção (D) liga o encontro do mundo (A) à instância de batalha, no lugar do sorteio
@@ -68,7 +70,7 @@ chutes.
 | D17 | Latência simulada | A página e o *worker* conversam por um canal com **atraso de ida e de volta** (metade do RTT escolhido cada) e ***jitter***. Seletor de RTT: 0, 50, 100, 150, 200 e 300 ms. A página mostra o atraso medido entre a tecla e o efeito na tela. **Modo às cegas:** o laboratório sorteia o RTT a cada batalha sem mostrá-lo, o dono dá uma nota de 1 a 5 ao fim ("dá para jogar?"), e o relatório cruza nota × RTT, exportável | A pergunta 3 da hipótese. Às cegas, o dono não julga o número, julga o jogo |
 | D18 | Determinismo | Mesmo setup + mesmos comandos ⇒ mesmo hash, em qualquer execução e engine. O laboratório **exporta o log** de uma batalha (setup + comandos por tick), e o `geo battle verify` reproduz o hash que o *worker* calculou | ADR-0003 e ADR-0008. É o que garante que o auto-resolve da junção dá o mesmo resultado no servidor e no replay |
 | D19 | Eventos | O passo da batalha devolve eventos estruturados fora do estado (ADR-0007): ataque, golpe, dano, morte, largou, catou, entrou, fugiu (pela borda ou por inatividade), fim. O laboratório mostra uma lista simples, **sem a crônica narrada**, e a tabela de resultado no fim | A crônica é da fatia A; a tradução para os eventos do mundo é da D |
-| D21 | Contagem no começo **(gameplay; dono)** | A batalha começa com uma **contagem de 3 s**: todos parados, podem **virar**, mas não andar nem atacar; a IA também. Regra da batalha: vale no laboratório, no mundo e no auto-resolve. Número provisório em `params/battle.json` | Dono, 2026-11-17, ao jogar o laboratório: sem ela, quem domina chega à luta com o aliado já morrendo, e a nota às cegas mediria a correria, não a latência |
+| D21 | Contagem no começo **(gameplay; dono)** | A batalha começa com uma **contagem de 3 s**: todos parados, podem **virar**, mas não andar nem atacar; a IA também. Regra da batalha: vale no laboratório, no mundo e no auto-resolve. Número provisório em `params/battle.json` | Dono, 2026-11-17, ao jogar o laboratório: sem ela, quem domina chega à luta com o aliado já morrendo, e a nota às cegas mediria a correria, não a latência. **Checkpoint da F5 (dono, 2026-11-20):** no fim da contagem vale só o que está apertado naquele instante (andar, atacar, largar, catar); o que foi apertado e solto durante ela é descartado, para um toque sem querer não derrubar a bolsa (plan §15, C15) |
 | D20 | Dificuldade da IA **(gameplay; dono)** | Cada participante da IA tem uma **reação** no setup: fácil (600 ms), normal (250 ms) ou difícil (100 ms), mais a lista de gambits, que o laboratório já deixa editar. Números provisórios em `params/battle.json` | Dono, 2026-11-17, no checkpoint da F3: ficar preso na borda sob fogo é aceitável se a dificuldade do bot for configurável. Uma IA que aprende fica como proposta sem marco (GDD 06) |
 | D22 | Primeiro passo imediato **(gameplay; dono)** | Parado, o creep dá o **primeiro passo no tick seguinte** ao comando de andar, e depois segue no ritmo do DNA. Cada toque na tecla anda uma célula; a velocidade média não muda (tocar não anda mais rápido que segurar) | Dono, 2026-11-18, no checkpoint da F5: o creep parado esperava o tempo de uma célula inteira (200 a 333 ms) antes de andar, e um toque mais curto se perdia; tocar a tecla várias vezes não movia o creep, e parar e voltar a andar parecia lento |
 
@@ -95,7 +97,7 @@ chutes.
 A junção com o mundo: o encontro abrindo a batalha, a bolha, o tempo do mundo durante a luta, os participantes
 vindos do mundo, a tradução dos eventos para o `sim` (fatia D); os errantes e o lado neutro (D); a regra **livre**
 (MOBA-lite) e a camada de **forja**, que o dono decide no checkpoint depois de ver a grade; predição no cliente
-(volta à mesa se a grade não aguentar a latência do deploy); skills, energia, level e XP (M2.5); fog dentro da
+(volta à mesa na junção, dono, 2026-11-20; a F7 só experimenta desenhar o próprio creep adiantado, plan §15, C11); skills, energia, level e XP (M2.5); fog dentro da
 batalha; terreno pelo entorno, rio, vau, árvores e estruturas na arena; fogo amigo; alianças entre lados; o
 transporte real pela rede (WebSocket) e o servidor de batalha; a crônica narrada; replay de batalha na página.
 
@@ -113,7 +115,8 @@ Formato: *Quando [gatilho], o sistema deve [resposta].*
 - **S-3** O estado deve ser só JSON, com ids de um contador nunca reaproveitados e arrays ordenados por id; o
   `serialize` deve recusar o resto.
 - **S-4** Durante a contagem do começo (D21), todos devem ficar parados: o virar vale, do humano e da IA; andar e
-  atacar não.
+  atacar não. No fim dela, deve valer só o que está apertado naquele instante; o que foi apertado e solto durante a
+  contagem deve ser descartado (checkpoint da F5, C15).
 
 ### Movimento (`battle`)
 - **M-1** A cada tick, um creep com ordem de andar deve acumular pontos pela velocidade de batalha do DNA, freada
@@ -170,7 +173,8 @@ Formato: *Quando [gatilho], o sistema deve [resposta].*
 - **L-2** O humano deve poder dominar um participante, trocar de participante ou não dominar nenhum a qualquer
   momento (D12), e jogar pelo teclado (D13).
 - **L-3** Toda entrada do humano deve atravessar o canal simulado até o *worker*, e a página deve renderizar só o que
-  volta pelo canal, sem predição (D17).
+  volta pelo canal, sem predição (D17). **Checkpoint da F5 (2ª parte):** uma opção de experimento pode desenhar o
+  creep dominado adiantado (C11); a simulação continua só no *worker*.
 - **L-4** O seletor de RTT e o *jitter* devem valer na hora; o atraso medido entre a tecla e o efeito deve aparecer
   na tela.
 - **L-5** No modo às cegas, o RTT de cada batalha deve ser sorteado do seletor e ficar escondido até o dono dar a

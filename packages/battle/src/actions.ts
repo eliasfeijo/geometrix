@@ -8,11 +8,12 @@
 //
 //   attack        go until the target is aligned within range, then face it
 //                 and fire; melee: until next to it; one step short of the
-//                 line, wait half the time (see lineUp)
+//                 line, wait half the time (see lineUp); ranged, the way
+//                 goes around the cells a melee enemy reaches (meleeReach)
 //   approach      go next to the target, then stand facing it
 //   keepDistance  stand aligned with the target between range − 1 and range,
 //                 and fire from there; back off when it comes closer; lines
-//                 up as attack does
+//                 up as attack does, around the melee reach too
 //   dodge         step to a free cell off every incoming projectile's line
 //   protect       stand next to the most wounded ally, on the side of the
 //                 enemy nearest to it; there, fire at that enemy if aligned
@@ -38,6 +39,7 @@ import {
   pickTarget,
   stepsTo,
   towards,
+  meleeReach,
   type Mind,
 } from "./mind.ts";
 import { nextInt } from "./rng.ts";
@@ -84,7 +86,8 @@ function lineUp(
   target: ViewParticipant,
   goals: readonly number[],
 ): Commands {
-  const way = towards(mind, goals);
+  const ranged = mind.kit.projectileCellsPerSecond !== 0;
+  const way = towards(mind, goals, ranged ? meleeReach(mind) : null);
   if (way === null) return null;
   if (way === "here") return fireAt(mind, target);
   const next = neighbor(mind.state.arena, mind.self.cell, way);

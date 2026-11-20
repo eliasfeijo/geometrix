@@ -2,7 +2,9 @@
 // local page with no world and no game server. It builds a battle, runs it in
 // a worker behind a simulated network, lets the owner dominate one
 // participant at a time from the keyboard or just watch, and measures the
-// delay. Everything the page draws came back over the network (spec L-3).
+// delay. Everything the page draws came back over the network (spec L-3),
+// except, with the "prever o meu creep" option (C11, a lab experiment), the
+// dominated creep drawn ahead of the frames (motion.ts).
 
 import {
   parseArena,
@@ -12,6 +14,8 @@ import {
   type BattleLog,
   type BattleSetup,
   type BattleView,
+  type Carry,
+  type Dna,
   type Gambit,
 } from "@geometrix/battle";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
@@ -40,6 +44,7 @@ import { GambitsEditor } from "./gambits-editor.tsx";
 import { KeyboardInput } from "./input.ts";
 import { DNA_GLYPHS, REACTION_LABELS, sideLetter } from "./labels.ts";
 import { LatencyPanel } from "./latency-panel.tsx";
+import { Predictor, StepGlides, stepTicks, type MotionMode } from "./motion.ts";
 import type { Ended, Speed } from "./protocol.ts";
 import { ResultTable } from "./result-table.tsx";
 import { RTT_CHOICES } from "./channel.ts";
@@ -111,6 +116,7 @@ type BattleInfo = {
   blind: boolean;
   /** The owner took or let go of a participant during the battle. */
   switched: boolean;
+  motion: MotionMode;
 };
 
 const storage = pageStorage();
@@ -126,7 +132,7 @@ export function Lab() {
   const [speed, setSpeed] = useState<Speed>(1);
   const [paused, setPaused] = useState(false);
   const [rtt, setRtt] = useState(0);
-  const [interpolate, setInterpolate] = useState(true);
+  const [motion, setMotion] = useState<MotionMode>("tick");
   const [selected, setSelected] = useState<number | null>(null);
   const [gambitsDraft, setGambitsDraft] = useState<Gambit[] | null>(null);
   const [gambitsRunning, setGambitsRunning] = useState<Gambit[] | null>(null);
@@ -159,8 +165,15 @@ export function Lab() {
   const names = useRef(0);
   const sides = useRef(0);
   // The callbacks read these, not the state of the render that made them.
-  const live = useRef({ interpolate, speed, selected, dominated });
-  live.current = { interpolate, speed, selected, dominated };
+  const live = useRef({ motion, speed, selected, dominated, rtt, blindRtt });
+  live.current = { motion, speed, selected, dominated, rtt, blindRtt };
+  const arenaRef = useRef<Arena | null>(null);
+  arenaRef.current = arena;
+  const stepGlides = useRef(new StepGlides());
+  /** The last frame's view: where a creep that died or fled stood (C13). */
+  const lastView = useRef<BattleView | null>(null);
+  const top = useRef<HTMLElement | null>(null);
+  const predictor = useRef(new Predictor());
 
   useEffect(() => {
     const worker = new Worker(new URL("./worker.ts", import.meta.url), {
@@ -178,7 +191,10 @@ export function Lab() {
           }));
           if (frame.events.length > 0) {
             setEvents((old) => [...old, ...frame.events].slice(-MAX_EVENTS));
-            const signals = effectsOf(frame.events, at, params);
+            const cells = new Map(
+              (lastView.current?.participants ?? []).map((p) => [p.id, p.cell]),
+            );
+            const signals = effectsOf(frame.events, at, params, cells);
             if (signals.length > 0) {
               setEffects((old) => [...liveEffects(old, at), ...signals]);
             }
@@ -195,15 +211,41 @@ export function Lab() {
               }
             }
           }
-          // The effect is on the screen now, or once the glide ends.
-          const { interpolate: glide, speed: s } = live.current;
-          connection.shown(frame.applied, at + (glide ? tickMsAt(s) : 0));
+          lastView.current = frame.view;
+          // The effect is on the screen now, or once the glide ends: one
+          // tick, or the dominated creep's step with the step option (C11).
+          const { motion: mode, speed: s, dominated: you } = live.current;
+          const tickMs = tickMsAt(s);
+          const width = arenaRef.current?.width ?? 0;
+          const stepMs = (p: { dna: Dna; carry: Carry }) =>
+            stepTicks(params, p) * tickMs;
+          stepGlides.current.frame(width, frame.view, at, stepMs);
+          const mine = frame.view.participants.find((p) => p.id === you);
+          if (mode === "predict" && mine !== undefined) {
+            const { rtt: r, blindRtt: b } = live.current;
+            const lead = Math.ceil(((b ?? r) + 2 * tickMs) / stepMs(mine));
+            predictor.current.frame(
+              width,
+              frame.view,
+              mine.id,
+              at,
+              stepMs(mine),
+              lead,
+            );
+          }
+          const glide =
+            mode === "instant"
+              ? 0
+              : mode === "step" && mine !== undefined
+                ? stepMs(mine)
+                : tickMs;
+          connection.shown(frame.applied, at + glide);
           if (frame.applied.length > 0) setMeasured((n) => n + 1);
           // The domination ends when the creep leaves or the battle ends
           // (C7): instant is back, and "Na arena" offers no release.
-          const mine = live.current.dominated;
-          if (mine !== null && !keepsDomination(frame.view, mine)) {
+          if (you !== null && !keepsDomination(frame.view, you)) {
             setDominated(null);
+            predictor.current.reset();
           }
         },
         ended(message) {
@@ -264,6 +306,7 @@ export function Lab() {
       winnerSide: result.winnerSide,
       ticks: message.ticks,
       measured: conn.current.latency.summary(),
+      motion: battle.motion,
       grade: null,
       hash: message.hash,
     };
@@ -343,6 +386,7 @@ export function Lab() {
     you: number | null,
     arenaName: string,
     blindRttMs: number | null = null,
+    scroll = true,
   ) {
     const connection = conn.current;
     if (connection === null) return;
@@ -362,6 +406,12 @@ export function Lab() {
     setGambitsDraft(null);
     setGambitsRunning(null);
     input.current = new KeyboardInput();
+    stepGlides.current.reset();
+    predictor.current.reset();
+    lastView.current = null;
+    // Começar takes the page up to the battle, with the keys' hints and the
+    // controls in sight (C13); R restarts where the page is.
+    if (scroll) top.current?.scrollIntoView({ block: "start" });
     lastSetup.current = setup;
     lastYou.current = you;
     lastArena.current = arenaName;
@@ -374,6 +424,7 @@ export function Lab() {
       rttMs,
       blind: blindRttMs !== null,
       switched: false,
+      motion,
     };
     setBlindRtt(blindRttMs);
     setBlindEnd(null);
@@ -415,10 +466,11 @@ export function Lab() {
         lastYou.current,
         lastArena.current,
         battle.rttMs,
+        false,
       );
       return;
     }
-    start(lastSetup.current, lastYou.current, lastArena.current);
+    start(lastSetup.current, lastYou.current, lastArena.current, null, false);
   }
 
   /** The owner took or let go of someone: the battle is neither's to count. */
@@ -439,6 +491,7 @@ export function Lab() {
     switched();
     send({ type: "control", id, controller: "human" });
     setDominated(id);
+    predictor.current.reset();
     for (const command of input.current.retarget(id)) send(command);
     if (speed === "instant") {
       setSpeed(1);
@@ -491,10 +544,34 @@ export function Lab() {
       : input.current.up(event, dominated);
     if (result.handled) event.preventDefault();
     for (const command of result.commands) send(command);
+    holdPrediction();
     if (result.cycle) cycle();
     if (result.release) release();
     if (result.restart) restart();
     if (result.pause) togglePause();
+  }
+
+  /** The predict option follows the direction held (C11). */
+  function holdPrediction() {
+    const mine = frames?.current.participants.find((p) => p.id === dominated);
+    if (motion !== "predict" || mine === undefined || arena === null) {
+      predictor.current.reset();
+      return;
+    }
+    const dir = input.current.moving;
+    predictor.current.hold(
+      dir,
+      performance.now(),
+      arena.width,
+      mine.cell,
+      releaseWaitMs(),
+    );
+  }
+
+  /** How long a released prediction waits for the frames: a round trip. */
+  function releaseWaitMs(): number {
+    const { rtt: r, blindRtt: b, speed: s } = live.current;
+    return (b ?? r) + 2 * tickMsAt(s);
   }
 
   // The listeners are added once and call the handler of the latest render.
@@ -503,6 +580,7 @@ export function Lab() {
   const blurHandler = useRef(() => {});
   blurHandler.current = () => {
     for (const c of input.current.releaseAll(dominated)) send(c);
+    predictor.current.hold(null, performance.now(), 0, -1, releaseWaitMs());
   };
   useEffect(() => {
     const down = (e: KeyboardEvent) => keyHandler.current(e, true);
@@ -520,6 +598,13 @@ export function Lab() {
 
   const current = frames?.current ?? null;
   const running = current !== null && current.ended === null;
+  const yourCreep = frames?.current.participants.find(
+    (p) => p.id === dominated,
+  );
+  const yourStepMs =
+    yourCreep === undefined
+      ? Number.NaN
+      : stepTicks(params, yourCreep) * tickMsAt(speed);
   const measured = conn.current?.latency.summary() ?? {
     samples: 0,
     medianMs: Number.NaN,
@@ -542,7 +627,7 @@ export function Lab() {
 
   return (
     <div class="lab">
-      <header class="lab-top">
+      <header class="lab-top" ref={top}>
         <h1>Laboratório de batalha</h1>
         <p class="lab-hint">
           Setas ou WASD andam · Shift + seta vira · espaço ataca · Q larga a
@@ -599,24 +684,20 @@ export function Lab() {
             >
               Exportar log
             </button>
-            {running && current.countdownTicks === 0 && (
-              <span
-                class={
-                  idleWarning(current, params)
-                    ? "lab-idle-meter lab-idle-meter-warn"
-                    : "lab-idle-meter"
-                }
-                title="Sem dano em ninguém por esse tempo, todos fogem (D9)"
-              >
-                sem dano: {(current.idleTicks / TPS).toFixed(0)} s · fogem em{" "}
-                {idleSecondsLeft(current, params)} s
-              </span>
-            )}
             <span class="lab-clock">
               {current === null ? "—" : `${(current.tick / TPS).toFixed(1)} s`}
             </span>
           </div>
           {error !== null && <p class="lab-error">Setup recusado: {error}</p>}
+          <p
+            class="lab-idle-meter"
+            title="Sem dano em ninguém por esse tempo, todos fogem (D9)"
+          >
+            {running &&
+              current.countdownTicks === 0 &&
+              !idleWarning(current, params) &&
+              `sem dano há ${(current.idleTicks / TPS).toFixed(0)} s · todos fogem em ${idleSecondsLeft(current, params)} s`}
+          </p>
           <div
             class={current === null ? "lab-stage lab-stage-empty" : "lab-stage"}
           >
@@ -628,7 +709,9 @@ export function Lab() {
                 current={current}
                 arrivedAt={frames!.at}
                 glideMs={tickMsAt(speed)}
-                interpolate={interpolate}
+                motion={motion}
+                stepGlides={stepGlides.current}
+                predictor={predictor.current}
                 effects={effects}
                 dominated={dominated}
                 selected={selected}
@@ -752,8 +835,12 @@ export function Lab() {
             }}
             measured={measured}
             tickMs={1000 / TPS}
-            interpolate={interpolate}
-            onInterpolate={setInterpolate}
+            motion={motion}
+            stepMs={yourStepMs}
+            onMotion={(mode) => {
+              setMotion(mode);
+              predictor.current.reset();
+            }}
             frameBytes={conn.current?.sizes.averageBytes ?? Number.NaN}
             blindRttMs={blindRtt}
             hidden={blindRtt !== null && blindEnd?.grade == null}

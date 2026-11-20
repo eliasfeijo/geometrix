@@ -23,7 +23,7 @@ import {
 } from "../src/lab/draft.ts";
 import { eventLines, eventText } from "../src/lab/events-list.tsx";
 import { actionOf, conditionOf, moved } from "../src/lab/gambits-editor.tsx";
-import { labName } from "../src/lab/labels.ts";
+import { conditionText, labName } from "../src/lab/labels.ts";
 
 const params = parseBattleParams(JSON.parse(paramsJson));
 
@@ -192,6 +192,15 @@ describe("the gambits editor (spec L-7)", () => {
     expect(
       actionOf("approach", { type: "attack", target: { by: "weakest" } }),
     ).toEqual({ type: "approach", target: { by: "weakest" } });
+  });
+
+  test("an enemy within N cells reads with its DNA when it has one", () => {
+    expect(conditionText({ type: "enemyWithin", cells: 4 })).toBe(
+      "inimigo a até 4 células",
+    );
+    expect(
+      conditionText({ type: "enemyWithin", cells: 3, dna: "square" }),
+    ).toBe("quadrado inimigo a até 3 células");
   });
 
   test("reorders a rule up or down, and stays put at the ends", () => {

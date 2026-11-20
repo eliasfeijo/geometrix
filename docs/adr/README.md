@@ -13,3 +13,4 @@ vira `Superseded by NNNN`.
 | [0006](0006-sync-do-mundo.md) | Sincronização do mundo: deltas por campo da visão de cada time | Accepted | 2026-11-14 |
 | [0007](0007-eventos-do-sim.md) | Eventos do `sim`: saída derivada do `step`, fora do estado | Accepted | 2026-11-15 |
 | [0008](0008-pacote-de-batalha.md) | Pacote de batalha: simulação determinística própria e o contrato interno v0 | Accepted | 2026-11-15 |
+| [0009](0009-predicao-no-laboratorio.md) | Predição do próprio creep como opção de experimento do laboratório | Proposed | 2026-11-20 |

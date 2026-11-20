@@ -6,14 +6,17 @@
 
 import { RTT_CHOICES } from "./channel.ts";
 import type { LatencySummary } from "./latency.ts";
+import { MOTION_LABELS, MOTION_MODES, type MotionMode } from "./motion.ts";
 
 type Props = {
   rttMs: number;
   onRtt(rtt: number): void;
   measured: LatencySummary;
   tickMs: number;
-  interpolate: boolean;
-  onInterpolate(on: boolean): void;
+  motion: MotionMode;
+  onMotion(mode: MotionMode): void;
+  /** The dominated creep's step on the page, for what to expect (step). */
+  stepMs: number;
   frameBytes: number;
   /** The blind mode's RTT of this battle, or null outside it. */
   blindRttMs: number | null;
@@ -25,7 +28,12 @@ const ms = (n: number) => (Number.isNaN(n) ? "—" : `${Math.round(n)} ms`);
 
 export function LatencyPanel(props: Props) {
   const { measured, tickMs } = props;
-  const glide = props.interpolate ? tickMs : 0;
+  const glide =
+    props.motion === "instant"
+      ? 0
+      : props.motion === "step" && !Number.isNaN(props.stepMs)
+        ? props.stepMs
+        : tickMs;
   const rtt = props.blindRttMs ?? props.rttMs;
   return (
     <section class="lab-panel">
@@ -56,14 +64,21 @@ export function LatencyPanel(props: Props) {
             </select>
           </label>
         )}
-        <label class="lab-check">
-          <input
-            id="latency-interpolate"
-            type="checkbox"
-            checked={props.interpolate}
-            onChange={(e) => props.onInterpolate(e.currentTarget.checked)}
-          />
-          interpolar
+        <label>
+          Movimento
+          <select
+            id="latency-motion"
+            value={props.motion}
+            onChange={(e) =>
+              props.onMotion(e.currentTarget.value as MotionMode)
+            }
+          >
+            {MOTION_MODES.map((mode) => (
+              <option key={mode} value={mode}>
+                {MOTION_LABELS[mode]}
+              </option>
+            ))}
+          </select>
         </label>
       </div>
       <dl class="lab-stats">
@@ -85,6 +100,15 @@ export function LatencyPanel(props: Props) {
             {ms(rtt + glide)} a {ms(rtt + tickMs + glide)}{" "}
             <span class="lab-hint">± jitter de 20%</span>
           </dd>
+        )}
+        {props.motion === "predict" && (
+          <>
+            <dt>o seu creep</dt>
+            <dd>
+              anda na hora{" "}
+              <span class="lab-hint">previsto; o quadro corrige</span>
+            </dd>
+          </>
         )}
         <dt>visão por tick</dt>
         <dd>

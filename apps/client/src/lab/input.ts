@@ -3,13 +3,15 @@
 // the intent to walk (the last one pressed wins; on a rock or a creep the
 // creep only turns); Shift + a direction only turns; Space held attacks, and
 // its tap also arms the latch, so a quick tap still fires; Q drops the bag,
-// E picks up; Tab moves the domination to the next participant and 0
+// E picks up, and while held they ride on the intent as its `bag`, which is
+// what counts at the end of the countdown (spec S-4: a Q pressed and let go
+// during it is discarded); Tab moves the domination to the next participant and 0
 // releases it; R restarts the battle and P or Esc pauses it (F5). Keys are
 // read by position (`code`), so WASD works on any layout; with Ctrl, Alt or
 // Meta they belong to the browser (Ctrl + R still reloads). A new intent goes out only when it changes: with latency, one
 // message on press and one on release, never one per cell.
 
-import type { BattleCommand, Dir } from "@geometrix/battle";
+import type { Bag, BattleCommand, Dir } from "@geometrix/battle";
 
 export type KeyLike = {
   code: string;
@@ -51,15 +53,23 @@ const withModifier = (key: KeyLike) =>
 
 const IGNORED: KeyResult = { handled: false, commands: [] };
 
+const BAG_KEYS: Record<string, Bag> = { KeyQ: "drop", KeyE: "pickup" };
+
+type Sent = { move: Dir | null; attack: boolean; bag: Bag | null };
+
 export class KeyboardInput {
   /** Direction keys held, the last pressed at the end. */
   private held: Dir[] = [];
   private attack = false;
+  /** Bag keys held (Q, E), the last pressed at the end. */
+  private bags: Bag[] = [];
   /** The last intent sent, to send only changes. */
-  private sent: { move: Dir | null; attack: boolean } = {
-    move: null,
-    attack: false,
-  };
+  private sent: Sent = { move: null, attack: false, bag: null };
+
+  /** The direction held to walk (the last pressed), or null. */
+  get moving(): Dir | null {
+    return this.held.at(-1) ?? null;
+  }
 
   /** A key pressed; `id` is the dominated participant, if any. */
   down(key: KeyLike, id: number | null): KeyResult {
@@ -93,10 +103,10 @@ export class KeyboardInput {
     } else if (key.code === "Space") {
       this.attack = true;
       commands.push({ type: "attackOnce", id });
-    } else if (key.code === "KeyQ") {
-      commands.push({ type: "drop", id });
     } else {
-      commands.push({ type: "pickup", id });
+      const bag = BAG_KEYS[key.code]!;
+      this.bags = [...this.bags.filter((b) => b !== bag), bag];
+      commands.push({ type: bag, id });
     }
     return { handled: true, commands: [...commands, ...this.intent(id)] };
   }
@@ -108,6 +118,8 @@ export class KeyboardInput {
       this.held = this.held.filter((d) => d !== dir);
     } else if (key.code === "Space") {
       this.attack = false;
+    } else if (BAG_KEYS[key.code] !== undefined) {
+      this.bags = this.bags.filter((b) => b !== BAG_KEYS[key.code]);
     } else {
       return IGNORED;
     }
@@ -118,6 +130,7 @@ export class KeyboardInput {
   releaseAll(id: number | null): BattleCommand[] {
     this.held = [];
     this.attack = false;
+    this.bags = [];
     return id === null ? [] : this.intent(id);
   }
 
@@ -126,14 +139,20 @@ export class KeyboardInput {
    * still held goes to it again.
    */
   retarget(id: number): BattleCommand[] {
-    this.sent = { move: null, attack: false };
+    this.sent = { move: null, attack: false, bag: null };
     return this.intent(id);
   }
 
+  /** The intent, if it changed; `bag` only while a bag key is held. */
   private intent(id: number): BattleCommand[] {
     const move = this.held.at(-1) ?? null;
-    if (move === this.sent.move && this.attack === this.sent.attack) return [];
-    this.sent = { move, attack: this.attack };
-    return [{ type: "intent", id, move, attack: this.attack }];
+    const bag = this.bags.at(-1) ?? null;
+    const { sent } = this;
+    if (move === sent.move && this.attack === sent.attack && bag === sent.bag) {
+      return [];
+    }
+    this.sent = { move, attack: this.attack, bag };
+    const intent = { type: "intent" as const, id, move, attack: this.attack };
+    return [bag === null ? intent : { ...intent, bag }];
   }
 }

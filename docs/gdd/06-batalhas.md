@@ -9,7 +9,7 @@
   [brainstorm M2–M3](../brainstorm/2026-11-15-m2-m3.md)):
   - **O encontro dispara a batalha.** Quando creeps de lados adversários se encontram, abre uma abordagem com
     diálogo: o agressor escolhe a primeira ação, e a vítima reage se a ação não abrir batalha na hora. O Mount &
-    Blade inspira só essa conversa, não o combate. **No M2:** o agressor ataca ou extorque; a vítima paga, recusa
+    Blade inspira essa conversa (até o checkpoint da F5 do laboratório, só ela; ver abaixo). **No M2:** o agressor ataca ou extorque; a vítima paga, recusa
     (batalha) ou foge. A 3ª ação por DNA fica para o M2.5.
   - **Lados, não grupos.** O encontro é no mínimo 1×1 e pode ter mais de dois lados (times, tribos, monstros). Dá
     para entrar numa batalha já começada (ex.: roubar o buff do chefão que o inimigo enfrenta, ou defender a tribo
@@ -77,7 +77,9 @@
   - **A contagem no começo da batalha** (dono, 2026-11-17, depois de jogar o laboratório): a batalha começa com uma
     **contagem de 3 s** (provisório), em que todos ficam parados: podem virar, mas não andar nem atacar, e a IA
     também. É **regra da batalha**: vale no laboratório, no mundo e no auto-resolve. Dá ao humano tempo de se
-    preparar antes da luta.
+    preparar antes da luta. **No fim da contagem, vale só o que está apertado naquele instante** (dono, 2026-11-20,
+    no checkpoint da F5): a direção segurada já anda, o ataque segurado já ataca, largar ou catar segurado já age; o
+    que foi apertado e solto durante a contagem não fica guardado (apertar sem querer não derruba a bolsa).
   - **Checkpoint da F5 do laboratório** (dono, 2026-11-18, na sessão livre;
     [tasks do laboratório](../specs/m2-laboratorio/tasks.md)):
     - **o primeiro passo é imediato:** parado, o creep anda já no tick seguinte ao comando, e depois segue no ritmo
@@ -88,6 +90,18 @@
       ao mesmo tempo, sem vencedor. Ideia do dono: com um relógio por creep, quem não acertava nem era acertado
       fugia no meio de uma luta que estava acontecendo (no 3 × 3 e no 1 × 1 × 1). No 1 × 1, as duas regras dão o
       mesmo resultado.
+  - **Checkpoint da F5 do laboratório, 2ª parte** (dono, 2026-11-19 e 20, na retomada depois da F6;
+    [tasks do laboratório](../specs/m2-laboratorio/tasks.md)):
+    - **a regra de grade é divertida:** "gostei bastante do resultado que alcançamos para o combate", sobretudo
+      depois dos sinais de ataque, golpe e erro na tela;
+    - **nenhuma regra nova antes da junção:** nem a livre nem a forja. "Vamos juntar o que tem": a grade é boa o
+      bastante para ver como o combate influencia uma partida real (e simulada);
+    - **o Mount & Blade inspira de várias formas, não só a conversa** (corrige a rodada de 2026-11-15): dá para
+      aproveitar as ideias dele, também no combate, e adaptá-las ao geometrix, sem comparar nem copiar a escala das
+      batalhas dele;
+    - **o deploy espera a junção:** a latência aceitável e a predição no cliente se decidem depois de colado o ciclo
+      inteiro (o mundo abre a instância, o canal fica aberto para reforços e terceiros, o resultado volta ao mundo).
+      A predição no cliente pode entrar ([ROADMAP](../ROADMAP.md)).
   - **Chefão disputado** (M2.5): quando dois lados ferem o mesmo chefão, leva o buff ou o item quem dá o último
     golpe ([05](05-tribos-e-diplomacia.md)).
 
@@ -115,10 +129,23 @@ sequenceDiagram
 - **Som da batalha** (pedido do dono, 2026-11-18, no checkpoint da F5, **sem marco**): um sinal sonoro para o
   disparo e o golpe, além do sinal visual que o laboratório ganha na F6. O jogo ainda não tem som nenhum: é um
   sistema novo, que só entra com um marco escolhido pelo dono.
+- **O comandante: a tática do time** (ideia do dono, 2026-11-20, no checkpoint da F5; **candidato ao M3, O time**,
+  pela análise do agente: o M3 já trata do 3v3 e da autoridade dentro do time). Nas batalhas em grupo (3 × 3), um
+  papel de estrategista ou comandante, como no combate do Mount & Blade: mesmo dominando um creep só, ele orquestra
+  o time pela arena (emboscadas, o terreno a favor, de acordo com os recursos militares do time), e quem entra no
+  meio da luta já entra seguindo a tática que o comandante do time definiu. Hoje cada creep tem só a própria lista
+  de gambits; a tática seria do time. Aumenta o escopo do M2: não entra antes de o dono aprovar o marco.
+- **Anúncios de abate e de fuga** (ideia do dono, 2026-11-19, no checkpoint da F5; **sem prioridade**, junto do som):
+  ao estilo do DotA e do LoL ("double kill", "rampage"), para quem assiste. O sinal visual simples de morte e de
+  fuga é da tela do laboratório (F7), não daqui.
 - **IA que aprende** (ideia do dono, 2026-11-17, **sem marco**): o bot começa burro e vai ficando mais esperto, até
   um "modo pesadelo". Um caminho concreto (agente): uma busca offline por listas de gambits que vençam a melhor
   lista anterior, com o auto-resolve (centenas de lutas por segundo), gerando níveis de bot. Aumenta o escopo do
-  M2: só entra com um marco escolhido pelo dono.
+  M2: só entra com um marco escolhido pelo dono. **Achado do checkpoint da F5 do laboratório** (2026-11-20): o
+  dono explorou o ● nas esquinas das pedras ("humanos aprendem sozinhos"). A F7 tirou a parte de caminho (o ● não
+  passa mais ao lado de um ■ parado na esquina); o que sobra é a previsibilidade: o ● ainda escolhe os mesmos
+  corredores, e um humano aprende o trajeto. Variar o trajeto conforme o adversário é o tipo de coisa que uma IA
+  que aprende resolveria.
 
 ### Brainstorm de 2026-11-15 (não aprovado)
 Detalhes e análise no [brainstorm M2–M3](../brainstorm/2026-11-15-m2-m3.md) §2 e §6.
