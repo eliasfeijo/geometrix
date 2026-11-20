@@ -243,7 +243,7 @@ seguir). Com o Claude na sessão, ele entrega um grupo por vez e junta as respos
 | 4 | Mexer na luta: editar gambits e soltar reforço | ~8 min | — |
 | 5 | Às cegas, parte 1 (15 batalhas) | ~15 min | sorteada |
 | 6 | Às cegas, parte 2 (15 batalhas) e encerrar | ~15 min | sorteada |
-| 7 | 300 ms com e sem interpolar | ~5 min | 300 ms |
+| 7 | O movimento: as quatro opções de desenho | ~10 min | 0 e 150 ms |
 | 8 | Fechamento: as tabelas, as perguntas da hipótese e a próxima regra | ~10 min | — |
 
 **Por que nessa ordem:**
@@ -255,7 +255,8 @@ seguir). Com o Claude na sessão, ele entrega um grupo por vez e junta as respos
 - **O grupo 4 usa um confronto que não aparece nos grupos 1 e 2:** um reforço ou um gambit editado estragaria
   aquela comparação.
 - **O grupo 7 vem depois das às cegas:** quem sabe como 300 ms "parece" reconhece o RTT às cegas e dá nota ao
-  número. Além disso, a sessão às cegas precisa do "interpolar" ligado, e o grupo 7 o desliga.
+  número. Além disso, a sessão às cegas usa um movimento só ("interpolar (1 tick)"), e o grupo 7 troca de
+  opção.
 
 **O que anotar:** só o que você sentiu. Vitória, derrota, RTT, atraso medido e nota ficam no registro da sessão,
 que vai no export do fim.
@@ -273,8 +274,8 @@ Abre o laboratório no Vite (`/lab.html`). Sem o Vite: `npm run build` e `npm ru
    para este endereço: o 5173 e o 8080 têm registros separados.
 2. No painel **"Sessão"** (abaixo da arena): se houver batalhas no registro (de testes antigos), clique em
    **"Exportar sessão"** (guarda uma cópia) e depois em **"Limpar"**. O registro tem de começar em 0.
-3. No painel **"Rede simulada"**: RTT em **0 ms** e **"interpolar" marcado**. Na barra acima da arena, velocidade
-   **×1**.
+3. No painel **"Rede simulada"**: RTT em **0 ms** e **Movimento "interpolar (1 tick)"**. Na barra acima da arena,
+   velocidade **×1**.
 4. Nos grupos 1 e 2, **não mexa** na dificuldade ("IA normal"), no HP nem na carga. O "Você × IA" separa os
    confrontos por arena, DNA e HP, não pela dificuldade: misturar dificuldades bagunça a comparação sem aparecer.
 
@@ -284,14 +285,17 @@ reinicia, **P** ou **Esc** pausa e continua.
 
 As regras que o jogador precisa saber:
 
-- Toda batalha começa com a **contagem de 3 s** (spec D21): todos parados, só dá para virar. O "você joga com" do
-  formulário diz quem você domina desde o começo; o **Começar**, o **Reiniciar** e o **R** já dominam.
+- Toda batalha começa com a **contagem de 3 s** (spec D21): todos parados, só dá para virar. No fim dela vale o
+  que está **apertado** naquele instante (a direção, o espaço, o Q ou o E segurados); o que foi apertado e solto
+  durante a contagem é descartado (F7). O "você joga com" do formulário diz quem você domina desde o começo; o
+  **Começar**, o **Reiniciar** e o **R** já dominam, e o Começar sobe a página até a arena.
 - **Parado, o creep dá o primeiro passo na hora** (spec D22), e cada toque na tecla anda uma célula.
 - Quem fica **2 s** no anel da borda sem levar golpe foge pela borda. Se a batalha inteira passa **15 s** sem
   nenhum dano em ninguém, **todos fogem** (spec D9). A batalha acaba quando sobra no máximo um lado.
-- **Na tela** (F6): quem ataca pulsa num anel da cor do lado; quem leva o golpe pisca em branco, com o dano subindo
-  em amarelo; o tiro que some sem acertar deixa um **x** onde sumiu. O tempo sem dano aparece na barra sobre a
-  arena, e em vermelho, grande, sobre a arena nos últimos 5 s.
+- **Na tela** (F6 e F7): quem ataca pulsa num anel da cor do lado; quem leva o golpe pisca em branco, com o dano
+  subindo em amarelo; o tiro que some sem acertar deixa um **x** onde sumiu. Quem morre se desfaz em estilhaços
+  ("‹nome› caiu"); quem foge deixa uma seta para fora da arena ("‹nome› fugiu"). O tempo sem dano aparece numa
+  linha discreta logo acima da arena, e em vermelho, grande, sobre a arena nos últimos 5 s.
 - Toda batalha que acaba entra no registro. **Trocar ou soltar o domínio no meio** (Tab, 0, "dominar", "soltar")
   tira a batalha das contas do "Você × IA".
 
@@ -391,7 +395,7 @@ Responde à pergunta 3 da hipótese (latência). **Um setup só na sessão intei
 dominando, para a nota medir o atraso e não o confronto. Sugestão: **▲ (você) × ● (IA normal) nas pedras**, o duelo
 à distância em que mirar e desviar mais sentem o atraso (spec D4).
 
-1. Confira o **"interpolar" marcado** (a sessão inteira usa o mesmo).
+1. Confira o **Movimento "interpolar (1 tick)"** (a sessão inteira usa o mesmo).
 2. Monte o setup no formulário, com "você joga com" no seu ▲, e clique em **"Começar sessão às cegas"** no painel
    "Sessão". A página sorteia a ordem de **5 batalhas de cada RTT** (0, 50, 100, 150, 200 e 300 ms), 30 no total, e
    esconde o RTT e o atraso medido.
@@ -412,17 +416,33 @@ Alguma batalha que chamou atenção (o número dela no painel, e por quê)?
 Quando o atraso incomodou, o que ficou ruim: andar, mirar, desviar?
 ```
 
-### Grupo 7: 300 ms com e sem interpolar (~5 min, 4 batalhas)
+### Grupo 7: O movimento, as quatro opções (~10 min, 8 batalhas)
 
-Fora da sessão às cegas: RTT em **300 ms** no painel "Rede simulada", o mesmo ▲ × ● nas pedras, dominando.
+Fora da sessão às cegas, o mesmo ▲ × ● nas pedras, dominando. Desde a F7 (checkpoint C11), o painel **"Rede
+simulada"** tem o seletor **Movimento**, com quatro jeitos de desenhar o mesmo combate (a batalha não muda, só o
+desenho):
 
-1. Duas batalhas com **"interpolar" marcado**.
-2. Duas com **"interpolar" desmarcado**.
-3. No fim, marque o "interpolar" de novo e volte o RTT para 0 ms.
+| Opção | O que faz | Medido no Chromium (o ▲ segurado; tecla → 1º movimento na tela, 0 / 150 / 300 ms) |
+|---|---|---|
+| sem interpolar | cada creep pula para a célula | 52 / 175 / 345 ms; parado ~240 ms entre os passos |
+| interpolar (1 tick) | o de hoje: desliza 50 ms, para o resto do passo | 64 / 231 / 329 ms; parado ~210 ms entre os passos |
+| deslizar o passo inteiro | desliza na velocidade do DNA, sem pausa, até um passo atrás | 60 / 239 / 354 ms; sem pausa |
+| prever o meu creep | o seu creep anda na hora em que você aperta, sem esperar a rede; os outros como no 1 tick | 15 / 16 / 43 ms; sem pausa |
+
+1. RTT em **0 ms**. Uma batalha com cada opção, na ordem da tabela (4 batalhas).
+2. RTT em **150 ms**. De novo uma com cada (4 batalhas).
+3. No fim, volte para "interpolar (1 tick)" e o RTT para 0 ms.
+
+O que olhar: a pausa entre os passos ao segurar uma direção, se o seu creep parece "atrasado" ou "escorregando",
+se a previsão alguma vez desenha o creep onde ele não está (ela corrige quando erra: um bloqueio, outro creep na
+frente), e se mirar no ● fica mais fácil ou mais difícil.
 
 ```
 GRUPO 7
-F6 Qual dos dois sente melhor a 300 ms, com ou sem interpolar? Por quê?
+F6 A 0 ms, qual das quatro sente melhor? E qual pior? Por quê?
+F7 A 150 ms, a mesma pergunta.
+F8 A previsão alguma vez enganou (o creep apareceu num lugar e voltou)? Onde?
+F9 Qual delas você quer como padrão no laboratório (e, depois da junção, como ponto de partida para o jogo)?
 ```
 
 ### Grupo 8: Fechamento (~10 min)
@@ -440,7 +460,7 @@ F6 Qual dos dois sente melhor a 300 ms, com ou sem interpolar? Por quê?
       faria no seu lugar)?
 3. A decisão que fecha a fatia: **a próxima regra a experimentar é a livre (MOBA-lite), a forja, ou nenhuma antes
    da junção?**
-4. As **interpretações a validar** das fases (o `tasks.md` do laboratório, F4 a F6): o Claude as resume para um sim
+4. As **interpretações a validar** das fases (o `tasks.md` do laboratório, F4 a F7): o Claude as resume para um sim
    ou não por item.
 
 ## Validar o replay (dono)

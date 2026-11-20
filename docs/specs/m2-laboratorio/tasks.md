@@ -701,7 +701,7 @@ As decisões C9 a C15 do checkpoint (plan §15). Worktree: `.claude/worktrees/la
       da contagem e a página repete o que está segurado no fim: escolha da F7, com o porquê no registro). Mesmo log,
       outro resultado: a `BATTLE_VERSION` sobe para 4, com o hash de referência, o `sweep` e o `verify` de novo e a
       *fixture* do laboratório refeita (um log exportado da página no fim da F7, com as outras mudanças)
-- [ ] **O movimento, para comparar** (C11): ao lado do "interpolar" e do "sem interpolar" de hoje, duas opções de
+- [x] **O movimento, para comparar** (C11): ao lado do "interpolar" e do "sem interpolar" de hoje, duas opções de
       desenho na "Rede simulada": **deslizar o passo inteiro** (o creep desliza na velocidade do DNA, sem a pausa,
       desenhado até um passo atrás) e **prever o meu creep** (enquanto a tecla está segurada e a frente está livre
       no último quadro, a página continua deslizando o creep dominado para a próxima célula, sem esperar o quadro;
