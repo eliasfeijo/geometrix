@@ -29,7 +29,8 @@ export function regenerateHp(state: WorldState): void {
   if (elapsed % 60 !== 0) return;
   const { map, coreZone } = params.hp.regenPermillePerMinute;
   for (const creep of state.creeps) {
-    if (creep.engagement !== null) continue;
+    // In an encounter or a battle a creep does not heal (junction O-5).
+    if (creep.engagement !== null || creep.battle !== null) continue;
     const full = maxHp(params, creep.dna);
     if (creep.hp >= full) continue;
     const permille = inCoreZone(state, creep.team, creep) ? coreZone : map;

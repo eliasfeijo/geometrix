@@ -1,6 +1,6 @@
 # M2 junction tasks — Slice D
 
-**Status:** F1 done (2026-11-24); F2 next. Branches `m2/junction-f<n>-<slug>` (skill `commit`).
+**Status:** F2 done (2026-11-24); F3 next. Branches `m2/junction-f<n>-<slug>` (skill `commit`).
 **Spec:** [spec.md](spec.md) · **Plan:** [plan.md](plan.md)
 
 ## F0 — Spec, ADR and plan
@@ -47,18 +47,59 @@ not versioned):
 
 ## F2 — The world side
 
-- [ ] `Battle` stub, `state.battles`, `Creep.battle`, serialize and the fixed hashes; `SIM_VERSION` 10
-- [ ] An attack opens the battle after the declaration; the `fight` stage and `fightRound` leave
-- [ ] Extortion: pay or refuse, a refusal (answer, rules, window) opens the battle; the dialogue's flee leaves; `react`
+- [x] `Battle` stub, `state.battles`, `Creep.battle`, serialize and the fixed hashes; `SIM_VERSION` 10
+- [x] An attack opens the battle after the declaration; the `fight` stage and `fightRound` leave
+- [x] Extortion: pay or refuse, a refusal (answer, rules, window) opens the battle; the dialogue's flee leaves; `react`
       without `fight`/`flee`
-- [ ] The lock: locked creeps skip the autopilot, orders, gathering, delivery and regeneration; domination allowed
-- [ ] `battleExit` (died, escaped) with the `flee` order and its bonus; whole HP points
-- [ ] `battleEnd`: the winners' loot, spoils from the piles, survivors placed; the end by inactivity
-- [ ] Joins: an attack approach inside the window joins its team's side or a new one; the side cap and the wait; an
+- [x] The lock: locked creeps skip the autopilot, orders, gathering, delivery and regeneration; domination allowed
+- [x] `battleExit` (died, escaped) with the `flee` order and its bonus; whole HP points
+- [x] `battleEnd`: the winners' loot, spoils from the piles, survivors placed; the end by inactivity
+- [x] Joins: an attack approach inside the window joins its team's side or a new one; the side cap and the wait; an
       extortion of a participant refused
-- [ ] Events (`battleOpened`, `battleJoined`, `battleLeft`, `battleEnded`, `died` with the battle) and their audience
-- [ ] The team view with the battle stubs and participants; nothing leaks (hand-built world)
-- [ ] Bots and presets: the raider and the gatherers' reaction rules map to D2 (carrier on flee)
+- [x] Events (`battleOpened`, `battleJoined`, `battleLeft`, `battleEnded`, `died` with the battle) and their audience
+- [x] The team view with the battle stubs and participants; nothing leaks (hand-built world)
+- [x] Bots and presets: the raider and the gatherers' reaction rules map to D2 (carrier on flee)
+
+### F2 record
+
+One commit for the whole phase: the encounter's types (`Reply`, the `Encounter` without stage, the events) are one
+contract that `protocol`, the CLI and the client compile against, so no task is green alone.
+
+- **The world side** lives in `packages/sim/src/battle.ts` (stub, bubble, lock, joins, the two result commands and
+  their validation) and in the rewritten `encounter.ts` (an attack opens the battle at once; an extortion is pay or
+  refuse). The params lose `fight` and the flee roll (`flee` keeps `speedPermille` and `seconds`) and gain `battle`
+  (`window` 9 × 5 with `cellBlock` 5, `sideCap` 5, `maxSides` 4). Fixed hashes: serialize and the 6 h bot world.
+- **Without the host** (F3) no battle ends: in `geo verify --seed 42` the world has 6 events in 50,000 ticks, and the
+  bot worlds lock their first fighters for good. The CLI's encounter test ends battles with a stand-in for the host
+  (side 0 wins, the rest die on their cells); the protocol's diff property drops its death and spoil floors (4–8
+  battle stubs seen per seed instead) until it runs through the host (F4).
+- **Done early, as the types required:** in `protocol`, `react` with `pay`/`refuse` only, the battle stubs in the
+  delta (`window`, `sides`, `participants` by value), the system commands in the replay schema and
+  `PROTOCOL_VERSION` 5 (F4); the server refuses them from clients through the sim (`notSystem`). In the client, the
+  reaction panel with pay and refuse only, no fight mark on the map, "em batalha" in the inspector and one plain
+  sentence per battle event in the chronicle (F5 keeps the battle screen, the battle sign and the voiced sentences).
+- **The CLI's tally:** an encounter ends `paid`, `battle` or `open`; per team, the battles by result (won, lost, idle,
+  empty, open), joins, escapes by DNA, deaths, kills, extortion, loot taken and spoils picked up; the spoils' dropped
+  cargo is measured from the state. The flee-roll metrics leave the report and the sweep (`battlePercent` and
+  `battlesPerHour` come in); the per-team "encounter balance" leaves too, since a battle's loss is not attributable
+  to a team from the events (F3's battle metrics may bring it back).
+
+**Interpretations to validate** (implementation details the spec and the plan leave open):
+
+1. `battleEnd` has a third reason, `empty` (nobody left in the arena): no winner, every pile becomes spoils.
+2. The end by inactivity returns the survivors stopped, without the flee order and its bonus.
+3. The winners loot all the cristal first, then the materia, pile by pile, each winner in creep id order up to its
+   free capacity.
+4. An extortion approach on a participant ends when it comes within the radius (J-2), as one with nothing to demand.
+5. World orders to a locked creep are refused (`inBattle`); `setRules` stays allowed, domination too (O-5).
+6. Each participant's stance (`fight`, or `flee` = carrier) is kept in the stub for the host, and hidden from the view.
+7. An attack's declaration has its own encounter id (the `battleOpened` event points to it), though no encounter stays
+   in the state.
+8. `battleExit` carries `by`, the killer's world id, for the chronicle and the kill count.
+9. The posture rules read literally under D2: the circle's "always flee" now refuses every extortion and enters as a
+   carrier; the triangle pays an extortion and enters an attack as a carrier.
+10. A team with a creep in the battle hears all of its events (K-2), even where it does not see the event's cell (an
+    escape far away).
 
 ## F3 — The host and the harness
 

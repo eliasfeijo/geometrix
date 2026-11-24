@@ -3,11 +3,13 @@
 // war (M1.5 fog plan section 4) it is filtered: the team's own entities whole,
 // other teams' creeps only while in sight and only with the fields of spec
 // D7 (and, since M2, its name, HP and whether it is in an encounter: M2
-// encontro spec D18), and everything else from the team's memory.
+// encontro spec D18, or a battle: junction D16), and everything else from the
+// team's memory.
 
 import type { Player } from "./domination.ts";
 import type { Cell } from "./map.ts";
 import type {
+  Battle,
   Creep,
   Deposit,
   Encounter,
@@ -28,28 +30,46 @@ export type CreepView = Omit<
 
 /**
  * Another team's creep in sight (spec D7, M2 encontro D18): no order, rules
- * or domination; its name, HP and encounter, so a wounded one can be chosen.
+ * or domination; its name, HP, encounter and battle, so a wounded one can be
+ * chosen and a locked one is drawn as such.
  */
 export type ForeignCreepView = Pick<
   Creep,
-  "id" | "team" | "dna" | "name" | "hp" | "engagement" | "x" | "y" | "cargo"
+  | "id"
+  | "team"
+  | "dna"
+  | "name"
+  | "hp"
+  | "engagement"
+  | "battle"
+  | "x"
+  | "y"
+  | "cargo"
 >;
 
 /**
- * An encounter with one of the team's creeps (M2 encontro plan section 8):
- * whole, except the other side's pending reply to the fight, which would tell
- * the team what the enemy's player is about to do. In fullView, whole.
+ * An extortion with one of the team's creeps (M2 encontro plan section 8):
+ * whole. In fullView, whole.
  */
 export type EncounterView = Encounter;
 
 /**
- * Other teams' encounter on a cell in sight (plan section 8): who, the
- * intent, the stage and where; no demand, window, replies or rounds.
+ * Other teams' extortion on a cell in sight (plan section 8): who, the
+ * intent and where; no demand, window or reply.
  */
 export type ForeignEncounterView = Pick<
   Encounter,
-  "id" | "aggressor" | "victim" | "intent" | "stage" | "x" | "y"
+  "id" | "aggressor" | "victim" | "intent" | "x" | "y"
 >;
+
+/**
+ * A battle as a team sees it (junction D16, K-3): where, its bubble, its
+ * sides and who is locked in it. How each enters (its stance) and the fight
+ * itself stay out.
+ */
+export type BattleStubView = Omit<Battle, "participants"> & {
+  participants: { id: number; side: number }[];
+};
 
 /** Another team: its id and, once seen, where its core is (spec D7). */
 export type ForeignTeam = { id: number; core: Cell | null };
@@ -77,6 +97,11 @@ export type TeamView = {
    * sight, by id (plan section 8).
    */
   encounters: (EncounterView | ForeignEncounterView)[];
+  /**
+   * The battles with a creep of the team, and the others on a cell in
+   * sight, by id (junction D16).
+   */
+  battles: BattleStubView[];
   /** The spoils the team remembers, with the last cargo seen, by id. */
   spoils: Spoil[];
   /** Per cell: -1 never seen, else its Terrain (plan N6). */
@@ -149,6 +174,14 @@ export function view(state: WorldState, team: number): TeamView {
       encounters.push(foreignEncounterView(encounter));
   }
 
+  const battles: BattleStubView[] = [];
+  for (const battle of state.battles) {
+    const own = battle.participants.some(
+      (p) => state.creeps.find((c) => c.id === p.id)?.team === team,
+    );
+    if (own || inSight(battle)) battles.push(stubView(battle));
+  }
+
   const roadJobs: RoadJob[] = [];
   for (const job of state.roadJobs) {
     if (job.team === team) roadJobs.push({ ...job });
@@ -184,6 +217,7 @@ export function view(state: WorldState, team: number): TeamView {
       p.team === team ? { ...p } : { id: p.id, team: p.team, bot: p.bot },
     ),
     encounters,
+    battles,
     spoils: memory.spoils.map((s) => ({ ...s })),
     known,
     visible: seen,
@@ -209,6 +243,7 @@ export function fullView(state: WorldState): TeamView {
     roadJobs: state.roadJobs.map((j) => ({ ...j })),
     players: state.players.map((p) => ({ ...p })),
     encounters: state.encounters.map((e) => ({ ...e })),
+    battles: state.battles.map(stubView),
     spoils: state.spoils.map((s) => ({ ...s, cargo: { ...s.cargo } })),
     known: [...map.terrain],
     visible: map.terrain.map((_, i) => i),
@@ -223,6 +258,7 @@ function creepView(creep: Creep): CreepView {
     name: creep.name,
     hp: creep.hp,
     engagement: creep.engagement,
+    battle: creep.battle,
     safeConduct: creep.safeConduct,
     x: creep.x,
     y: creep.y,
@@ -242,6 +278,7 @@ function foreignCreepView(creep: Creep): ForeignCreepView {
     name: creep.name,
     hp: creep.hp,
     engagement: creep.engagement,
+    battle: creep.battle,
     x: creep.x,
     y: creep.y,
     cargo: creep.cargo,
@@ -249,8 +286,8 @@ function foreignCreepView(creep: Creep): ForeignCreepView {
 }
 
 /**
- * The team's encounter: whole, with the other side's pending reply hidden.
- * The fight's replies wait for the next round, several ticks ahead.
+ * The team's extortion: whole, with the victim's pending reply hidden from
+ * the aggressor's side.
  */
 function encounterView(
   state: WorldState,
@@ -259,11 +296,7 @@ function encounterView(
 ): EncounterView {
   const aggressorSide =
     state.creeps.find((c) => c.id === encounter.aggressor)?.team === team;
-  return {
-    ...encounter,
-    reply: aggressorSide ? null : encounter.reply,
-    aggressorReply: aggressorSide ? encounter.aggressorReply : null,
-  };
+  return { ...encounter, reply: aggressorSide ? null : encounter.reply };
 }
 
 function foreignEncounterView(encounter: Encounter): ForeignEncounterView {
@@ -272,8 +305,19 @@ function foreignEncounterView(encounter: Encounter): ForeignEncounterView {
     aggressor: encounter.aggressor,
     victim: encounter.victim,
     intent: encounter.intent,
-    stage: encounter.stage,
     x: encounter.x,
     y: encounter.y,
+  };
+}
+
+function stubView(battle: Battle): BattleStubView {
+  return {
+    id: battle.id,
+    window: battle.window,
+    sides: battle.sides,
+    participants: battle.participants.map((p) => ({ id: p.id, side: p.side })),
+    openedTick: battle.openedTick,
+    x: battle.x,
+    y: battle.y,
   };
 }

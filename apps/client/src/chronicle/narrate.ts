@@ -5,7 +5,7 @@
 // make the creeps' names clickable.
 
 import type { CreepRef, Stock, TeamEvent } from "@geometrix/sim";
-import { stockText } from "../format.ts";
+import { stockText, teamName } from "../format.ts";
 import { TEMPLATES } from "./templates.ts";
 
 /** A piece of a sentence: plain text, or a creep to name (and click). */
@@ -18,11 +18,6 @@ export function variant(event: Pick<TeamEvent, "tick" | "index">, n: number) {
 
 const pick = (event: TeamEvent, list: readonly string[]) =>
   list[variant(event, list.length)]!;
-
-const rounds = (n: number) => (n === 1 ? "1 rodada" : `${n} rodadas`);
-
-const empty = (stock: Stock | null) =>
-  stock === null || stock.materia + stock.cristal === 0;
 
 /** The template of an event and what fills its placeholders. */
 function template(event: TeamEvent): {
@@ -52,23 +47,32 @@ function template(event: TeamEvent): {
         creeps: { from: event.from, to: event.to },
         values: { amount: stockText(event.amount) },
       };
-    case "fleeAttempt": {
-      const list = !event.escaped
-        ? TEMPLATES.flee.caught
-        : empty(event.dropped)
-          ? TEMPLATES.flee.escapedEmpty
-          : TEMPLATES.flee.escaped;
+    case "battleOpened":
       return {
-        text: pick(event, list),
-        creeps: { creep: event.creep },
-        values: { dropped: stockText(event.dropped ?? zero) },
+        text: pick(event, TEMPLATES.battleOpened),
+        creeps: {
+          first: event.sides[0]!.creeps[0]!,
+          second: event.sides[1]!.creeps[0]!,
+        },
+        values: {},
       };
-    }
-    case "fightEnded":
+    case "battleJoined":
       return {
-        text: pick(event, TEMPLATES.fightEnded),
-        creeps: { winner: event.winner, loser: event.loser },
-        values: { rounds: rounds(event.rounds) },
+        text: pick(event, TEMPLATES.battleJoined),
+        creeps: { creep: event.creep },
+        values: {},
+      };
+    case "battleLeft":
+      return {
+        text: pick(event, TEMPLATES.battleLeft[event.reason]),
+        creeps: { creep: event.creep },
+        values: {},
+      };
+    case "battleEnded":
+      return {
+        text: pick(event, TEMPLATES.battleEnded[event.reason]),
+        creeps: {},
+        values: { team: teamName(event.winner?.team ?? -1) },
       };
     case "died":
       return {
@@ -82,18 +86,6 @@ function template(event: TeamEvent): {
             : { creep: event.creep, by: event.by },
         values: {},
       };
-    case "looted": {
-      const list = empty(event.taken)
-        ? TEMPLATES.looted.spoilOnly
-        : event.spoil === null
-          ? TEMPLATES.looted.taken
-          : TEMPLATES.looted.takenAndSpoil;
-      return {
-        text: pick(event, list),
-        creeps: { by: event.by, from: event.from },
-        values: { taken: stockText(event.taken) },
-      };
-    }
     case "pickedUp":
       return {
         text: pick(event, TEMPLATES.pickedUp),

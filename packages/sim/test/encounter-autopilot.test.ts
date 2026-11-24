@@ -28,6 +28,10 @@ function world(at: [Creep["dna"], number, number][]): {
 const always = { type: "always" } as const;
 const reactionOf = (events: SimEvent[]) =>
   events.find((e) => e.type === "reaction");
+/** How `creep` entered its battle (junction D2): its stance in the stub. */
+const stanceOf = (w: WorldState, creep: Creep) =>
+  w.battles.flatMap((b) => b.participants).find((p) => p.id === creep.id)
+    ?.stance;
 
 describe("encounter conditions (spec D13, A-1)", () => {
   test("enemyInSight: within the radius, the DNA filter and the cargo, only what the team sees", () => {
@@ -129,44 +133,50 @@ describe("reaction rules (spec D13, A-2)", () => {
       choice: "refuse",
       by: "rule",
     });
-    expect(big.w.encounters[0]?.stage).toBe("fight");
+    // Refusing opens the battle; the fight rule enters with the preset.
+    expect(big.w.encounters).toEqual([]);
+    expect(stanceOf(big.w, big.prey)).toBe("fight");
   });
 
-  test("pay is impossible against an attack: the next reaction rule decides", () => {
-    const { w, creeps } = world([
-      ["circle", 0, 9],
-      ["square", 1, 10],
-    ]);
-    const [hunter, prey] = creeps as [Creep, Creep];
-    prey.rules = [
-      { when: always, then: { type: "pay" } },
-      { when: always, then: { type: "fight" } },
-    ];
-    hunter.order = { type: "approach", targetId: prey.id, intent: "attack" };
-    expect(reactionOf(step(w, []))).toMatchObject({
-      choice: "fight",
+  test("a flee rule refuses an extortion and enters the battle as a carrier (junction D2)", () => {
+    const fleer = extortion([{ when: always, then: { type: "flee" } }], 12);
+    expect(reactionOf(fleer.events)).toMatchObject({
+      choice: "refuse",
       by: "rule",
     });
+    expect(stanceOf(fleer.w, fleer.prey)).toBe("flee");
+    expect(stanceOf(fleer.w, fleer.hunter)).toBe("fight");
   });
 
-  test("a rule flees mid-fight below an HP share", () => {
-    const { w, creeps } = world([
-      ["circle", 0, 9],
-      ["square", 1, 10],
-    ]);
-    const [hunter, prey] = creeps as [Creep, Creep];
-    prey.rules = [
+  test("an attack has no dialogue: the reaction rules choose the stance (junction D2)", () => {
+    const attacked = (rules: Rule[], hp?: number) => {
+      const { w, creeps } = world([
+        ["circle", 0, 9],
+        ["square", 1, 10],
+      ]);
+      const [hunter, prey] = creeps as [Creep, Creep];
+      prey.rules = rules;
+      if (hp !== undefined) prey.hp = hp;
+      hunter.order = { type: "approach", targetId: prey.id, intent: "attack" };
+      const events = step(w, []);
+      expect(reactionOf(events)).toBeUndefined();
+      return stanceOf(w, prey);
+    };
+    const wary: Rule[] = [
       { when: { type: "hpBelow", permille: 1000 }, then: { type: "flee" } },
       { when: always, then: { type: "fight" } },
     ];
-    hunter.order = { type: "approach", targetId: prey.id, intent: "attack" };
-    // Full HP: it fights; wounded, it tries to flee at the next round.
-    expect(reactionOf(step(w, []))).toMatchObject({ choice: "fight" });
-    prey.hp -= 1;
-    const events: SimEvent[] = [];
-    for (let i = 0; i < 10; i++) events.push(...step(w, []));
-    expect(reactionOf(events)).toMatchObject({ choice: "flee", by: "rule" });
-    expect(events.some((e) => e.type === "fleeAttempt")).toBe(true);
+    // Pay is impossible against an attack: the next rule decides.
+    expect(
+      attacked([
+        { when: always, then: { type: "pay" } },
+        { when: always, then: { type: "fight" } },
+      ]),
+    ).toBe("fight");
+    expect(attacked(wary)).toBe("fight");
+    expect(attacked(wary, 1_000)).toBe("flee");
+    // With no reaction rule, the DNA's preset.
+    expect(attacked([])).toBe("fight");
   });
 });
 
@@ -303,22 +313,25 @@ describe("the raider preset (spec D14)", () => {
     expect(run(10)).toBe("approach");
   });
 
-  test("fights when attacked and flees when wounded", () => {
-    const { w, creeps } = world([
-      ["circle", 0, 9],
-      ["square", 1, 10],
-    ]);
-    const [hunter, raider] = creeps as [Creep, Creep];
-    raider.rules = raiderRules();
-    hunter.order = { type: "approach", targetId: raider.id, intent: "attack" };
-    expect(reactionOf(step(w, []))).toMatchObject({
-      choice: "fight",
-      by: "rule",
-    });
-    raider.hp = maxHp(w.params, "square") / 4;
-    const events: SimEvent[] = [];
-    for (let i = 0; i < 10; i++) events.push(...step(w, []));
-    expect(reactionOf(events)).toMatchObject({ choice: "flee", by: "rule" });
+  test("fights when attacked and flees when wounded (junction D2)", () => {
+    const attacked = (hp: number | null) => {
+      const { w, creeps } = world([
+        ["circle", 0, 9],
+        ["square", 1, 10],
+      ]);
+      const [hunter, raider] = creeps as [Creep, Creep];
+      raider.rules = raiderRules();
+      if (hp !== null) raider.hp = hp;
+      hunter.order = {
+        type: "approach",
+        targetId: raider.id,
+        intent: "attack",
+      };
+      step(w, []);
+      return stanceOf(w, raider);
+    };
+    expect(attacked(null)).toBe("fight");
+    expect(attacked(maxHp(textWorld(ROW).params, "square") / 4)).toBe("flee");
   });
 
   test("a dominated victim's rules decide once the window is over", () => {
@@ -328,11 +341,13 @@ describe("the raider preset (spec D14)", () => {
     ]);
     const [hunter, raider] = creeps as [Creep, Creep];
     raider.rules = raiderRules();
+    raider.cargo.materia = 12;
     join(w, 9, 1, false);
     dominate(w, 9, raider.id);
-    hunter.order = { type: "approach", targetId: raider.id, intent: "attack" };
+    hunter.order = { type: "approach", targetId: raider.id, intent: "extort" };
     const events: SimEvent[] = [];
     for (let i = 0; i < 61; i++) events.push(...step(w, []));
-    expect(reactionOf(events)).toMatchObject({ choice: "fight", by: "rule" });
+    expect(reactionOf(events)).toMatchObject({ choice: "refuse", by: "rule" });
+    expect(stanceOf(w, raider)).toBe("fight");
   });
 });

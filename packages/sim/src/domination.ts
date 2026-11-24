@@ -47,6 +47,8 @@ export type DominationRefusal =
   | "invalidOrder"
   /** In an encounter, a creep takes no order (spec L-3). */
   | "engaged"
+  /** Locked in a battle, a creep takes no world order (junction O-5). */
+  | "inBattle"
   /** A fleeing creep's order is locked (plan P4). */
   | "fleeing";
 
@@ -197,6 +199,7 @@ export function orderRefusal(
   const creep = findCreep(state, creepId)!;
   if (creep.dominatedBy !== playerId) return "notDominating";
   if (creep.engagement !== null) return "engaged";
+  if (creep.battle !== null) return "inBattle";
   if (creep.order.type === "flee") return "fleeing";
   switch (order.type) {
     case "stop":
@@ -268,9 +271,8 @@ function toOrder(input: OrderInput): Order {
 }
 
 /**
- * The dominating player answers its creep's encounter (spec C-5, D6): in the
- * dialogue, the victim pays, refuses or flees an extortion, and fights or
- * flees an attack; in the fight, either side may only try to flee.
+ * The dominating player answers its creep's extortion (spec C-5, D6;
+ * junction D1): the victim pays or refuses.
  */
 export function reactRefusal(
   state: WorldState,
@@ -284,24 +286,12 @@ export function reactRefusal(
   if (creep.dominatedBy !== playerId) return "notDominating";
   const encounter = state.encounters.find((e) => e.id === creep.engagement);
   if (encounter === undefined) return "notEngaged";
-  if (encounter.stage === "fight") {
-    return choice === "flee" ? null : "invalidReaction";
-  }
   if (encounter.victim !== creep.id) return "invalidReaction";
-  const allowed: readonly Reply[] =
-    encounter.intent === "extort"
-      ? ["pay", "refuse", "flee"]
-      : ["fight", "flee"];
-  return allowed.includes(choice) ? null : "invalidReaction";
+  return choice === "pay" || choice === "refuse" ? null : "invalidReaction";
 }
 
 /** Records the reply; the encounters stage applies it (plan section 6). */
 export function react(state: WorldState, creepId: number, choice: Reply): void {
   const creep = findCreep(state, creepId)!;
-  const encounter = state.encounters.find((e) => e.id === creep.engagement)!;
-  if (encounter.stage === "fight" && encounter.aggressor === creep.id) {
-    encounter.aggressorReply = "flee";
-  } else {
-    encounter.reply = choice;
-  }
+  state.encounters.find((e) => e.id === creep.engagement)!.reply = choice;
 }

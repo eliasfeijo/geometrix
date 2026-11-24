@@ -27,9 +27,12 @@ import { nameAt } from "./names.ts";
  * and the encounter vocabulary (M2 encontro F2). 8: the deposit reached at
  * the same cost goes to the first cell in the team's frame, not the lower id
  * (M2 encontro F3). 9: the raider preset approaches targets carrying at least
- * 10, not 1 (M2 encontro F6, plan C11).
+ * 10, not 1 (M2 encontro F6, plan C11). 10: the battle replaces the roll: an
+ * attack or a refused extortion opens a battle stub, its participants lock,
+ * the junction host's result commands end it; no dialogue flee (M2 junction
+ * F2).
  */
-export const SIM_VERSION = 9;
+export const SIM_VERSION = 10;
 
 export type Stock = Record<Resource, number>;
 
@@ -62,6 +65,11 @@ export type Creep = {
   /** Id of the Encounter the creep is in, or null (plan P2). */
   engagement: number | null;
   /**
+   * Id of the Battle the creep is locked in, or null (junction plan P3):
+   * while in one it does not move, work, regenerate or take orders (O-5).
+   */
+  battle: number | null;
+  /**
    * After paying an extortion (spec D9): immune to approaches of `team` until
    * `untilTick`, entering its own core zone, or approaching someone itself.
    */
@@ -89,30 +97,65 @@ export type Creep = {
 export type SafeConduct = { team: number; untilTick: number };
 export type ExtortBlock = { aggressor: number; untilTick: number };
 
-/** A reply of the player dominating a creep in an encounter (command react). */
-export type Reply = "pay" | "refuse" | "fight" | "flee";
+/**
+ * A reply of the player dominating the victim of an extortion (command
+ * react): pay, or refuse and open the battle (junction spec D1).
+ */
+export type Reply = "pay" | "refuse";
 
 /**
- * An encounter between two creeps (M2 encontro plan section 3, P2): a
- * dialogue, then maybe a fight. Its cell is the victim's when it opened.
+ * An extortion between two creeps (M2 encontro plan section 3, P2; junction
+ * plan P3): the dialogue only. Paying closes it; refusing opens a battle. An
+ * attack has no dialogue: it opens the battle at once. Its cell is the
+ * victim's when it opened.
  */
 export type Encounter = {
   id: number;
   aggressor: number;
   victim: number;
-  intent: "attack" | "extort";
-  stage: "dialogue" | "fight";
-  /** What the aggressor demands (D8), set when an extortion opens. */
-  demand: Stock | null;
+  intent: "extort";
+  /** What the aggressor demands (D8). */
+  demand: Stock;
   /** When the dominated victim's window ends (D6); null for a free one. */
   deadlineTick: number | null;
   /** The victim's player's answer, applied at the encounters stage. */
   reply: Reply | null;
-  /** The aggressor's player asking to flee the fight (the victim's is reply). */
-  aggressorReply: "flee" | null;
-  /** Tick of the next round of the fight; null in the dialogue. */
-  nextRoundTick: number | null;
-  rounds: number;
+} & Cell;
+
+/** A side of a battle as the world knows it: a team (wanderers come in F6). */
+export type BattleSide = { kind: "team"; team: number };
+
+/**
+ * How a participant enters the battle (junction spec D2, D10): with its DNA's
+ * preset, or with the carrier gambits when its reaction rule said flee.
+ */
+export type Stance = "fight" | "flee";
+
+/** A creep in a battle, by creep id: its battle side (index into `sides`). */
+export type BattleParticipant = { id: number; side: number; stance: Stance };
+
+/** The world cells of a battle's bubble (junction spec D5). */
+export type BattleWindow = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
+/**
+ * A battle as the world keeps it (junction plan P3, ADR-0010): the stub. The
+ * fight itself runs in the junction host; the world only knows where, who,
+ * and gets back the results (battleExit, battleEnd). Its cell is the
+ * victim's when it opened.
+ */
+export type Battle = {
+  id: number;
+  window: BattleWindow;
+  /** Battle side index → who; the side of a participant is its index. */
+  sides: BattleSide[];
+  /** The locked creeps, by id. */
+  participants: BattleParticipant[];
+  openedTick: number;
 } & Cell;
 
 /** A pile of resources on a cell that any creep can pick up (spec D11). */
@@ -146,8 +189,10 @@ export type WorldState = {
   deposits: Deposit[];
   /** Segments under construction, by id. */
   roadJobs: RoadJob[];
-  /** Open encounters, by id (plan P2). */
+  /** Open encounters (extortion dialogues), by id (plan P2). */
   encounters: Encounter[];
+  /** Open battles, the world's stubs, by id (junction plan P3). */
+  battles: Battle[];
   /** Spoils on the map, by id; one per cell at most (D11). */
   spoils: Spoil[];
   /** What each team has seen and remembers, by team id (fog plan N1). */
@@ -207,6 +252,7 @@ export function createWorld(seed: number, params: Params): WorldState {
     deposits,
     roadJobs: [],
     encounters: [],
+    battles: [],
     spoils: [],
     memory: createMemory(teams, layout.map),
     nextId,
@@ -237,6 +283,7 @@ export function newCreep(
     name: nameAt(birth),
     hp: maxHp(params, dna),
     engagement: null,
+    battle: null,
     safeConduct: null,
     extortBlocks: [],
     ...team.core,

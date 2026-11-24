@@ -16,7 +16,7 @@ const positive: Leaf = { min: 1 };
 
 const cost = { materia: nonNegative, cristal: nonNegative } as const;
 const dna = { capacity: positive, cellsPerMinute: positive } as const;
-const hpDna = { max: positive, fightWeightPermille: positive } as const;
+const hpDna = { max: positive } as const;
 
 const schema = {
   world: { durationSeconds: positive, tickSeconds: positive },
@@ -109,9 +109,8 @@ const schema = {
   },
   /**
    * Hit points (M2 encontro spec D2, D3; plan P1). The state keeps HP in
-   * thousandths, so the per-mille rates below give integers. `fightWeight`
-   * scales a creep's chance in each round of the throwaway fight (D7).
-   * Regeneration is per mille of the maximum per world minute, faster within
+   * thousandths, so the per-mille rates below give integers; a battle takes
+   * them in whole points (junction spec D9). Regeneration is per mille of the maximum per world minute, faster within
    * `coreZoneRadius` (Manhattan) of the team's own core; the same radius ends
    * a safe conduct (D9).
    */
@@ -120,16 +119,25 @@ const schema = {
     regenPermillePerMinute: { map: nonNegative, coreZone: nonNegative },
     coreZoneRadius: nonNegative,
   },
-  /** The throwaway fight (D7): a round every `roundSeconds`, a hit takes `hitPermille` of the maximum HP. */
-  fight: { roundSeconds: positive, hitPermille: positive },
   /**
-   * Fleeing (D10): who escapes drops between `dropMinPermille` and 1000‰ of
-   * each resource and runs to its core at `speedPermille` for `seconds`.
+   * Fleeing (M2 encontro D10, junction D7): who escapes a battle by the
+   * border runs to its core at `speedPermille` for `seconds`.
    */
   flee: {
-    dropMinPermille: nonNegative,
     speedPermille: positive,
     seconds: positive,
+  },
+  /**
+   * The battle as the world sees it (junction spec D5, D6): its bubble is a
+   * `window` of world cells centered on the battle cell (odd sides), each
+   * drawn as `cellBlock` × `cellBlock` arena cells by the junction host; a
+   * side takes at most `sideCap` participants and a battle at most
+   * `maxSides` sides.
+   */
+  battle: {
+    window: { width: positive, height: positive, cellBlock: positive },
+    sideCap: positive,
+    maxSides: positive,
   },
   /**
    * The encounter (D5, D6): it opens within `radius` (Manhattan); a dominated
@@ -211,7 +219,6 @@ function checkConsistency(p: Params, issues: string[]): void {
     ["creep.productionSeconds", p.creep.productionSeconds],
     ["road.buildSeconds", p.road.buildSeconds],
     ["domination.cooldownSeconds", p.domination.cooldownSeconds],
-    ["fight.roundSeconds", p.fight.roundSeconds],
     ["flee.seconds", p.flee.seconds],
     ["encounter.reactionSeconds", p.encounter.reactionSeconds],
     ["safeConduct.seconds", p.safeConduct.seconds],
@@ -228,12 +235,19 @@ function checkConsistency(p: Params, issues: string[]): void {
       "world.tickSeconds: must divide 60 (HP regenerates per minute)",
     );
   }
-  if (p.flee.dropMinPermille > 1000) {
-    issues.push("flee.dropMinPermille: must be <= 1000");
+  // The window is centered on the battle cell and fits in the map (D5).
+  const { window } = p.battle;
+  if (window.width % 2 === 0) issues.push("battle.window.width: must be odd");
+  if (window.height % 2 === 0) {
+    issues.push("battle.window.height: must be odd");
   }
-  if (p.fight.hitPermille > 1000) {
-    issues.push("fight.hitPermille: must be <= 1000");
+  if (window.width > p.map.width) {
+    issues.push("battle.window.width: must be <= map.width");
   }
+  if (window.height > p.map.height) {
+    issues.push("battle.window.height: must be <= map.height");
+  }
+  if (p.battle.maxSides < 2) issues.push("battle.maxSides: must be >= 2");
   // Point symmetry (plan section 6) needs even sides and a centered river.
   if (p.map.width % 2 !== 0) issues.push("map.width: must be even");
   if (p.map.height % 2 !== 0) issues.push("map.height: must be even");

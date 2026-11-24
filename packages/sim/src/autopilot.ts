@@ -92,7 +92,11 @@ export type Action =
       dna?: Dna[];
       minCargo: number;
     }
-  /** Reactions: decided only in an encounter (plan section 6). */
+  /**
+   * Reactions: decided only in an encounter (plan section 6). Since the
+   * junction (D2), fight and flee choose how the creep enters the battle
+   * (its DNA's preset, or the carrier), and both refuse an extortion.
+   */
   | { type: "pay" }
   | { type: "fight" }
   | { type: "flee" };
@@ -109,11 +113,13 @@ export type Rule = { when: Condition; then: Action };
 
 export function runAutopilot(state: WorldState): void {
   for (const creep of state.creeps) {
-    // In an encounter, only its reactions decide (encounter.ts).
-    // Fleeing is a locked order (plan P4).
+    // In an encounter, only its reactions decide (encounter.ts); in a
+    // battle, nothing in the world (junction O-5). Fleeing is a locked order
+    // (plan P4).
     if (
       creep.dominatedBy !== null ||
       creep.engagement !== null ||
+      creep.battle !== null ||
       creep.order.type === "flee"
     ) {
       continue;
@@ -311,8 +317,7 @@ function holds(
       if (
         encounter === null ||
         encounter.intent !== "extort" ||
-        encounter.victim !== creep.id ||
-        encounter.demand === null
+        encounter.victim !== creep.id
       ) {
         return false;
       }
@@ -350,13 +355,14 @@ function enemiesInSight(
 /**
  * The reaction of the creep's first reaction rule whose condition holds and
  * whose action is possible in `context` (paying only in an extortion), or
- * null: then the defaults apply (spec D13).
+ * null: then the defaults apply (spec D13). `encounter` is the extortion's
+ * dialogue, or null for an attack, which has none (junction D1).
  */
 export function ruleReaction(
   state: WorldState,
   creep: Creep,
-  context: "extorted" | "attacked" | "round",
-  encounter: Encounter,
+  context: "extorted" | "attacked",
+  encounter: Encounter | null,
 ): Reaction | null {
   for (const rule of creep.rules) {
     const { type } = rule.then;

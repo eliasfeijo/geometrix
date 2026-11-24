@@ -57,8 +57,6 @@ export function stockText(stock: Stock): string {
 export const REPLY_TEXTS: Record<Reply, string> = {
   pay: "Pagar",
   refuse: "Recusar e lutar",
-  fight: "Lutar",
-  flee: "Tentar fugir",
 };
 
 export const TEAM_NAMES = ["Azul", "Laranja"];
@@ -80,6 +78,7 @@ export const REJECT_TEXTS: Record<RejectReason | "disconnected", string> = {
   notDominating: "Você não domina esse creep.",
   invalidOrder: "Ordem inválida.",
   engaged: "Esse creep está num encontro.",
+  inBattle: "Esse creep está numa batalha.",
   fleeing: "Esse creep está fugindo.",
   notEngaged: "Esse creep não está num encontro.",
   invalidReaction: "Essa resposta não cabe agora.",
@@ -93,6 +92,11 @@ export const REJECT_TEXTS: Record<RejectReason | "disconnected", string> = {
   unknownCommand: "Comando desconhecido.",
   invalidDna: "DNA inválido.",
   invalidUpgrade: "Upgrade inválido.",
+  // The junction host's results: no client sends them (junction plan P2).
+  notSystem: "Comando reservado ao servidor.",
+  unknownBattle: "Essa batalha não existe.",
+  notInBattle: "Esse creep não está nessa batalha.",
+  invalidResult: "Resultado de batalha inválido.",
   invalidMessage: "Mensagem inválida.",
   worldEnded: "O mundo terminou: só leitura.",
   disconnected: "Sem conexão com o servidor.",

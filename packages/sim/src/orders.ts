@@ -24,10 +24,11 @@ import {
   findRoadJob,
   nextSegment,
 } from "./roads.ts";
+import { battleToJoin } from "./battle.ts";
 import { findCreep } from "./domination.ts";
 import { creepRef, emit, type EventLog } from "./events.ts";
 import { findSpoil, takeSpoil } from "./spoils.ts";
-import { recordDelivery, type Activity } from "./stats.ts";
+import { recordDelivery } from "./stats.ts";
 import type { Creep, Deposit, WorldState } from "./world.ts";
 
 export type Order =
@@ -62,9 +63,14 @@ export function resolveOrders(state: WorldState, log: EventLog): void {
   const built = new Set<number>();
   for (const creep of state.creeps) {
     creep.activity = "idle";
-    // In an encounter a creep neither moves nor works (spec L-3).
+    // In an encounter or a battle a creep neither moves nor works (spec
+    // L-3, junction O-5).
+    if (creep.battle !== null) {
+      creep.activity = "fighting";
+      continue;
+    }
     if (creep.engagement !== null) {
-      creep.activity = engagedActivity(state, creep.engagement);
+      creep.activity = "talking";
       continue;
     }
     const { order } = creep;
@@ -107,15 +113,12 @@ export function resolveOrders(state: WorldState, log: EventLog): void {
   }
 }
 
-function engagedActivity(state: WorldState, id: number): Activity {
-  const encounter = state.encounters.find((e) => e.id === id);
-  return encounter?.stage === "fight" ? "fighting" : "talking";
-}
-
 /**
  * Walks toward the target's cell, the path recomputed when the target moves
  * (the path cache keys on the target cell). Ends when the target is gone
- * from the team's sight at the end of the last tick (spec E-2), or dead.
+ * from the team's sight at the end of the last tick (spec E-2), or dead. An
+ * attacker already inside the bubble of its target's battle waits there to
+ * join (junction J-3).
  */
 function approach(state: WorldState, creep: Creep, targetId: number): void {
   const target = findCreep(state, targetId);
@@ -125,6 +128,11 @@ function approach(state: WorldState, creep: Creep, targetId: number): void {
     visible[target.y * state.map.width + target.x] !== 1
   ) {
     halt(creep);
+    return;
+  }
+  if (battleToJoin(state, creep) !== undefined) {
+    creep.movePoints = 0;
+    creep.path = null;
     return;
   }
   if (walk(state, creep, target) === "unreachable") halt(creep);

@@ -1,13 +1,12 @@
-// The reaction panel (M2 encontro spec C-5, plan section 9): opens while the
-// creep this player dominates is in an encounter. As the victim of a
-// dialogue: the intent, the demand of an extortion, the answers and the world
-// seconds left in the window (D6). In a fight: the rounds and "flee", for
-// either side. As the aggressor of a dialogue: who it waits for.
+// The reaction panel (M2 encontro spec C-5, plan section 9; junction D1):
+// opens while the creep this player dominates is in an extortion's dialogue.
+// As the victim: the demand, pay or refuse, and the world seconds left in the
+// window (D6). As the aggressor: who it waits for. An attack has no dialogue:
+// it opens the battle at once.
 
 import { useGame } from "../context.ts";
 import { reactionOf } from "../encounter-actions.ts";
 import { REPLY_TEXTS, stockText } from "../format.ts";
-import { hpPoints } from "../map/combat-marks.ts";
 import { DnaIcon } from "./dna-icon.tsx";
 
 export function ReactionPanel() {
@@ -23,17 +22,13 @@ export function ReactionPanel() {
   const { encounter, side, other, choices, sent, seconds } = reaction;
   const canAct = store.canAct.value;
   const otherName = other?.name ?? "o outro creep";
-  const fight = encounter.stage === "fight";
-  const headline = fight
-    ? `${mine.name} luta contra ${otherName}`
-    : side === "victim"
-      ? encounter.intent === "attack"
-        ? `${otherName} vai atacar ${mine.name}`
-        : `${otherName} exige carga de ${mine.name}`
-      : `${mine.name} abordou ${otherName}`;
+  const victim = side === "victim";
+  const headline = victim
+    ? `${otherName} exige carga de ${mine.name}`
+    : `${mine.name} abordou ${otherName}`;
   return (
     <div
-      class={`reaction-panel panel ${fight ? "is-fight" : "is-dialogue"}`}
+      class="reaction-panel panel is-dialogue"
       role="alertdialog"
       aria-label="Encontro"
     >
@@ -49,15 +44,10 @@ export function ReactionPanel() {
         )}
       </div>
       <p class="reaction-detail">
-        {fight
-          ? `Rodada ${encounter.rounds}. HP: ${mine.name} ${hpPoints(mine.hp)}` +
-            (other === null ? "" : ` · ${other.name} ${hpPoints(other.hp)}`)
-          : side === "victim"
-            ? encounter.intent === "extort" && encounter.demand !== null
-              ? `Exigência: ${stockText(encounter.demand)}. Pagar dá salvo-conduto contra o time dele.`
-              : "Lute ou tente fugir. Fugindo, ele larga parte da carga se escapar."
-            : `Esperando a resposta de ${otherName}.`}
-        {!fight && side === "victim" && seconds !== null && (
+        {victim
+          ? `Exigência: ${stockText(encounter.demand)}. Pagar dá salvo-conduto contra o time dele; recusar abre a batalha.`
+          : `Esperando a resposta de ${otherName}.`}
+        {victim && seconds !== null && (
           <span class="muted"> Sem resposta, valem as regras do piloto.</span>
         )}
       </p>
@@ -66,13 +56,7 @@ export function ReactionPanel() {
           {choices.map((choice) => (
             <button
               key={choice}
-              class={
-                sent === choice
-                  ? "active"
-                  : choice === "flee"
-                    ? undefined
-                    : "primary"
-              }
+              class={sent === choice ? "active" : "primary"}
               disabled={!canAct || sent !== null}
               onClick={() =>
                 void send({ type: "react", creepId: mine.id, choice })

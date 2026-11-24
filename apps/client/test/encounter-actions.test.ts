@@ -95,53 +95,41 @@ describe("the right-click menu over an enemy (spec C-6)", () => {
 });
 
 describe("the reaction panel (spec C-5)", () => {
-  it("offers pay, refuse and flee to the dominated victim of an extortion", () => {
+  it("offers pay and refuse to the dominated victim of an extortion", () => {
     const { world, prey } = encounterWorld("extort", true);
     const state = viewOf(world, 1);
     const mine = state.creeps.find((c) => c.id === prey.id)!;
     const reaction = reactionOf(state, world.params, mine as never)!;
     expect(reaction.side).toBe("victim");
-    expect(reaction.choices).toEqual(["pay", "refuse", "flee"]);
+    expect(reaction.choices).toEqual(["pay", "refuse"]);
     expect(reaction.encounter.demand).not.toBeNull();
     expect(reaction.seconds).toBeGreaterThan(0);
     // Every choice offered is one the sim accepts.
     for (const choice of reaction.choices) {
       expect(reactRefusal(world, 9, prey.id, choice)).toBeNull();
     }
+    step(world, [
+      {
+        playerId: 9,
+        command: { type: "react", creepId: prey.id, choice: "refuse" },
+      },
+    ]);
+    // Refused, the battle opens: no dialogue left to answer.
+    const after = viewOf(world, 1);
+    const locked = after.creeps.find((c) => c.id === prey.id)!;
+    expect(reactionOf(after, world.params, locked as never)).toBeNull();
   });
 
-  it("offers fight or flee against an attack, then only flee in the fight", () => {
+  it("opens nothing to answer against an attack: the battle starts", () => {
     const { world, prey } = encounterWorld("attack", true);
-    const mineOf = () =>
-      viewOf(world, 1).creeps.find((c) => c.id === prey.id)! as never;
-    expect(
-      reactionOf(viewOf(world, 1), world.params, mineOf())!.choices,
-    ).toEqual(["fight", "flee"]);
-    step(world, [
-      {
-        playerId: 9,
-        command: { type: "react", creepId: prey.id, choice: "fight" },
-      },
-    ]);
-    const fight = reactionOf(viewOf(world, 1), world.params, mineOf())!;
-    expect(fight.encounter.stage).toBe("fight");
-    expect(fight.choices).toEqual(["flee"]);
-    expect(fight.seconds).toBeNull();
-    expect(reactRefusal(world, 9, prey.id, "flee")).toBeNull();
-    // The flee asked for waits for the next round.
-    step(world, [
-      {
-        playerId: 9,
-        command: { type: "react", creepId: prey.id, choice: "flee" },
-      },
-    ]);
-    expect(reactionOf(viewOf(world, 1), world.params, mineOf())!.sent).toBe(
-      "flee",
-    );
+    const state = viewOf(world, 1);
+    const mine = state.creeps.find((c) => c.id === prey.id)!;
+    expect(reactionOf(state, world.params, mine as never)).toBeNull();
+    expect(world.battles).toHaveLength(1);
   });
 
   it("has nothing to answer for the aggressor of a dialogue", () => {
-    const { world, hunter } = encounterWorld("attack", true);
+    const { world, hunter } = encounterWorld("extort", true);
     const state = viewOf(world, 0);
     const mine = state.creeps.find((c) => c.id === hunter.id)! as never;
     const reaction = reactionOf(state, world.params, mine)!;
@@ -172,21 +160,19 @@ describe("the inspector's encounter and safe conduct (spec C-7)", () => {
     );
   });
 
-  it("counts the rounds of a fight for the own team", () => {
+  it("says a creep in a battle is in one", () => {
     const { world, hunter, prey } = encounterWorld("attack", true);
-    step(world, [
-      {
-        playerId: 9,
-        command: { type: "react", creepId: prey.id, choice: "fight" },
-      },
-    ]);
-    const own = viewOf(world, 0);
-    expect(
-      engagementText(
-        own,
-        own.creeps.find((c) => c.id === hunter.id)!,
-      ),
-    ).toBe(`lutando com ${prey.name}, rodada 0`);
+    for (const team of [0, 1]) {
+      const seen = viewOf(world, team);
+      for (const id of [hunter.id, prey.id]) {
+        expect(
+          engagementText(
+            seen,
+            seen.creeps.find((c) => c.id === id)!,
+          ),
+        ).toBe("em batalha");
+      }
+    }
   });
 
   it("gives the safe conduct after paying, until it runs out", () => {

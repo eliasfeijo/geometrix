@@ -1,18 +1,22 @@
-// The tick pipeline (plan section 5; M2 encontro plan section 5). Its fixed
-// order:
-//   1. apply the tick's external commands, in seq order       (F4)
+// The tick pipeline (plan section 5; M2 encontro plan section 5; junction
+// plan section 3). Its fixed order:
+//   1. apply the tick's external commands, in seq order, the junction
+//      host's battle results included                  (F4; junction P2)
 //   2. per creep, by id: dominated keeps its order, free ones
-//      evaluate their rules; creeps in an encounter skip      (F4)
+//      evaluate their rules; creeps in an encounter or a battle skip
 //   3. resolve orders: movement, gathering, delivery, roads,
-//      approach                                    (F2 / F3; M2 encontro)
-//   4. encounters: open, dialogue, rounds, close     (M2 encontro §4)
+//      approach; creeps in a battle skip           (F2 / F3; M2 encontro)
+//   4. encounters: open (an attack opens a battle), the extortion
+//      dialogue (a refusal opens one), joins       (M2 encontro §4; junction)
 //   5. core production queues, spawning (born event)           (F3)
-//   6. materia and HP regeneration                   (F3; M2 encontro P1)
+//   6. materia and HP regeneration; creeps in a battle do not heal
+//                                                    (F3; M2 encontro P1)
 //   7. vision and team memory; the events' audience  (M1.5 fog, N10;
 //      ADR-0007 rule 3)
 //   8. stats accumulators; tick++                              (F5)
 
 import { runAutopilot } from "./autopilot.ts";
+import { SYSTEM_PLAYER_ID } from "./battle.ts";
 import { applyCommand, type CommandInput } from "./commands.ts";
 import { findPlayer } from "./domination.ts";
 import { runEncounters } from "./encounter.ts";
@@ -40,7 +44,9 @@ export function step(
 ): SimEvent[] {
   const log = createEventLog(state.tick);
   for (const { playerId, command } of commands) {
-    if (applyCommand(state, command, playerId) !== null) continue;
+    if (applyCommand(state, command, playerId, log) !== null) continue;
+    // The junction host's results belong to no team (plan P2).
+    if (playerId === SYSTEM_PLAYER_ID) continue;
     const preset = command.type === "applyPreset" ? command.preset : null;
     recordCommand(
       state,

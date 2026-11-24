@@ -74,7 +74,6 @@ describe("parseParams", () => {
   test("encounter durations must be whole ticks, and a tick divide a minute", () => {
     const issues = issuesOf(withLeaf("world.tickSeconds", 7));
     for (const path of [
-      "fight.roundSeconds",
       "flee.seconds",
       "encounter.reactionSeconds",
       "safeConduct.seconds",
@@ -90,12 +89,16 @@ describe("parseParams", () => {
   });
 
   test.each([
-    ["flee.dropMinPermille", 1001, "flee.dropMinPermille: must be <= 1000"],
-    ["fight.hitPermille", 1500, "fight.hitPermille: must be <= 1000"],
-    ["fight.hitPermille", 0, "fight.hitPermille: must be >= 1"],
-  ])("per mille shares: %s = %s", (path, value, issue) => {
-    expect(issuesOf(withLeaf(path, value))).toEqual([issue]);
-  });
+    ["battle.window.width", 8, "battle.window.width: must be odd"],
+    ["battle.window.height", 4, "battle.window.height: must be odd"],
+    ["battle.window.width", 65, "battle.window.width: must be <= map.width"],
+    ["battle.maxSides", 1, "battle.maxSides: must be >= 2"],
+  ])(
+    "the battle window and sides (junction D5, D6): %s = %s",
+    (path, value, issue) => {
+      expect(issuesOf(withLeaf(path, value))).toEqual([issue]);
+    },
+  );
 
   test.each([
     ["map.width", 63, "map.width: must be even"],

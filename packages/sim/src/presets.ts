@@ -74,9 +74,10 @@ export function roadBuilderRules(target: Cell): Rule[] {
 
 /**
  * The raider (M2 encontro spec D14, plan section 6): extorts a loaded enemy
- * in sight, picks up spoils, delivers when full, explores; fights when
- * approached and flees below 400‰ of its HP. Targets carry at least 10, the
- * circle's capacity (plan C11). Both numbers belong to the rule, not params.
+ * in sight, picks up spoils, delivers when full, explores; refuses when
+ * extorted and enters a battle with its DNA's preset, or as a carrier below
+ * 400‰ of its HP (junction D2). Targets carry at least 10, the circle's
+ * capacity (plan C11). Both numbers belong to the rule, not params.
  */
 export function raiderRules(): Rule[] {
   return [

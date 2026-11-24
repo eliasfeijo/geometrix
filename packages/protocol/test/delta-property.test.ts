@@ -5,8 +5,10 @@
 // up as a difference. Views are compared as plain JSON every tick (stricter
 // than canonical JSON, and fast enough for CI) and as viewJson, the hashed
 // form, every world minute. With the encounter (M2 encontro spec N-3) the
-// world also has deaths, encounters and spoils, and the test asserts floors
-// of each, so it does exercise their removal.
+// world also has battle stubs, and the test asserts a floor of them, so it
+// does exercise the locked creeps. Deaths and
+// spoils need the junction host to end the battles: their floors come back
+// when this test runs through it (junction F4).
 
 import {
   botCommands,
@@ -46,9 +48,7 @@ test.each([1, 42, 649])(
     let explored = 0;
     let sight = 0;
     let foreign = 0;
-    let deaths = 0;
-    let encounters = 0;
-    let spoils = 0;
+    let battles = 0;
     const enemyCoreSeen = teams.map(() => false);
     for (;;) {
       for (const team of teams) {
@@ -59,17 +59,9 @@ test.each([1, 42, 649])(
         upserts += delta.creeps?.upsert?.length ?? 0;
         removes += delta.creeps?.remove?.length ?? 0;
         roads += delta.roads?.length ?? 0;
-        // The team's own creeps never leave its view: a remove is a death.
-        const own = new Set(
-          client[team]!.creeps.filter((c) => c.team === team).map((c) => c.id),
-        );
-        deaths += (delta.creeps?.remove ?? []).filter((id) =>
-          own.has(id),
-        ).length;
-        // Encounters closed and spoils dropped, as each team saw them.
-        encounters += delta.encounters?.remove?.length ?? 0;
-        spoils += (delta.spoils?.upsert ?? []).filter(
-          (spoil) => spoil.x !== undefined,
+        // Battles opened, as each team saw them.
+        battles += (delta.battles?.upsert ?? []).filter(
+          (battle) => battle.x !== undefined,
         ).length;
         explored += delta.known?.length ?? 0;
         sight += delta.visible?.remove?.length ?? 0;
@@ -105,10 +97,9 @@ test.each([1, 42, 649])(
     // cells were explored and left sight, enemy creeps came into sight (with
     // the D7 fields: a new entity is sent whole, so it has its team) and left
     // it, and each team found the enemy core (seen after ~4.5-5.3 h in these
-    // seeds). Since M2 (encontro spec N-3) creeps also die, and encounters
-    // and spoils come and go: 9, 5 and 7 deaths, 26-54 encounters closed and
-    // 20-31 spoils dropped (as the two teams saw them) in these seeds, since
-    // raiders only approach targets carrying 10 or more (plan C11).
+    // seeds). Since the junction (F2) battles open and lock their creeps: 8,
+    // 4 and more as the two teams saw them in these seeds. A bot's extortion
+    // is answered in the tick it opens, so no delta carries it.
     expect(state.creeps.length).toBeGreaterThan(12);
     expect(upserts).toBeGreaterThan(ticks);
     expect(explored).toBeGreaterThan(300);
@@ -117,9 +108,7 @@ test.each([1, 42, 649])(
     expect(removes).toBeGreaterThan(0);
     expect(foreign).toBeGreaterThan(20);
     expect(enemyCoreSeen).toEqual([true, true]);
-    expect(deaths).toBeGreaterThanOrEqual(2);
-    expect(encounters).toBeGreaterThan(20);
-    expect(spoils).toBeGreaterThan(10);
+    expect(battles).toBeGreaterThanOrEqual(2);
   },
   60_000,
 );

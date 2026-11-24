@@ -8,6 +8,7 @@
 import {
   canonicalJson,
   type CreepView,
+  type BattleStubView,
   type Deposit,
   type EncounterView,
   type ForeignCreepView,
@@ -39,6 +40,7 @@ export type Delta = {
   roadJobs?: EntityDelta<RoadJob>;
   players?: EntityDelta<Player | ForeignPlayer>;
   encounters?: EntityDelta<EncounterView | ForeignEncounterView>;
+  battles?: EntityDelta<BattleStubView>;
   spoils?: EntityDelta<Spoil>;
   /** Cells that got a road, increasing. Roads never go away in M1. */
   roads?: number[];
@@ -66,6 +68,7 @@ export type Sent = {
   roadJobs: Entity[];
   players: Entity[];
   encounters: Entity[];
+  battles: Entity[];
   spoils: Entity[];
   roads: Set<number>;
   /**
@@ -86,6 +89,7 @@ export function emptySent(): Sent {
     roadJobs: [],
     players: [],
     encounters: [],
+    battles: [],
     spoils: [],
     roads: new Set(),
     known: [],
@@ -109,6 +113,7 @@ export function emptyView(team: number, cells: number): TeamView {
     roadJobs: [],
     players: [],
     encounters: [],
+    battles: [],
     spoils: [],
     known: new Array<number>(cells).fill(-1),
     visible: [],
@@ -139,6 +144,7 @@ const KINDS = {
   roadJobs: {},
   players: {},
   encounters: { demand: "value" },
+  battles: { window: "value", sides: "value", participants: "value" },
   spoils: { cargo: "value" },
 } satisfies Record<
   keyof Omit<Sent, "roads" | "tick" | "team" | "known" | "visible">,
@@ -315,6 +321,7 @@ export function sentView(sent: Sent): TeamView {
     roadJobs: sent.roadJobs,
     players: sent.players,
     encounters: sent.encounters,
+    battles: sent.battles,
     spoils: sent.spoils,
     known: sent.known,
     visible: sent.visible,

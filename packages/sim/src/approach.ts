@@ -3,7 +3,7 @@
 // action and the client, which shows the demand before confirming (C-6).
 
 import { capacity, cargoTotal, teamOf } from "./economy.ts";
-import type { Creep, Encounter, Stock, WorldState } from "./world.ts";
+import type { Creep, Stock, WorldState } from "./world.ts";
 
 /**
  * What an extortion demands (spec D8): the victim's cargo up to the
@@ -44,14 +44,16 @@ export const ticks = (state: WorldState, seconds: number) =>
  * Whether `aggressor` can open an encounter with `victim` now: "open"; "wait"
  * while the victim is busy, protected against the aggressor's team, or (for
  * an extortion) fleeing; "end" for an extortion with nothing to demand or a
- * blocked pair (spec E-5, D9): the approach is over.
+ * blocked pair (spec E-5, D9): the approach is over. A victim in a battle can
+ * only be attacked, which joins the battle (junction J-1, J-2).
  */
 export function opening(
   state: WorldState,
   aggressor: Creep,
   victim: Creep,
-  intent: Encounter["intent"],
+  intent: "attack" | "extort",
 ): "open" | "wait" | "end" {
+  if (victim.battle !== null) return intent === "attack" ? "open" : "end";
   if (victim.engagement !== null) return "wait";
   if (victim.safeConduct?.team === aggressor.team) return "wait";
   if (intent === "attack") return "open";

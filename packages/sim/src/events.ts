@@ -5,6 +5,7 @@
 // the teams that see its cell in the vision at the end of the tick. The
 // replay reads the whole list; everyone else reads eventsFor(team).
 
+import type { BattleCause, BattleEndReason } from "./battle.ts";
 import type { Cell } from "./map.ts";
 import type { Dna } from "./params.ts";
 import type { Creep, Stock, WorldState } from "./world.ts";
@@ -25,10 +26,11 @@ export type EventBody = (
       mutual: boolean;
     }
   | {
+      /** The victim of an extortion answers (junction D1). */
       type: "reaction";
       encounter: number;
       creep: CreepRef;
-      choice: "pay" | "refuse" | "fight" | "flee";
+      choice: "pay" | "refuse";
       by: "rule" | "player" | "default";
     }
   | {
@@ -39,28 +41,44 @@ export type EventBody = (
       amount: Stock;
     }
   | {
-      type: "fleeAttempt";
+      /**
+       * A battle opened on its cell (junction D15, O-1, O-2), from the
+       * declaration `encounter`: each side's team and creeps.
+       */
+      type: "battleOpened";
+      battle: number;
       encounter: number;
+      cause: BattleCause;
+      sides: { team: number; creeps: CreepRef[] }[];
+    }
+  | { type: "battleJoined"; battle: number; creep: CreepRef; side: number }
+  | {
+      /**
+       * A participant back in the world alive before the end, by the border
+       * (with the flee bonus), or at the end by inactivity (X-2, X-4); on the
+       * cell it comes back on.
+       */
+      type: "battleLeft";
+      battle: number;
       creep: CreepRef;
-      escaped: boolean;
-      dropped: Stock | null;
-      spoil: number | null;
+      reason: "edge" | "idle";
+      hp: number;
+      cargo: Stock;
     }
   | {
-      type: "fightEnded";
-      encounter: number;
-      winner: CreepRef;
-      loser: CreepRef;
-      rounds: number;
+      /** The end (X-3, X-4): who won, what each winner looted, the spoils. */
+      type: "battleEnded";
+      battle: number;
+      reason: BattleEndReason;
+      winner: { side: number; team: number } | null;
+      /** The team of each battle side, by side index. */
+      sideTeams: number[];
+      survivors: CreepRef[];
+      loot: { creep: CreepRef; taken: Stock }[];
+      spoils: number[];
     }
-  | { type: "died"; creep: CreepRef; by: CreepRef | null }
-  | {
-      type: "looted";
-      by: CreepRef;
-      from: CreepRef;
-      taken: Stock;
-      spoil: number | null;
-    }
+  /** A death; `battle` is the battle it happened in (junction X-1). */
+  | { type: "died"; creep: CreepRef; by: CreepRef | null; battle: number }
   | { type: "pickedUp"; creep: CreepRef; spoil: number; taken: Stock }
 ) &
   Cell;
@@ -96,44 +114,80 @@ export function creepRef(creep: Creep): CreepRef {
   return { id: creep.id, team: creep.team, dna: creep.dna, name: creep.name };
 }
 
-/** The creeps an event is about: their teams are always in its audience. */
+/**
+ * The teams an event is about: always in its audience. A battle's events
+ * reach every team with a side in it (junction K-2), `battleTeams` by battle
+ * id.
+ */
+function involvedTeams(
+  event: EventBody,
+  battleTeams: ReadonlyMap<number, readonly number[]>,
+): number[] {
+  const teams = participants(event).map((creep) => creep.team);
+  const battle = battleOf(event);
+  if (battle === null) return teams;
+  return [...teams, ...(battleTeams.get(battle) ?? [])];
+}
+
+/** The battle an event belongs to, if any. */
+function battleOf(event: EventBody): number | null {
+  switch (event.type) {
+    case "battleOpened":
+    case "battleJoined":
+    case "battleLeft":
+    case "battleEnded":
+    case "died":
+      return event.battle;
+    default:
+      return null;
+  }
+}
+
+/** The creeps an event is about. */
 function participants(event: EventBody): CreepRef[] {
   switch (event.type) {
     case "born":
     case "reaction":
-    case "fleeAttempt":
     case "pickedUp":
+    case "battleJoined":
+    case "battleLeft":
       return [event.creep];
     case "encounter":
       return [event.aggressor, event.victim];
     case "paid":
       return [event.from, event.to];
-    case "fightEnded":
-      return [event.winner, event.loser];
+    case "battleOpened":
+      return event.sides.flatMap((s) => s.creeps);
+    case "battleEnded":
+      return event.survivors;
     case "died":
       return event.by === null ? [event.creep] : [event.creep, event.by];
-    case "looted":
-      return [event.by, event.from];
   }
 }
 
 /**
  * Sets each event's audience (ADR-0007 rule 3), after the vision of the tick
- * is updated: the participants' teams and the teams with the event's cell in
- * sight, in team id order.
+ * is updated: the participants' teams (for a battle's events, the teams of
+ * its sides) and the teams with the event's cell in sight, in team id order.
  */
 export function setAudience(state: WorldState, events: SimEvent[]): void {
   const { width } = state.map;
+  // The sides of the battles open, and of those that ended in the tick.
+  const battleTeams = new Map<number, readonly number[]>(
+    state.battles.map((b) => [b.id, b.sides.map((s) => s.team)]),
+  );
+  for (const event of events) {
+    if (event.type === "battleEnded") {
+      battleTeams.set(event.battle, event.sideTeams);
+    }
+  }
   for (const event of events) {
     const cell = event.y * width + event.x;
-    const involved = participants(event);
+    const involved = involvedTeams(event, battleTeams);
     const teams: number[] = [];
     for (const memory of state.memory) {
       const team = memory.team;
-      if (
-        memory.visible[cell] === 1 ||
-        involved.some((creep) => creep.team === team)
-      ) {
+      if (memory.visible[cell] === 1 || involved.includes(team)) {
         teams.push(team);
       }
     }

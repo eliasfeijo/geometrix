@@ -1,6 +1,6 @@
 // What the map shows of the encounters (M2 encontro spec C-1..C-3, plan
 // section 9), as data the layers draw: the HP bar of a wounded creep, the
-// color of a spoil, and the lines between the two sides of an encounter.
+// color of a spoil, and the lines between the two sides of an extortion.
 
 import {
   isOwnCreep,
@@ -42,18 +42,17 @@ export type Link =
   /** One of the team's creeps chasing an enemy (approach order). */
   | { kind: "chase"; from: number; to: number; intent: "attack" | "extort" }
   /**
-   * An encounter in dialogue or in a fight. `seconds` is what is left of the
-   * dominated victim's window; `rounds`, the fight's (both only for the
-   * team's own encounters).
+   * An extortion's dialogue. `seconds` is what is left of the dominated
+   * victim's window (only for the team's own encounters). A battle has no
+   * link: its creeps are in the arena (junction O-5).
    */
   | {
-      kind: "dialogue" | "fight";
+      kind: "dialogue";
       encounter: number;
       from: number;
       to: number;
-      intent: "attack" | "extort";
+      intent: "extort";
       seconds: number | null;
-      rounds: number | null;
     };
 
 /**
@@ -78,16 +77,14 @@ export function linksOf(state: TeamView, params: Params): Link[] {
     if (!ids.has(encounter.aggressor) || !ids.has(encounter.victim)) continue;
     const own = isOwnEncounter(encounter);
     links.push({
-      kind: encounter.stage,
+      kind: "dialogue",
       encounter: encounter.id,
       from: encounter.aggressor,
       to: encounter.victim,
       intent: encounter.intent,
-      seconds:
-        own && encounter.stage === "dialogue"
-          ? windowSeconds(encounter.deadlineTick, state.tick, params)
-          : null,
-      rounds: own && encounter.stage === "fight" ? encounter.rounds : null,
+      seconds: own
+        ? windowSeconds(encounter.deadlineTick, state.tick, params)
+        : null,
     });
   }
   return links;

@@ -9,17 +9,16 @@ import {
   type Stock,
 } from "@geometrix/sim";
 import {
+  BATTLE_RESULTS,
   DECIDERS,
-  FLEE_GROUNDS,
   OUTCOMES,
   REACTIONS,
+  type BattleResult,
   type Decider,
   type EncounterTally,
-  type FleeGround,
   type Outcome,
   type Reaction,
   type TeamEncounters,
-  type Tries,
 } from "./encounters.ts";
 import type { RunData } from "./sim.ts";
 
@@ -37,28 +36,24 @@ const ACTIVITY_LABELS: Record<Activity, string> = {
 const DNA_ORDER = ["square", "triangle", "circle"] as const;
 const OUTCOME_LABELS: Record<Outcome, string> = {
   paid: "pagou",
-  escapedDialogue: "escapou no diálogo",
-  escapedFight: "escapou na luta",
-  victimDied: "vítima morreu",
-  aggressorDied: "agressor morreu",
+  battle: "abriu batalha",
   open: "em aberto no fim",
 };
 const REACTION_LABELS: Record<Reaction, string> = {
   pay: "pagou",
   refuse: "recusou",
-  fight: "lutou",
-  flee: "tentou fugir",
+};
+const BATTLE_LABELS: Record<BattleResult, string> = {
+  won: "venceu",
+  lost: "perdeu",
+  idle: "acabou por inatividade",
+  empty: "acabou sem ninguém",
+  open: "em aberto no fim",
 };
 const DECIDER_LABELS: Record<Decider, string> = {
   rule: "regra",
   player: "jogador",
   default: "padrão",
-};
-const GROUND_LABELS: Record<FleeGround, string> = {
-  road: "estrada",
-  jungle: "selva",
-  crossing: "vau",
-  river: "rio",
 };
 
 /** The team's creeps' mean HP share in a sample, or "—" with no creep. */
@@ -437,16 +432,13 @@ export function renderReport(run: RunData): string {
 
 /** "a / b" of a stock. */
 const stockPair = (s: Stock) => `${number(s.materia)} / ${number(s.cristal)}`;
-const tries = (t: Tries) =>
-  t.tries === 0
-    ? "0"
-    : `${number(t.escaped)} de ${number(t.tries)} (${percent(t.escaped, t.tries)})`;
 const encountersOf = (r: Record<"attack" | "extort", number>) =>
   r.attack + r.extort;
 
 /**
- * Encounters (M2 encontro spec §7): how often, how they ended, who fled and
- * where, deaths, and what changed hands. Facts, as the rest of the report.
+ * Encounters and battles (M2 encontro spec §7, junction spec §7): how often,
+ * how they ended, escapes, deaths, and what changed hands. Facts, as the rest
+ * of the report.
  */
 function encounterSection(
   tally: EncounterTally,
@@ -463,17 +455,6 @@ function encounterSection(
     REACTIONS.reduce((sum, r) => sum + t.reactions[r], 0);
   const deaths = (t: TeamEncounters) =>
     DNA_ORDER.reduce((sum, dna) => sum + t.deaths[dna], 0);
-  const net = (t: TeamEncounters) => {
-    const gained = (k: keyof Stock) =>
-      t.extortionReceived[k] +
-      t.lootTaken[k] +
-      t.pickedUp[k] -
-      t.extortionPaid[k] -
-      t.lootLost[k] -
-      t.droppedFleeing[k] -
-      t.droppedDying[k];
-    return `${number(gained("materia"))} / ${number(gained("cristal"))}`;
-  };
   const { spoils } = tally;
   return [
     "## Encontros",
@@ -530,14 +511,15 @@ function encounterSection(
           `Desfecho como agressor: ${OUTCOME_LABELS[o]}`,
           ...perTeam((t) => String(t.outcomesAsAggressor[o])),
         ]),
-        ...DNA_ORDER.map((dna) => [
-          `Fugas que escaparam: ${{ square: "■", triangle: "▲", circle: "●" }[dna]}`,
-          ...perTeam((t) => tries(t.fleeByDna[dna])),
+        ...BATTLE_RESULTS.map((r) => [
+          `Batalha: ${BATTLE_LABELS[r]}`,
+          ...perTeam((t) => String(t.battles[r])),
         ]),
-        ...FLEE_GROUNDS.map((g) => [
-          `Fugas que escaparam: ${GROUND_LABELS[g]}`,
-          ...perTeam((t) => tries(t.fleeByGround[g])),
-        ]),
+        ["Entrou em batalha já aberta", ...perTeam((t) => String(t.joins))],
+        [
+          "Escapou pela borda (■ / ▲ / ●)",
+          ...perTeam((t) => DNA_ORDER.map((dna) => t.escapes[dna]).join(" / ")),
+        ],
         [
           "Mortes (■ / ▲ / ●)",
           ...perTeam(
@@ -553,25 +535,12 @@ function encounterSection(
               `${stockPair(t.extortionPaid)} · ${stockPair(t.extortionReceived)}`,
           ),
         ],
-        [
-          "Saque perdido / tomado",
-          ...perTeam(
-            (t) => `${stockPair(t.lootLost)} · ${stockPair(t.lootTaken)}`,
-          ),
-        ],
-        [
-          "Largado em despojo, fugindo / morrendo",
-          ...perTeam(
-            (t) =>
-              `${stockPair(t.droppedFleeing)} · ${stockPair(t.droppedDying)}`,
-          ),
-        ],
+        ["Saque tomado", ...perTeam((t) => stockPair(t.lootTaken))],
         ["Catado de despojos", ...perTeam((t) => stockPair(t.pickedUp))],
-        ["Saldo dos encontros", ...perTeam(net)],
       ],
     ),
     "",
-    `Despojos: ${number(spoils.created)} pilhas criadas, ${number(spoils.pickups)} catadas; no fim, ${number(spoils.left)} no mapa com ${stockPair(spoils.leftCargo)}.`,
+    `Batalhas abertas: ${number(tally.battlesOpened)}. Despojos: ${number(spoils.created)} pilhas criadas com ${stockPair(spoils.dropped)}, ${number(spoils.pickups)} catadas; no fim, ${number(spoils.left)} no mapa com ${stockPair(spoils.leftCargo)}.`,
     "",
   ];
 }

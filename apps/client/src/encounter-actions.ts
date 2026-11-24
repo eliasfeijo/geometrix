@@ -54,18 +54,17 @@ export type Reaction = {
   other: Creep | null;
   /** The answers the sim accepts now (reactRefusal), in button order. */
   choices: Reply[];
-  /** The answer already sent this round, if any. */
+  /** The answer already sent, if any. */
   sent: Reply | null;
   /** World seconds left in the window of a dominated victim; null otherwise. */
   seconds: number | null;
 };
 
-/** The choices of each moment of an encounter, in the order of the buttons. */
-const CHOICES = {
-  attack: ["fight", "flee"],
-  extort: ["pay", "refuse", "flee"],
-  fight: ["flee"],
-} as const satisfies Record<string, readonly Reply[]>;
+/**
+ * The victim's answers to an extortion, in the order of the buttons; an
+ * attack has no dialogue, it opens the battle at once (junction O-1, D1).
+ */
+const CHOICES = ["pay", "refuse"] as const satisfies readonly Reply[];
 
 export function reactionOf(
   state: TeamView,
@@ -78,37 +77,26 @@ export function reactionOf(
   const side = encounter.aggressor === mine.id ? "aggressor" : "victim";
   const otherId = side === "aggressor" ? encounter.victim : encounter.aggressor;
   const other = state.creeps.find((c) => c.id === otherId) ?? null;
-  const fight = encounter.stage === "fight";
-  const choices: Reply[] = fight
-    ? [...CHOICES.fight]
-    : side === "victim"
-      ? [...CHOICES[encounter.intent]]
-      : [];
-  const sent =
-    side === "aggressor"
-      ? fight
-        ? encounter.aggressorReply
-        : null
-      : encounter.reply;
+  const victim = side === "victim";
   return {
     encounter,
     side,
     other,
-    choices,
-    sent,
-    seconds:
-      !fight && side === "victim"
-        ? windowSeconds(encounter.deadlineTick, state.tick, params)
-        : null,
+    choices: victim ? [...CHOICES] : [],
+    sent: victim ? encounter.reply : null,
+    seconds: victim
+      ? windowSeconds(encounter.deadlineTick, state.tick, params)
+      : null,
   };
 }
 
 /**
- * The encounter a creep is in, as the inspector says it (spec C-7): with
- * whom, what for and at which stage; null when it is in none. Another team's
- * creep shows only what its encounter's public fields say.
+ * The encounter or battle a creep is in, as the inspector says it (spec C-7,
+ * junction K-3): with whom and what for; null when it is in none. Another
+ * team's creep shows only what its encounter's public fields say.
  */
 export function engagementText(state: TeamView, creep: Creep): string | null {
+  if (creep.battle !== null) return "em batalha";
   if (creep.engagement === null) return null;
   const encounter = state.encounters.find((e) => e.id === creep.engagement);
   if (encounter === undefined) return "num encontro";
@@ -116,15 +104,9 @@ export function engagementText(state: TeamView, creep: Creep): string | null {
   const otherId = aggressor ? encounter.victim : encounter.aggressor;
   const other = state.creeps.find((c) => c.id === otherId);
   const name = other?.name ?? `#${otherId}`;
-  if (encounter.stage === "fight") {
-    return isOwnEncounter(encounter)
-      ? `lutando com ${name}, rodada ${encounter.rounds}`
-      : `lutando com ${name}`;
-  }
-  const what = encounter.intent === "attack" ? "atacar" : "extorquir";
   return aggressor
-    ? `abordou ${name} para ${what}`
-    : `abordado por ${name}, que quer ${what}`;
+    ? `abordou ${name} para extorquir`
+    : `abordado por ${name}, que quer extorquir`;
 }
 
 /**

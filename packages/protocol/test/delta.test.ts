@@ -5,6 +5,7 @@ import {
   step,
   updateVision,
   view,
+  type Stance,
   type TeamView,
   type WorldState,
 } from "@geometrix/sim";
@@ -238,6 +239,7 @@ describe("diffView / applyDelta", () => {
         name: enemy.name,
         hp: enemy.hp,
         engagement: null,
+        battle: null,
         ...world.teams[0]!.core,
         cargo: enemy.cargo,
       },
@@ -247,6 +249,53 @@ describe("diffView / applyDelta", () => {
     const left = next();
     expect(left.creeps).toEqual({ remove: [enemy.id] });
     expectApplies(world, seen, left);
+  });
+
+  test("a battle stub comes whole, its participants change by value, and it leaves as a remove", () => {
+    const { world, client, next } = setup();
+    const [a, b] = world.creeps.filter((c) => c.team === 0);
+    const battle = {
+      id: world.nextId++,
+      window: { x: 0, y: 0, width: 9, height: 5 },
+      sides: [
+        { kind: "team" as const, team: 0 },
+        { kind: "team" as const, team: 1 },
+      ],
+      participants: [{ id: a!.id, side: 0, stance: "fight" as Stance }],
+      openedTick: world.tick,
+      x: a!.x,
+      y: a!.y,
+    };
+    world.battles.push(battle);
+    a!.battle = battle.id;
+    const opened = next();
+    expect(opened.battles?.upsert).toEqual([
+      {
+        ...battle,
+        participants: [{ id: a!.id, side: 0 }],
+      },
+    ]);
+    let seen = expectApplies(world, client, opened);
+    // A join replaces nothing in place in the client: a new participants value.
+    battle.participants.push({ id: b!.id, side: 0, stance: "flee" });
+    b!.battle = battle.id;
+    const joined = next();
+    expect(joined.battles?.upsert).toEqual([
+      {
+        id: battle.id,
+        participants: [
+          { id: a!.id, side: 0 },
+          { id: b!.id, side: 0 },
+        ],
+      },
+    ]);
+    seen = expectApplies(world, seen, joined);
+    world.battles = [];
+    a!.battle = null;
+    b!.battle = null;
+    const ended = next();
+    expect(ended.battles).toEqual({ remove: [battle.id] });
+    expectApplies(world, seen, ended);
   });
 
   test("the enemy core goes from unknown to known", () => {
