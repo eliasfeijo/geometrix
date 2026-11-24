@@ -1,6 +1,6 @@
 # M2 junction tasks — Slice D
 
-**Status:** F3 done up to checkpoint C1 (2026-11-24), waiting on the owner. Branches `m2/junction-f<n>-<slug>` (skill `commit`).
+**Status:** F3 done (2026-11-24); F6 next (C1-1). Branches `m2/junction-f<n>-<slug>` (skill `commit`).
 **Spec:** [spec.md](spec.md) · **Plan:** [plan.md](plan.md)
 
 ## F0 — Spec, ADR and plan
@@ -114,7 +114,7 @@ contract that `protocol`, the CLI and the client compile against, so no task is 
 - [x] `geo verify`: restore of world and host mid-battle; the fifth path, each battle log against the world log's
       results
 - [x] The battle metrics in the `geo sim` and `geo sweep` reports
-- [ ] **Checkpoint C1:** the bot × bot report against the baseline (battles per hour, outcomes, the risk against the
+- [x] **Checkpoint C1:** the bot × bot report against the baseline (battles per hour, outcomes, the risk against the
       roll, snowball, tick cost)
 
 ### F3 record
@@ -176,6 +176,27 @@ The battles over the 20 sweep seeds (90 battles):
    derivation.
 6. `geo verify` cuts its snapshot at the first tick from halfway on with a battle open (else at halfway).
 
+**C1 decisions** (owner, 2026-11-24; plan §12, "Decided at checkpoint C1"). The causes found: the raiders exist only
+while there is map to explore (gone by 6–12 h), are picked by id (triangles here), only extort, and nobody joins; the
+bots' posture is fixed by DNA; and the spawn zones put the victim ~10 cells from the exit ring and ~23 from the
+aggressor, so a circle leaves before any contact. Hence: merge F3; **F6 (the wanderers) before F4 and F5**, with the
+**junction matrix** and the **zones' distance as a param** first, and checkpoint **C1b** with the bot × bot report
+again; the strategist unchanged until then (C1-4). Interpretations 2–6 stand; 1 becomes the param.
+
+## F6 — The wanderers (runs after F3: C1-1)
+
+- [ ] The junction matrix (C1-2): `geo junction matrix`, battles auto-resolved from real world setups and arenas, DNA ×
+      DNA, loaded or empty, fight or flee (carrier), seeds 1–100; wins, deaths, escapes and durations per cell
+- [ ] The zones' distance to the border as a param (`battle.zone`), its value from the matrix (C1-3)
+- [ ] `Wanderer`, `state.wanderers`, the `wanderers` params (stats, band, curve, cap)
+- [ ] Birth by the curve in the band; roaming
+- [ ] Targets: loaded team creeps in sight (attack, no dialogue); joining a battle in sight on their side
+- [ ] In battle: their setup (HP 60, damage 12, marksman); carrying the loot; spoils or pile on death
+- [ ] Teams attack them, an extortion refused; the strategist counts them; the raider ignores them
+- [ ] Fog and view; drawing in a neutral color; chronicle (`wandererBorn`); metrics
+- [ ] **Checkpoint C1b:** the matrix, the zones' value, and the bot × bot report with wanderers against C1; whether
+      the bots need changing (C1-4)
+
 ## F4 — Network and server
 
 - [ ] Protocol: `battleInput`, `battleScreen`, `battleOpen`, `battleFrame`; the system commands refused from clients;
@@ -195,15 +216,6 @@ The battles over the 20 sweep seeds (90 battles):
 - [ ] The reaction panel with pay and refuse only; the mid-fight flee button removed
 - [ ] The chronicle sentences for the new events
 - [ ] The movement drawing selector in the `?net=1` panel (D19)
-
-## F6 — The wanderers
-
-- [ ] `Wanderer`, `state.wanderers`, the `wanderers` params (stats, band, curve, cap)
-- [ ] Birth by the curve in the band; roaming
-- [ ] Targets: loaded team creeps in sight (attack, no dialogue); joining a battle in sight on their side
-- [ ] In battle: their setup (HP 60, damage 12, marksman); carrying the loot; spoils or pile on death
-- [ ] Teams attack them, an extortion refused; the strategist counts them; the raider ignores them
-- [ ] Fog and view; drawing in a neutral color; chronicle (`wandererBorn`); metrics
 
 ## F7 — Soak and playtest
 

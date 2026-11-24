@@ -6,23 +6,26 @@
 
 ## Now
 
-**Updated:** 2026-11-24 (F3 at checkpoint C1)
+**Updated:** 2026-11-24 (end of F3)
 
 | | |
 |---|---|
 | **Milestone** | **M2 — The ambush** ([ROADMAP](../ROADMAP.md)). M0, M1 and M1.5 ✅ |
 | **Slices** | **A — The encounter** ([spec](../specs/m2-encounter/spec.md) · [plan](../specs/m2-encounter/plan.md) · [tasks](../specs/m2-encounter/tasks.md)) ✅ 2026-11-17 · **B — The battle lab** ([spec](../specs/m2-battle-lab/spec.md) · [plan](../specs/m2-battle-lab/plan.md) · [tasks](../specs/m2-battle-lab/tasks.md)) ✅ 2026-11-20 |
-| **In progress** | **D — The junction** ([spec](../specs/m2-junction/spec.md) · [plan](../specs/m2-junction/plan.md) · [tasks](../specs/m2-junction/tasks.md)), spec and plan ✅ 2026-11-24. **F1** ✅ (the baseline, the battle contract, the `junction` package) · **F2** ✅ (the world side: stub, lock, joins, the result commands; `SIM_VERSION` 10) · **F3** done up to **checkpoint C1**, not merged (branch `m2/junction-f3-host`, worktree `~/workspace/geometrix/junction-f3-host`) |
-| **Next front** | The owner's answer to C1, then the F3 merge; then **F4 — Network and server** (branch `m2/junction-f4-server`): the battle messages, the `WorldHost` through the `JunctionHost`, the battle tables and recovery, the screen presence and the real-time clock |
-| **Then** | F4–F7; then **P — The friends' playtest**; E's order vs. P decided at D's checkpoint C2 |
-| **Waiting on the owner** | **C1** (the [F3 record](../specs/m2-junction/tasks.md) has the numbers): (C1-1) the frequency: 0.4 battles per team-hour, all from refused extortions, all 1 × 1, all in a world's first hours: enough to go on to F4? (C1-2) the risk: the raider triangle wins 97% and dies in 2%; a square that refuses dies 92%; a circle always escapes by the border: accept for now and measure again in the playtest, or change something first? (C1-3) the 10 F2 and 6 F3 interpretations in the tasks: OK? (C1-4) the tick cost (1.25× the baseline, target 1.5×) and the rest: merge F3? Also: (1) [ADR-0009](../adr/0009-prediction-in-the-lab.md) (`Proposed`): prediction as a lab experiment option. (2) `gambits.meleeBerthSteps` 3 (provisional, lab F7). (3) Whenever the owner wants: [PLAYTEST](../PLAYTEST.md) lab group 7 (the four movement options at 0 and 150 ms), which feeds the prediction decision |
+| **In progress** | **D — The junction** ([spec](../specs/m2-junction/spec.md) · [plan](../specs/m2-junction/plan.md) · [tasks](../specs/m2-junction/tasks.md)), spec and plan ✅ 2026-11-24. **F1** ✅ (the baseline, the battle contract, the `junction` package) · **F2** ✅ (the world side: stub, lock, joins, the result commands; `SIM_VERSION` 10) · **F3** ✅ (the junction host, every harness caller through it, `geo verify` with the two logs, the battle metrics; checkpoint C1 decided) |
+| **Next front** | **F6 — The wanderers, moved before F4/F5** (C1-1; branch `m2/junction-f6-wanderers`): first the **junction matrix** (C1-2) and the **spawn zones' distance as a param** (C1-3), then the wanderers; **checkpoint C1b** (the matrix, the zones' value, the bot × bot report with wanderers against C1, whether the bots need changing) |
+| **Then** | F4 (network and server), F5 (client), F7 (soak and playtest); then **P — The friends' playtest**; E's order vs. P decided at D's checkpoint C2 |
+| **Waiting on the owner** | (1) [ADR-0009](../adr/0009-prediction-in-the-lab.md) (`Proposed`): prediction as a lab experiment option. (2) `gambits.meleeBerthSteps` 3 (provisional, lab F7). (3) Whenever the owner wants: [PLAYTEST](../PLAYTEST.md) lab group 7 (the four movement options at 0 and 150 ms), which feeds the prediction decision |
 | **Blockers** | None |
 
 ### Next steps
 
-1. **C1 → the F3 merge:** record the owner's answers in the F3 record (and the plan/GDD if gameplay), mark the
-   checkpoint, update this Now, merge `m2/junction-f3-host` into `main` from the Windows checkout and remove the
-   worktree. Then **F4** from the [tasks](../specs/m2-junction/tasks.md).
+1. **F6** from the [tasks](../specs/m2-junction/tasks.md), up to checkpoint C1b (stop before the merge with the
+   numbers and numbered questions). Why it moved up: the F3 record's "C1 decisions" (the C1 bot × bot battles were
+   all early, 1 × 1, from refused extortions, with outcomes set by the victim's DNA; causes: the bots' policy and the
+   spawn zones ~10 cells from the exit ring). The matrix comes first: `geo battle sweep`'s shape, but each battle
+   built by `battleSetup` from a hand-built world stub (DNA × DNA, loaded or empty, fight or carrier), so it measures
+   the junction's real arenas and setups, apart from the strategist.
 2. **🐞 The road-builder preset does not work for the player** (owner, 2026-11-20, seen since before slice A): it asks
    for a point on the map, but nothing happens on click or mouse move (no road or cost preview); a road can only be
    built by dominating a creep, in road mode. The bots build with the same preset, so the `sim` works. Hypotheses: the
