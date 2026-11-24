@@ -91,7 +91,8 @@ More commands (server, replay, network, battle and soak tests) are listed in [CL
 Design and code move through explicit gates: pillars and a game design document, then a spec, a plan and tasks for
 each slice, with the owner approving every step, architecture decisions recorded as ADRs, and small phases merged one
 at a time. Development is done with [Claude Code](https://claude.com/claude-code): the owner decides the design and
-approves each gate, and the workflow lives in [`CLAUDE.md`](CLAUDE.md) and `.claude/skills/`.
+approves each gate, and the workflow lives in [`CLAUDE.md`](CLAUDE.md) and `.claude/skills/`. To work on it with
+AI agents (Claude Code, opencode, Kilo), see the [harness guide](docs/HARNESS.md).
 
 | To… | Read |
 |---|---|
