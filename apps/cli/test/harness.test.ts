@@ -10,8 +10,10 @@ import {
   strategistActs,
   type WorldState,
 } from "@geometrix/sim";
+import { createHost } from "@geometrix/junction";
 import { describe, expect, test } from "vitest";
 import {
+  defaultBattleParams,
   logCursor,
   runBots,
   stepWithBots,
@@ -33,7 +35,7 @@ const bots = botsFor(["balanced", "balanced"]);
 /** The seed-42 world after the bots joined at tick 0. */
 function joined(): WorldState {
   const world = createWorld(42, params);
-  stepWithBots(world, bots, []);
+  stepWithBots(world, createHost(defaultBattleParams()), bots, []);
   return world;
 }
 
@@ -61,7 +63,7 @@ describe("bots", () => {
     const world = joined();
     world.teams[0]!.stock = { materia: 40, cristal: 10 };
     const log: LoggedCommand[] = [];
-    stepWithBots(world, bots, log);
+    stepWithBots(world, createHost(defaultBattleParams()), bots, log);
     // Team 1 cannot pay for a creep, so it never sends produce.
     expect(log.filter((l) => l.command.type === "produce")).toEqual([
       {

@@ -297,6 +297,20 @@ function stepJunction(world, host, commands): SimEvent[] {
 | P10 | The lab's view, input and motion **move to `apps/client/src/battle/`**, shared by the lab and the game | A copy in the game (two arena views to keep in step) |
 | P11 | The wanderers' behavior as a **stage of their own** in the `sim`, not a strategist (they are not a player) | A bot strategist with its own commands (they would need a player and a team) |
 
+### Decided at checkpoint C1 (2026-11-24)
+
+The bot × bot report through the host (tasks, F3 record) had battles only in a world's first hours, all 1 × 1,
+all from a refused extortion, with outcomes set by the victim's DNA. The causes found are the bots' policy (raiders
+only while there is map to explore, picked by id, extortion only, nobody helping) and the spawn zones' distance to
+the exit ring, not the combat numbers. The owner decided:
+
+| # | Decision | Alternative not taken |
+|---|---|---|
+| C1-1 | **Merge F3; the wanderers (F6) run before F4 and F5**, and the bot × bot report is measured again with them (checkpoint C1b) before the network and the client | The plan's order F4 → F5 → F6; a balance round before any new phase |
+| C1-2 | **A junction matrix in the harness**, now: auto-resolved battles from real world setups and arenas, DNA × DNA, loaded or empty, fight or flee, seeds 1–100, so the risk is measured apart from the bots' policy | Judging the combat from the bot × bot runs only |
+| C1-3 | **The spawn zones' distance to the border becomes a param**, its value chosen with the matrix and brought to the owner | The zones halfway between the border and the center, fixed (F3 interpretation 1) |
+| C1-4 | **The strategist unchanged until the wanderers are in**; changes to the bots, if still needed, come at C1b as a proposal | Raiders patrolling after exploring, mixed DNA and helping a teammate, together with F6 |
+
 ## 13. Implementation order
 
 | Phase | Content | Checkpoint |
@@ -305,7 +319,7 @@ function stepJunction(world, host, commands): SimEvent[] {
 | **F1** — Baseline and the battle contract | The baseline runs; max HP and capacity in the setup, the lab and CLI reading the world's params (`BATTLE_VERSION` 5); the `junction` package skeleton with the guards and CI | — |
 | **F2** — The world side | The stub and the lock; the attack and the refused extortion opening the battle; the roll and its flee leaving; `react`; the result commands with loot, spoils and escape; joins with the cap; events and view; `SIM_VERSION` 10. Tested with hand-built result commands | — |
 | **F3** — The host and the harness | The arena from the window; the setups; both paces' code; joins and control; results; host serialize; every harness caller through the host; `geo verify` with the two logs; the battle metrics | **C1:** the bot × bot report (battles per hour, outcomes, the risk against the roll, snowball, tick cost) |
+| **F6** — The wanderers (after F3, C1-1) | The junction matrix and the zones' distance as a param (C1-2, C1-3); state, params, birth, roaming, targets, joining, loot; fog and view; drawing; chronicle; metrics | **C1b:** the matrix, the zones' value and the bot × bot report with wanderers against C1; the bots (C1-4) |
 | **F4** — Network and server | Protocol 5; the delta with stubs; frames, inputs and screen presence; the battle clock and the pace; the battle tables and recovery; `geo net` with a watcher | — |
 | **F5** — Client | The shared battle module; the battle screen opening by itself, back to the map, watching; the battle on the map; the reaction panel; the chronicle sentences | — |
-| **F6** — The wanderers | State, params, birth, roaming, targets, joining, loot; fog and view; drawing; chronicle; metrics | — |
 | **F7** — Soak and playtest | The soak test with a `kill -9` mid-battle; the PLAYTEST junction groups | **C2:** the owner's sessions (spec §8), the hypothesis questions, the order of E against P |

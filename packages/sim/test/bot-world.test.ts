@@ -1,46 +1,14 @@
-// Behavior lock for the strategist (M1.5 rede plan section 7, spec D4): a
-// seed-42 world with one balanced bot per team, run for 6 world hours the way
-// the harness and the server run it. A changed hash means a bot decided
-// something different; it changes on purpose with the fog (fog spec D12),
-// with the raiders (M2 encontro spec D15, D20) and with their minimum target
-// cargo (plan C11).
+// The bots' mirrored worlds. The 6 h behavior lock of the strategist runs
+// through the junction host now, as the harness and the server run the world
+// (packages/junction/test/bot-world.test.ts).
 
-import { createHash } from "node:crypto";
 import { expect, test } from "vitest";
 import { validate } from "../src/commands.ts";
-import { serialize } from "../src/serialize.ts";
 import { step } from "../src/step.ts";
 import { botCommands, botsFor } from "../src/strategist.ts";
 import { mirrorCell } from "../src/map.ts";
 import { createWorld, type Creep, type WorldState } from "../src/world.ts";
 import { loadTestParams } from "./helpers.ts";
-
-const HOURS = 6;
-
-test("a 6 h bot world of seed 42 hashes to a stable value", () => {
-  const params = loadTestParams();
-  const state = createWorld(42, params);
-  const ticks = (HOURS * 3600) / params.world.tickSeconds;
-  const bots = botsFor(["balanced", "balanced"]);
-  let commands = 0;
-  while (state.tick < ticks) {
-    const accepted = botCommands(state, bots).filter(
-      ({ playerId, command }) => validate(state, command, playerId) === null,
-    );
-    commands += accepted.length;
-    step(state, accepted);
-  }
-  // The bots did act: production, upgrades and role changes.
-  expect(state.creeps.length).toBeGreaterThan(12);
-  expect(commands).toBeGreaterThan(20);
-  expect(
-    createHash("sha256").update(serialize(state)).digest("hex"),
-  ).toMatchInlineSnapshot(
-    `"2d5def23cd9b9b80f8db95bb70682da3660ed3b35f8feca3a9e9aff9cb238ba4"`,
-  );
-  // Growing to the population cap, with raiders exploring, the world takes
-  // over 10 s alone and some 30 s with the whole suite running.
-}, 60_000);
 
 /**
  * The mirrored teams play the same world: the first hours, before contested

@@ -80,6 +80,14 @@ describe("verify", () => {
     }
   }, 30_000);
 
+  test("the snapshot falls mid-battle and every battle replays to the world log's results", () => {
+    // Seed 7 has a battle open after the halfway tick; seed 42 not yet.
+    const result = verify(7, 2 * 3600, testParams);
+    expect(result.runs[2]!.name).toMatch(/\(mid-battle\)/);
+    expect(result.battles.battles).toBeGreaterThan(0);
+    expect(result.battles.mismatches).toEqual([]);
+  }, 30_000);
+
   test("the events hash takes every event in order, however the run is split", () => {
     const { events } = withEvents(42, 2 * 3600);
     expect(events.length).toBeGreaterThan(2);

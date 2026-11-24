@@ -284,6 +284,7 @@ describe("damage and death (spec A-4, A-5)", () => {
         type: "died",
         participant: { id: 2, side: 1, dna: "circle", name: "circle" },
         by: { id: 1, side: 0, dna: "square", name: "square" },
+        cell: at(4, 3),
         tick: 0,
         index: 2,
       },

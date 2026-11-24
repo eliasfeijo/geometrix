@@ -35,6 +35,7 @@ function escape(
     reason,
     hp: participant.hp,
     carry,
+    cell: participant.cell,
   });
 }
 

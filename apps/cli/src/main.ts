@@ -279,6 +279,13 @@ function runVerify(args: string[], out: Output): number {
     out.log(`  ${run.hash}  ${run.name}`);
     out.log(`  ${run.eventsHash}    events: ${run.events}`);
   }
+  const { battles } = result;
+  out.log(
+    `  battles: ${battles.battles} replayed to the world log's results` +
+      (battles.mismatches.length > 0
+        ? `, ${battles.mismatches.length} did not: ${battles.mismatches.join(", ")}`
+        : ""),
+  );
   out.log(result.ok ? "OK: deterministic" : "FAIL: hashes differ");
   return result.ok ? 0 : 1;
 }

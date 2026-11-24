@@ -76,8 +76,8 @@ export function simulate(
     params,
     ticks,
     botsFor(strategists),
-    (s, events) => {
-      tracker.record(s, events);
+    (s, events, finished) => {
+      tracker.record(s, events, finished);
       if (s.tick % SAMPLE_EVERY_TICKS === 0 || s.tick === ticks) {
         samples.push(sampleMetrics(s));
         tracker.mark(s);

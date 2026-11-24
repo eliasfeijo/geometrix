@@ -52,6 +52,7 @@ describe("escape by the edge (spec F-1, D7)", () => {
       reason: "edge",
       hp: 100,
       carry: { materia: 3, cristal: 2 },
+      cell: 3 * state.arena.width,
       tick: DWELL - 1,
       index: 0,
     });

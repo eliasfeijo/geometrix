@@ -93,6 +93,15 @@ describe("parseParams", () => {
     ["battle.window.height", 4, "battle.window.height: must be odd"],
     ["battle.window.width", 65, "battle.window.width: must be <= map.width"],
     ["battle.maxSides", 1, "battle.maxSides: must be >= 2"],
+    ["battle.maxSides", 5, "battle.maxSides: must be <= 4"],
+    ["battle.window.cellBlock", 4, "battle.window.cellBlock: must be odd"],
+    ["battle.zone.depth", 2, "battle.zone.depth: must be odd"],
+    ["battle.zone.breadth", 4, "battle.zone.breadth: must be odd"],
+    [
+      "battle.sideCap",
+      16,
+      "battle.sideCap: must fit in a zone (depth × breadth)",
+    ],
   ])(
     "the battle window and sides (junction D5, D6): %s = %s",
     (path, value, issue) => {
