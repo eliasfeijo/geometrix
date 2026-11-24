@@ -67,7 +67,8 @@ The forces at play:
 7. **The combat rule is a field of the setup.** In slice B only the grid exists. **No generic rule interface** until
    a second one exists (first the concrete): when it comes, what the two share gets extracted.
 8. **Internal contract v0.** This package's setup and result events are the battle side of the ADR-0001 contract,
-   versioned by `BATTLE_VERSION`. **The world side is left to slice D's ADR**: who is locked in the world, the bubble,
+   versioned by `BATTLE_VERSION`. **The world side is left to slice D's ADR** (answered by
+   [ADR-0010](0010-world-side-of-the-battle-contract.md)): who is locked in the world, the bubble,
    how much world time passes, how the world keeps feeding the battle with late arrivals, and how the events become
    `sim` events. Slice B already accepts **sides and participants that join mid-fight** (spec, D12), so D starts from
    an engine that supports it.

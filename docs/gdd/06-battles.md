@@ -81,7 +81,7 @@
 
 ## Proposal
 See [ADR-0001](../adr/0001-world-and-battle-as-separate-simulations.md). The world side of the contract is
-[ADR-0010](../adr/0010-world-side-of-the-battle-contract.md) (`Proposed`): battle instances next to the world, run by
+[ADR-0010](../adr/0010-world-side-of-the-battle-contract.md) (`Accepted`): battle instances next to the world, run by
 a junction host; the world log keeps only the results.
 - **Exit:** a participant that dies or escapes leaves the battle in the world on the same tick; an escapee comes back
   on the world cell under the border it left by, with slice A's run home ([junction spec](../specs/m2-junction/spec.md)

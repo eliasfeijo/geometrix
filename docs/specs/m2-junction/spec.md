@@ -5,7 +5,7 @@
 (loot, spoils), [05](../../gdd/05-tribes-and-diplomacy.md) (the wanderers), [06](../../gdd/06-battles.md) (the
 instance, the bubble, world time), [07](../../gdd/07-autopilot.md) (reactions, gambits),
 [08](../../gdd/08-chronicle-chat-and-console.md) (chronicle) ·
-**ADR:** [0010](../../adr/0010-world-side-of-the-battle-contract.md) (the world side of the contract, `Proposed`);
+**ADR:** [0010](../../adr/0010-world-side-of-the-battle-contract.md) (the world side of the contract, `Accepted`);
 [0001](../../adr/0001-world-and-battle-as-separate-simulations.md), [0008](../../adr/0008-battle-package.md)
 
 ## 1. Hypothesis
@@ -234,7 +234,7 @@ the slice's start (slice A's encounter with the roll), measured in F1.
 ## 9. Prerequisites before the `plan.md`
 
 - The owner's acceptance of D1–D19 (the agent's ones included).
-- **ADR-0010 — The world side of the battle contract** `Accepted` (`Proposed`, 2026-11-24).
+- **ADR-0010 — The world side of the battle contract** ✅ `Accepted` (2026-11-24).
 
 ## 10. Open questions
 
