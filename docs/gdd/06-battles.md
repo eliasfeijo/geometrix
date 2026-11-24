@@ -60,18 +60,34 @@
     whole cycle is joined (the world opens the instance, the channel stays open for reinforcements and third parties,
     the result returns to the world). Client prediction may come in;
   - **movement is tried before becoming a rule:** the lab compares four ways of drawing movement (PLAYTEST group 7).
+- **M2 slice D, the junction: design round** (owner, 2026-11-24; [junction spec](../specs/m2-junction/spec.md)):
+  - **the roll leaves:** an attack always opens the battle; on extortion, the victim pays or refuses, and refusing
+    opens the battle. **Fleeing is only in the arena** (the border, dropping the purse); a free creep whose reaction
+    rule says flee enters with the carrier gambits;
+  - **world time:** the world keeps its pace (its ×N); a battle with a human playing runs in real time, and its
+    participants stay locked in the world while it lasts;
+  - **auto-resolve on the world clock:** with no human, 1 battle second = 1 world second, so reinforcements and a
+    human taking over have time to arrive;
+  - **only who chooses joins:** a creep that approaches a participant to attack, inside the bubble, enters on its
+    team's side or on a new side; an ally helps by approaching the enemy;
+  - **the arena from the terrain, enlarged:** the world cells around the encounter become blocks of the arena, at the
+    lab's size; rock stays rock, river, ford and road become floor; spawn zones as in the lab;
+  - **the loot:** at the end, the winning side's survivors collect up to their free capacity, cristal first, and the
+    rest becomes spoils in the world (slice A's rule);
+  - **the battle screen opens by itself** when the creep you dominate enters a battle, in place of the map, with a
+    button back to the map; teammates get a button to watch;
+  - **taking over mid-fight:** a player may dominate a creep of their team that is already in a battle; it leaves its
+    gambits for the human, and the battle switches to real time.
 
 ## Proposal
-See [ADR-0001](../adr/0001-world-and-battle-as-separate-simulations.md). The world side of the contract is slice D's
-ADR.
-- **Entry:** when a battle starts, the world locks the participants (creeps, inventories, a slice of terrain) and
-  hands them to the instance; while it runs, the world keeps feeding it with late arrivals.
-- **Exit:** when it ends, the battle returns a **result as events** (deaths, loot, resource transfers). The world
-  applies them.
-- **No humans:** if no player is present, the battle runs headless and accelerated, with the **same simulation**,
-  decided by the gambits AI (auto-resolve). Humans who arrive mid-fight can dominate a creep and take over.
-- **A minimal arena from the encounter's terrain** (agent, 2026-11-20): at the junction, the arena comes from the
-  world cells around the encounter (rock stays rock), within the lab's arena size. To confirm in slice D's spec.
+See [ADR-0001](../adr/0001-world-and-battle-as-separate-simulations.md). The world side of the contract is
+[ADR-0010](../adr/0010-world-side-of-the-battle-contract.md) (`Proposed`): battles inside the world state, one log
+and one hash.
+- **Exit:** a participant that dies or escapes leaves the battle in the world on the same tick; an escapee comes back
+  on the world cell under the border it left by, with slice A's run home ([junction spec](../specs/m2-junction/spec.md)
+  D7, D8; agent).
+- **The bubble is the arena's window** (agent, junction spec D5, D6): 9 × 5 world cells around the battle's cell, each
+  a 5 × 5 block of arena (provisional); whoever enters it with an attack approach on a participant joins.
 - **Short battles** (agent): 1 to 2 minutes; each human controls only the creep they dominate.
 - **Dialogue only at the opening** (agent): whoever joins mid-fight skips the conversation; the chronicle records the
   entry ([08](08-chronicle-chat-and-console.md)).
@@ -102,7 +118,5 @@ sequenceDiagram
   None before the junction (C9).
 
 ## Open questions
-- What is the battle bubble's radius? How far away can someone join? Slice D.
-- How much world time passes during a battle? Slice D.
 - How movement is drawn in the game (the four lab options). After PLAYTEST group 7.
 - **Critical hits?** (owner, 2026-11-18): a hit that sometimes deals more damage. With stats and skills; not in M2.
