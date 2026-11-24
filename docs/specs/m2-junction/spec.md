@@ -65,24 +65,27 @@ others are the **agent's proposal**, which only holds with the owner's acceptanc
 | D14 | The wanderers **(gameplay; owner, details by the agent)** | **Owner:** a wanderer is a **circle with its own stats** (HP and damage below the circle's, in the params) and a neutral color; it **always attacks**, with no dialogue or extortion; it targets only **loaded** team creeps in sight; it **carries what it loots until it dies**, when the load becomes spoils. **Agent:** they are born in the jungle band along the river, outside the core zones; they roam between random reachable cells of that band; the first is born after a while and the respawn interval shrinks with world time, with a cap of living wanderers (§6); they join a battle between teams they see, on their own side; teams may attack them, not extort them. A side that is not a team: no core, stock, player or domination; seen through the fog like an enemy creep | GDD 05 asks for them in slice D. Built only for the wanderers, with no generic faction (GDD 05 proposal) |
 | D15 | Events and chronicle **(gameplay; agent)** | New `sim` events: battle opened (with its sides), joined, escaped (by the border or by inactivity), battle ended (winner, loot and spoils), wanderer born. Death stays slice A's. The chronicle narrates them with the slice A templates and voice; the battle's blow-by-blow (hits, misses) stays on the battle screen. The agent writes the sentences; the owner reviews the tone at the checkpoint | GDD 08. A player off the battle understands it through the chronicle (hypothesis 4) |
 | D16 | The battle in the world view **(gameplay; agent)** | The team view shows a battle like a creep, through the fog: its cell, the bubble, the participants marked "in battle" and their sides. The map draws the bubble and a battle sign; clicking it selects the battle and offers "watch" (D11). Battle frames go only to whoever has the battle screen open | Hypothesis 4: where a battle is and who is in it, without opening it |
-| D17 | Determinism, persistence and recovery **(agent; ADR-0010)** | A battle is part of the world: same log, same snapshot, same hash. Replaying a world log replays its battles, humans included; a restart in the middle of a battle resumes it, on the world clock until a human comes back to the screen | ADR-0001: the world must be recoverable after a crash. One log is the only way the soak test and `geo verify` cover battles |
+| D17 | Determinism, persistence and recovery **(agent; ADR-0010)** | A battle is an **instance next to the world**, run by a junction host. The world log keeps only the battle's **results** (exits and the end); each battle has its own log (setup + commands per tick), written in the same transaction as the world tick. The world replays alone; each battle log replays to the results the world applied. A restart in the middle of a battle rebuilds it from its log and resumes it, on the world clock until a human comes back to the screen | ADR-0001: the world must be recoverable after a crash. A battle change must not invalidate the log of a world that lasts days (owner, 2026-11-24) |
 | D18 | What changes on purpose | `SIM_VERSION`, `PROTOCOL_VERSION`, `BATTLE_VERSION` (the setup carries max HP and capacity), the command vocabulary (`react` loses `flee`/`fight`; the mid-fight `flee` leaves; new battle commands) as a `BREAKING CHANGE`; the fixed hashes | New gameplay: old snapshots and replays become invalid (ADR-0004) |
 | D19 | The movement drawing **(agent)** | The battle screen offers the lab's four movement drawings in the network panel (`?net=1`), starting from the lab's default. Choosing one for the game waits for PLAYTEST group 7; client prediction waits for P | ADR-0009 and the lab checkpoint (C10, C11): decided after playing, not in the spec |
 
 ## 4. Scope
 
 ### In
-- **`sim`:** the battle in the world state (ADR-0010); opening the battle from the encounter (D1, D2); the arena from
-  the terrain and the spawn zones (D5); locking the participants (D3); the world-clock pace (D4); joining from the
-  world (D6); exits and the end (D7, D8); HP and capacity on entry and exit (D9); the gambits per creep (D10);
-  domination in battle (D12); the wanderers, their side, birth, roaming and behavior (D14); the events (D15); the view
-  (D16); the params; `react` and `flee` changing (D18).
+- **`sim`:** the battle stub and the result inputs (ADR-0010); opening the battle from the encounter (D1, D2);
+  locking the participants (D3); detecting who joins (D6); applying exits and the end (D7, D8); domination in battle
+  (D12); the wanderers, their side, birth, roaming and behavior (D14); the events (D15); the view (D16); the params;
+  `react` and `flee` changing (D18).
+- **Junction host** (ADR-0010), shared by the server and the CLI: the setup from the world, the arena from the
+  terrain and the spawn zones (D5); HP and capacity on entry and exit (D9); the gambits per creep (D10); both paces
+  (D4, D13); joins and control; turning the battle's events into result inputs; the battle logs.
 - **`battle`:** max HP and capacity in the participant setup (D9); whatever the world needs to drive a battle tick by
   tick from outside (ADR-0010; the plan says what).
 - **Bot strategist:** wanderers counted as enemies; nothing else changes.
 - **Protocol:** battle commands from the client; battle frames; battles in the team's delta; the new events.
-- **Server:** the real-time pace for battles with a human on the screen (D13); presence on the battle screen; the
-  frames to watchers; recovery in the middle of a battle (D17).
+- **Server:** the host's real-time pace for battles with a human on the screen (D13); presence on the battle screen;
+  the frames to watchers; the battle logs in the same transaction as the world tick; recovery in the middle of a
+  battle (D17).
 - **Client:** the battle screen in the world client, from the lab's arena view and keyboard (D11, D19); opening it by
   itself, going back to the map, watching; the battle on the map (D16); the wanderers on the map; the chronicle
   sentences (D15); the reaction panel without flee and the mid-fight flee button removed (D1, D2).
@@ -101,27 +104,27 @@ road-builder preset bug (a separate fix session, dashboard).
 
 Format: *When [trigger], the system shall [response].*
 
-### Opening (`sim`)
+### Opening (`sim` and host)
 - **O-1** When an attack encounter opens (slice A's E-3), after the declaration event, the battle shall open on the
   same tick with the aggressor and the victim on two sides (D1).
 - **O-2** When the victim of an extortion refuses (by the player's answer, by its rules, or by the end of the window),
   the battle shall open; when it pays, slice A's E-6 holds.
-- **O-3** Each world participant shall enter with its DNA's preset, or the carrier's when its reaction rule says flee
+- **O-3** Each world participant shall enter the setup the host builds with its DNA's preset, or the carrier's when its reaction rule says flee
   (D2, D10), the normal reaction, its whole HP points (at least 1), its max HP, its capacity and its load (D9).
 - **O-4** The arena shall be the D5 window: rock where the world has rock, floor elsewhere, floor in the spawn zones,
   shifted to stay inside the map.
 - **O-5** While in a battle, a creep shall not walk, gather, deliver, regenerate, open an encounter or take a world
   order; domination may start and end (D3, D12).
 
-### Pace (`sim` and server)
+### Pace (host and server)
 - **T-1** With no human in control (D13), each world tick shall advance the battle by the battle ticks of one world
-  second (D4).
+  second (D4), synchronously, so a world with no human stays deterministic.
 - **T-2** With a human in control on the screen, the battle shall advance in real time, independently of the world's
   ×N, and stop advancing on the world clock; when no human controls anyone on the screen any more, it shall go back
   to T-1.
 - **T-3** The battle's 3 s countdown shall run only at its opening, in either pace.
 
-### Joining (`sim`)
+### Joining (`sim` and host)
 - **J-1** When a creep with an attack approach on a participant enters the bubble (D6), it shall join the battle on
   its team's side, or on a new side; the battle shall get a `join` with its HP, load, max HP, capacity and gambits.
 - **J-2** An extort approach on a participant shall be refused with slice A's refusal for an impossible extortion.
@@ -129,7 +132,9 @@ Format: *When [trigger], the system shall [response].*
   the next tick, while its approach holds.
 - **J-4** A creep that sees no participant of the battle shall not learn of it from a refusal (slice A's D19).
 
-### Leaving and the end (`sim`)
+### Leaving and the end (`sim` and host)
+- **X-0** Every exit and every end shall reach the world as a result input in the world log, on the first world tick
+  after the battle tick it happened on.
 - **X-1** When a participant dies in the battle, it shall die in the world on the same world tick, by slice A's death
   rule (H-3, D4), with its load left in the arena as a pile.
 - **X-2** When a participant escapes by the border, it shall come back to the world on the D7 cell with its HP and load
@@ -199,12 +204,12 @@ the slice's start (slice A's encounter with the roll), measured in F1.
 | No snowball | On every seed, both teams end with creeps and delivering materia; the population and delivered-materia gap goes into the report | Same runs |
 | Wanderers | Born, alive over time, battles opened and joined, loot carried, spoils left when they die | Same runs |
 | Economy | Materia and cristal delivered, deaths, loot, extortion and spoils per team, against the baseline | `geo sim`; the owner judges |
-| Determinism | 2 runs and snapshot → restore in the middle of a battle give the same hash | `geo verify` in CI |
-| A human battle replays | A world log with a battle played by a human, on the real-time pace, gives the server's hash in `geo verify` | Test with the server, and the soak test |
+| Determinism | 2 runs and snapshot → restore in the middle of a battle give the same world and battle hashes | `geo verify` in CI |
+| Two logs agree | The world log replays alone to the server's hash; each battle log, played by a human on the real-time pace included, gives in `geo battle verify` the results the world log applied | Test with the server, and the soak test |
 | Diff correctness | Property test green (N-4) | CI, seeds 1, 42, 649 |
 | Bandwidth and CPU | The [network spec §7](../m1.5-network/spec.md) targets for the world delta; battle frames at most 16 KB/s per watcher (guess) | `geo net --seed 42 --days 3`, with a watcher |
-| Tick cost | `geo sim` 3 days at most 1.5× the baseline | Harness |
-| Recovery | A `kill -9` in the middle of a battle, then a restart: the battle resumes and the final hashes match | `npm run soak` |
+| Tick cost | `geo sim` 3 days, through the host, at most 1.5× the baseline | Harness |
+| Recovery | A `kill -9` in the middle of a battle, then a restart: the battle resumes from its log, nothing half-applied, and the final hashes match | `npm run soak` |
 | Nothing leaks | A team's view and events have no battle, participant or wanderer outside its sight or memory | `sim` test with a hand-built world |
 | Rules | Each §5 rule with a test, on text maps | `npm run check` |
 
