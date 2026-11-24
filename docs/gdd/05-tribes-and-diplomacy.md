@@ -13,14 +13,14 @@
   - it **always attacks**, with no dialogue or extortion;
   - it targets only **loaded** team creeps in sight;
   - it **carries what it loots until it dies**, when the load becomes spoils: a full wanderer is worth hunting.
+- **The wanderers in the junction spec** (owner, 2026-11-24, approving the agent's proposals; numbers provisional):
+  a side that is not a team, built only for them (no core, stock, player or domination; seen through the fog like an
+  enemy); born in the jungle band along the river (rows within 8 of it), outside the core zones; they roam between
+  random reachable cells of the band; the first at world hour 1, then one every 60 world minutes shrinking linearly to
+  one every 15 by the end of day 3, at most 4 alive; HP 60 and damage 12, the rest of the circle's kit; they join a
+  battle between teams they see, on their own side; teams may attack them, not extort them.
 
 ## Proposal
-- **A side that is not a team** (agent): the junction's ADR on the neutral side builds only the wanderers, without
-  generalizing for factions that do not exist yet (first the concrete).
-- **The wanderers' respawn curve** is a function of world time, in the params (agent).
-- **Where and how many** (agent, junction spec D14 and §6): born in the jungle band along the river, outside the core
-  zones; they roam between random cells of that band; the first at world hour 1, then one every 60 world minutes
-  shrinking to 15 by day 3, at most 4 alive; HP 60 and damage 12 (provisional). Teams may attack them, not extort them.
 
 ## Parked (the owner's ideas, no milestone)
 - **Bosses:** they live at a spot on the map, are slow and respawn slowly; buff bosses give the team that defeats them
