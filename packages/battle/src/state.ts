@@ -10,7 +10,7 @@ import type { RngState } from "./rng.ts";
  * Bumped when the same log starts giving another result (plan section 11).
  * Snapshots and logs of another version are refused.
  */
-export const BATTLE_VERSION = 4;
+export const BATTLE_VERSION = 5;
 
 export type Carry = { materia: number; cristal: number };
 
@@ -44,9 +44,13 @@ export type Participant = {
   /** Index of the cell in the arena. */
   cell: number;
   facing: Dir;
-  /** Current HP; the maximum comes from the params. */
+  /** Current HP, 1..maxHp while it is in the arena. */
   hp: number;
+  /** From the setup: the world owns max HP and capacity (junction spec D9). */
+  maxHp: number;
   carry: Carry;
+  /** The most the carry may hold, from the setup (junction spec D9). */
+  capacity: number;
   controller: Controller;
   /** Replaced whole, never mutated in place (like the sim's rules). */
   gambits: Gambit[];
@@ -97,6 +101,8 @@ export type Departure = {
   dna: Dna;
   outcome: Outcome;
   hp: number;
+  /** The setup's max HP, so the result can show HP against it. */
+  maxHp: number;
   carry: Carry;
   tick: number;
 };

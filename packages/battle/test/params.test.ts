@@ -44,19 +44,20 @@ describe("parseBattleParams", () => {
   test("accepts test/params.json, with the spec section 6 numbers", () => {
     const { dna } = loadTestParams();
     expect(dna.square).toEqual({
-      hp: 300,
       damage: 30,
       range: 1,
       cooldownMs: 1000,
       cellsPerSecond: 3,
       projectileCellsPerSecond: 0,
-      capacity: 30,
     });
     expect([dna.triangle.range, dna.circle.range]).toEqual([4, 6]);
   });
 
   test.each([
-    ["dna.square.hp", 0, "dna.square.hp: must be >= 1"],
+    ["dna.square.range", 0, "dna.square.range: must be >= 1"],
+    // Max HP and capacity are the world's (junction spec D9).
+    ["dna.square.hp", 300, "dna.square.hp: unknown"],
+    ["dna.square.capacity", 30, "dna.square.capacity: unknown"],
     ["dna.circle.damage", 2.5, "dna.circle.damage: expected an integer"],
     ["carry.fullBrakePermille", -1, "carry.fullBrakePermille: must be >= 0"],
     ["exit.dwellMs", "2000", "exit.dwellMs: expected an integer"],

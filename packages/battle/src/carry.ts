@@ -62,8 +62,7 @@ export function dropAndPickUp(state: BattleState, log: BattleEventLog): void {
     if (intent.pickup) {
       intent.pickup = false;
       const pile = pileAt(state, cell);
-      const capacity = state.params.dna[participant.dna].capacity;
-      const room = capacity - carryTotal(carry);
+      const room = participant.capacity - carryTotal(carry);
       if (pile === undefined || room <= 0) continue;
       const cristal = Math.min(room, pile.cristal);
       const materia = Math.min(room - cristal, pile.materia);

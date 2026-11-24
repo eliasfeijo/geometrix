@@ -13,8 +13,8 @@
 ## F1 — Baseline and the battle contract
 
 - [x] Baseline: `geo sim` 3 days (seed 42) and `geo sweep` 6 h (seeds 1–20) on `main`, the numbers quoted here
-- [ ] `ParticipantSetup` with `maxHp` and `capacity`; the validation; `params/battle.json` without them; `BATTLE_VERSION` 5
-- [ ] The lab and `geo battle` read max HP and capacity from `params/default.json`; the lab log fixture rebuilt
+- [x] `ParticipantSetup` with `maxHp` and `capacity`; the validation; `params/battle.json` without them; `BATTLE_VERSION` 5
+- [x] The lab and `geo battle` read max HP and capacity from `params/default.json`; the lab log fixture rebuilt
 - [ ] `packages/junction`: the workspace, tsconfig, the determinism lint, Vitest, `src/index.ts`; the `junction`
       scope in the `commit` skill
 
@@ -31,6 +31,19 @@ not versioned):
   hour 0.8 encounters (0.2–1.8); paid 30%, with a flee 59%, with a death 12%; flee escapes 65% (42–86); 69% in the
   victim's core zone; 0.6 deaths per team (0–1); 63 resources taken per team; creep gap 1 (0–2); delivered-materia
   gap 97 (0–659).
+
+**The contract** (`BATTLE_VERSION` 5):
+
+- Each participant keeps the setup's `maxHp` and `capacity` (state and view); the gambits' HP and load conditions, the
+  pickup, the carry brake and the lab's drawing read them there. The departures and the `ended` results also carry
+  `maxHp`, so the result table shows HP against it without the params.
+- The setup refuses a max HP or capacity that is not a positive integer (capacity 0 would divide the brake by zero).
+- `geo battle` reads `params/default.json` through the `sim`'s `parseParams` (the CLI already validates the world's
+  file that way); the lab imports it as JSON and checks only the two numbers per DNA, without the `sim` (plan §5).
+  Both take the **base** capacity: the upgrade is the world's, applied by the junction's setups (F3).
+- With the same numbers moved, `geo battle sweep --quick` gives the same outcomes and durations as `main` (93 rows of
+  `battle.csv`, timings aside); the lab fixture migrated (participants and joins with the old kit numbers) replays to
+  the same state as before, under the new hash.
 
 ## F2 — The world side
 

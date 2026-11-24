@@ -263,6 +263,7 @@ describe("damage and death (spec A-4, A-5)", () => {
         dna: "circle",
         outcome: "died",
         hp: 0,
+        maxHp: 120,
         carry: { materia: 0, cristal: 0 },
         tick: 0,
       },

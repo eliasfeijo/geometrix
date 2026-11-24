@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import type { BattleEvent } from "../src/events.ts";
 import type { BattleState, Carry } from "../src/state.ts";
 import { stepBattle } from "../src/step.ts";
-import { brawl, member, plan } from "./helpers.ts";
+import { brawl, member, plan, TEST_KITS } from "./helpers.ts";
 
 const SEEDS = 40;
 const MAX_TICKS = 6000;
@@ -35,7 +35,7 @@ function play(seed: number): Outcome {
     for (const e of step) {
       if (e.type === "joined") {
         start.set(e.participant.id, {
-          hp: state.params.dna[e.participant.dna].hp,
+          hp: TEST_KITS[e.participant.dna].maxHp,
           carry: { materia: 0, cristal: 0 },
         });
       }

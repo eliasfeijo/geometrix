@@ -1,5 +1,5 @@
 {
-  "battleVersion": 4,
+  "battleVersion": 5,
   "setup": {
     "rule": "grid",
     "arena": [
@@ -40,15 +40,33 @@
           "name": "Ária",
           "dna": "square",
           "hp": 300,
-          "carry": { "materia": 0, "cristal": 0 },
+          "maxHp": 300,
+          "carry": {
+            "materia": 0,
+            "cristal": 0
+          },
+          "capacity": 30,
           "gambits": [
             {
-              "when": { "type": "allyHpBelow", "permille": 500, "cells": 4 },
-              "then": { "type": "protect" }
+              "when": {
+                "type": "allyHpBelow",
+                "permille": 500,
+                "cells": 4
+              },
+              "then": {
+                "type": "protect"
+              }
             },
             {
-              "when": { "type": "always" },
-              "then": { "type": "attack", "target": { "by": "nearest" } }
+              "when": {
+                "type": "always"
+              },
+              "then": {
+                "type": "attack",
+                "target": {
+                  "by": "nearest"
+                }
+              }
             }
           ],
           "reaction": "normal"
@@ -59,23 +77,52 @@
           "name": "Brasa",
           "dna": "circle",
           "hp": 120,
-          "carry": { "materia": 0, "cristal": 0 },
+          "maxHp": 120,
+          "carry": {
+            "materia": 0,
+            "cristal": 0
+          },
+          "capacity": 10,
           "gambits": [
             {
-              "when": { "type": "hpBelow", "permille": 250 },
-              "then": { "type": "flee" }
+              "when": {
+                "type": "hpBelow",
+                "permille": 250
+              },
+              "then": {
+                "type": "flee"
+              }
             },
             {
-              "when": { "type": "projectileIncoming" },
-              "then": { "type": "dodge" }
+              "when": {
+                "type": "projectileIncoming"
+              },
+              "then": {
+                "type": "dodge"
+              }
             },
             {
-              "when": { "type": "enemyWithin", "cells": 3 },
-              "then": { "type": "keepDistance", "target": { "by": "nearest" } }
+              "when": {
+                "type": "enemyWithin",
+                "cells": 3
+              },
+              "then": {
+                "type": "keepDistance",
+                "target": {
+                  "by": "nearest"
+                }
+              }
             },
             {
-              "when": { "type": "always" },
-              "then": { "type": "attack", "target": { "by": "weakest" } }
+              "when": {
+                "type": "always"
+              },
+              "then": {
+                "type": "attack",
+                "target": {
+                  "by": "weakest"
+                }
+              }
             }
           ],
           "reaction": "normal"
@@ -84,58 +131,86 @@
     ]
   },
   "params": {
-    "tick": { "ticksPerSecond": 20 },
-    "start": { "countdownMs": 3000 },
+    "tick": {
+      "ticksPerSecond": 20
+    },
+    "start": {
+      "countdownMs": 3000
+    },
     "dna": {
       "square": {
-        "hp": 300,
         "damage": 30,
         "range": 1,
         "cooldownMs": 1000,
         "cellsPerSecond": 3,
-        "projectileCellsPerSecond": 0,
-        "capacity": 30
+        "projectileCellsPerSecond": 0
       },
       "triangle": {
-        "hp": 200,
         "damage": 20,
         "range": 4,
         "cooldownMs": 800,
         "cellsPerSecond": 4,
-        "projectileCellsPerSecond": 10,
-        "capacity": 20
+        "projectileCellsPerSecond": 10
       },
       "circle": {
-        "hp": 120,
         "damage": 24,
         "range": 6,
         "cooldownMs": 800,
         "cellsPerSecond": 5,
-        "projectileCellsPerSecond": 12,
-        "capacity": 10
+        "projectileCellsPerSecond": 12
       }
     },
-    "carry": { "fullBrakePermille": 500 },
-    "exit": { "dwellMs": 2000 },
-    "inactivity": { "timeoutMs": 15000 },
-    "ai": {
-      "easy": { "decisionMs": 600, "decisionJitterMs": 250 },
-      "normal": { "decisionMs": 250, "decisionJitterMs": 100 },
-      "hard": { "decisionMs": 100, "decisionJitterMs": 50 }
+    "carry": {
+      "fullBrakePermille": 500
     },
-    "gambits": { "maxRules": 8, "meleeBerthSteps": 3 },
-    "limits": { "maxSides": 4, "maxPerSide": 5 }
+    "exit": {
+      "dwellMs": 2000
+    },
+    "inactivity": {
+      "timeoutMs": 15000
+    },
+    "ai": {
+      "easy": {
+        "decisionMs": 600,
+        "decisionJitterMs": 250
+      },
+      "normal": {
+        "decisionMs": 250,
+        "decisionJitterMs": 100
+      },
+      "hard": {
+        "decisionMs": 100,
+        "decisionJitterMs": 50
+      }
+    },
+    "gambits": {
+      "maxRules": 8,
+      "meleeBerthSteps": 3
+    },
+    "limits": {
+      "maxSides": 4,
+      "maxPerSide": 5
+    }
   },
   "ticks": 167,
   "commands": [
     {
       "tick": 3,
-      "commands": [{ "type": "control", "id": 1, "controller": "human" }]
+      "commands": [
+        {
+          "type": "control",
+          "id": 1,
+          "controller": "human"
+        }
+      ]
     },
     {
       "tick": 15,
       "commands": [
-        { "type": "drop", "id": 1 },
+        {
+          "type": "drop",
+          "id": 1
+        },
         {
           "type": "intent",
           "id": 1,
@@ -148,29 +223,67 @@
     {
       "tick": 17,
       "commands": [
-        { "type": "intent", "id": 1, "move": null, "attack": false },
-        { "type": "intent", "id": 1, "move": "right", "attack": false }
+        {
+          "type": "intent",
+          "id": 1,
+          "move": null,
+          "attack": false
+        },
+        {
+          "type": "intent",
+          "id": 1,
+          "move": "right",
+          "attack": false
+        }
       ]
     },
     {
       "tick": 90,
       "commands": [
-        { "type": "intent", "id": 1, "move": null, "attack": false },
-        { "type": "attackOnce", "id": 1 },
-        { "type": "intent", "id": 1, "move": null, "attack": true }
+        {
+          "type": "intent",
+          "id": 1,
+          "move": null,
+          "attack": false
+        },
+        {
+          "type": "attackOnce",
+          "id": 1
+        },
+        {
+          "type": "intent",
+          "id": 1,
+          "move": null,
+          "attack": true
+        }
       ]
     },
     {
       "tick": 91,
       "commands": [
-        { "type": "intent", "id": 1, "move": null, "attack": false },
-        { "type": "intent", "id": 1, "move": "up", "attack": false }
+        {
+          "type": "intent",
+          "id": 1,
+          "move": null,
+          "attack": false
+        },
+        {
+          "type": "intent",
+          "id": 1,
+          "move": "up",
+          "attack": false
+        }
       ]
     },
     {
       "tick": 100,
       "commands": [
-        { "type": "intent", "id": 1, "move": null, "attack": false },
+        {
+          "type": "intent",
+          "id": 1,
+          "move": null,
+          "attack": false
+        },
         {
           "type": "join",
           "side": 2,
@@ -178,26 +291,54 @@
             "name": "Cobre",
             "dna": "triangle",
             "hp": 200,
-            "carry": { "materia": 0, "cristal": 0 },
+            "maxHp": 200,
+            "carry": {
+              "materia": 0,
+              "cristal": 0
+            },
+            "capacity": 20,
             "gambits": [
               {
-                "when": { "type": "hpBelow", "permille": 250 },
-                "then": { "type": "flee" }
-              },
-              {
-                "when": { "type": "projectileIncoming" },
-                "then": { "type": "dodge" }
-              },
-              {
-                "when": { "type": "enemyWithin", "cells": 3, "dna": "square" },
+                "when": {
+                  "type": "hpBelow",
+                  "permille": 250
+                },
                 "then": {
-                  "type": "keepDistance",
-                  "target": { "by": "dna", "dna": "square" }
+                  "type": "flee"
                 }
               },
               {
-                "when": { "type": "always" },
-                "then": { "type": "attack", "target": { "by": "nearest" } }
+                "when": {
+                  "type": "projectileIncoming"
+                },
+                "then": {
+                  "type": "dodge"
+                }
+              },
+              {
+                "when": {
+                  "type": "enemyWithin",
+                  "cells": 3,
+                  "dna": "square"
+                },
+                "then": {
+                  "type": "keepDistance",
+                  "target": {
+                    "by": "dna",
+                    "dna": "square"
+                  }
+                }
+              },
+              {
+                "when": {
+                  "type": "always"
+                },
+                "then": {
+                  "type": "attack",
+                  "target": {
+                    "by": "nearest"
+                  }
+                }
               }
             ],
             "reaction": "normal"
@@ -213,10 +354,22 @@
           "id": 2,
           "gambits": [
             {
-              "when": { "type": "enemyWithin", "cells": 4 },
-              "then": { "type": "drop" }
+              "when": {
+                "type": "enemyWithin",
+                "cells": 4
+              },
+              "then": {
+                "type": "drop"
+              }
             },
-            { "when": { "type": "always" }, "then": { "type": "flee" } }
+            {
+              "when": {
+                "type": "always"
+              },
+              "then": {
+                "type": "flee"
+              }
+            }
           ]
         }
       ]
@@ -224,24 +377,51 @@
     {
       "tick": 126,
       "commands": [
-        { "type": "intent", "id": 1, "move": "down", "attack": false }
+        {
+          "type": "intent",
+          "id": 1,
+          "move": "down",
+          "attack": false
+        }
       ]
     },
     {
       "tick": 137,
       "commands": [
-        { "type": "intent", "id": 1, "move": null, "attack": false },
-        { "type": "attackOnce", "id": 1 }
+        {
+          "type": "intent",
+          "id": 1,
+          "move": null,
+          "attack": false
+        },
+        {
+          "type": "attackOnce",
+          "id": 1
+        }
       ]
     },
     {
       "tick": 138,
-      "commands": [{ "type": "intent", "id": 1, "move": null, "attack": true }]
+      "commands": [
+        {
+          "type": "intent",
+          "id": 1,
+          "move": null,
+          "attack": true
+        }
+      ]
     },
     {
       "tick": 140,
-      "commands": [{ "type": "intent", "id": 1, "move": null, "attack": false }]
+      "commands": [
+        {
+          "type": "intent",
+          "id": 1,
+          "move": null,
+          "attack": false
+        }
+      ]
     }
   ],
-  "finalHash": "25532f102b7ec9a7850ce0596d4dbdd85d22352641f2c285b93e23a0e24f3fef"
+  "finalHash": "d61bcfd21c8f2cfc926f17b154f6fb6a4e7040a6d8f4bd707489945a85bd9964"
 }

@@ -250,6 +250,7 @@ describe("the view", () => {
     for (let i = 0; i < 20; i++) stepBattle(state, []);
     expect(JSON.stringify(view)).toBe(before);
     expect(Object.keys(view.participants[0]!).sort()).toEqual([
+      "capacity",
       "carry",
       "cell",
       "controller",
@@ -259,6 +260,7 @@ describe("the view", () => {
       "facing",
       "hp",
       "id",
+      "maxHp",
       "name",
       "reaction",
       "side",

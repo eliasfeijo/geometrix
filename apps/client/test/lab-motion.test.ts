@@ -36,7 +36,10 @@ function creep(id: number, cell: number, dna: Dna = "triangle") {
     cell,
     facing: "right",
     hp: 100,
+    maxHp: 200,
     carry: { materia: 0, cristal: 0 },
+    // The triangle's: a full bag is 20 (fullBrakePermille halves the speed).
+    capacity: 20,
     controller: "human",
     reaction: "normal",
     cooldownTicks: 0,

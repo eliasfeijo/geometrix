@@ -10,7 +10,7 @@
 // page (Math.random, outside the battle: it is not in the log), the RTT and
 // the measured delay hidden until the grade from 1 to 5.
 
-import type { BattleParams, BattleSetup, Outcome } from "@geometrix/battle";
+import type { BattleSetup, Outcome } from "@geometrix/battle";
 import type { KeyValueStore } from "../session.ts";
 import { DNA_GLYPHS } from "./labels.ts";
 import type { LatencySummary } from "./latency.ts";
@@ -80,16 +80,12 @@ const KEY = "geometrix:lab:session";
  * The matchup of a setup, for the summary: the arena and each side's DNAs,
  * with the starting HP when it is not full (e.g. "pedras · ■ × ●50%").
  */
-export function matchupOf(
-  setup: BattleSetup,
-  arena: string,
-  params: BattleParams,
-): string {
+export function matchupOf(setup: BattleSetup, arena: string): string {
   const side = (members: BattleSetup["sides"][number]) =>
     members
       .map((p) => {
-        const max = params.dna[p.dna].hp;
-        const hp = p.hp < max ? `${Math.round((p.hp * 100) / max)}%` : "";
+        const hp =
+          p.hp < p.maxHp ? `${Math.round((p.hp * 100) / p.maxHp)}%` : "";
         return `${DNA_GLYPHS[p.dna]}${hp}`;
       })
       .join("");

@@ -17,11 +17,20 @@ import { FakeClock } from "./fake-clock.ts";
 // The battle tests' fixed params, so balancing does not change these tests.
 const params = parseBattleParams(JSON.parse(paramsJson));
 
+// Max HP and capacity fixed like the params (the world's numbers of D9).
+const KITS: Record<Dna, { maxHp: number; capacity: number }> = {
+  square: { maxHp: 300, capacity: 30 },
+  triangle: { maxHp: 200, capacity: 20 },
+  circle: { maxHp: 120, capacity: 10 },
+};
+
 const fighter = (dna: Dna) => ({
   name: dna,
   dna,
-  hp: params.dna[dna].hp,
+  hp: KITS[dna].maxHp,
+  maxHp: KITS[dna].maxHp,
   carry: { materia: 0, cristal: 0 },
+  capacity: KITS[dna].capacity,
   gambits: defaultGambits(dna),
   reaction: "normal" as const,
 });

@@ -24,9 +24,15 @@ import {
 export type ParticipantSetup = {
   name: string;
   dna: Dna;
-  /** HP to start with, 1..the DNA's maximum: the wounded fight wounded (D6). */
+  /** HP to start with, 1..maxHp: the wounded fight wounded (D6). */
   hp: number;
+  /**
+   * The participant's max HP and capacity (junction spec D9): the world owns
+   * them (capacity has the world's upgrade), so the setup carries them.
+   */
+  maxHp: number;
   carry: Carry;
+  capacity: number;
   /**
    * The participant's gambits, copied field by field (spec D14). The setup
    * carries the list itself, so a log replays the same whatever the presets
@@ -72,24 +78,29 @@ export function participantIssue(
   params: BattleParams,
 ): string | null {
   if (!isRecord(input)) return "expected an object";
-  const { name, dna, hp, carry, gambits, reaction } = input;
+  const { name, dna, hp, maxHp, carry, capacity, gambits, reaction } = input;
   if (typeof name !== "string" || name.length === 0) {
     return "name must be a non-empty string";
   }
   if (!DNAS.includes(dna as Dna)) return `unknown DNA ${String(dna)}`;
-  const kit = params.dna[dna as Dna];
+  if (!Number.isSafeInteger(maxHp) || (maxHp as number) < 1) {
+    return `${name}: max HP must be a positive integer`;
+  }
   if (
     !Number.isSafeInteger(hp) ||
     (hp as number) < 1 ||
-    (hp as number) > kit.hp
+    (hp as number) > (maxHp as number)
   ) {
-    return `${name}: HP must be an integer in 1..${kit.hp}`;
+    return `${name}: HP must be an integer in 1..${String(maxHp)}`;
+  }
+  if (!Number.isSafeInteger(capacity) || (capacity as number) < 1) {
+    return `${name}: capacity must be a positive integer`;
   }
   if (!isRecord(carry) || !isCount(carry.materia) || !isCount(carry.cristal)) {
     return `${name}: carry must have non-negative integer materia and cristal`;
   }
-  if (carryTotal(carry as Carry) > kit.capacity) {
-    return `${name}: carry above the capacity of ${kit.capacity}`;
+  if (carryTotal(carry as Carry) > (capacity as number)) {
+    return `${name}: carry above the capacity of ${capacity}`;
   }
   const list = copyGambits(gambits, params.gambits.maxRules);
   if (typeof list === "string") return `${name}: ${list}`;
@@ -208,7 +219,9 @@ export function placeParticipant(
     cell,
     facing: state.arena.entries[entry]!.facing,
     hp: setup.hp,
+    maxHp: setup.maxHp,
     carry: { materia: setup.carry.materia, cristal: setup.carry.cristal },
+    capacity: setup.capacity,
     controller: "gambits",
     gambits: copyGambits(
       setup.gambits,

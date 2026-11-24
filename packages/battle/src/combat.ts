@@ -218,6 +218,7 @@ export function applyHits(
       ...participantRef(participant),
       outcome: "died",
       hp: 0,
+      maxHp: participant.maxHp,
       carry: { materia: 0, cristal: 0 },
       tick: log.tick,
     });

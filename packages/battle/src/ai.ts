@@ -38,7 +38,7 @@ export function conditionHolds(mind: Mind, condition: Condition): boolean {
     case "always":
       return true;
     case "hpBelow":
-      return hpBelow(state, self, condition.permille);
+      return hpBelow(self, condition.permille);
     case "enemyWithin":
       return mind.enemies.some((e) => {
         if (condition.dna !== undefined && e.dna !== condition.dna) {
@@ -55,12 +55,12 @@ export function conditionHolds(mind: Mind, condition: Condition): boolean {
     case "projectileIncoming":
       return projectileIncoming(mind);
     case "carryAbove":
-      return carryAbove(state, self, condition.permille);
+      return carryAbove(self, condition.permille);
     case "allyHpBelow":
       return mind.allies.some((a) => {
         const steps = stepsTo(mind, a.cell);
         return (
-          hpBelow(state, a, condition.permille) &&
+          hpBelow(a, condition.permille) &&
           steps >= 0 &&
           steps <= condition.cells
         );

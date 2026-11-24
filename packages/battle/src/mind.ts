@@ -72,28 +72,18 @@ export function stepsTo(mind: Mind, cell: number): number {
 }
 
 /** `p.hp` below `permille` of its maximum (spec D14). */
-export function hpBelow(
-  state: BattleState,
-  p: ViewParticipant,
-  permille: number,
-): boolean {
-  return p.hp * 1000 < permille * state.params.dna[p.dna].hp;
+export function hpBelow(p: ViewParticipant, permille: number): boolean {
+  return p.hp * 1000 < permille * p.maxHp;
 }
 
 /** `p`'s carry above `permille` of its capacity (spec D14). */
-export function carryAbove(
-  state: BattleState,
-  p: ViewParticipant,
-  permille: number,
-): boolean {
-  return (
-    carryTotal(p.carry) * 1000 > permille * state.params.dna[p.dna].capacity
-  );
+export function carryAbove(p: ViewParticipant, permille: number): boolean {
+  return carryTotal(p.carry) * 1000 > permille * p.capacity;
 }
 
 /** a's HP is a smaller share of its maximum than b's (exact, cross-multiplied). */
-function weaker(state: BattleState, a: ViewParticipant, b: ViewParticipant) {
-  return a.hp * state.params.dna[b.dna].hp - b.hp * state.params.dna[a.dna].hp;
+function weaker(a: ViewParticipant, b: ViewParticipant) {
+  return a.hp * b.maxHp - b.hp * a.maxHp;
 }
 
 /**
@@ -135,7 +125,7 @@ export function pickTarget(mind: Mind, target: Target): ViewParticipant | null {
     stepsTo(mind, a.cell) - stepsTo(mind, b.cell);
   const tied =
     target.by === "weakest"
-      ? smallest(candidates, (a, b) => weaker(mind.state, a, b))
+      ? smallest(candidates, (a, b) => weaker(a, b))
       : smallest(candidates, nearest);
   const chosen = breakTie(mind, tied);
   mind.participant.ai.target = chosen.id;

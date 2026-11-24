@@ -530,8 +530,7 @@ export function ArenaView(props: Props) {
         const cx = at.x + 0.5;
         const cy = at.y + 0.5;
         const [dx, dy] = STEP[p.facing];
-        const kit = params.dna[p.dna];
-        const hp = p.hp / kit.hp;
+        const hp = p.hp / p.maxHp;
         const band =
           hp > 0.5 ? COLORS.hp.high : hp > 0.25 ? COLORS.hp.mid : COLORS.hp.low;
         const load = p.carry.materia + p.carry.cristal;
@@ -616,7 +615,7 @@ export function ArenaView(props: Props) {
               <circle
                 cx={cx + 0.4}
                 cy={cy + 0.4}
-                r={0.1 + (0.14 * load) / kit.capacity}
+                r={0.1 + (0.14 * load) / p.capacity}
                 fill={p.carry.cristal > 0 ? COLORS.cristal : COLORS.materia}
                 stroke={COLORS.background}
                 stroke-width={0.04}

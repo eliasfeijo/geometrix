@@ -8,14 +8,13 @@
 import {
   DEFAULT_PRESETS,
   presetGambits,
-  type BattleParams,
   type BattleSetup,
   type Dna,
   type ParticipantSetup,
   type PresetId,
   type Reaction,
 } from "@geometrix/battle";
-import type { ArenaName } from "./assets.ts";
+import type { ArenaName, Kit } from "./assets.ts";
 import { labName } from "./labels.ts";
 
 export type MemberDraft = {
@@ -87,15 +86,17 @@ export function randomSeed(): number {
 /** The participant a draft member becomes, named by its place in the lab. */
 export function participantOf(
   draft: MemberDraft,
-  params: BattleParams,
+  kits: Record<Dna, Kit>,
   nameIndex: number,
 ): ParticipantSetup {
-  const kit = params.dna[draft.dna];
+  const kit = kits[draft.dna];
   return {
     name: labName(nameIndex),
     dna: draft.dna,
-    hp: Math.max(1, Math.floor((kit.hp * draft.hpPermille) / 1000)),
+    hp: Math.max(1, Math.floor((kit.maxHp * draft.hpPermille) / 1000)),
+    maxHp: kit.maxHp,
     carry: { materia: Math.min(draft.materia, kit.capacity), cristal: 0 },
+    capacity: kit.capacity,
     gambits: presetGambits(draft.preset),
     reaction: draft.reaction,
   };
@@ -103,7 +104,7 @@ export function participantOf(
 
 export function setupOf(
   draft: SetupDraft,
-  params: BattleParams,
+  kits: Record<Dna, Kit>,
   arena: string[],
 ): BattleSetup {
   let index = 0;
@@ -112,7 +113,7 @@ export function setupOf(
     arena,
     seed: draft.seed,
     sides: draft.sides.map((members) =>
-      members.map((m) => participantOf(m, params, index++)),
+      members.map((m) => participantOf(m, kits, index++)),
     ),
   };
 }
