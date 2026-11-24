@@ -160,6 +160,7 @@ describe("the events list (spec D19)", () => {
         reason: "idle",
         hp: 1,
         carry: { materia: 0, cristal: 0 },
+        cell: 0,
       }),
     ).toBe("Brasa (B ●) foge por inatividade");
     expect(

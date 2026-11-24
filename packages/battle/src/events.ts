@@ -63,16 +63,27 @@ export type BattleEventBody =
       cell: number;
       dir: Dir;
     }
-  | { type: "died"; participant: ParticipantRef; by: ParticipantRef | null }
+  | {
+      /** `cell`: where it fell, its load left there as a pile. */
+      type: "died";
+      participant: ParticipantRef;
+      by: ParticipantRef | null;
+      cell: number;
+    }
   | { type: "dropped"; participant: ParticipantRef; carry: Carry; cell: number }
   | { type: "picked"; participant: ParticipantRef; carry: Carry; cell: number }
   | { type: "joined"; participant: ParticipantRef; cell: number }
   | {
+      /**
+       * `cell`: where it stood when it left, which the junction maps back to
+       * the world (junction spec D7).
+       */
       type: "escaped";
       participant: ParticipantRef;
       reason: "edge" | "idle";
       hp: number;
       carry: Carry;
+      cell: number;
     }
   | {
       type: "controlChanged";

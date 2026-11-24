@@ -226,6 +226,7 @@ export function applyHits(
       type: "died",
       participant: participantRef(participant),
       by: refById(state, killers.get(participant.id)!),
+      cell: participant.cell,
     });
   }
   state.participants = state.participants.filter((p) => p.hp > 0);
