@@ -1,12 +1,22 @@
 // Runs a world headless with bot players (plan section 9). Bots go through
 // the same path as a human on the server: their commands are validated on
 // receipt (ack or reject), the accepted ones get the tick and a seq and go into
-// the command log, and step validates them again when it applies them.
+// the command log, and step validates them again when it applies them. The
+// world steps through the junction host (ADR-0010): its battles' results go
+// into the log after the bots' commands, as the system player's.
 
+import { readFileSync } from "node:fs";
+import { parseBattleParams, type BattleParams } from "@geometrix/battle";
+import {
+  createHost,
+  stepJunction,
+  type FinishedBattle,
+  type JunctionHost,
+  type JunctionStep,
+} from "@geometrix/junction";
 import {
   botCommands,
   createWorld,
-  step,
   validate,
   type Bot,
   type Command,
@@ -24,22 +34,33 @@ export type LoggedCommand = {
   command: Command;
 };
 
+const BATTLE_PARAMS = new URL("../../../params/battle.json", import.meta.url);
+
+/** params/battle.json, the battles' params of every bot run. */
+export function defaultBattleParams(): BattleParams {
+  return parseBattleParams(JSON.parse(readFileSync(BATTLE_PARAMS, "utf8")));
+}
+
 /**
- * Steps one tick with the bots' accepted commands, appending them to `log`.
- * Returns the tick's events (ADR-0007).
+ * Steps one tick through the host with the bots' accepted commands, appending
+ * them and then the battles' results to `log`. Returns the tick's events
+ * (ADR-0007), the results and the battles that ended.
  */
 export function stepWithBots(
   state: WorldState,
+  host: JunctionHost,
   bots: readonly Bot[],
   log: LoggedCommand[],
-): SimEvent[] {
+): JunctionStep {
+  const tick = state.tick;
   const accepted = botCommands(state, bots).filter(
     ({ playerId, command }) => validate(state, command, playerId) === null,
   );
-  accepted.forEach(({ playerId, command }, seq) => {
-    log.push({ tick: state.tick, seq, playerId, command });
+  const done = stepJunction(state, host, accepted);
+  [...accepted, ...done.results].forEach(({ playerId, command }, seq) => {
+    log.push({ tick, seq, playerId, command });
   });
-  return step(state, accepted);
+  return done;
 }
 
 /** Groups a log by tick for replay: commands of `tick` in seq order. */
@@ -56,25 +77,36 @@ export function logCursor(log: readonly LoggedCommand[]) {
   };
 }
 
-export type BotRun = { state: WorldState; log: LoggedCommand[] };
+export type BotRun = {
+  state: WorldState;
+  host: JunctionHost;
+  log: LoggedCommand[];
+};
 
 /**
- * Creates a world and runs `ticks` ticks with the bots. `onTick` sees the new
- * world (tick 0, no events) and the state after each tick with the tick's
- * events, for metric samples.
+ * Creates a world and its host and runs `ticks` ticks with the bots. `onTick`
+ * sees the new world (tick 0, no events) and the state after each tick with
+ * the tick's events and the battles that ended, for metric samples.
  */
 export function runBots(
   seed: number,
   params: Params,
   ticks: number,
   bots: readonly Bot[],
-  onTick: (state: WorldState, events: readonly SimEvent[]) => void = () => {},
+  onTick: (
+    state: WorldState,
+    events: readonly SimEvent[],
+    finished: readonly FinishedBattle[],
+  ) => void = () => {},
+  battleParams: BattleParams = defaultBattleParams(),
 ): BotRun {
   const state = createWorld(seed, params);
+  const host = createHost(battleParams);
   const log: LoggedCommand[] = [];
-  onTick(state, []);
+  onTick(state, [], []);
   for (let i = 0; i < ticks; i++) {
-    onTick(state, stepWithBots(state, bots, log));
+    const done = stepWithBots(state, host, bots, log);
+    onTick(state, done.events, done.finished);
   }
-  return { state, log };
+  return { state, host, log };
 }

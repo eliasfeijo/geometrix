@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@geometrix/battle": "*",
+    "@geometrix/junction": "*",
     "@geometrix/protocol": "*",
     "@geometrix/sim": "*"
   }

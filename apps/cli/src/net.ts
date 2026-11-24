@@ -29,7 +29,12 @@ import {
   type TeamEvent,
   type TeamView,
 } from "@geometrix/sim";
-import { stepWithBots, type LoggedCommand } from "./harness.ts";
+import { createHost } from "@geometrix/junction";
+import {
+  defaultBattleParams,
+  stepWithBots,
+  type LoggedCommand,
+} from "./harness.ts";
 import { stateHash } from "./hash.ts";
 import { HOUR, number, table, windowSeconds } from "./report.ts";
 
@@ -121,6 +126,7 @@ export function measureNet(
   const state = createWorld(options.seed, params);
   const bots = botsFor(options.strategists);
   const log: LoggedCommand[] = [];
+  const host = createHost(defaultBattleParams());
   const teams = state.teams.map((t) => t.id);
   const sent = teams.map(() => emptySent());
   const cells = state.map.width * state.map.height;
@@ -152,7 +158,7 @@ export function measureNet(
   };
 
   for (let i = 0; i < ticks; i++) {
-    const tickEvents = stepWithBots(state, bots, log);
+    const tickEvents = stepWithBots(state, host, bots, log).events;
     const hashed = state.tick % hashEveryTicks === 0;
     const messages: string[] = [];
     const views: TeamView[] = [];
