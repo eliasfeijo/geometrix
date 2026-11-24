@@ -6,21 +6,22 @@
 
 ## Now
 
-**Updated:** 2026-11-24
+**Updated:** 2026-11-24 (end of F2)
 
 | | |
 |---|---|
 | **Milestone** | **M2 — The ambush** ([ROADMAP](../ROADMAP.md)). M0, M1 and M1.5 ✅ |
 | **Slices** | **A — The encounter** ([spec](../specs/m2-encounter/spec.md) · [plan](../specs/m2-encounter/plan.md) · [tasks](../specs/m2-encounter/tasks.md)) ✅ 2026-11-17 · **B — The battle lab** ([spec](../specs/m2-battle-lab/spec.md) · [plan](../specs/m2-battle-lab/plan.md) · [tasks](../specs/m2-battle-lab/tasks.md)) ✅ 2026-11-20 |
-| **In progress** | **D — The junction** ([spec](../specs/m2-junction/spec.md) · [plan](../specs/m2-junction/plan.md) · [tasks](../specs/m2-junction/tasks.md)), spec and plan ✅ 2026-11-24. **F1** ✅ (the baseline, the battle contract, the `junction` package) |
-| **Next front** | **F2 — The world side** (branch `m2/junction-f2-world`): the battle stub and the lock, the attack and the refused extortion opening the battle, the roll leaving, the result commands, joins, events and view; `SIM_VERSION` 10 |
-| **Then** | F3 (the host and the harness, checkpoint C1), F4–F7; then **P — The friends' playtest**; E's order vs. P decided at D's checkpoint C2 |
+| **In progress** | **D — The junction** ([spec](../specs/m2-junction/spec.md) · [plan](../specs/m2-junction/plan.md) · [tasks](../specs/m2-junction/tasks.md)), spec and plan ✅ 2026-11-24. **F1** ✅ (the baseline, the battle contract, the `junction` package) · **F2** ✅ (the world side: stub, lock, joins, the result commands; `SIM_VERSION` 10) |
+| **Next front** | **F3 — The host and the harness** (branch `m2/junction-f3-host`): the arena from the window, the setups, `JunctionHost` and `stepJunction`, results back as `battleExit`/`battleEnd`, joins and control, every harness caller through the host, `geo verify`'s fifth path, the battle metrics; **checkpoint C1** (bot × bot against the baseline) for the owner |
+| **Then** | F4–F7; then **P — The friends' playtest**; E's order vs. P decided at D's checkpoint C2 |
 | **Waiting on the owner** | (1) [ADR-0009](../adr/0009-prediction-in-the-lab.md) (`Proposed`): prediction as a lab experiment option. (2) `gambits.meleeBerthSteps` 3 (provisional, lab F7). (3) Whenever the owner wants: [PLAYTEST](../PLAYTEST.md) lab group 7 (the four movement options at 0 and 150 ms), which feeds the prediction decision |
 | **Blockers** | None |
 
 ### Next steps
 
-1. **F2** from the [tasks](../specs/m2-junction/tasks.md): tested with hand-built result commands (no host yet).
+1. **F3** from the [tasks](../specs/m2-junction/tasks.md), up to checkpoint C1 (stop before the merge with the
+   numbers and numbered questions). The F2 record lists 10 interpretations to validate.
 2. **🐞 The road-builder preset does not work for the player** (owner, 2026-11-20, seen since before slice A): it asks
    for a point on the map, but nothing happens on click or mouse move (no road or cost preview); a road can only be
    built by dominating a creep, in road mode. The bots build with the same preset, so the `sim` works. Hypotheses: the
@@ -56,9 +57,19 @@
 - **The baseline** for D's comparisons is in the [tasks](../specs/m2-junction/tasks.md) F1 record (`geo sim` 3 days
   seed 42: 10.7–11.7 s; `geo sweep` 6 h seeds 1–20, run as `--set creep.cost.materia=3000`, the default, since
   `sweep` needs a `--set`).
-- **The encounter in the world** (`packages/sim/src/encounter.ts`): the fight today is `fightRound`'s roll, by HP ×
-  DNA; it is what D replaces with the instance. The chronicle, the reaction panel and the approach menu are in the
-  client.
+- **The battle in the world** (`packages/sim/src/battle.ts`, F2): `state.battles` holds stubs (`window`, `sides`,
+  `participants` with `stance` fight or flee = carrier, `openedTick`, the cell); `creep.battle` locks a creep (no
+  autopilot, order, regeneration; orders refused `inBattle`). `encounter.ts` opens a battle at once on an attack
+  (after the `encounter` declaration) and on a refused extortion; `runJoins` adds attackers inside the bubble. The
+  host's results are the system commands `battleExit` and `battleEnd` with `playerId` `SYSTEM_PLAYER_ID` (0): `step`
+  applies them like any command, validated (`notSystem`, `unknownBattle`, `notInBattle`, `invalidResult`), and does
+  not count them as a player's. **Nothing ends a battle yet**: until F3, bot worlds lock their first fighters for good
+  (`geo verify --seed 42`: 6 events in 50,000 ticks). Tests build the results by hand (`battle.test.ts`; the CLI's
+  `encounters.test.ts` has a stand-in host, `quickResults`). Events: `battleOpened`, `battleJoined`, `battleLeft`
+  (edge, idle), `battleEnded` (winner, loot, spoils), `died` with its battle; a team with a side hears them all.
+- **Already in place for F4/F5:** the protocol's delta carries the stubs, the replay schema the system commands,
+  `PROTOCOL_VERSION` 5; the client's reaction panel is pay or refuse, the chronicle has one plain sentence per battle
+  event. The protocol's diff property test lost its death and spoil floors until it runs through the host (F4).
 - **The server** (`apps/server`): WebSocket, SQLite command log with snapshots, the lobby with 2 teams and up to 3
   humans each (`teams.maxHumans`), the player token in the URL fragment.
 - **Screenshots and clicks in Chromium:** the headless Chromium in the Playwright cache accepts CDP
