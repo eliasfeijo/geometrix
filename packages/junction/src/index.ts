@@ -2,4 +2,7 @@
 // junction host, which runs the battle instances next to the world and turns
 // their results into world commands. Pure and deterministic like the sim and
 // the battle, which it imports; the server and the CLI drive it.
-export {};
+export * from "./arena.ts";
+export * from "./host.ts";
+export * from "./results.ts";
+export * from "./setup.ts";

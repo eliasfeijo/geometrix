@@ -106,10 +106,10 @@ contract that `protocol`, the CLI and the client compile against, so no task is 
 - [x] The arena from the window: the 5 × 5 blocks, rock, the four zones always floor, the shift at the map's edge
 - [x] The cell mappings arena → world (ring, rock → nearest walkable)
 - [x] The setups: whole HP, max HP, capacity, cargo, gambits (DNA preset or carrier), `normal`; the battle seed
-- [ ] `JunctionHost`: create on `battleOpened`; `stepJunction` with the world-paced battles before the world step
-- [ ] Results: `died`/`escaped` → `battleExit`, `ended` → `battleEnd`; the instance leaves
-- [ ] Joins (`join`, retried when refused) and domination (`control`); `stepRealtime` and `setPace`
-- [ ] `serializeHost`/`restoreHost`
+- [x] `JunctionHost`: create on `battleOpened`; `stepJunction` with the world-paced battles before the world step
+- [x] Results: `died`/`escaped` → `battleExit`, `ended` → `battleEnd`; the instance leaves
+- [x] Joins (`join`, retried when refused) and domination (`control`); `stepRealtime` and `setPace`
+- [x] `serializeHost`/`restoreHost`
 - [ ] Every harness caller through the host: `stepWithBots`, `runBots`, the bot-world tests, `geo sim`, `geo sweep`
 - [ ] `geo verify`: restore of world and host mid-battle; the fifth path, each battle log against the world log's
       results
