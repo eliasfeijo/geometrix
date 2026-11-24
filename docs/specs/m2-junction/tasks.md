@@ -1,6 +1,6 @@
 # M2 junction tasks — Slice D
 
-**Status:** F1 in progress. Branches `m2/junction-f<n>-<slug>` (skill `commit`).
+**Status:** F1 done (2026-11-24); F2 next. Branches `m2/junction-f<n>-<slug>` (skill `commit`).
 **Spec:** [spec.md](spec.md) · **Plan:** [plan.md](plan.md)
 
 ## F0 — Spec, ADR and plan
