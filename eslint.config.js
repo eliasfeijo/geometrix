@@ -46,9 +46,13 @@ export default defineConfig(
   tseslint.configs.recommended,
   {
     // Determinism guards for the simulations (plan section 2): the world, bot
-    // strategists included (their decisions go into the command log), and the
-    // battle (ADR-0008).
-    files: ["packages/sim/src/**/*.ts", "packages/battle/src/**/*.ts"],
+    // strategists included (their decisions go into the command log), the
+    // battle (ADR-0008) and the junction host that runs both (junction P1).
+    files: [
+      "packages/sim/src/**/*.ts",
+      "packages/battle/src/**/*.ts",
+      "packages/junction/src/**/*.ts",
+    ],
     rules: {
       "no-restricted-properties": [
         "error",
