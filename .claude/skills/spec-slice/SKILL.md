@@ -67,7 +67,7 @@ prerequisites before the `plan.md` · open questions.
 - One section per plan phase (`## F<n> — <name>`), with atomic checkbox tasks `- [ ]`.
 - Each task ends with green tests. Mark `[x]` on completion, in the same commit (`commit` skill).
 - Checkpoints with the owner appear as a bold task (`**Checkpoint:** ...`).
-- Each phase is implemented on its branch and worktree (`commit` skill).
+- Each phase is implemented on its own branch (`commit` skill).
 - When the slice closes, condense the `tasks.md`: a phase table, the checkpoints and the findings.
 
 ## Approval

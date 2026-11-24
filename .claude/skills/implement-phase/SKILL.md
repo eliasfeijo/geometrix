@@ -6,7 +6,7 @@ description: Runs a phase of a geometrix tasks.md (e.g. M2 D F3), from opening t
 # Implementing a phase
 
 The procedure observed in the M1, M1.5 and M2 phases. Code conventions: the "`sim` conventions" section of
-`CLAUDE.md`. Commits, branches and worktrees: the `commit` skill.
+`CLAUDE.md`. Commits and branches: the `commit` skill.
 
 A request for several phases (e.g. "run the junction", "F3 onwards"): one phase at a time, each with its closing and
 merge, until done or until a checkpoint that needs the owner's judgment (section 4).
@@ -18,9 +18,8 @@ merge, until done or until a checkpoint that needs the owner's judgment (section
    previous phase learned has to be there or in the slice's `tasks.md`.
 2. Read the phase's section in the `tasks.md` and the `plan.md` and `spec.md` sections it cites or depends on
    (behavior, params, pipeline). Read the code the phase will extend.
-3. The worktree: `~/workspace/geometrix/<slug>`, on the branch the `tasks.md` gives the phase. If it does not exist,
-   create it from `main` (`commit` skill). If it exists (it may have docs/harness commits between phases), continue
-   in it. Run `npm ci` in a new worktree.
+3. The branch the `tasks.md` gives the phase. If it does not exist, create it from `main` (`commit` skill). If it
+   exists (it may have docs/harness commits between phases), continue on it. Run `npm ci` in a fresh checkout.
 
 ## 2. Gaps before coding
 
@@ -68,7 +67,7 @@ Before the first line of code, list what the phase needs and that **neither the 
    it needs to know about the code, live pending items (remove the resolved ones). What the phase measured,
    interpreted and decided goes into its record in the slice's `tasks.md`. Commit
    `docs: update status dashboard for the end of F<n>`.
-4. Merge into `main` (`commit` skill), then `npm run check` on `main`. Remove the worktree after the merge.
+4. Merge into `main` (`commit` skill), then `npm run check` on `main`.
 
 ## 5. Report to the owner
 
