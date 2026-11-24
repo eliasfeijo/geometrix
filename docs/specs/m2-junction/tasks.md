@@ -1,6 +1,6 @@
 # M2 junction tasks — Slice D
 
-**Status:** F0 in progress. Branches `m2/junction-f<n>-<slug>` (skill `commit`).
+**Status:** F1 in progress. Branches `m2/junction-f<n>-<slug>` (skill `commit`).
 **Spec:** [spec.md](spec.md) · **Plan:** [plan.md](plan.md)
 
 ## F0 — Spec, ADR and plan
@@ -8,7 +8,7 @@
 - [x] Design round with the owner (2026-11-24), recorded in GDD 05, 06 and 07
 - [x] ADR-0010, accepted (2026-11-24): battle instances next to the world
 - [x] Spec approved (2026-11-24), the agent's proposals in GDD 02, 05–08
-- [ ] **Checkpoint:** the owner approves the plan (P1–P11) and the `junction` commit scope
+- [x] **Checkpoint:** the owner approves the plan (P1–P11) and the `junction` commit scope (2026-11-24)
 
 ## F1 — Baseline and the battle contract
 
