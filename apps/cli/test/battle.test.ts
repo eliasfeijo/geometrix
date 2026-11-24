@@ -15,6 +15,7 @@ import {
   quantile,
   readArena,
   scenarios,
+  worldKits,
   type BattleRecord,
   type BattleSweepResult,
 } from "../src/battle.ts";
@@ -47,7 +48,7 @@ function capture(clock?: () => number) {
 
 describe("the matrix (spec sections 7, 8)", () => {
   test("every group has scenarios, and every setup is valid on every arena", () => {
-    const list = scenarios(params);
+    const list = scenarios();
     for (const group of GROUPS) {
       expect(
         list.some((s) => s.group === group),
@@ -68,13 +69,31 @@ describe("the matrix (spec sections 7, 8)", () => {
     }
   });
 
+  test("max HP and capacity come from the world's params (junction spec D9)", () => {
+    const world = JSON.parse(
+      readFileSync(
+        new URL("../../../params/default.json", import.meta.url),
+        "utf8",
+      ),
+    ) as {
+      hp: { dna: Record<string, { max: number }> };
+      dna: Record<string, { capacity: number }>;
+    };
+    for (const s of scenarios()) {
+      for (const p of s.sides.flat()) {
+        expect(p.maxHp).toBe(world.hp.dna[p.dna]!.max);
+        expect(p.capacity).toBe(world.dna[p.dna]!.capacity);
+      }
+    }
+  });
+
   test("1 × 1 of each pair and mirror, wounded at 500‰ on either side", () => {
-    const ids = scenarios(params).map((s) => s.id);
+    const ids = scenarios().map((s) => s.id);
     expect(ids).toContain("1x1 square-triangle");
     expect(ids).toContain("1x1 circle-circle");
     expect(ids).toContain("1x1 square@500-circle");
     expect(ids).toContain("1x1 square-circle@500");
-    const wounded = scenarios(params).find(
+    const wounded = scenarios().find(
       (s) => s.id === "1x1 triangle@500-circle",
     )!;
     expect(wounded.sides[0]![0]!.hp).toBe(100);
@@ -82,10 +101,10 @@ describe("the matrix (spec sections 7, 8)", () => {
   });
 
   test("the carry scenarios start a full square in its zone, far from the exit", () => {
-    const carry = scenarios(params).filter((s) => s.group === "carry");
+    const carry = scenarios().filter((s) => s.group === "carry");
     expect(carry.map((s) => s.id)).toEqual(["carry drop", "carry keep"]);
     for (const s of carry) {
-      expect(s.sides[0]![0]!.carry.materia).toBe(params.dna.square.capacity);
+      expect(s.sides[0]![0]!.carry.materia).toBe(worldKits().square.capacity);
     }
     const state = createBattle(
       {
@@ -112,7 +131,7 @@ describe("the matrix (spec sections 7, 8)", () => {
   test("a pair fails only when the same DNA wins above 75% on every arena", () => {
     /** Ten battles per cell; side 0 wins `wins[scenario][arena]` of them. */
     function result(wins: (id: string, arena: number) => number) {
-      const cells = scenarios(params).flatMap((scenario) =>
+      const cells = scenarios().flatMap((scenario) =>
         ARENAS.map((arena, a) => ({
           scenario,
           arena,
@@ -170,7 +189,7 @@ describe("geo battle sweep (spec R-1)", () => {
     );
     expect(code).toBe(0);
     expect(lines.join("\n")).toContain(
-      `${scenarios(params).length * REPORT_ARENAS.length * 2} battles`,
+      `${scenarios().length * REPORT_ARENAS.length * 2} battles`,
     );
     const report = readFileSync(join(scratch, "two", "battle.md"), "utf8");
     // Win share and duration are informative (F3 checkpoint): only the
@@ -196,9 +215,7 @@ describe("geo battle sweep (spec R-1)", () => {
     const csv = readFileSync(join(scratch, "two", "battle.csv"), "utf8")
       .trimEnd()
       .split("\n");
-    expect(csv).toHaveLength(
-      1 + scenarios(params).length * REPORT_ARENAS.length,
-    );
+    expect(csv).toHaveLength(1 + scenarios().length * REPORT_ARENAS.length);
     expect(csv[1]).toMatch(/^1x1 square-triangle,duel,aberta,2,/);
   });
 

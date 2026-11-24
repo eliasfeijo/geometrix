@@ -43,7 +43,7 @@ function capture() {
 
 /** A logged battle with the scripted human, as the lab would export it. */
 function labLog(seed: number) {
-  const scenario = scenarios(params).find((s) => s.id === "1x1 square-circle")!;
+  const scenario = scenarios().find((s) => s.id === "1x1 square-circle")!;
   const setup = {
     rule: "grid" as const,
     arena: readArena("pedras"),

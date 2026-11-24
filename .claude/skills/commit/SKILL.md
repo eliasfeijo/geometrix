@@ -75,6 +75,7 @@ Optional. A closed list:
 |---|---|
 | `sim` | `packages/sim` |
 | `battle` | `packages/battle` |
+| `junction` | `packages/junction` |
 | `protocol` | `packages/protocol` |
 | `server` | `apps/server` |
 | `client` | `apps/client` |

@@ -81,6 +81,22 @@ describe("pick up (spec C-2, D8)", () => {
     ]);
   });
 
+  test("the capacity is the setup's, not the DNA's (junction spec D9)", () => {
+    // A square with the world's capacity upgrade (30 + 50%).
+    const state = humans(
+      battleOn(FIELD, [[member("square", { capacity: 45 })], ["circle"]]),
+    );
+    put(state, 1, 3, 3);
+    put(state, 2, 6, 5);
+    state.piles.push({ id: 9, cell: HERE, materia: 50, cristal: 0 });
+    run(state, 1, [{ type: "pickup", id: 1 }]);
+    expect(square(state).carry).toEqual({ materia: 45, cristal: 0 });
+    // The brake follows the same capacity: 45 of 45 is the full brake.
+    const full = moveGain(state, square(state));
+    run(state, 1, [{ type: "drop", id: 1 }]);
+    expect(moveGain(state, square(state))).toBe(2 * full);
+  });
+
   test("an emptied pile leaves the state", () => {
     const state = carrier(0, 0);
     state.piles.push({ id: 9, cell: HERE, materia: 3, cristal: 2 });

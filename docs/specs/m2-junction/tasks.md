@@ -1,6 +1,6 @@
 # M2 junction tasks — Slice D
 
-**Status:** F0 in progress. Branches `m2/junction-f<n>-<slug>` (skill `commit`).
+**Status:** F1 done (2026-11-24); F2 next. Branches `m2/junction-f<n>-<slug>` (skill `commit`).
 **Spec:** [spec.md](spec.md) · **Plan:** [plan.md](plan.md)
 
 ## F0 — Spec, ADR and plan
@@ -8,15 +8,42 @@
 - [x] Design round with the owner (2026-11-24), recorded in GDD 05, 06 and 07
 - [x] ADR-0010, accepted (2026-11-24): battle instances next to the world
 - [x] Spec approved (2026-11-24), the agent's proposals in GDD 02, 05–08
-- [ ] **Checkpoint:** the owner approves the plan (P1–P11) and the `junction` commit scope
+- [x] **Checkpoint:** the owner approves the plan (P1–P11) and the `junction` commit scope (2026-11-24)
 
 ## F1 — Baseline and the battle contract
 
-- [ ] Baseline: `geo sim` 3 days (seed 42) and `geo sweep` 6 h (seeds 1–20) on `main`, the numbers quoted here
-- [ ] `ParticipantSetup` with `maxHp` and `capacity`; the validation; `params/battle.json` without them; `BATTLE_VERSION` 5
-- [ ] The lab and `geo battle` read max HP and capacity from `params/default.json`; the lab log fixture rebuilt
-- [ ] `packages/junction`: the workspace, tsconfig, the determinism lint, Vitest, `src/index.ts`; the `junction`
+- [x] Baseline: `geo sim` 3 days (seed 42) and `geo sweep` 6 h (seeds 1–20) on `main`, the numbers quoted here
+- [x] `ParticipantSetup` with `maxHp` and `capacity`; the validation; `params/battle.json` without them; `BATTLE_VERSION` 5
+- [x] The lab and `geo battle` read max HP and capacity from `params/default.json`; the lab log fixture rebuilt
+- [x] `packages/junction`: the workspace, tsconfig, the determinism lint, Vitest, `src/index.ts`; the `junction`
       scope in the `commit` skill
+
+### F1 record
+
+**Baseline** (`main` at `0121923`, `SIM_VERSION` 9, slice A's roll; `runs/d-baseline-sim-s42`, `runs/d-baseline-sweep`,
+not versioned):
+
+- **`geo sim` 3 days, seed 42:** 10.7 s and 11.7 s (two runs), hash `6dabb099…`. 30 / 30 creeps at the end,
+  154,578 / 174,602 materia and 1,117 / 1,283 cristal delivered (gap 11%). Encounters: 6 / 17 opened (all extortion,
+  none attacks; all in the first 12 h), victims paid 3, refused 9, tried to flee 11; 2 deaths (both team 0
+  squares); flee escapes ■ 1 of 3, ▲ 6 of 8, ● 11 of 18. Encounter balance −102 / −63 against +102 / +63.
+- **`geo sweep` 6 h, seeds 1–20** (`creep.cost.materia=3000`, the default, as the single value): 9.7 s. Per team and
+  hour 0.8 encounters (0.2–1.8); paid 30%, with a flee 59%, with a death 12%; flee escapes 65% (42–86); 69% in the
+  victim's core zone; 0.6 deaths per team (0–1); 63 resources taken per team; creep gap 1 (0–2); delivered-materia
+  gap 97 (0–659).
+
+**The contract** (`BATTLE_VERSION` 5):
+
+- Each participant keeps the setup's `maxHp` and `capacity` (state and view); the gambits' HP and load conditions, the
+  pickup, the carry brake and the lab's drawing read them there. The departures and the `ended` results also carry
+  `maxHp`, so the result table shows HP against it without the params.
+- The setup refuses a max HP or capacity that is not a positive integer (capacity 0 would divide the brake by zero).
+- `geo battle` reads `params/default.json` through the `sim`'s `parseParams` (the CLI already validates the world's
+  file that way); the lab imports it as JSON and checks only the two numbers per DNA, without the `sim` (plan §5).
+  Both take the **base** capacity: the upgrade is the world's, applied by the junction's setups (F3).
+- With the same numbers moved, `geo battle sweep --quick` gives the same outcomes and durations as `main` (93 rows of
+  `battle.csv`, timings aside); the lab fixture migrated (participants and joins with the old kit numbers) replays to
+  the same state as before, under the new hash.
 
 ## F2 — The world side
 

@@ -1,13 +1,13 @@
 # M2 plan — The junction
 
-**Status:** Draft · **Date:** 2026-11-24
+**Status:** Approved (2026-11-24) · **Date:** 2026-11-24
 **Spec:** [spec.md](spec.md) · **ADRs:** [0010](../../adr/0010-world-side-of-the-battle-contract.md) (the world side
 of the contract, `Accepted`), [0008](../../adr/0008-battle-package.md) (battle package),
 [0007](../../adr/0007-sim-events.md) (`sim` events), [0006](../../adr/0006-world-sync.md) (view deltas),
 [0004](../../adr/0004-persistence-sqlite-command-log.md) (log and snapshots), [0002](../../adr/0002-every-action-is-a-command.md)
 (command vocabulary)
 
-The decisions that need the owner's OK are marked **(P*n*)** and listed in §12.
+The decisions the owner approved with the plan (2026-11-24) are marked **(P*n*)** and listed in §12.
 
 ## 1. What the code does today and what changes
 
@@ -281,9 +281,9 @@ function stepJunction(world, host, commands): SimEvent[] {
 - **The bots:** without the roll, the raiders may lose or win far more; the F3 checkpoint looks at it before the
   client is built.
 
-## 12. Decisions for the owner
+## 12. Decisions (approved 2026-11-24)
 
-| # | Proposal | Alternative |
+| # | Decision | Alternative not taken |
 |---|---|---|
 | P1 | A **new package `@geometrix/junction`**, pure, under the determinism guards, used by the server and the CLI; a new commit scope `junction` | The host inside the server (the CLI and the tests could not run bot battles) or inside the `sim` (breaks ADR-0010 rule 1) |
 | P2 | The results are **system commands** of the world vocabulary (`battleExit`, `battleEnd`), logged with player id 0 | A table of their own for results (the world replay would read two sources) |

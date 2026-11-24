@@ -17,14 +17,17 @@ import {
   type BattleRecord,
   type Grade,
 } from "../src/lab/session.ts";
-import { LAB_PARAMS } from "../src/lab/assets.ts";
 import { memoryStorage } from "./helpers.ts";
+
+const MAX_HP = { square: 300, triangle: 200, circle: 120 };
 
 const fighter = (dna: "square" | "triangle" | "circle") => ({
   name: dna,
   dna,
   hp: 1,
+  maxHp: MAX_HP[dna],
   carry: { materia: 0, cristal: 0 },
+  capacity: 1,
   gambits: [],
   reaction: "normal" as const,
 });
@@ -110,7 +113,6 @@ describe("the session's storage (plan P14)", () => {
 
 describe("the matchup label", () => {
   test("the arena and each side's DNAs, with the HP when not full", () => {
-    const params = LAB_PARAMS;
     const s: BattleSetup = {
       ...setup,
       sides: [
@@ -121,7 +123,7 @@ describe("the matchup label", () => {
         [{ ...fighter("circle"), hp: 120 }],
       ],
     };
-    expect(matchupOf(s, "corredor", params)).toBe("corredor · ■▲50% × ●");
+    expect(matchupOf(s, "corredor")).toBe("corredor · ■▲50% × ●");
   });
 });
 

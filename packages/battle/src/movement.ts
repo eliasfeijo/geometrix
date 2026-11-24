@@ -14,9 +14,11 @@ export function brakePermille(
   state: BattleState,
   participant: Participant,
 ): number {
-  const { capacity } = state.params.dna[participant.dna];
   const brake = state.params.carry.fullBrakePermille;
-  return 1000 - Math.floor((brake * carryTotal(participant.carry)) / capacity);
+  return (
+    1000 -
+    Math.floor((brake * carryTotal(participant.carry)) / participant.capacity)
+  );
 }
 
 /** Movement points a participant gains per tick, carry brake included. */

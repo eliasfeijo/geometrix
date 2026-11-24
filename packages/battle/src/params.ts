@@ -29,16 +29,16 @@ const positive: Leaf = { min: 1 };
 
 /**
  * The combat kit of a DNA (spec D6). `projectileCellsPerSecond` 0 is a melee
- * attack: it hits the cell in front (plan section 3).
+ * attack: it hits the cell in front (plan section 3). Max HP and capacity are
+ * not here: they are the world's, and each participant's setup carries them
+ * (junction spec D9).
  */
 const dna = {
-  hp: positive,
   damage: positive,
   range: positive,
   cooldownMs: positive,
   cellsPerSecond: positive,
   projectileCellsPerSecond: nonNegative,
-  capacity: positive,
 } as const;
 
 /** One level of the AI's reaction time (spec D20, plan P12). */

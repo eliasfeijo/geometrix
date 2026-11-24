@@ -28,6 +28,7 @@ import {
   MAX_BATTLE_SECONDS,
   readArena,
   scenarios,
+  worldKits,
 } from "./battle.ts";
 
 /** sha256 of the events, one canonical JSON line each, however split. */
@@ -64,8 +65,10 @@ export function scriptedCommands(seed: number, ticks: number): unknown[][] {
         participant: {
           name: "reforço",
           dna: "triangle",
-          hp: 200,
+          hp: worldKits().triangle.maxHp,
+          maxHp: worldKits().triangle.maxHp,
           carry: { materia: 0, cristal: 0 },
+          capacity: worldKits().triangle.capacity,
           gambits: defaultGambits("triangle"),
           reaction: "hard",
         },
@@ -113,7 +116,7 @@ type Sample = { name: string; setup: BattleSetup; scripted: boolean };
 
 /** The verify sample: a slice of the matrix on every arena, plus a human. */
 function sample(params: BattleParams, seed: number): Sample[] {
-  const all = scenarios(params);
+  const all = scenarios();
   const pick = (id: string) => all.find((s) => s.id === id)!;
   const list: Sample[] = [];
   for (const arena of ARENAS) {

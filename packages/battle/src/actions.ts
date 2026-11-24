@@ -198,20 +198,15 @@ function drawSmallest<T>(
  * rule's condition names (allyHpBelow), or among all allies.
  */
 function wardOf(mind: Mind, when: Condition): ViewParticipant | undefined {
-  const { state } = mind;
   let allies = mind.allies;
   if (when.type === "allyHpBelow") {
     allies = allies.filter((a) => {
       const steps = stepsTo(mind, a.cell);
-      return (
-        hpBelow(state, a, when.permille) && steps >= 0 && steps <= when.cells
-      );
+      return hpBelow(a, when.permille) && steps >= 0 && steps <= when.cells;
     });
   }
   // Share of HP in per mille, floored: close enough to rank the wounded.
-  return drawSmallest(mind, allies, (a) =>
-    Math.floor((a.hp * 1000) / state.params.dna[a.dna].hp),
-  );
+  return drawSmallest(mind, allies, (a) => Math.floor((a.hp * 1000) / a.maxHp));
 }
 
 function protect(mind: Mind, when: Condition): Commands {
@@ -246,7 +241,7 @@ function drop(mind: Mind): Commands {
 }
 
 function pickup(mind: Mind): Commands {
-  if (carryTotal(mind.self.carry) >= mind.kit.capacity) return null;
+  if (carryTotal(mind.self.carry) >= mind.self.capacity) return null;
   const piles = mind.view.piles.map((p) => p.cell);
   return reach(mind, piles, () => [
     ...still(mind),

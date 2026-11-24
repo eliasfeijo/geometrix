@@ -12,7 +12,7 @@ import {
   type PresetId,
   type Reaction,
 } from "@geometrix/battle";
-import { ARENA_NAMES, type ArenaName } from "./assets.ts";
+import { ARENA_NAMES, LAB_KITS, type ArenaName } from "./assets.ts";
 import { sideColor } from "./arena-view.tsx";
 import {
   HP_CHOICES,
@@ -33,20 +33,14 @@ import {
 
 type MemberProps = {
   value: MemberDraft;
-  params: BattleParams;
   idPrefix: string;
   onChange(value: MemberDraft): void;
 };
 
 /** The fields of one participant: DNA, HP, load, preset and reaction. */
-export function MemberFields({
-  value,
-  params,
-  idPrefix,
-  onChange,
-}: MemberProps) {
+export function MemberFields({ value, idPrefix, onChange }: MemberProps) {
   const set = (patch: Partial<MemberDraft>) => onChange({ ...value, ...patch });
-  const capacity = params.dna[value.dna].capacity;
+  const capacity = LAB_KITS[value.dna].capacity;
   return (
     <div class="lab-member">
       <select
@@ -197,7 +191,6 @@ export function SetupForm({
             <div key={i} class="lab-member-row">
               <MemberFields
                 value={m}
-                params={params}
                 idPrefix={`setup-${side}-${i}`}
                 onChange={(value) =>
                   setSide(
@@ -348,7 +341,6 @@ export function ReinforceForm(props: ReinforceProps) {
       </div>
       <MemberFields
         value={props.value}
-        params={props.params}
         idPrefix="reinforce"
         onChange={props.onChange}
       />

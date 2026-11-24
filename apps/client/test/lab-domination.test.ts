@@ -6,7 +6,7 @@ import {
 } from "@geometrix/battle";
 import { describe, expect, test } from "vitest";
 import paramsJson from "../../../packages/battle/test/params.json?raw";
-import { LAB_ARENAS } from "../src/lab/assets.ts";
+import { LAB_ARENAS, LAB_KITS } from "../src/lab/assets.ts";
 import { isSwitch, keepsDomination } from "../src/lab/domination.ts";
 import { defaultDraft, setupOf } from "../src/lab/draft.ts";
 
@@ -15,7 +15,7 @@ const params = parseBattleParams(JSON.parse(paramsJson));
 describe("the domination on the page (plan C7)", () => {
   test("it ends with the battle, even for the winner still in the arena", () => {
     const state = createBattle(
-      setupOf(defaultDraft(), params, LAB_ARENAS.pedras),
+      setupOf(defaultDraft(), LAB_KITS, LAB_ARENAS.pedras),
       params,
     );
     const ids = state.participants.map((p) => p.id);
@@ -34,7 +34,7 @@ describe("the domination on the page (plan C7)", () => {
 
   test("it ends when the creep leaves the arena", () => {
     const state = createBattle(
-      setupOf(defaultDraft(), params, LAB_ARENAS.pedras),
+      setupOf(defaultDraft(), LAB_KITS, LAB_ARENAS.pedras),
       params,
     );
     const view = battleView(state);

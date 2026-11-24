@@ -25,6 +25,7 @@ function escape(
     ...participantRef(participant),
     outcome: reason === "edge" ? "escapedEdge" : "escapedIdle",
     hp: participant.hp,
+    maxHp: participant.maxHp,
     carry,
     tick: log.tick,
   });
@@ -91,6 +92,7 @@ export function checkEnd(state: BattleState, log: BattleEventLog): void {
         participant: participantRef(alive),
         outcome: "won",
         hp: alive.hp,
+        maxHp: alive.maxHp,
         carry: { ...alive.carry },
         dealt,
         taken,
@@ -101,6 +103,7 @@ export function checkEnd(state: BattleState, log: BattleEventLog): void {
       participant: participantRef(gone),
       outcome: gone.outcome,
       hp: gone.hp,
+      maxHp: gone.maxHp,
       carry: { ...gone.carry },
       dealt,
       taken,

@@ -21,6 +21,7 @@ import {
   type ParticipantSetup,
   type Reaction,
 } from "@geometrix/battle";
+import { parseParams, type Params } from "@geometrix/sim";
 
 /** The lab's arenas: the verdicts and the verify sample use these. */
 export const ARENAS = ["aberta", "pedras", "corredor"] as const;
@@ -38,6 +39,38 @@ export function readArena(name: ArenaName): string[] {
   return readFileSync(new URL(`${name}.txt`, ARENAS_DIR), "utf8")
     .trimEnd()
     .split("\n");
+}
+
+const WORLD_PARAMS = new URL("../../../params/default.json", import.meta.url);
+
+/** A DNA's max HP and capacity, which the world owns (junction spec D9). */
+export type Kit = { maxHp: number; capacity: number };
+
+/**
+ * Each DNA's max HP and base capacity in the world's params (junction plan
+ * section 5): the battle setups of the sweep and the verify take them from
+ * here, so the number has one home.
+ */
+export function kitsOf(world: Params): Record<Dna, Kit> {
+  const kit = (dna: Dna): Kit => ({
+    maxHp: world.hp.dna[dna].max,
+    capacity: world.dna[dna].capacity,
+  });
+  return {
+    square: kit("square"),
+    triangle: kit("triangle"),
+    circle: kit("circle"),
+  };
+}
+
+let worldKitsCache: Record<Dna, Kit> | null = null;
+
+/** The kits of params/default.json, read once. */
+export function worldKits(): Record<Dna, Kit> {
+  worldKitsCache ??= kitsOf(
+    parseParams(JSON.parse(readFileSync(WORLD_PARAMS, "utf8"))),
+  );
+  return worldKitsCache;
 }
 
 /** sha256 of the canonical snapshot (plan section 11). */
@@ -102,17 +135,15 @@ type FighterOptions = {
   reaction?: Reaction;
 };
 
-function fighter(
-  params: BattleParams,
-  dna: Dna,
-  options: FighterOptions = {},
-): ParticipantSetup {
-  const { hp } = params.dna[dna];
+function fighter(dna: Dna, options: FighterOptions = {}): ParticipantSetup {
+  const { maxHp, capacity } = worldKits()[dna];
   return {
     name: DNA_LABELS[dna],
     dna,
-    hp: Math.floor((hp * (options.hpPermille ?? 1000)) / 1000),
+    hp: Math.floor((maxHp * (options.hpPermille ?? 1000)) / 1000),
+    maxHp,
     carry: { materia: options.carry ?? 0, cristal: 0 },
+    capacity,
     gambits: options.gambits ?? defaultGambits(dna),
     reaction: options.reaction ?? "normal",
   };
@@ -126,11 +157,11 @@ const PAIRS: [Dna, Dna][] = [
 const MIRRORS: Dna[] = ["square", "triangle", "circle"];
 
 /** The scenarios of the sweep, in report order. */
-export function scenarios(params: BattleParams): Scenario[] {
+export function scenarios(): Scenario[] {
   const list: Scenario[] = [];
   const duel = (a: Dna, b: Dna, wounded: 0 | 1 | null): ParticipantSetup[][] =>
     [a, b].map((dna, side) => [
-      fighter(params, dna, {
+      fighter(dna, {
         hpPermille: side === wounded ? WOUNDED_PERMILLE : 1000,
       }),
     ]);
@@ -175,12 +206,12 @@ export function scenarios(params: BattleParams): Scenario[] {
       group: "reaction",
       label: `${DNA_LABELS[dna]} difícil × ${DNA_LABELS[dna]} fácil`,
       sides: [
-        [fighter(params, dna, { reaction: "hard" })],
-        [fighter(params, dna, { reaction: "easy" })],
+        [fighter(dna, { reaction: "hard" })],
+        [fighter(dna, { reaction: "easy" })],
       ],
     });
   }
-  const team = (dnas: Dna[]) => dnas.map((dna) => fighter(params, dna));
+  const team = (dnas: Dna[]) => dnas.map((dna) => fighter(dna));
   list.push({
     id: "2x2 square+triangle-square+circle",
     group: "team",
@@ -202,7 +233,7 @@ export function scenarios(params: BattleParams): Scenario[] {
     label: "1 × 1 × 1: quadrado × triângulo × círculo",
     sides: [team(["square"]), team(["triangle"]), team(["circle"])],
   });
-  const full = params.dna.square.capacity;
+  const full = worldKits().square.capacity;
   const runOnly: Gambit[] = [
     { when: { type: "always" }, then: { type: "flee" } },
   ];
@@ -216,8 +247,8 @@ export function scenarios(params: BattleParams): Scenario[] {
       group: "carry",
       label: `quadrado cheio, ${text} × círculo`,
       sides: [
-        [fighter(params, "square", { carry: full, gambits })],
-        [fighter(params, "circle")],
+        [fighter("square", { carry: full, gambits })],
+        [fighter("circle")],
       ],
     });
   }
@@ -312,7 +343,7 @@ export function battleSweep(
   const start = clock();
   const cells: SweepCell[] = [];
   const rows = Object.fromEntries(REPORT_ARENAS.map((a) => [a, readArena(a)]));
-  for (const scenario of scenarios(options.params)) {
+  for (const scenario of scenarios()) {
     for (const arena of REPORT_ARENAS) {
       const records = options.seeds.map((seed) =>
         resolve(scenario, arena, rows[arena]!, seed, options.params, clock),
@@ -436,7 +467,7 @@ function pooled(cells: readonly SweepCell[], params: BattleParams) {
 export function battleVerdicts(result: BattleSweepResult): Verdicts {
   const { params } = result.options;
   const decidedPairs: string[] = [];
-  for (const scenario of scenarios(params).filter((s) => s.group === "duel")) {
+  for (const scenario of scenarios().filter((s) => s.group === "duel")) {
     // The same side above the limit on every arena: the DNA decides. A pair
     // whose winner flips with the arena is decided by the arena instead.
     const decided = scenario.sides.some((_, side) =>
@@ -484,7 +515,7 @@ export function renderBattleReport(result: BattleSweepResult): string {
   );
   const at = (scenario: Scenario, arena: ArenaName) =>
     stats.get(`${scenario.id}|${arena}`)!;
-  const all = scenarios(params);
+  const all = scenarios();
   const group = (g: Group) => all.filter((s) => s.group === g);
   const verdicts = battleVerdicts(result);
   const battles = cells.reduce((n, c) => n + c.records.length, 0);
@@ -669,7 +700,7 @@ export function renderBattleReport(result: BattleSweepResult): string {
   out.push("## Fuga carregada");
   out.push("");
   out.push(
-    `Um quadrado com a bolsa cheia (${params.dna.square.capacity} de matéria) contra um círculo: a taxa com que o quadrado sai pela borda, com o preset portador (larga a bolsa com o inimigo a 4 células, depois foge) e só fugindo, com a bolsa. Ele nasce na zona do seu lado e precisa chegar à borda com o freio da carga.`,
+    `Um quadrado com a bolsa cheia (${worldKits().square.capacity} de matéria) contra um círculo: a taxa com que o quadrado sai pela borda, com o preset portador (larga a bolsa com o inimigo a 4 células, depois foge) e só fugindo, com a bolsa. Ele nasce na zona do seu lado e precisa chegar à borda com o freio da carga.`,
   );
   out.push("");
   out.push(

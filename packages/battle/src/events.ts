@@ -31,6 +31,8 @@ export type Result = {
   participant: ParticipantRef;
   outcome: Outcome | "won";
   hp: number;
+  /** The setup's max HP (junction spec D9): the params no longer have it. */
+  maxHp: number;
   carry: Carry;
   dealt: number;
   taken: number;

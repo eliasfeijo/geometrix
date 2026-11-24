@@ -48,18 +48,33 @@ export function readArenaRows(name: string): string[] {
   return readFileSync(url, "utf8").trimEnd().split("\n");
 }
 
+/**
+ * The max HP and capacity the tests give each DNA (the world's numbers when
+ * the battle still kept them, junction spec D9): fixed like test/params.json.
+ */
+export const TEST_KITS: Record<Dna, { maxHp: number; capacity: number }> = {
+  square: { maxHp: 300, capacity: 30 },
+  triangle: { maxHp: 200, capacity: 20 },
+  circle: { maxHp: 120, capacity: 10 },
+};
+
 /** A participant of the setup, at full HP and with no carry unless given. */
 export function member(
   dna: Dna,
   overrides: Partial<ParticipantSetup> = {},
 ): ParticipantSetup {
   // An unknown DNA (to test the refusal) gets HP 1.
-  const hp = (loadTestParams().dna[dna] as { hp: number } | undefined)?.hp ?? 1;
+  const kit = (TEST_KITS[dna] as (typeof TEST_KITS)[Dna] | undefined) ?? {
+    maxHp: 1,
+    capacity: 1,
+  };
   return {
     name: dna,
     dna,
-    hp,
+    hp: kit.maxHp,
+    maxHp: kit.maxHp,
     carry: { materia: 0, cristal: 0 },
+    capacity: kit.capacity,
     gambits: [],
     reaction: "normal",
     ...overrides,

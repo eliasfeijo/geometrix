@@ -62,6 +62,9 @@ describe("createBattle (spec S-1)", () => {
     expect(ana!.name).toBe("Ana");
     expect(ana!.hp).toBe(300);
     expect(circle!.hp).toBe(60);
+    // Max HP and capacity are the setup's (junction spec D9).
+    expect([ana!.maxHp, ana!.capacity]).toEqual([300, 30]);
+    expect([circle!.maxHp, circle!.capacity]).toEqual([120, 10]);
     expect(triangle!.carry).toEqual({ materia: 5, cristal: 3 });
     expect(triangle!.carry).not.toBe(setup.sides[1]![0]!.carry);
     for (const p of state.participants) {
@@ -179,6 +182,29 @@ describe("invalid setups (spec S-2)", () => {
         [member("square")],
       ]),
       "carry above the capacity of 10",
+    ],
+    [
+      "max HP 0",
+      setupOf(tiny, [[member("square", { maxHp: 0 })], [member("circle")]]),
+      "max HP must be a positive integer",
+    ],
+    [
+      "max HP not an integer",
+      setupOf(tiny, [[member("square", { maxHp: 2.5 })], [member("circle")]]),
+      "max HP must be a positive integer",
+    ],
+    [
+      "capacity 0",
+      setupOf(tiny, [[member("square", { capacity: 0 })], [member("circle")]]),
+      "capacity must be a positive integer",
+    ],
+    [
+      "carry above a capacity the setup lowered",
+      setupOf(tiny, [
+        [member("square", { capacity: 4, carry: { materia: 5, cristal: 0 } })],
+        [member("circle")],
+      ]),
+      "carry above the capacity of 4",
     ],
     [
       "negative carry",

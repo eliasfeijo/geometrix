@@ -25,7 +25,7 @@ import {
   idleWarning,
   sideColor,
 } from "./arena-view.tsx";
-import { LAB_ARENAS, LAB_PARAMS } from "./assets.ts";
+import { LAB_ARENAS, LAB_KITS, LAB_PARAMS } from "./assets.ts";
 import { LabConnection, type WorkerLike } from "./connection.ts";
 import { isSwitch, keepsDomination } from "./domination.ts";
 import { effectsOf, liveEffects, type Effect } from "./effects.ts";
@@ -217,7 +217,7 @@ export function Lab() {
           const { motion: mode, speed: s, dominated: you } = live.current;
           const tickMs = tickMsAt(s);
           const width = arenaRef.current?.width ?? 0;
-          const stepMs = (p: { dna: Dna; carry: Carry }) =>
+          const stepMs = (p: { dna: Dna; carry: Carry; capacity: number }) =>
             stepTicks(params, p) * tickMs;
           stepGlides.current.frame(width, frame.view, at, stepMs);
           const mine = frame.view.participants.find((p) => p.id === you);
@@ -299,7 +299,7 @@ export function Lab() {
       blind: battle.blind,
       rttMs: battle.rttMs,
       arena: battle.arena,
-      matchup: matchupOf(battle.setup, battle.arena, params),
+      matchup: matchupOf(battle.setup, battle.arena),
       setup: battle.setup,
       played,
       switched: battle.switched,
@@ -344,12 +344,12 @@ export function Lab() {
   function startBlind() {
     const you = youOf(draft);
     if (you === null || session.blind !== null) return;
-    const setup = setupOf(draft, params, LAB_ARENAS[draft.arena]);
+    const setup = setupOf(draft, LAB_KITS, LAB_ARENAS[draft.arena]);
     const bag = shuffledBag(RTT_CHOICES, BLIND_PER_RTT, Math.random);
     const blind = {
       setup,
       arena: draft.arena,
-      matchup: matchupOf(setup, draft.arena, params),
+      matchup: matchupOf(setup, draft.arena),
       you,
       bag,
       total: bag.length,
@@ -448,7 +448,7 @@ export function Lab() {
     if (session.blind !== null) return;
     names.current = namesUsed(draft);
     start(
-      setupOf(draft, params, LAB_ARENAS[draft.arena]),
+      setupOf(draft, LAB_KITS, LAB_ARENAS[draft.arena]),
       youOf(draft),
       draft.arena,
     );
@@ -763,7 +763,7 @@ export function Lab() {
                       </span>
                     </span>
                     <span class="lab-num">
-                      {p.hp}/{params.dna[p.dna].hp}
+                      {p.hp}/{p.maxHp}
                     </span>
                     {p.id === dominated ? (
                       <button type="button" onClick={release}>
@@ -789,7 +789,6 @@ export function Lab() {
       {endedEvent !== null && current !== null && (
         <ResultTable
           ended={endedEvent}
-          params={params}
           seconds={(endedEvent.tick + 1) / TPS}
           hash={ended?.hash ?? null}
         />
@@ -818,7 +817,7 @@ export function Lab() {
                   side,
                   participant: participantOf(
                     reinforcement,
-                    params,
+                    LAB_KITS,
                     names.current++,
                   ),
                 })

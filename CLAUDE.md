@@ -33,7 +33,7 @@ Node 26 (`.nvmrc`). Node runs `.ts` directly; only the client has a build (Vite)
 | `npm install` | Installs every workspace's dependencies |
 | `npm run check` | Everything CI runs: typecheck, lint, format:check and tests. **Green before finishing a task.** |
 | `npm run typecheck` | `tsc` in each workspace |
-| `npm run lint` | ESLint, including the `sim` and `battle` determinism rules |
+| `npm run lint` | ESLint, including the `sim`, `battle` and `junction` determinism rules |
 | `npm run format` | Prettier (does not touch Markdown) |
 | `npm test` | Vitest in every workspace |
 | `npm test -- --project @geometrix/sim` | Vitest in one workspace |
@@ -50,7 +50,8 @@ Node 26 (`.nvmrc`). Node runs `.ts` directly; only the client has a build (Vite)
 
 ## `sim` and `battle` conventions
 
-`packages/sim` (the world) and `packages/battle` (combat, ADR-0008) are pure and deterministic (ADR-0003). The
+`packages/sim` (the world) and `packages/battle` (combat, ADR-0008) are pure and deterministic (ADR-0003), and so is
+`packages/junction` (the host that runs battle instances next to the world, ADR-0010), which imports both. The
 tsconfig and lint already block runtime APIs, `Math.random`, transcendental functions, `Date`, `for…in` and
 floating-point literals. The battle imports neither the `sim` nor the `protocol`. Beyond that:
 

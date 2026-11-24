@@ -2,7 +2,7 @@
 // its HP, the damage dealt and taken and the load it left with; and what
 // stayed on the ground.
 
-import type { BattleEvent, BattleParams } from "@geometrix/battle";
+import type { BattleEvent } from "@geometrix/battle";
 import { sideColor } from "./arena-view.tsx";
 import { DNA_GLYPHS, OUTCOME_LABELS, sideLetter } from "./labels.ts";
 
@@ -10,12 +10,11 @@ type EndedEvent = Extract<BattleEvent, { type: "ended" }>;
 
 type Props = {
   ended: EndedEvent;
-  params: BattleParams;
   seconds: number;
   hash: string | null;
 };
 
-export function ResultTable({ ended, params, seconds, hash }: Props) {
+export function ResultTable({ ended, seconds, hash }: Props) {
   const left = ended.piles.reduce((n, p) => n + p.materia + p.cristal, 0);
   return (
     <section class="lab-panel lab-result">
@@ -46,7 +45,7 @@ export function ResultTable({ ended, params, seconds, hash }: Props) {
                 </td>
                 <td>{OUTCOME_LABELS[r.outcome]}</td>
                 <td class="lab-num">
-                  {r.hp} / {params.dna[r.participant.dna].hp}
+                  {r.hp} / {r.maxHp}
                 </td>
                 <td class="lab-num">{r.dealt}</td>
                 <td class="lab-num">{r.taken}</td>

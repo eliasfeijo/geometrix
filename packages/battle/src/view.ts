@@ -17,7 +17,9 @@ export type ViewParticipant = {
   cell: number;
   facing: Dir;
   hp: number;
+  maxHp: number;
   carry: Carry;
+  capacity: number;
   controller: Controller;
   /** How fast the gambits react for it (spec D20). */
   reaction: Reaction;
@@ -66,7 +68,9 @@ export function battleView(state: BattleState): BattleView {
       cell: p.cell,
       facing: p.facing,
       hp: p.hp,
+      maxHp: p.maxHp,
       carry: { materia: p.carry.materia, cristal: p.carry.cristal },
+      capacity: p.capacity,
       controller: p.controller,
       reaction: p.reaction,
       cooldownTicks: p.cooldownTicks,

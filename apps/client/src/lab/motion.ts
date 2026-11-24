@@ -53,12 +53,12 @@ const STEP: Record<Dir, Point> = {
  */
 export function stepTicks(
   params: BattleParams,
-  creep: Pick<ViewParticipant, "dna" | "carry">,
+  creep: Pick<ViewParticipant, "dna" | "carry" | "capacity">,
 ): number {
   const kit = params.dna[creep.dna];
   const load = creep.carry.materia + creep.carry.cristal;
   const brake =
-    1000 - Math.floor((params.carry.fullBrakePermille * load) / kit.capacity);
+    1000 - Math.floor((params.carry.fullBrakePermille * load) / creep.capacity);
   const gain = Math.floor(
     (pointsPerTick(params, kit.cellsPerSecond) * brake) / 1000,
   );

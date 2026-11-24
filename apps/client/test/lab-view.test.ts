@@ -10,7 +10,7 @@ import {
 } from "@geometrix/battle";
 import { describe, expect, test } from "vitest";
 import paramsJson from "../../../packages/battle/test/params.json?raw";
-import { LAB_ARENAS, LAB_PARAMS } from "../src/lab/assets.ts";
+import { LAB_ARENAS, LAB_KITS, LAB_PARAMS } from "../src/lab/assets.ts";
 import { countdownSeconds } from "../src/lab/arena-view.tsx";
 import {
   defaultDraft,
@@ -39,7 +39,7 @@ describe("the lab's assets", () => {
 describe("the setup draft (spec L-1)", () => {
   test("the default draft is a valid 1 × 1 on every arena", () => {
     for (const arena of Object.values(LAB_ARENAS)) {
-      expect(setupIssue(setupOf(defaultDraft(), params, arena), params)).toBe(
+      expect(setupIssue(setupOf(defaultDraft(), LAB_KITS, arena), params)).toBe(
         null,
       );
     }
@@ -53,11 +53,14 @@ describe("the setup draft (spec L-1)", () => {
       preset: "carrier" as const,
       reaction: "hard" as const,
     };
-    expect(participantOf(draft, params, 3)).toEqual({
+    expect(participantOf(draft, LAB_KITS, 3)).toEqual({
       name: "Duna",
       dna: "circle",
+      // 250‰ of the world's 120, and the bag capped at the world's 10 (D9).
       hp: 30,
+      maxHp: 120,
       carry: { materia: 10, cristal: 0 },
+      capacity: 10,
       gambits: presetGambits("carrier"),
       reaction: "hard",
     });
@@ -68,7 +71,7 @@ describe("the setup draft (spec L-1)", () => {
       ...defaultDraft(),
       sides: [[member("square"), member("square")], [member("circle")]],
     };
-    const setup = setupOf(draft, params, LAB_ARENAS.aberta);
+    const setup = setupOf(draft, LAB_KITS, LAB_ARENAS.aberta);
     expect(setup.sides.flat().map((p) => p.name)).toEqual([
       "Ária",
       "Brasa",
@@ -85,7 +88,7 @@ describe("the setup draft (spec L-1)", () => {
       you: 2,
     };
     const state = createBattle(
-      setupOf(draft, params, LAB_ARENAS.pedras),
+      setupOf(draft, LAB_KITS, LAB_ARENAS.pedras),
       params,
     );
     const id = idOfPlace(youOf(draft)!);
@@ -98,7 +101,7 @@ describe("the setup draft (spec L-1)", () => {
 
   test("a new member takes its DNA's default preset", () => {
     expect(member("triangle").preset).toBe("skirmisher");
-    expect(participantOf(member("square"), params, 0).gambits).toEqual(
+    expect(participantOf(member("square"), LAB_KITS, 0).gambits).toEqual(
       defaultGambits("square"),
     );
   });
@@ -111,7 +114,7 @@ describe("the start countdown on the arena (spec D21)", () => {
       start: { countdownMs: 3000 },
     });
     const state = createBattle(
-      setupOf(defaultDraft(), lab, LAB_ARENAS.pedras),
+      setupOf(defaultDraft(), LAB_KITS, LAB_ARENAS.pedras),
       lab,
     );
     const seconds: number[] = [];
@@ -130,7 +133,7 @@ describe("the start countdown on the arena (spec D21)", () => {
 describe("the events list (spec D19)", () => {
   test("a real battle's events read as lines, newest first, without the attacks", () => {
     const state = createBattle(
-      setupOf(defaultDraft(), params, LAB_ARENAS.aberta),
+      setupOf(defaultDraft(), LAB_KITS, LAB_ARENAS.aberta),
       params,
     );
     const events: BattleEvent[] = [];
