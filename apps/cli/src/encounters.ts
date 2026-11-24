@@ -4,9 +4,11 @@
 // encounter was in the victim's core zone, what went into spoils). Nothing
 // here goes into the state or its hash.
 
+import type { FinishedBattle } from "@geometrix/junction";
 import {
   DNAS,
   inCoreZone,
+  type BattleCause,
   type Dna,
   type SimEvent,
   type Stock,
@@ -36,6 +38,46 @@ export type Decider = (typeof DECIDERS)[number];
  */
 export const BATTLE_RESULTS = ["won", "lost", "idle", "empty", "open"] as const;
 export type BattleResult = (typeof BATTLE_RESULTS)[number];
+
+export const CAUSES = ["attack", "refused"] as const satisfies BattleCause[];
+export const END_REASONS = ["won", "idle", "empty"] as const;
+export type EndReason = (typeof END_REASONS)[number];
+
+/** A participant's side: the aggressor's team or the victim's (junction §7). */
+export const ROLES = ["aggressor", "victim"] as const;
+export type Role = (typeof ROLES)[number];
+/** With cargo when it entered, or not. */
+export const LOADS = ["loaded", "empty"] as const;
+export type Load = (typeof LOADS)[number];
+/**
+ * How a participant came out: on the winning side, dead, out by the border,
+ * back at an end by inactivity (or with nobody winning); "open" when the run
+ * ended first.
+ */
+export const FATES = ["won", "died", "escaped", "idle", "open"] as const;
+export type Fate = (typeof FATES)[number];
+
+export type Fates = Record<
+  Role,
+  Record<Dna, Record<Load, Record<Fate, number>>>
+>;
+
+/** A duration over the battles that ended: sum and max, in seconds. */
+export type Durations = { count: number; total: number; max: number };
+
+/** The battles of a run, all teams (junction spec §7). */
+export type BattleStats = {
+  byCause: Record<BattleCause, number>;
+  ended: Record<EndReason, number>;
+  /** Creeps that entered a battle, at the opening or joining it. */
+  participants: number;
+  joins: number;
+  /** From the opening to the end, on the world clock. */
+  worldSeconds: Durations;
+  /** Battle time stepped (the battle log's ticks). */
+  battleSeconds: Durations;
+  fates: Fates;
+};
 
 export type TeamEncounters = {
   team: number;
@@ -75,6 +117,7 @@ export type EncounterTally = {
   teams: TeamEncounters[];
   /** Battles opened, all teams. */
   battlesOpened: number;
+  battleStats: BattleStats;
   spoils: {
     /** Piles created (a drop on an existing pile adds to it). */
     created: number;
@@ -119,14 +162,43 @@ function teamEncounters(team: number): TeamEncounters {
 }
 
 type Open = { aggressorTeam: number; victimTeam: number };
+/** A creep in a battle, as it entered. */
+type Entrant = { role: Role; dna: Dna; load: Load };
+type OpenBattle = {
+  sides: number[];
+  openedTick: number;
+  aggressorTeam: number;
+  entrants: Map<number, Entrant>;
+};
+
+const durations = (): Durations => ({ count: 0, total: 0, max: 0 });
+const addDuration = (into: Durations, seconds: number) => {
+  into.count += 1;
+  into.total += seconds;
+  into.max = Math.max(into.max, seconds);
+};
+
+function emptyFates(): Fates {
+  const byLoad = () =>
+    Object.fromEntries(LOADS.map((l) => [l, countBy(FATES)])) as Record<
+      Load,
+      Record<Fate, number>
+    >;
+  const byDna = () =>
+    Object.fromEntries(DNAS.map((d) => [d, byLoad()])) as Record<
+      Dna,
+      Record<Load, Record<Fate, number>>
+    >;
+  return { aggressor: byDna(), victim: byDna() };
+}
 
 /** Counts a run's encounters and battles as it goes; `tally` is the result. */
 export class EncounterTracker {
   readonly tally: EncounterTally;
   /** Encounters still open, by id. */
   private readonly open = new Map<number, Open>();
-  /** Battles still open, by id: the team of each side. */
-  private readonly battles = new Map<number, number[]>();
+  /** Battles still open, by id. */
+  private readonly battles = new Map<number, OpenBattle>();
   /** Spoil ids seen so far, to count the new piles. */
   private readonly spoilIds = new Set<number>();
   /** Cargo in spoils at the end of the last tick. */
@@ -136,6 +208,15 @@ export class EncounterTracker {
     this.tally = {
       teams: Array.from({ length: teams }, (_, t) => teamEncounters(t)),
       battlesOpened: 0,
+      battleStats: {
+        byCause: countBy(CAUSES),
+        ended: countBy(END_REASONS),
+        participants: 0,
+        joins: 0,
+        worldSeconds: durations(),
+        battleSeconds: durations(),
+        fates: emptyFates(),
+      },
       spoils: {
         created: 0,
         pickups: 0,
@@ -147,9 +228,21 @@ export class EncounterTracker {
     };
   }
 
-  /** The tick's events, with the state after the tick. */
-  record(state: WorldState, events: readonly SimEvent[]): void {
+  /**
+   * The tick's events, with the state after the tick, and the battles the
+   * host finished in it.
+   */
+  record(
+    state: WorldState,
+    events: readonly SimEvent[],
+    finished: readonly FinishedBattle[] = [],
+  ): void {
     const teams = this.tally.teams;
+    const stats = this.tally.battleStats;
+    for (const battle of finished) {
+      const perSecond = battle.log.params.tick.ticksPerSecond;
+      addDuration(stats.battleSeconds, battle.log.ticks / perSecond);
+    }
     const picked = zeroStock();
     for (const event of events) {
       switch (event.type) {
@@ -178,19 +271,31 @@ export class EncounterTracker {
           add(teams[event.to.team]!.extortionReceived, event.amount);
           this.close(event.encounter, "paid");
           break;
-        case "battleOpened":
+        case "battleOpened": {
           this.tally.battlesOpened += 1;
+          stats.byCause[event.cause] += 1;
           this.close(event.encounter, "battle");
-          this.battles.set(
-            event.battle,
-            event.sides.map((s) => s.team),
-          );
+          const battle: OpenBattle = {
+            sides: event.sides.map((s) => s.team),
+            openedTick: state.tick,
+            aggressorTeam: event.sides[0]!.team,
+            entrants: new Map(),
+          };
+          this.battles.set(event.battle, battle);
+          for (const side of event.sides) {
+            for (const creep of side.creeps) this.enter(state, battle, creep);
+          }
           break;
+        }
         case "battleJoined": {
           teams[event.creep.team]!.joins += 1;
-          const sides = this.battles.get(event.battle);
-          if (sides !== undefined && event.side === sides.length) {
-            sides.push(event.creep.team);
+          stats.joins += 1;
+          const battle = this.battles.get(event.battle);
+          if (battle !== undefined) {
+            if (event.side === battle.sides.length) {
+              battle.sides.push(event.creep.team);
+            }
+            this.enter(state, battle, event.creep);
           }
           break;
         }
@@ -198,9 +303,27 @@ export class EncounterTracker {
           if (event.reason === "edge") {
             teams[event.creep.team]!.escapes[event.creep.dna] += 1;
           }
+          this.fate(
+            event.battle,
+            event.creep.id,
+            event.reason === "edge" ? "escaped" : "idle",
+          );
           break;
         case "battleEnded": {
+          const battle = this.battles.get(event.battle);
           this.battles.delete(event.battle);
+          stats.ended[event.reason] += 1;
+          if (battle !== undefined) {
+            addDuration(
+              stats.worldSeconds,
+              (state.tick - battle.openedTick) * state.params.world.tickSeconds,
+            );
+            for (const creep of event.survivors) {
+              const won =
+                event.winner !== null && creep.team === event.winner.team;
+              this.fateIn(battle, creep.id, won ? "won" : "idle");
+            }
+          }
           for (const [side, team] of event.sideTeams.entries()) {
             const result: BattleResult =
               event.reason !== "won"
@@ -217,6 +340,7 @@ export class EncounterTracker {
         }
         case "died": {
           teams[event.creep.team]!.deaths[event.creep.dna] += 1;
+          this.fate(event.battle, event.creep.id, "died");
           if (event.by !== null) teams[event.by.team]!.kills += 1;
           break;
         }
@@ -260,8 +384,13 @@ export class EncounterTracker {
   /** Closes the run: open encounters and battles, the spoils on the map. */
   finish(state: WorldState): EncounterTally {
     for (const id of [...this.open.keys()]) this.close(id, "open");
-    for (const sides of this.battles.values()) {
-      for (const team of sides) this.tally.teams[team]!.battles.open += 1;
+    for (const battle of this.battles.values()) {
+      for (const team of battle.sides) {
+        this.tally.teams[team]!.battles.open += 1;
+      }
+      for (const id of [...battle.entrants.keys()]) {
+        this.fateIn(battle, id, "open");
+      }
     }
     this.battles.clear();
     const { spoils } = this.tally;
@@ -269,6 +398,38 @@ export class EncounterTracker {
     spoils.leftCargo = zeroStock();
     for (const spoil of state.spoils) add(spoils.leftCargo, spoil.cargo);
     return this.tally;
+  }
+
+  /** A creep entering a battle: its role, DNA and load as it entered. */
+  private enter(
+    state: WorldState,
+    battle: OpenBattle,
+    ref: { id: number; team: number; dna: Dna },
+  ): void {
+    const creep = state.creeps.find((c) => c.id === ref.id);
+    const loaded =
+      creep !== undefined && creep.cargo.materia + creep.cargo.cristal > 0;
+    battle.entrants.set(ref.id, {
+      role: ref.team === battle.aggressorTeam ? "aggressor" : "victim",
+      dna: ref.dna,
+      load: loaded ? "loaded" : "empty",
+    });
+    this.tally.battleStats.participants += 1;
+  }
+
+  private fate(battleId: number, creepId: number, fate: Fate): void {
+    const battle = this.battles.get(battleId);
+    if (battle !== undefined) this.fateIn(battle, creepId, fate);
+  }
+
+  /** Each entrant's first way out counts (an idle end also names it a survivor). */
+  private fateIn(battle: OpenBattle, creepId: number, fate: Fate): void {
+    const entrant = battle.entrants.get(creepId);
+    if (entrant === undefined) return;
+    battle.entrants.delete(creepId);
+    this.tally.battleStats.fates[entrant.role][entrant.dna][entrant.load][
+      fate
+    ] += 1;
   }
 
   private close(id: number, outcome: Outcome): void {

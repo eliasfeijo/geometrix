@@ -4,21 +4,24 @@ import {
   DNAS,
   parseParams,
   raiderRules,
-  step,
-  SYSTEM_PLAYER_ID,
-  type Command,
   type Rule,
   type Stock,
-  type WorldState,
 } from "@geometrix/sim";
+import { createHost, stepJunction } from "@geometrix/junction";
 import { describe, expect, test } from "vitest";
 import {
   BATTLE_RESULTS,
+  CAUSES,
+  END_REASONS,
   EncounterTracker,
+  FATES,
+  LOADS,
+  ROLES,
   OUTCOMES,
   REACTIONS,
   type EncounterTally,
 } from "../src/encounters.ts";
+import { defaultBattleParams } from "../src/harness.ts";
 
 const params = parseParams(
   JSON.parse(
@@ -39,59 +42,9 @@ const attackerRules = (): Rule[] =>
   );
 
 /**
- * A stand-in for the junction host (F3), so battles end: a battle open for a
- * tick ends with side 0 the winner, every other participant dead on its cell
- * with its load as a pile there.
- */
-function quickResults(state: WorldState): Command[] {
-  const commands: Command[] = [];
-  for (const battle of state.battles) {
-    if (battle.openedTick >= state.tick) continue;
-    const creeps = battle.participants.map((p) => ({
-      p,
-      creep: state.creeps.find((c) => c.id === p.id)!,
-    }));
-    const winners = creeps.filter(({ p }) => p.side === 0);
-    const killer = winners[0]?.creep.id ?? null;
-    for (const { p, creep } of creeps) {
-      if (p.side === 0) continue;
-      commands.push({
-        type: "battleExit",
-        battleId: battle.id,
-        creepId: creep.id,
-        outcome: "died",
-        hp: 0,
-        cargo: { materia: 0, cristal: 0 },
-        cell: { x: creep.x, y: creep.y },
-        by: killer,
-      });
-    }
-    commands.push({
-      type: "battleEnd",
-      battleId: battle.id,
-      winnerSide: winners.length > 0 ? 0 : null,
-      reason: winners.length > 0 ? "won" : "empty",
-      survivors: winners.map(({ creep }) => ({
-        creepId: creep.id,
-        hp: Math.max(1, Math.floor(creep.hp / 1000)),
-        cargo: { ...creep.cargo },
-        cell: { x: creep.x, y: creep.y },
-      })),
-      piles: creeps
-        .filter(({ p }) => p.side !== 0)
-        .map(({ creep }) => ({
-          cell: { x: creep.x, y: creep.y },
-          cargo: { ...creep.cargo },
-        })),
-    });
-  }
-  return commands;
-}
-
-/**
  * A world without bots where a third of each team's creeps extort, a third
  * attack and a third collect materia: raiders fight raiders, collectors pay
- * or refuse. Battles end through quickResults.
+ * or refuse. The battles run in the junction host.
  */
 function violentWorld(seed: number, hours: number): EncounterTally {
   const state = createWorld(seed, params);
@@ -99,15 +52,13 @@ function violentWorld(seed: number, hours: number): EncounterTally {
     if (i % 3 === 0) creep.rules = raiderRules();
     if (i % 3 === 1) creep.rules = attackerRules();
   });
+  const host = createHost(defaultBattleParams());
   const tracker = new EncounterTracker(state.teams.length);
   tracker.mark(state);
   const ticks = (hours * 3600) / params.world.tickSeconds;
   for (let i = 0; i < ticks; i++) {
-    const commands = quickResults(state).map((command) => ({
-      playerId: SYSTEM_PLAYER_ID,
-      command,
-    }));
-    tracker.record(state, step(state, commands));
+    const done = stepJunction(state, host, []);
+    tracker.record(state, done.events, done.finished);
     if (state.tick % 3600 === 0) tracker.mark(state);
   }
   return tracker.finish(state);
@@ -167,6 +118,43 @@ describe("EncounterTracker", () => {
     expect(sum(last.teams.map((t) => t.deaths))).toBeLessThanOrEqual(
       sum(teams.map((t) => sum(DNAS.map((d) => t.deaths[d])))),
     );
+  });
+
+  test.each([0, 1])("seed %#: the battle stats add up", (run) => {
+    const tally = runs[run]!;
+    const stats = tally.battleStats;
+    expect(sum(CAUSES.map((c) => stats.byCause[c]))).toBe(tally.battlesOpened);
+    const ended = sum(END_REASONS.map((r) => stats.ended[r]));
+    expect(ended).toBeGreaterThan(0);
+    expect(stats.worldSeconds.count).toBe(ended);
+    // The host finished every battle the world ended, and stepped it.
+    expect(stats.battleSeconds.count).toBe(ended);
+    expect(stats.battleSeconds.max).toBeGreaterThan(0);
+    expect(stats.worldSeconds.max).toBeGreaterThanOrEqual(
+      Math.floor(stats.battleSeconds.max),
+    );
+    expect(stats.participants).toBeGreaterThanOrEqual(2 * tally.battlesOpened);
+    expect(stats.joins).toBe(sum(tally.teams.map((t) => t.joins)));
+    // Each participant comes out once.
+    let fates = 0;
+    for (const role of ROLES) {
+      for (const dna of DNAS) {
+        for (const load of LOADS) {
+          fates += sum(FATES.map((f) => stats.fates[role][dna][load][f]));
+        }
+      }
+    }
+    expect(fates).toBe(stats.participants);
+    const deaths = sum(
+      tally.teams.map((t) => sum(DNAS.map((d) => t.deaths[d]))),
+    );
+    let died = 0;
+    for (const role of ROLES) {
+      for (const dna of DNAS) {
+        for (const load of LOADS) died += stats.fates[role][dna][load].died;
+      }
+    }
+    expect(died).toBe(deaths);
   });
 
   test.each([0, 1])("seed %#: what changes hands is conserved", (run) => {

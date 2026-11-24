@@ -7,11 +7,19 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import {
   ACTIVITIES,
+  DNAS,
   parseParams,
   type MetricsSample,
   type Params,
   type StrategistId,
 } from "@geometrix/sim";
+import {
+  FATES,
+  LOADS,
+  type EncounterTally,
+  type Fate,
+  type Role,
+} from "./encounters.ts";
 import { HOUR, hours, number, table } from "./report.ts";
 import {
   metaJson,
@@ -111,6 +119,17 @@ export type RunSummary = {
   battlePercent: number | null;
   /** Battles opened per team per hour (junction spec §7). */
   battlesPerHour: number;
+  /** Creeps in a battle, openers and joins, per battle; null with none. */
+  participantsPerBattle: number | null;
+  /** Mean world seconds from the opening to the end; null with none ended. */
+  battleWorldSeconds: number | null;
+  /**
+   * How the participants came out, of those whose battle ended: the
+   * aggressors' side winning, the victims' dying or escaping.
+   */
+  aggressorWinPercent: number | null;
+  victimDeathPercent: number | null;
+  victimEscapePercent: number | null;
   /** Encounters in the victim's own core zone, of all (D21). */
   campingPercent: number | null;
   deaths: number;
@@ -239,6 +258,7 @@ export function summarize(result: SimResult, value: number): RunSummary {
       result.encounters.battlesOpened /
       last.teams.length /
       (totalSeconds / HOUR),
+    ...battleFacts(result.encounters),
     campingPercent:
       encounters === 0
         ? null
@@ -330,6 +350,27 @@ const COLUMNS: { key: ScalarKey; label: string; digits: number }[] = [
     digits: 1,
   },
   {
+    key: "participantsPerBattle",
+    label: "Participantes por batalha",
+    digits: 1,
+  },
+  {
+    key: "battleWorldSeconds",
+    label: "Duração da batalha no mundo (s)",
+    digits: 0,
+  },
+  {
+    key: "aggressorWinPercent",
+    label: "Agressores do lado vencedor (%)",
+    digits: 0,
+  },
+  { key: "victimDeathPercent", label: "Vítimas mortas (%)", digits: 0 },
+  {
+    key: "victimEscapePercent",
+    label: "Vítimas que escaparam pela borda (%)",
+    digits: 0,
+  },
+  {
     key: "campingPercent",
     label: "Encontros na zona do Núcleo da vítima (%)",
     digits: 0,
@@ -344,6 +385,49 @@ const COLUMNS: { key: ScalarKey; label: string; digits: number }[] = [
   { key: "creepsGap", label: "Diferença entre os times em creeps", digits: 0 },
   { key: "hpPercent", label: "HP médio no fim (%)", digits: 0 },
 ];
+
+/** The participants of a role by fate, all DNAs and loads. */
+function fatesOf(tally: EncounterTally, role: Role): Record<Fate, number> {
+  const out = Object.fromEntries(FATES.map((f) => [f, 0])) as Record<
+    Fate,
+    number
+  >;
+  for (const dna of DNAS) {
+    for (const load of LOADS) {
+      for (const fate of FATES) {
+        out[fate] += tally.battleStats.fates[role][dna][load][fate];
+      }
+    }
+  }
+  return out;
+}
+
+/** The battle columns of a run (junction spec §7). */
+function battleFacts(tally: EncounterTally) {
+  const stats = tally.battleStats;
+  const rate = (fates: Record<Fate, number>, fate: Fate) => {
+    const ended = FATES.reduce(
+      (sum, f) => sum + (f === "open" ? 0 : fates[f]),
+      0,
+    );
+    return ended === 0 ? null : (100 * fates[fate]) / ended;
+  };
+  const aggressors = fatesOf(tally, "aggressor");
+  const victims = fatesOf(tally, "victim");
+  return {
+    participantsPerBattle:
+      tally.battlesOpened === 0
+        ? null
+        : stats.participants / tally.battlesOpened,
+    battleWorldSeconds:
+      stats.worldSeconds.count === 0
+        ? null
+        : stats.worldSeconds.total / stats.worldSeconds.count,
+    aggressorWinPercent: rate(aggressors, "won"),
+    victimDeathPercent: rate(victims, "died"),
+    victimEscapePercent: rate(victims, "escaped"),
+  };
+}
 
 /** "mean (min–max)" over the runs that have the value; "—" for none. */
 function cell(values: (number | null)[], digits: number): string {

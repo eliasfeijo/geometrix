@@ -11,10 +11,18 @@ import {
 import {
   BATTLE_RESULTS,
   DECIDERS,
+  FATES,
+  LOADS,
+  ROLES,
   OUTCOMES,
   REACTIONS,
   type BattleResult,
+  type BattleStats,
   type Decider,
+  type Durations,
+  type Fate,
+  type Load,
+  type Role,
   type EncounterTally,
   type Outcome,
   type Reaction,
@@ -278,6 +286,7 @@ export function renderReport(run: RunData): string {
   );
 
   out(...encounterSection(run.encounters, teamIds, total, params));
+  out(...battleSection(run.encounters, teamIds.length, total));
 
   // Timeline.
   const window = windowSeconds(total);
@@ -542,6 +551,77 @@ function encounterSection(
     "",
     `Batalhas abertas: ${number(tally.battlesOpened)}. Despojos: ${number(spoils.created)} pilhas criadas com ${stockPair(spoils.dropped)}, ${number(spoils.pickups)} catadas; no fim, ${number(spoils.left)} no mapa com ${stockPair(spoils.leftCargo)}.`,
     "",
+  ];
+}
+
+const DNA_GLYPHS = { square: "■", triangle: "▲", circle: "●" } as const;
+const ROLE_LABELS: Record<Role, string> = {
+  aggressor: "agressor",
+  victim: "vítima",
+};
+const LOAD_LABELS: Record<Load, string> = {
+  loaded: "carregado",
+  empty: "vazio",
+};
+const FATE_LABELS: Record<Fate, string> = {
+  won: "venceu",
+  died: "morreu",
+  escaped: "escapou",
+  idle: "inatividade",
+  open: "aberta",
+};
+
+/** "mean / max" of a duration, in seconds; "—" with none. */
+const durationPair = (d: Durations) =>
+  d.count === 0 ? "—" : `${number(d.total / d.count)} s / ${number(d.max)} s`;
+
+/**
+ * The battles (junction spec §7): how they opened and ended, who and how many
+ * were in them, how long they took, and how each participant came out by
+ * role, DNA and load.
+ */
+function battleSection(
+  tally: EncounterTally,
+  teams: number,
+  totalSeconds: number,
+): string[] {
+  const stats: BattleStats = tally.battleStats;
+  const opened = tally.battlesOpened;
+  const ended = stats.ended.won + stats.ended.idle + stats.ended.empty;
+  const rows: string[][] = [];
+  for (const role of ROLES) {
+    for (const dna of DNA_ORDER) {
+      for (const load of LOADS) {
+        const fates = stats.fates[role][dna][load];
+        const total = FATES.reduce((sum, f) => sum + fates[f], 0);
+        if (total === 0) continue;
+        rows.push([
+          `${ROLE_LABELS[role]} ${DNA_GLYPHS[dna]} ${LOAD_LABELS[load]}`,
+          number(total),
+          ...FATES.map((f) => `${fates[f]} (${percent(fates[f], total)})`),
+        ]);
+      }
+    }
+  }
+  return [
+    "## Batalhas",
+    "",
+    `- Abertas: ${number(opened)} (ataque ${number(stats.byCause.attack)}, extorsão recusada ${number(stats.byCause.refused)}), ${number((opened * HOUR) / totalSeconds / teams, 1)} por time por hora.`,
+    `- Terminadas: ${number(ended)} (vitória ${number(stats.ended.won)}, inatividade ${number(stats.ended.idle)}, ninguém sobrou ${number(stats.ended.empty)}); abertas no fim: ${number(opened - ended)}.`,
+    `- Participantes: ${number(stats.participants)} (${opened === 0 ? "—" : number(stats.participants / opened, 1)} por batalha), dos quais ${number(stats.joins)} entraram com a batalha aberta (${opened === 0 ? "—" : number(stats.joins / opened, 1)} por batalha).`,
+    `- Duração (média / máxima): ${durationPair(stats.worldSeconds)} no relógio do mundo; ${durationPair(stats.battleSeconds)} de tempo de batalha.`,
+    "",
+    ...(rows.length === 0
+      ? []
+      : [
+          "Como cada participante saiu, pelo lado (o do agressor ou o da vítima), DNA e carga ao entrar:",
+          "",
+          table(
+            ["Participante", "Entraram", ...FATES.map((f) => FATE_LABELS[f])],
+            rows,
+          ),
+          "",
+        ]),
   ];
 }
 
