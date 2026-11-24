@@ -15,7 +15,7 @@
 - [x] Baseline: `geo sim` 3 days (seed 42) and `geo sweep` 6 h (seeds 1–20) on `main`, the numbers quoted here
 - [x] `ParticipantSetup` with `maxHp` and `capacity`; the validation; `params/battle.json` without them; `BATTLE_VERSION` 5
 - [x] The lab and `geo battle` read max HP and capacity from `params/default.json`; the lab log fixture rebuilt
-- [ ] `packages/junction`: the workspace, tsconfig, the determinism lint, Vitest, `src/index.ts`; the `junction`
+- [x] `packages/junction`: the workspace, tsconfig, the determinism lint, Vitest, `src/index.ts`; the `junction`
       scope in the `commit` skill
 
 ### F1 record
