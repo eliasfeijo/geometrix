@@ -15,7 +15,7 @@
 | **In progress** | **D — The junction, F0** (branch `m2/junction-f0-spec`): the [spec](../specs/m2-junction/spec.md) draft, after the design round of 2026-11-24 (recorded in GDD 05, 06, 07) |
 | **Next front** | D's `plan.md` and `tasks.md`, once the spec and ADR-0010 are approved |
 | **Then** | **P — The friends' playtest** (ROADMAP); E's order vs. P decided at D's checkpoint |
-| **Waiting on the owner** | (0) **The junction spec** (D1–D19; the agent's proposals included) and [ADR-0010](../adr/0010-world-side-of-the-battle-contract.md) (`Proposed`): battles inside the world state. (1) [ADR-0009](../adr/0009-prediction-in-the-lab.md) (`Proposed`): prediction as a lab experiment option. (2) `gambits.meleeBerthSteps` 3 (provisional, lab F7). (3) Whenever the owner wants: [PLAYTEST](../PLAYTEST.md) lab group 7 (the four movement options at 0 and 150 ms), which feeds the prediction decision |
+| **Waiting on the owner** | (0) **The junction spec** (D1–D19; the agent's proposals included) and [ADR-0010](../adr/0010-world-side-of-the-battle-contract.md) (`Proposed`): battle instances next to the world, run by a junction host, with the results in the world log. (1) [ADR-0009](../adr/0009-prediction-in-the-lab.md) (`Proposed`): prediction as a lab experiment option. (2) `gambits.meleeBerthSteps` 3 (provisional, lab F7). (3) Whenever the owner wants: [PLAYTEST](../PLAYTEST.md) lab group 7 (the four movement options at 0 and 150 ms), which feeds the prediction decision |
 | **Blockers** | None |
 
 ### Next steps
