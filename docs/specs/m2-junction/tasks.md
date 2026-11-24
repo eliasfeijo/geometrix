@@ -111,7 +111,7 @@ contract that `protocol`, the CLI and the client compile against, so no task is 
 - [x] Joins (`join`, retried when refused) and domination (`control`); `stepRealtime` and `setPace`
 - [x] `serializeHost`/`restoreHost`
 - [x] Every harness caller through the host: `stepWithBots`, `runBots`, the bot-world tests, `geo sim`, `geo sweep`
-- [ ] `geo verify`: restore of world and host mid-battle; the fifth path, each battle log against the world log's
+- [x] `geo verify`: restore of world and host mid-battle; the fifth path, each battle log against the world log's
       results
 - [ ] The battle metrics in the `geo sim` and `geo sweep` reports
 - [ ] **Checkpoint C1:** the bot × bot report against the baseline (battles per hour, outcomes, the risk against the

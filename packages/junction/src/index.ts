@@ -6,3 +6,4 @@ export * from "./arena.ts";
 export * from "./host.ts";
 export * from "./results.ts";
 export * from "./setup.ts";
+export * from "./replay.ts";

@@ -1,9 +1,4 @@
-import {
-  createBattle,
-  parseBattleParams,
-  stepBattle,
-  type BattleParams,
-} from "@geometrix/battle";
+import { parseBattleParams, type BattleParams } from "@geometrix/battle";
 import {
   dominate,
   join,
@@ -25,7 +20,7 @@ import {
   type FinishedBattle,
   type JunctionHost,
 } from "../src/host.ts";
-import { tickResults } from "../src/results.ts";
+import { replayResults } from "../src/replay.ts";
 import { loadBattleParams, textWorld } from "./helpers.ts";
 
 // 30 × 7, the cores in opposite corners.
@@ -114,24 +109,8 @@ describe("the results reach the world (junction X-0..X-4)", () => {
   test("the two logs agree: the battle log replays to the results the world applied", () => {
     const { w, host } = duel();
     const { finished } = untilOver(w, host);
-    const [done] = finished;
-    const state = createBattle(done!.log.setup, done!.log.params);
-    let next = 0;
-    const replayed: Command[] = [];
-    while (state.ended === null) {
-      const entry = done!.log.commands[next];
-      let commands: unknown[] = [];
-      if (entry !== undefined && entry.tick === state.tick) {
-        commands = entry.commands;
-        next += 1;
-      }
-      const events = stepBattle(state, commands);
-      replayed.push(
-        ...tickResults(w, done!, state, events, state.ended ? done!.late : []),
-      );
-    }
-    expect(state.tick).toBe(done!.log.ticks);
-    expect(replayed).toEqual(done!.results);
+    expect(finished).toHaveLength(1);
+    expect(replayResults(w, finished[0]!)).toEqual(finished[0]!.results);
   });
 
   test("the same world gives the same battles, step by step", () => {
