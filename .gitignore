@@ -5,3 +5,4 @@ runs/
 .claude/settings.local.json
 data/
 .claude/worktrees/
+CLAUDE.local.md

@@ -8,26 +8,22 @@ description: Creates commits in geometrix's Conventional Commits style, one per 
 geometrix commit rules. Sources: the owner's request (Conventional Commits, one commit per logical unit), `CLAUDE.md`
 (everything in English) and the package layout of the [M1 plan §1](../../../docs/specs/m1-wealth-cycle/plan.md).
 
-## Branches and worktrees
+## Branches
 
-- `main` is the default branch, checked out in `~/workspace/geometrix/master`, which is **the owner's**. Phase work is
-  not committed there.
+- `main` is the default branch and **the owner's**. Phase work is not committed on it directly.
 - Each phase of a `tasks.md` has its branch: `m<milestone>/<slice>-f<phase>-<slug>` (e.g. `m2/junction-f1-contract`),
-  in its own worktree beside `master`: `git worktree add ../<slug> -b <branch>` from `~/workspace/geometrix/master`.
-  The worktree is removed after the merge.
+  created from `main`. Where it is checked out is the local setup's call (`CLAUDE.local.md`, if any).
 - At the end of the phase, with `npm run check` green, the branch enters `main` with **`git merge --no-ff`** (never
   squash or rebase): each phase becomes a merge commit, `git log --first-parent main` shows one line per phase, and the
   per-unit commits are kept. Message: `merge: m2/junction-f1-contract (M2 D F1 — The contract)`, with a body
   summarizing the phase and the trailers. `git merge` does not read `-F -`: write the message to a scratchpad file and
-  use `git merge --no-ff <branch> -F <file>`.
-  The merge runs in `~/workspace/geometrix/master` (`git -C`).
+  use `git merge --no-ff <branch> -F <file>`, in the checkout that has `main`.
 - Before the merge, update `docs/dashboard/current-status.md` on the phase branch itself.
 - Work between phases (docs, owner decisions, harness) goes in as the first commits of the **next** phase's branch,
   created from `main` if it does not exist yet, or on a `docs/<slug>` branch.
 - Before committing, check the current branch. If the work belongs to no phase (e.g. design for another milestone),
   **ask the owner** where to commit.
-- **Pushing:** WSL git has no GitHub credentials; the owner pushes from Windows. Never push to `main`, never
-  force-push.
+- **Pushing:** the owner pushes. Never push to `main`, never force-push.
 
 ## Logical unit
 

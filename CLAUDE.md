@@ -22,6 +22,7 @@ at D's checkpoint. See `docs/ROADMAP.md`.
 | Build order | `docs/ROADMAP.md` |
 | Playtest scripts | `docs/PLAYTEST.md` |
 | Workflow skills (commit, phase, ADR, GDD, slice) | `.claude/skills/` (implementing a phase: `implement-phase`) |
+| How we develop with AI agents | `docs/HARNESS.md` |
 
 ## Commands
 
@@ -97,12 +98,11 @@ floating-point literals. The battle imports neither the `sim` nor the `protocol`
   the owner is in Portuguese. The game's UI text is still in Portuguese (translating it is an open question).
 - **Diagrams** in Mermaid, never ASCII art (a folder tree may be a text block).
 
-## Worktrees and git
+## Git
 
-- `~/workspace/geometrix/master` is the `main` checkout and **the owner's**. Each phase or docs branch gets its own
-  worktree beside it: `git -C ~/workspace/geometrix/master worktree add ../<slug> -b <branch>`, then work there
-  (`EnterWorktree` with `path`). Remove it after the merge.
-- Branches, commits and merges: the `commit` skill. WSL git has no GitHub credentials: the owner pushes.
+- Branches, commits and merges: the `commit` skill. Never push unless the owner asks.
+- The machine-specific setup (where each checkout lives, where merges run, who pushes) is not versioned: it lives in
+  an untracked `CLAUDE.local.md` when there is one. See `docs/HARNESS.md`.
 
 ## External reference
 
