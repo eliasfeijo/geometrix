@@ -1,6 +1,6 @@
 # M2 junction tasks — Slice D
 
-**Status:** F2 done (2026-11-24); F3 next. Branches `m2/junction-f<n>-<slug>` (skill `commit`).
+**Status:** F3 done up to checkpoint C1 (2026-11-24), waiting on the owner. Branches `m2/junction-f<n>-<slug>` (skill `commit`).
 **Spec:** [spec.md](spec.md) · **Plan:** [plan.md](plan.md)
 
 ## F0 — Spec, ADR and plan
@@ -116,6 +116,65 @@ contract that `protocol`, the CLI and the client compile against, so no task is 
 - [x] The battle metrics in the `geo sim` and `geo sweep` reports
 - [ ] **Checkpoint C1:** the bot × bot report against the baseline (battles per hour, outcomes, the risk against the
       roll, snowball, tick cost)
+
+### F3 record
+
+**What it does.** `packages/junction` holds the host: `arenaOf` (the window as 5 × 5 blocks with the ring, rock where
+the world has rock, the four zones always floor), `worldCellOf` (back to the world), `battleSetup` (the setups and
+the seed), `JunctionHost` with `stepJunction` (the world-paced battles one world second before each world step, then
+the world with their results as system commands), `stepRealtime` and `setScreen` (the real-time pace, for F4),
+`serializeHost`/`restoreHost`, and `replayResults` (a battle log back to its world commands). The battle's `died`
+and `escaped` events now carry the cell (state and replay unchanged, so no `BATTLE_VERSION` bump). `geo sim`, `geo
+sweep`, `geo net` and `geo verify` step through the host; the 6 h bot-world lock moved to the junction package and
+hashes world and host. `geo verify --seed 42`: deterministic on the four paths, the snapshot mid-battle (tick 25,911),
+and the 9 battles replay alone to the world log's results.
+
+**Checkpoint C1** (`runs/c1-sim-s42-1`, `-2`, `runs/c1-sweep`, not versioned):
+
+| | Baseline (roll) | F3 (battles) |
+|---|---|---|
+| `geo sim` 3 days, seed 42: wall time | 10.7 s, 11.7 s | 13.7 s, 14.2 s (about 1.25×; target ≤ 1.5×) |
+| Encounters (sim) | 6 / 17, all extortion, all in the first 12 h | 7 / 2, all extortion, all in the first 12 h |
+| Their outcome (sim) | paid 3, refused 9, fled 11 | paid 0, refused 9 → 9 battles |
+| Deaths (sim) | 2 (team 0 squares) | 2 (team 1 squares) |
+| Delivered materia / cristal (sim) | 154,578 / 174,602 · 1,117 / 1,283 (gap 11%) | 175,675 / 160,780 · 1,305 / 1,095 (gap 8%) |
+| Creeps at the end (sim) | 30 / 30 | 30 / 30 |
+| `geo sweep` 6 h, seeds 1–20: wall time | 9.7 s | 10.1 s |
+| Encounters per team-hour | 0.8 (0.2–1.8) | 0.6 (0.2–1.3) |
+| Paid / with a flee or battle / with a death | 30% / 59% / 12% | 35% / 65% (all battles) / 39% of the victims |
+| Battles per team-hour | — | 0.4 (0.0–1.1) |
+| Deaths per team | 0.6 (0–1) | 0.6 (0–1) |
+| Resources taken per team | 63 | 43 (17–75) |
+| Creep gap / delivered-materia gap | 1 (0–2) / 97 (0–659) | 1 (0–2) / 80 (0–491) |
+
+The battles over the 20 sweep seeds (90 battles):
+
+- **How they opened:** all 90 from a refused extortion; no attack (the bots only extort, as in the baseline).
+- **How they ended:** all 90 by a win; no end by inactivity or with nobody left.
+- **Size:** always 1 against 1, with no join.
+- **Duration:** 13 s on average on the world clock, at most 28 s. Battle time equals world time at the world pace.
+- **The aggressor is always the raider triangle:** it wins 87 of 90 (97%) and dies in 2.
+- **Victims:**
+  - circles (always loaded, carrier preset): escape by the border 64 of 64 (baseline flee escapes: 65%);
+  - squares (fight): die 23 of 25 and win 2;
+  - a triangle won its only battle.
+- **Loot:** checked against the spoils, nothing is duplicated. In seed 42 the winner takes up to its free capacity
+  from the dead square's pile, the rest goes to spoils, and it picks that up later (90 cristal: 45 looted, 45 through
+  spoils).
+
+**Interpretations to validate** (implementation details the plan left open):
+
+1. The spawn zones: side 0 on the left and 1 on the right, centered halfway between the border and the center; 2 at
+   the top and 3 at the bottom. Their size is the new provisional params `battle.zone` (3 × 5, the lab's).
+2. A creep or a pile comes back on the world cell under its arena cell; on rock or river, on the nearest walkable cell
+   (breadth-first, up, right, down, left).
+3. The battle seed mixes the world seed and the stub id (fmix32); opening a battle draws nothing from the world's rng.
+4. One join placed per battle tick. A join still waiting for room at the end comes back where it waited, with its
+   world HP and cargo: as a survivor if its side won or nobody won, as an escape if its side lost.
+5. The pace is derived, not set: real time while a participant is dominated *and* its player has the battle screen
+   open (`setScreen`, the server's, not in the snapshot); the world clock otherwise. The plan's `setPace` is that
+   derivation.
+6. `geo verify` cuts its snapshot at the first tick from halfway on with a battle open (else at halfway).
 
 ## F4 — Network and server
 
