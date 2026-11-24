@@ -10,8 +10,8 @@
 // - circle (glass cannon, fast, fragile): cheeky, quick, nervous.
 //
 // Placeholders, filled by narrate.ts: creeps as {aggressor}, {victim},
-// {creep}, {from}, {to}, {winner}, {loser}, {by} (clickable names); amounts
-// as {demand}, {amount}, {dropped}, {taken}; {rounds} as "3 rodadas".
+// {creep}, {from}, {to}, {first}, {second}, {by} (clickable names); amounts
+// as {demand}, {amount}, {taken}; {team} as the team's name.
 
 import type { Dna } from "@geometrix/sim";
 
@@ -95,40 +95,6 @@ export const TEMPLATES = {
         '{creep}: "Nem pensar, a bolsa é minha!"',
       ],
     },
-    fight: {
-      square: [
-        '{creep}: "Finalmente."',
-        '{creep} se planta firme: "Pode vir."',
-        "{creep} não recua um passo.",
-      ],
-      triangle: [
-        '{creep}: "Se é assim, vamos."',
-        '{creep} assume posição: "Você vai se arrepender dessa conta."',
-        "{creep} aceita a luta sem pressa.",
-      ],
-      circle: [
-        '{creep}: "Ah, é briga? Adoro briga!"',
-        '{creep} quica no lugar: "Vem, vem!"',
-        '{creep}: "Escolheu a vítima errada."',
-      ],
-    },
-    flee: {
-      square: [
-        "{creep} tenta dar meia-volta, pesado.",
-        '{creep} resmunga "hoje não" e tenta sair dali.',
-        "{creep} tenta recuar.",
-      ],
-      triangle: [
-        "{creep} procura a rota de fuga mais curta.",
-        '{creep}: "Retirada estratégica."',
-        "{creep} tenta escapar pelo flanco.",
-      ],
-      circle: [
-        "{creep} dispara para longe.",
-        '{creep}: "Tchau!"',
-        "{creep} some numa nuvem de poeira. Ou tenta.",
-      ],
-    },
   },
   /** {from} paid {amount} to {to} (E-6). */
   paid: [
@@ -136,54 +102,32 @@ export const TEMPLATES = {
     "{to} recolhe {amount} de {from}.",
     "{to} fica com {amount} de {from}, sem briga.",
   ],
-  /** {creep} tried to flee (F-1..F-3). */
-  flee: {
-    /** With {dropped}. */
-    escaped: [
-      "{creep} escapa, mas larga {dropped} no caminho.",
-      "{creep} foge e deixa {dropped} para trás.",
-      "{creep} escapa por pouco, largando {dropped}.",
-    ],
-    escapedEmpty: [
-      "{creep} escapa de bolsa vazia.",
-      "{creep} foge sem nada a perder.",
-    ],
-    caught: [
-      "{creep} tenta fugir e não consegue.",
-      "A fuga de {creep} falha.",
-      "{creep} tropeça na fuga.",
-    ],
+  /**
+   * The battle (junction K-3). Plain sentences for now: the voiced bank comes
+   * with the battle screen (junction F5).
+   */
+  battleOpened: ["Começa uma batalha: {first} contra {second}."],
+  /** {creep} entered a battle already open. */
+  battleJoined: ["{creep} entra na batalha."],
+  /** {creep} back in the world alive: by the border, or with no winner. */
+  battleLeft: {
+    edge: ["{creep} escapa da batalha pela borda."],
+    idle: ["{creep} volta da batalha sem vencedor."],
   },
-  /** {winner} beat {loser} after {rounds} (L-2). */
-  fightEnded: [
-    "{winner} vence {loser} depois de {rounds}.",
-    "Depois de {rounds}, {winner} continua de pé. {loser}, não.",
-    "{winner} derruba {loser} em {rounds}.",
-  ],
+  /** The end; {team} is the winner's team. */
+  battleEnded: {
+    won: ["A batalha termina com a vitória do time {team}."],
+    idle: ["A batalha termina sem vencedor."],
+    empty: ["A batalha termina sem ninguém de pé."],
+  },
   died: {
-    /** By {by}, after the fight. */
+    /** By {by}, in the battle. */
     killed: [
       "{creep} não se levanta mais.",
       "{creep} se desfaz no chão.",
       "Fim da linha para {creep}.",
     ],
     alone: ["{creep} morreu.", "{creep} não resistiu."],
-  },
-  /** {by} took {taken} from {from}; the rest went to a spoil. */
-  looted: {
-    taken: [
-      "{by} recolhe {taken} de {from}.",
-      "{by} fica com {taken} do que era de {from}.",
-      "{by} saqueia {taken} de {from}.",
-    ],
-    takenAndSpoil: [
-      "{by} recolhe {taken} de {from}; o que não coube fica no chão.",
-      "{by} saqueia {taken} de {from} e deixa o resto espalhado.",
-    ],
-    spoilOnly: [
-      "{by} não tem onde pôr a carga de {from}: fica tudo no chão.",
-      "A carga de {from} fica no chão: {by} já está cheio.",
-    ],
   },
   /** {creep} picked up {taken} from a spoil (S-1). */
   pickedUp: [
@@ -212,12 +156,13 @@ export const TEMPLATES = {
 } as const satisfies {
   encounter: Record<"attack" | "extort", Voiced>;
   mutual: readonly string[];
-  reaction: Record<"pay" | "refuse" | "fight" | "flee", Voiced>;
+  reaction: Record<"pay" | "refuse", Voiced>;
   paid: readonly string[];
-  flee: Record<"escaped" | "escapedEmpty" | "caught", readonly string[]>;
-  fightEnded: readonly string[];
+  battleOpened: readonly string[];
+  battleJoined: readonly string[];
+  battleLeft: Record<"edge" | "idle", readonly string[]>;
+  battleEnded: Record<"won" | "idle" | "empty", readonly string[]>;
   died: Record<"killed" | "alone", readonly string[]>;
-  looted: Record<"taken" | "takenAndSpoil" | "spoilOnly", readonly string[]>;
   pickedUp: readonly string[];
   born: Voiced;
 };

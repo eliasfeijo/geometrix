@@ -42,10 +42,11 @@ describe("approach and opening (spec E-1..E-3, E-5, E-9)", () => {
     const world = textWorld(ROW);
     const hunter = creepOf(world, 0, "circle");
     const prey = creepOf(world, 1, "square");
-    placed(world, [hunter, 5], [prey, 9]);
+    placed(world, [hunter, 4], [prey, 9]);
     dominatedByTeam1(world, prey);
     prey.order = { type: "moveTo", x: 20, y: 0 };
-    hunter.order = { type: "approach", targetId: prey.id, intent: "attack" };
+    prey.cargo.materia = 4;
+    hunter.order = { type: "approach", targetId: prey.id, intent: "extort" };
     const events = untilEncounter(world);
     expect(prey.x).toBeGreaterThan(9);
     expect(Math.abs(hunter.x - prey.x)).toBeLessThanOrEqual(1);
@@ -53,9 +54,8 @@ describe("approach and opening (spec E-1..E-3, E-5, E-9)", () => {
     expect(encounter).toMatchObject({
       aggressor: hunter.id,
       victim: prey.id,
-      intent: "attack",
-      stage: "dialogue",
-      demand: null,
+      intent: "extort",
+      demand: { materia: 4, cristal: 0 },
       deadlineTick: world.tick - 1 + 60,
       x: prey.x,
       y: prey.y,
@@ -76,6 +76,23 @@ describe("approach and opening (spec E-1..E-3, E-5, E-9)", () => {
     run(world, 30);
     expect([hunter.x, prey.x]).toEqual(at);
     expect(prey.activity).toBe("talking");
+  });
+
+  test("an attack has no dialogue: the declaration opens the battle (junction O-1)", () => {
+    const world = textWorld(ROW);
+    const hunter = creepOf(world, 0, "circle");
+    const prey = creepOf(world, 1, "square");
+    placed(world, [hunter, 9], [prey, 10]);
+    dominatedByTeam1(world, prey);
+    hunter.order = { type: "approach", targetId: prey.id, intent: "attack" };
+    const events = tick(world);
+    expect(events.map((e) => e.type)).toEqual(["encounter", "battleOpened"]);
+    expect(world.encounters).toEqual([]);
+    expect(world.battles).toHaveLength(1);
+    expect([hunter.battle, prey.battle]).toEqual([
+      world.battles[0]!.id,
+      world.battles[0]!.id,
+    ]);
   });
 
   test("ends when the target leaves the team's sight", () => {
@@ -147,7 +164,7 @@ describe("approach and opening (spec E-1..E-3, E-5, E-9)", () => {
     expect(world.encounters[0]?.demand).toEqual({ materia: 0, cristal: 3 });
   });
 
-  test("an extortion does not open on a fleeing creep; an attack goes straight to the fight", () => {
+  test("an extortion does not open on a fleeing creep; an attack opens the battle", () => {
     const world = textWorld(ROW);
     const hunter = creepOf(world, 0, "circle");
     const prey = creepOf(world, 1, "square");
@@ -159,11 +176,8 @@ describe("approach and opening (spec E-1..E-3, E-5, E-9)", () => {
     expect(world.encounters).toEqual([]);
     hunter.order = { type: "approach", targetId: prey.id, intent: "attack" };
     untilEncounter(world, 30);
-    expect(world.encounters[0]).toMatchObject({
-      stage: "fight",
-      deadlineTick: null,
-      nextRoundTick: world.tick - 1 + 10,
-    });
+    expect(world.battles).toHaveLength(1);
+    expect(prey.order).toEqual({ type: "stop" });
   });
 });
 

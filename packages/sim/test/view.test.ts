@@ -15,6 +15,7 @@ import {
 import { updateVision } from "../src/vision.ts";
 import {
   createWorld,
+  type Battle,
   type Creep,
   type Encounter,
   type WorldState,
@@ -183,6 +184,7 @@ describe("view", () => {
         name: enemy.name,
         hp: 123_000,
         engagement: 777,
+        battle: null,
         x: 3,
         y: 1,
         cargo: { materia: 0, cristal: 4 },
@@ -282,13 +284,9 @@ function encounterOf(
     aggressor: aggressor.id,
     victim: victim.id,
     intent: "extort",
-    stage: "fight",
     demand: { materia: 0, cristal: 4 },
-    deadlineTick: null,
-    reply: "flee",
-    aggressorReply: "flee",
-    nextRoundTick: world.tick + 10,
-    rounds: 2,
+    deadlineTick: world.tick + 60,
+    reply: "refuse",
     x: victim.x,
     y: victim.y,
   };
@@ -298,17 +296,75 @@ function encounterOf(
   return encounter;
 }
 
+/** A battle stub between `a` (side 0) and `b` (side 1), on b's cell. */
+function battleOf(world: WorldState, a: Creep, b: Creep): Battle {
+  const battle: Battle = {
+    id: world.nextId++,
+    window: { x: 0, y: 0, width: 9, height: 3 },
+    sides: [
+      { kind: "team", team: a.team },
+      { kind: "team", team: b.team },
+    ],
+    participants: [
+      { id: a.id, side: 0, stance: "fight" as const },
+      { id: b.id, side: 1, stance: "flee" as const },
+    ].sort((p, q) => p.id - q.id),
+    openedTick: world.tick,
+    x: b.x,
+    y: b.y,
+  };
+  world.battles.push(battle);
+  a.battle = battle.id;
+  b.battle = battle.id;
+  a.engagement = null;
+  b.engagement = null;
+  return battle;
+}
+
+describe("battles in the view (junction D16, K-3)", () => {
+  const stub = (battle: Battle) => ({
+    ...battle,
+    participants: battle.participants.map(({ id, side }) => ({ id, side })),
+  });
+
+  test("a battle of the team is in its view wherever it is, without the stances", () => {
+    const { world, enemy } = leakyWorld();
+    const mine = creepOf(world, 0, "triangle");
+    Object.assign(mine, { x: 2, y: 1 });
+    const battle = battleOf(world, mine, enemy);
+    expect(view(world, 0).battles).toEqual([stub(battle)]);
+    expect(view(world, 1).battles).toEqual([stub(battle)]);
+    Object.assign(battle, { x: 20, y: 1 });
+    expect(view(world, 0).battles.map((b) => b.id)).toEqual([battle.id]);
+    const own = view(world, 0).creeps.find((c) => c.id === mine.id)!;
+    expect(own.battle).toBe(battle.id);
+    expect(JSON.stringify(view(world, 0))).not.toContain("stance");
+    expect(fullView(world).battles).toEqual([stub(battle)]);
+  });
+
+  test("other teams' battles only on a cell in sight; their creeps marked in battle", () => {
+    const { world, enemy, hidden } = leakyWorld();
+    const battle = battleOf(world, hidden, enemy);
+    expect(view(world, 0).battles).toEqual([stub(battle)]);
+    const seen = view(world, 0).creeps.find((c) => c.id === enemy.id)!;
+    expect(seen.battle).toBe(battle.id);
+    // The hidden participant stays hidden: only its id is in the stub.
+    expect(view(world, 0).creeps.map((c) => c.id)).not.toContain(hidden.id);
+    expect(JSON.stringify(view(world, 0))).not.toContain(`"${hidden.name}"`);
+    Object.assign(battle, { x: 20, y: 1 });
+    expect(view(world, 0).battles).toEqual([]);
+  });
+});
+
 describe("encounters and spoils in the view (M2 encontro plan section 8)", () => {
   test("an encounter of the team is whole, but the other side's pending reply", () => {
     const { world, enemy } = leakyWorld();
     const mine = creepOf(world, 0, "triangle");
     Object.assign(mine, { x: 2, y: 1 });
     const encounter = encounterOf(world, mine, enemy);
-    // Team 0 is the aggressor: it sees its own reply, not the victim's.
+    // Team 0 is the aggressor: it does not see the victim's pending reply.
     expect(view(world, 0).encounters).toEqual([{ ...encounter, reply: null }]);
-    expect(view(world, 1).encounters).toEqual([
-      { ...encounter, aggressorReply: null },
-    ]);
+    expect(view(world, 1).encounters).toEqual([encounter]);
     // Wherever the encounter is: the team's creep is in it.
     Object.assign(encounter, { x: 20, y: 1 });
     expect(view(world, 0).encounters.map((e) => e.id)).toEqual([encounter.id]);
@@ -324,7 +380,6 @@ describe("encounters and spoils in the view (M2 encontro plan section 8)", () =>
         aggressor: hidden.id,
         victim: enemy.id,
         intent: "extort",
-        stage: "fight",
         x: 3,
         y: 1,
       },

@@ -199,12 +199,13 @@ function scarcestDna(seen: TeamView, team: Team): Dna {
 
 /**
  * The reaction rules the bot puts before a gatherer's rules (F3 checkpoint,
- * C2): the square refuses an extortion and fights, fleeing below
+ * C2), as the junction reads them (D2): a flee rule refuses an extortion and
+ * enters the battle as a carrier; fight, the DNA's preset. The square
+ * refuses and fights, entering as a carrier below
  * BALANCED.posture.fleeBelowPermille of its HP; the triangle pays any
- * extortion and flees an attack (2nd round); the circle always flees. The
- * rules cannot tell the dialogue from the fight: a triangle or a circle tries
- * to flee in every round too. Human players' gatherers keep the defaults
- * (D13).
+ * extortion and enters an attack as a carrier; the circle refuses every
+ * extortion and always enters as a carrier. Human players' gatherers keep the
+ * defaults (D13).
  */
 export function postureRules(dna: Dna): Rule[] {
   const always = { type: "always" } as const;

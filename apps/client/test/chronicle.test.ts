@@ -41,45 +41,49 @@ function bodies(dna: Dna): EventBody[] {
         ...at,
       })),
     ),
-    ...(["pay", "refuse", "fight", "flee"] as const).map(
-      (choice): EventBody => ({
-        type: "reaction",
-        encounter: 9,
-        creep: a,
-        choice,
-        by: "rule",
-        ...at,
-      }),
-    ),
-    { type: "paid", encounter: 9, from: b, to: a, amount: stock(0, 3), ...at },
-    ...[
-      [true, stock(5, 0)],
-      [true, stock(0, 0)],
-      [false, null],
-    ].map(([escaped, dropped]): EventBody => ({
-      type: "fleeAttempt",
+    ...(["pay", "refuse"] as const).map((choice): EventBody => ({
+      type: "reaction",
       encounter: 9,
       creep: a,
-      escaped: escaped as boolean,
-      dropped: dropped as ReturnType<typeof stock> | null,
-      spoil: null,
+      choice,
+      by: "rule",
       ...at,
     })),
-    { type: "fightEnded", encounter: 9, winner: a, loser: b, rounds: 1, ...at },
-    { type: "died", creep: b, by: a, ...at },
-    { type: "died", creep: b, by: null, ...at },
-    ...[
-      [stock(3, 1), null],
-      [stock(3, 1), 77],
-      [stock(0, 0), 77],
-    ].map(([taken, spoil]): EventBody => ({
-      type: "looted",
-      by: a,
-      from: b,
-      taken: taken as ReturnType<typeof stock>,
-      spoil: spoil as number | null,
+    { type: "paid", encounter: 9, from: b, to: a, amount: stock(0, 3), ...at },
+    {
+      type: "battleOpened",
+      battle: 20,
+      encounter: 9,
+      cause: "attack",
+      sides: [
+        { team: a.team, creeps: [a] },
+        { team: b.team, creeps: [b] },
+      ],
+      ...at,
+    },
+    { type: "battleJoined", battle: 20, creep: a, side: 0, ...at },
+    ...(["edge", "idle"] as const).map((reason): EventBody => ({
+      type: "battleLeft",
+      battle: 20,
+      creep: a,
+      reason,
+      hp: 40,
+      cargo: stock(1, 0),
       ...at,
     })),
+    ...(["won", "idle", "empty"] as const).map((reason): EventBody => ({
+      type: "battleEnded",
+      battle: 20,
+      reason,
+      winner: reason === "won" ? { side: 0, team: a.team } : null,
+      sideTeams: [a.team, b.team],
+      survivors: reason === "empty" ? [] : [a],
+      loot: [],
+      spoils: [],
+      ...at,
+    })),
+    { type: "died", creep: b, by: a, battle: 20, ...at },
+    { type: "died", creep: b, by: null, battle: 20, ...at },
     { type: "pickedUp", creep: a, spoil: 77, taken: stock(2, 0), ...at },
   ];
 }
@@ -108,13 +112,12 @@ describe("narrate (spec K-3, D17)", () => {
     expect(named.sort()).toEqual([1, 2]);
   });
 
-  it("says the demand, the rounds and what was dropped", () => {
+  it("says the demand and the battle's winner", () => {
     const texts = bodies("triangle").map((b) =>
       plainText(narrate({ ...b, tick: 0, index: 0 })),
     );
     expect(texts.join("\n")).toContain("12 matéria e 4 cristal");
-    expect(texts.join("\n")).toContain("1 rodada");
-    expect(texts.join("\n")).toContain("5 matéria");
+    expect(texts.join("\n")).toContain("vitória do time Laranja");
   });
 
   it("picks the variant by (tick × 7919 + index) mod n", () => {
@@ -129,8 +132,16 @@ describe("narrate (spec K-3, D17)", () => {
   });
 
   it("gives both teams and the replay the same sentence", () => {
-    const { world, prey, events } = encounterWorld("attack");
+    const { world, prey, events } = encounterWorld("extort", true);
     const all: SimEvent[] = [...events];
+    all.push(
+      ...step(world, [
+        {
+          playerId: 9,
+          command: { type: "react", creepId: prey.id, choice: "pay" },
+        },
+      ]),
+    );
     for (let i = 0; i < 400 && world.creeps.includes(prey); i++) {
       all.push(...step(world, []));
     }

@@ -1,8 +1,9 @@
 import { describe, expect, test } from "vitest";
 import { eventsFor, type SimEvent } from "../src/events.ts";
-import { dominate, join } from "../src/domination.ts";
 import { createRng } from "../src/rng.ts";
 import { dropSpoil } from "../src/spoils.ts";
+import { SYSTEM_PLAYER_ID } from "../src/battle.ts";
+import type { Command } from "../src/commands.ts";
 import { step } from "../src/step.ts";
 import { updateVision } from "../src/vision.ts";
 import type { WorldState } from "../src/world.ts";
@@ -11,69 +12,107 @@ import { creepOf, textWorld } from "./helpers.ts";
 // 40 cells: the cores far apart, the middle dark for both.
 const ROW = ["A......................................B"];
 
-/** A team 0 circle attacks a team 1 square at x=9 / 10 until one dies. */
-function fightToDeath(seed: number): { w: WorldState; events: SimEvent[] } {
+/**
+ * A team 0 circle attacks a team 1 square at x=9 / 10; the junction host's
+ * results, built by hand: the square dies, its load left as a pile, and the
+ * circle wins and loots it.
+ */
+function battleToDeath(seed: number): { w: WorldState; events: SimEvent[] } {
   const w = textWorld(ROW);
   w.rng = createRng(seed);
   const hunter = creepOf(w, 0, "circle");
   const prey = creepOf(w, 1, "square");
-  // Both carry something: whoever dies leaves loot.
   Object.assign(hunter, { x: 9, y: 0, cargo: { materia: 2, cristal: 0 } });
   Object.assign(prey, { x: 10, y: 0, cargo: { materia: 20, cristal: 6 } });
   updateVision(w);
-  // The victim fights: a dominated one refuses through its player.
-  join(w, 2, 1, false);
-  dominate(w, 2, prey.id);
   hunter.order = { type: "approach", targetId: prey.id, intent: "attack" };
   const events: SimEvent[] = [];
   events.push(...step(w, []));
+  const battleId = w.battles[0]!.id;
+  const system = (command: Command) => ({
+    playerId: SYSTEM_PLAYER_ID,
+    command,
+  });
   events.push(
     ...step(w, [
-      {
-        playerId: 2,
-        command: { type: "react", creepId: prey.id, choice: "fight" },
-      },
+      system({
+        type: "battleExit",
+        battleId,
+        creepId: prey.id,
+        outcome: "died",
+        hp: 0,
+        cargo: { materia: 0, cristal: 0 },
+        cell: { x: 11, y: 0 },
+        by: hunter.id,
+      }),
+      system({
+        type: "battleEnd",
+        battleId,
+        winnerSide: 0,
+        reason: "won",
+        survivors: [
+          {
+            creepId: hunter.id,
+            hp: 100,
+            cargo: { materia: 2, cristal: 0 },
+            cell: { x: 9, y: 0 },
+          },
+        ],
+        piles: [{ cell: { x: 11, y: 0 }, cargo: { materia: 20, cristal: 6 } }],
+      }),
     ]),
   );
-  for (let i = 0; i < 600 && w.encounters.length > 0; i++) {
-    events.push(...step(w, []));
-  }
   return { w, events };
 }
 
-describe("encounter events (spec K-1, K-2; plan section 7)", () => {
-  test("a fight emits, in order, the declaration, the reaction, the end, the death and the loot", () => {
-    const { events } = fightToDeath(3);
+describe("encounter and battle events (spec K-1, K-2; junction D15)", () => {
+  test("an attack emits the declaration and the opening; the results, the death and the end", () => {
+    const { events } = battleToDeath(3);
     expect(events.map((e) => e.type)).toEqual([
       "encounter",
-      "reaction",
-      "fightEnded",
+      "battleOpened",
       "died",
-      "looted",
+      "battleEnded",
     ]);
-    const [opened, reaction, ended, died] = events;
+    const [opened, battle, died, ended] = events;
     if (
       opened?.type !== "encounter" ||
-      reaction?.type !== "reaction" ||
-      ended?.type !== "fightEnded" ||
-      died?.type !== "died"
+      battle?.type !== "battleOpened" ||
+      died?.type !== "died" ||
+      ended?.type !== "battleEnded"
     ) {
       throw new Error("unreachable");
     }
-    expect(reaction).toMatchObject({ choice: "fight", by: "player" });
-    expect(died.creep).toEqual(ended.loser);
-    expect(died.by).toEqual(ended.winner);
+    expect(battle).toMatchObject({
+      encounter: opened.encounter,
+      cause: "attack",
+      sides: [
+        { team: 0, creeps: [opened.aggressor] },
+        { team: 1, creeps: [opened.victim] },
+      ],
+    });
+    expect(died.creep).toEqual(opened.victim);
+    expect(died.by).toEqual(opened.aggressor);
+    expect(died.battle).toBe(battle.battle);
     // The dead keep their name in the events: the chronicle needs it.
     expect(died.creep.name.length).toBeGreaterThan(0);
+    // Circle capacity 10, 2 carried: 6 cristal, then 2 materia.
+    expect(ended).toMatchObject({
+      reason: "won",
+      winner: { side: 0, team: 0 },
+      survivors: [opened.aggressor],
+      loot: [{ creep: opened.aggressor, taken: { materia: 2, cristal: 6 } }],
+    });
+    expect(ended.spoils).toHaveLength(1);
   });
 
   test("the same world and commands give the same events", () => {
     const strip = (events: SimEvent[]) => JSON.stringify(events);
-    expect(strip(fightToDeath(5).events)).toBe(strip(fightToDeath(5).events));
+    expect(strip(battleToDeath(5).events)).toBe(strip(battleToDeath(5).events));
   });
 
   test("the participants' teams always hear it, even when the dead see no more", () => {
-    const { events } = fightToDeath(3);
+    const { events } = battleToDeath(3);
     for (const event of events) expect(event.teams).toEqual([0, 1]);
   });
 

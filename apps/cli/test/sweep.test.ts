@@ -137,7 +137,8 @@ describe("geo sweep", () => {
       // Encounters (M2 encontro spec §7).
       "| Encontros abertos por time por hora |",
       "| Encontros pagos (%) |",
-      "| Fugas que escaparam (%) |",
+      "| Encontros que viraram batalha (%) |",
+      "| Batalhas abertas por time por hora |",
       "| Encontros na zona do Núcleo da vítima (%) |",
       "| Mortes por time |",
       "| Diferença entre os times em creeps |",

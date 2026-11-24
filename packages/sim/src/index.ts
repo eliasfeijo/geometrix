@@ -1,5 +1,6 @@
 export * from "./approach.ts";
 export * from "./autopilot.ts";
+export * from "./battle.ts";
 export * from "./commands.ts";
 export * from "./domination.ts";
 export * from "./economy.ts";

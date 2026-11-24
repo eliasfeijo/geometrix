@@ -108,10 +108,9 @@ export type RunSummary = {
   encountersPerHour: number;
   /** Shares of all encounters, by outcome; null with no encounter. */
   paidPercent: number | null;
-  escapedPercent: number | null;
-  deathOutcomePercent: number | null;
-  /** Escaped of the tries to flee, all teams; null with no try. */
-  fleeEscapedPercent: number | null;
+  battlePercent: number | null;
+  /** Battles opened per team per hour (junction spec §7). */
+  battlesPerHour: number;
   /** Encounters in the victim's own core zone, of all (D21). */
   campingPercent: number | null;
   deaths: number;
@@ -192,12 +191,6 @@ export function summarize(result: SimResult, value: number): RunSummary {
           sumOf(tally.flatMap((t) => keys.map((k) => t.outcomesAsVictim[k]))),
           encounters,
         );
-  const fleeTries = sumOf(
-    tally.flatMap((t) => Object.values(t.fleeByDna).map((f) => f.tries)),
-  );
-  const fleeEscaped = sumOf(
-    tally.flatMap((t) => Object.values(t.fleeByDna).map((f) => f.escaped)),
-  );
   const deathsByTeam = tally.map(
     (t) => t.deaths.square + t.deaths.triangle + t.deaths.circle,
   );
@@ -241,9 +234,11 @@ export function summarize(result: SimResult, value: number): RunSummary {
     ),
     encountersPerHour: encounters / last.teams.length / (totalSeconds / HOUR),
     paidPercent: outcome("paid"),
-    escapedPercent: outcome("escapedDialogue", "escapedFight"),
-    deathOutcomePercent: outcome("victimDied", "aggressorDied"),
-    fleeEscapedPercent: fleeTries === 0 ? null : share(fleeEscaped, fleeTries),
+    battlePercent: outcome("battle"),
+    battlesPerHour:
+      result.encounters.battlesOpened /
+      last.teams.length /
+      (totalSeconds / HOUR),
     campingPercent:
       encounters === 0
         ? null
@@ -324,9 +319,16 @@ const COLUMNS: { key: ScalarKey; label: string; digits: number }[] = [
     digits: 1,
   },
   { key: "paidPercent", label: "Encontros pagos (%)", digits: 0 },
-  { key: "escapedPercent", label: "Encontros com fuga (%)", digits: 0 },
-  { key: "deathOutcomePercent", label: "Encontros com morte (%)", digits: 0 },
-  { key: "fleeEscapedPercent", label: "Fugas que escaparam (%)", digits: 0 },
+  {
+    key: "battlePercent",
+    label: "Encontros que viraram batalha (%)",
+    digits: 0,
+  },
+  {
+    key: "battlesPerHour",
+    label: "Batalhas abertas por time por hora",
+    digits: 1,
+  },
   {
     key: "campingPercent",
     label: "Encontros na zona do Núcleo da vítima (%)",

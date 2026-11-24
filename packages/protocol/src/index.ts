@@ -118,7 +118,7 @@ export const clientCommand = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("react"),
     creepId: id,
-    choice: z.enum(["pay", "refuse", "fight", "flee"]),
+    choice: z.enum(["pay", "refuse"]),
   }),
 ]);
 
@@ -269,11 +269,13 @@ export type ServerMessage =
 /** A sim refusal, or one from the server before the sim sees the command. */
 export type RejectReason = Refusal | "invalidMessage" | "worldEnded";
 
-// Compile-time check that the client vocabulary matches the sim's commands.
+// Compile-time check that the client vocabulary matches the sim's commands,
+// less the system ones: the server's join and the junction host's battle
+// results (junction plan P2), which no client may send.
 type Same<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false;
 const sameVocabulary: Same<
   ClientCommand,
-  Exclude<Command, { type: "join" }>
+  Exclude<Command, { type: "join" | "battleExit" | "battleEnd" }>
 > = true;
 void sameVocabulary;
 
@@ -304,7 +306,12 @@ export type Replay = {
 
 const count = z.number().int().nonnegative();
 
-/** Every command of the log: the client's plus the system join. */
+const stock = z.object({ materia: count, cristal: count });
+
+/**
+ * Every command of the log: the client's plus the system ones, the join and
+ * the junction host's battle results (junction plan P2).
+ */
 const loggedCommand = z.object({
   tick: count,
   seq: count,
@@ -312,6 +319,26 @@ const loggedCommand = z.object({
   command: z.union([
     clientCommand,
     z.object({ type: z.literal("join"), team: count, bot: z.boolean() }),
+    z.object({
+      type: z.literal("battleExit"),
+      battleId: id,
+      creepId: id,
+      outcome: z.enum(["died", "escaped"]),
+      hp: count,
+      cargo: stock,
+      cell,
+      by: id.nullable(),
+    }),
+    z.object({
+      type: z.literal("battleEnd"),
+      battleId: id,
+      winnerSide: count.nullable(),
+      reason: z.enum(["won", "idle", "empty"]),
+      survivors: z.array(
+        z.object({ creepId: id, hp: count, cargo: stock, cell }),
+      ),
+      piles: z.array(z.object({ cell, cargo: stock })),
+    }),
   ]),
 });
 

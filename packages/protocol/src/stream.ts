@@ -11,5 +11,7 @@ export * from "./delta.ts";
  * 3: fog of war, a filtered view with the known terrain and a welcome without
  * the map's terrain and the cores. 4: encounters and spoils in the view, the
  * team's events in the delta and its chronicle in the welcome (M2 encontro).
+ * 5: the battle stubs in the view and the delta, react with pay or refuse
+ * only, the battle events (M2 junction).
  */
-export const PROTOCOL_VERSION = 4;
+export const PROTOCOL_VERSION = 5;

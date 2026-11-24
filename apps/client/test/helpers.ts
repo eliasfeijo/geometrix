@@ -108,7 +108,8 @@ export function botReplay(
  * The seed-42 test world with an encounter just opened by the real step: a
  * circle of team 0 approaches a loaded square of team 1 standing next to it
  * by team 0's core. With `dominated`, player 9 of team 1 dominates the
- * square, so the dialogue waits for its reply (spec D6).
+ * square, so the dialogue waits for its reply (spec D6). An attack has no
+ * dialogue: it opens the battle (junction O-1).
  */
 export function encounterWorld(
   intent: "attack" | "extort",
@@ -133,9 +134,10 @@ export function encounterWorld(
   }
   hunter.order = { type: "approach", targetId: prey.id, intent };
   const events: SimEvent[] = [];
-  for (let i = 0; i < 5 && world.encounters.length === 0; i++) {
+  const opened = () => world.encounters.length + world.battles.length > 0;
+  for (let i = 0; i < 5 && !opened(); i++) {
     events.push(...step(world, []));
   }
-  if (world.encounters.length === 0) throw new Error("no encounter opened");
+  if (!opened()) throw new Error("no encounter opened");
   return { world, hunter, prey, events };
 }

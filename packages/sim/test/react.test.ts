@@ -28,10 +28,8 @@ const order = (
   creepId: number,
   o: Extract<Command, { type: "order" }>["order"],
 ) => ({ type: "order", creepId, order: o }) as const;
-const reactTo = (
-  creepId: number,
-  choice: "pay" | "refuse" | "fight" | "flee",
-) => ({ type: "react", creepId, choice }) as const;
+const reactTo = (creepId: number, choice: string) =>
+  ({ type: "react", creepId, choice }) as Command;
 
 describe("encounter orders (spec E-1, D19)", () => {
   test("approach takes an enemy the team sees; one it does not see is refused as unknown", () => {
@@ -58,21 +56,26 @@ describe("encounter orders (spec E-1, D19)", () => {
     expect(validate(w, pickup(9999), 1)).toBe("invalidOrder");
   });
 
-  test("a creep in an encounter or fleeing takes no order", () => {
+  test("a creep in an encounter, in a battle or fleeing takes no order", () => {
     const { w, hunter, prey } = world();
-    step(w, [
-      {
-        playerId: 1,
-        command: order(hunter.id, {
-          type: "approach",
-          targetId: prey.id,
-          intent: "attack",
-        }),
-      },
-    ]);
+    prey.cargo.cristal = 5;
+    const approach = (intent: "attack" | "extort") => ({
+      playerId: 1,
+      command: order(hunter.id, {
+        type: "approach",
+        targetId: prey.id,
+        intent,
+      }),
+    });
+    step(w, [approach("extort")]);
     expect(hunter.engagement).not.toBeNull();
     expect(validate(w, order(hunter.id, { type: "stop" }), 1)).toBe("engaged");
     expect(validate(w, order(prey.id, { type: "stop" }), 2)).toBe("engaged");
+    // Refused, the battle locks both (junction O-5).
+    step(w, [{ playerId: 2, command: reactTo(prey.id, "refuse") }]);
+    expect(hunter.battle).not.toBeNull();
+    expect(validate(w, order(hunter.id, { type: "stop" }), 1)).toBe("inBattle");
+    expect(validate(w, order(prey.id, { type: "stop" }), 2)).toBe("inBattle");
     const other = creepOf(w, 1, "triangle");
     join(w, 3, 1, false);
     dominate(w, 3, other.id);
@@ -100,15 +103,17 @@ describe("the react command (spec C-5, D6)", () => {
 
   test("is refused outside an encounter and for a creep not dominated", () => {
     const { w, hunter, prey } = world();
-    expect(validate(w, reactTo(prey.id, "flee"), 2)).toBe("notEngaged");
-    expect(validate(w, reactTo(hunter.id, "flee"), 2)).toBe("unknownCreep");
+    expect(validate(w, reactTo(prey.id, "pay"), 2)).toBe("notEngaged");
+    expect(validate(w, reactTo(hunter.id, "pay"), 2)).toBe("unknownCreep");
   });
 
-  test("the victim answers an extortion with pay, refuse or flee", () => {
+  test("the victim answers an extortion with pay or refuse (junction D1)", () => {
     const { w, hunter, prey } = opened("extort");
     expect(validate(w, reactTo(prey.id, "fight"), 2)).toBe("invalidReaction");
+    expect(validate(w, reactTo(prey.id, "flee"), 2)).toBe("invalidReaction");
     // The aggressor has nothing to answer in the dialogue.
-    expect(validate(w, reactTo(hunter.id, "flee"), 1)).toBe("invalidReaction");
+    expect(validate(w, reactTo(hunter.id, "pay"), 1)).toBe("invalidReaction");
+    expect(validate(w, reactTo(prey.id, "refuse"), 2)).toBeNull();
     expect(validate(w, reactTo(prey.id, "pay"), 2)).toBeNull();
     const events = step(w, [{ playerId: 2, command: reactTo(prey.id, "pay") }]);
     expect(events.find((e) => e.type === "reaction")).toMatchObject({
@@ -118,25 +123,9 @@ describe("the react command (spec C-5, D6)", () => {
     expect(hunter.cargo.cristal).toBe(5);
   });
 
-  test("the victim answers an attack with fight or flee", () => {
+  test("an attack opens the battle at once: nothing to answer", () => {
     const { w, prey } = opened("attack");
-    expect(validate(w, reactTo(prey.id, "pay"), 2)).toBe("invalidReaction");
-    expect(validate(w, reactTo(prey.id, "refuse"), 2)).toBe("invalidReaction");
-    step(w, [{ playerId: 2, command: reactTo(prey.id, "fight") }]);
-    expect(w.encounters[0]?.stage).toBe("fight");
-  });
-
-  test("in the fight, either side may only try to flee", () => {
-    const { w, hunter, prey } = opened("attack");
-    step(w, [{ playerId: 2, command: reactTo(prey.id, "fight") }]);
-    expect(validate(w, reactTo(prey.id, "fight"), 2)).toBe("invalidReaction");
-    expect(validate(w, reactTo(hunter.id, "flee"), 1)).toBeNull();
-    step(w, [{ playerId: 1, command: reactTo(hunter.id, "flee") }]);
-    expect(w.encounters[0]).toMatchObject({
-      aggressorReply: "flee",
-      reply: null,
-    });
-    step(w, [{ playerId: 2, command: reactTo(prey.id, "flee") }]);
-    expect(w.encounters[0]).toMatchObject({ reply: "flee" });
+    expect(w.battles).toHaveLength(1);
+    expect(validate(w, reactTo(prey.id, "refuse"), 2)).toBe("notEngaged");
   });
 });

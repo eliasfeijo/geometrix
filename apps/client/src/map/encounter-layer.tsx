@@ -1,7 +1,7 @@
 // The encounters on the map (M2 encontro spec C-3, plan section 9): a dashed
 // line from an own creep to the enemy it chases; a "!" between the two sides
-// of a dialogue, with the seconds left in the window; a red stroke with the
-// rounds in a fight; a short trail behind a fleeing creep.
+// of a dialogue, with the seconds left in the window; a short trail behind a
+// fleeing creep. Battles get their sign in junction F5.
 
 import { isOwnCreep, type Params, type TeamView } from "@geometrix/sim";
 import { COLORS } from "./colors.ts";
@@ -74,23 +74,16 @@ function LinkMark(props: {
       />
     );
   }
-  const fight = link.kind === "fight";
-  const label = fight
-    ? link.rounds === null
-      ? null
-      : `${link.rounds}`
-    : link.seconds === null
-      ? null
-      : `${link.seconds}s`;
+  const label = link.seconds === null ? null : `${link.seconds}s`;
   return (
-    <g class={fight ? "fight-mark" : "dialogue-mark"}>
+    <g class="dialogue-mark">
       <line
         x1={from.x}
         y1={from.y}
         x2={to.x}
         y2={to.y}
-        stroke={fight ? COLORS.fight : COLORS.selection}
-        stroke-width={fight ? 0.12 : 0.05}
+        stroke={COLORS.selection}
+        stroke-width={0.05}
         stroke-linecap="round"
       />
       <circle
@@ -98,7 +91,7 @@ function LinkMark(props: {
         cy={mid.y}
         r={size * 0.5}
         fill={COLORS.background}
-        stroke={fight ? COLORS.fight : COLORS.selection}
+        stroke={COLORS.selection}
         stroke-width={size * 0.08}
       />
       <text
@@ -106,12 +99,12 @@ function LinkMark(props: {
         x={mid.x}
         y={mid.y}
         font-size={size * 0.7}
-        fill={fight ? COLORS.fight : COLORS.selection}
+        fill={COLORS.selection}
         font-weight="700"
         text-anchor="middle"
         dominant-baseline="central"
       >
-        {fight ? "⚔" : "!"}
+        !
       </text>
       {label !== null && (
         <text

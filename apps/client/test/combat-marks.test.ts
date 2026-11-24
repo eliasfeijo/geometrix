@@ -1,4 +1,4 @@
-import { maxHp, step } from "@geometrix/sim";
+import { maxHp } from "@geometrix/sim";
 import { describe, expect, it } from "vitest";
 import {
   hpBand,
@@ -77,22 +77,15 @@ describe("links between creeps (spec C-3)", () => {
           to: prey.id,
           intent: "extort",
           seconds: (encounter!.deadlineTick! - world.tick) * 1,
-          rounds: null,
         },
       ]);
     }
   });
 
-  it("shows the rounds of a fight", () => {
-    const { world, prey } = encounterWorld("attack", true);
-    step(world, [
-      {
-        playerId: 9,
-        command: { type: "react", creepId: prey.id, choice: "fight" },
-      },
-    ]);
-    const [link] = linksOf(viewOf(world, 0), world.params);
-    expect(link).toMatchObject({ kind: "fight", seconds: null, rounds: 0 });
+  it("draws no link for a battle: its creeps are in the arena", () => {
+    const { world } = encounterWorld("attack", true);
+    expect(world.battles).toHaveLength(1);
+    expect(linksOf(viewOf(world, 0), world.params)).toEqual([]);
   });
 
   it("counts the window down to zero, none for a free victim", () => {

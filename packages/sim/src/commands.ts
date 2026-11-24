@@ -6,6 +6,16 @@
 
 import type { Rule } from "./autopilot.ts";
 import {
+  applyBattleEnd,
+  applyBattleExit,
+  battleEndRefusal,
+  battleExitRefusal,
+  type BattleEndCommand,
+  type BattleExitCommand,
+  type BattleRefusal,
+} from "./battle.ts";
+import { createEventLog, type EventLog } from "./events.ts";
+import {
   dominate,
   dominateRefusal,
   findPlayer,
@@ -59,8 +69,14 @@ export type Command =
   | { type: "produce"; dna: Dna; repeat: boolean }
   | { type: "stopRepeat" }
   | { type: "buyUpgrade"; upgrade: UpgradeId }
-  /** The dominating player answers its creep's encounter (M2 encontro). */
-  | { type: "react"; creepId: number; choice: Reply };
+  /** The dominating player answers its creep's extortion (M2 encontro). */
+  | { type: "react"; creepId: number; choice: Reply }
+  /**
+   * System commands of the junction host (plan P2), logged with player id 0:
+   * a participant left a battle; a battle ended.
+   */
+  | BattleExitCommand
+  | BattleEndCommand;
 
 export const COMMAND_TYPES = [
   "join",
@@ -73,6 +89,8 @@ export const COMMAND_TYPES = [
   "stopRepeat",
   "buyUpgrade",
   "react",
+  "battleExit",
+  "battleEnd",
 ] as const satisfies readonly Command["type"][];
 export type CommandType = Command["type"];
 
@@ -83,6 +101,7 @@ export type Refusal =
   | JoinRefusal
   | DominationRefusal
   | ReactRefusal
+  | BattleRefusal
   | RulesRefusal
   | ProductionRefusal
   | UpgradeRefusal
@@ -121,6 +140,10 @@ export function validate(
     case "stopRepeat":
     case "buyUpgrade":
       return teamCommandRefusal(state, command, playerId);
+    case "battleExit":
+      return battleExitRefusal(state, command, playerId);
+    case "battleEnd":
+      return battleEndRefusal(state, command, playerId);
     default:
       return "unknownCommand";
   }
@@ -148,12 +171,14 @@ function teamCommandRefusal(
 
 /**
  * Validates and applies one command. Returns the refusal, or null once
- * applied; a refused command changes nothing.
+ * applied; a refused command changes nothing. The battle results emit their
+ * events into `log` (step passes the tick's).
  */
 export function applyCommand(
   state: WorldState,
   command: Command,
   playerId: number,
+  log: EventLog | null = null,
 ): Refusal | null {
   const refusal = validate(state, command, playerId);
   if (refusal !== null) return refusal;
@@ -172,6 +197,12 @@ export function applyCommand(
       break;
     case "react":
       react(state, command.creepId, command.choice);
+      break;
+    case "battleExit":
+      applyBattleExit(state, log ?? createEventLog(state.tick), command);
+      break;
+    case "battleEnd":
+      applyBattleEnd(state, log ?? createEventLog(state.tick), command);
       break;
     case "setRules":
       setRules(state, command.creepId, command.rules);

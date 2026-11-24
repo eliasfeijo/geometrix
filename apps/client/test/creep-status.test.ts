@@ -63,6 +63,7 @@ describe("an enemy creep in sight (spec C-2)", () => {
     expect(isOwnCreep(creep)).toBe(false);
     expect(Object.keys(creep).sort()).toEqual(
       [
+        "battle",
         "cargo",
         "dna",
         "engagement",
