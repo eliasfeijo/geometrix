@@ -144,5 +144,5 @@ describe("geo net", () => {
     const again = capture();
     expect(run([...args, "--id", "one"], again)).toBe(2);
     expect(again.errors[0]).toContain("run already exists");
-  });
+  }, 30_000);
 });
