@@ -132,12 +132,14 @@ const schema = {
    * `window` of world cells centered on the battle cell (odd sides), each
    * drawn as `cellBlock` × `cellBlock` arena cells by the junction host; a
    * side takes at most `sideCap` participants and a battle at most
-   * `maxSides` sides.
+   * `maxSides` sides. Each side spawns in a `zone` of `depth` × `breadth`
+   * arena cells (the lab's arenas: 3 × 5), across the way it faces.
    */
   battle: {
     window: { width: positive, height: positive, cellBlock: positive },
     sideCap: positive,
     maxSides: positive,
+    zone: { depth: positive, breadth: positive },
   },
   /**
    * The encounter (D5, D6): it opens within `radius` (Manhattan); a dominated
@@ -248,6 +250,18 @@ function checkConsistency(p: Params, issues: string[]): void {
     issues.push("battle.window.height: must be <= map.height");
   }
   if (p.battle.maxSides < 2) issues.push("battle.maxSides: must be >= 2");
+  // The arena has a center cell and four spawn zones centered on their row
+  // or column, each with room for a full side (junction plan P7).
+  if (window.cellBlock % 2 === 0) {
+    issues.push("battle.window.cellBlock: must be odd");
+  }
+  if (p.battle.maxSides > 4) issues.push("battle.maxSides: must be <= 4");
+  const { zone } = p.battle;
+  if (zone.depth % 2 === 0) issues.push("battle.zone.depth: must be odd");
+  if (zone.breadth % 2 === 0) issues.push("battle.zone.breadth: must be odd");
+  if (p.battle.sideCap > zone.depth * zone.breadth) {
+    issues.push("battle.sideCap: must fit in a zone (depth × breadth)");
+  }
   // Point symmetry (plan section 6) needs even sides and a centered river.
   if (p.map.width % 2 !== 0) issues.push("map.width: must be even");
   if (p.map.height % 2 !== 0) issues.push("map.height: must be even");

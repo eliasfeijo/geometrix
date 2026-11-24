@@ -158,7 +158,8 @@
       "cellBlock": 5
     },
     "sideCap": 5,
-    "maxSides": 4
+    "maxSides": 4,
+    "zone": { "depth": 3, "breadth": 5 }
   },
   "encounter": {
     "radius": 1,

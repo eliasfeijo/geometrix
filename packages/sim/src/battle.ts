@@ -230,8 +230,11 @@ export function runJoins(state: WorldState, log: EventLog): void {
 
 const isCount = (value: number) => Number.isSafeInteger(value) && value >= 0;
 
-/** A world cell a creep can stand on. */
-function isStandable(state: WorldState, cell: Cell): boolean {
+/**
+ * A world cell a creep can stand on: in the map, and walkable (not rock nor
+ * river). Where a creep may come back from a battle (D7, D8).
+ */
+export function isStandable(state: WorldState, cell: Cell): boolean {
   if (!isInMap(state.map, cell)) return false;
   return (
     cellModifier(state.map, cell.y * state.map.width + cell.x, state.params) > 0
