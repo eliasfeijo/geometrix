@@ -78,16 +78,26 @@
     button back to the map; teammates get a button to watch;
   - **taking over mid-fight:** a player may dominate a creep of their team that is already in a battle; it leaves its
     gambits for the human, and the battle switches to real time.
+- **M2 slice D, the junction spec** (owner, 2026-11-24, approving the agent's proposals in
+  [the spec](../specs/m2-junction/spec.md); numbers provisional):
+  - **the bubble is the arena's window:** 9 × 5 world cells around the battle's cell, each a 5 × 5 block of arena;
+    a creep with an attack approach on a participant that enters it joins; a full side (5) makes the joiner wait at
+    the edge; extorting a participant is refused (D5, D6);
+  - **leaving mid-fight:** a participant that dies or escapes leaves the battle in the world on the same tick; an
+    escapee comes back on the world cell under the border it left by, with slice A's run home; its order ends (D7);
+  - **the end:** survivors come back on the world cell under their arena cell; an end by inactivity is an escape for
+    everyone, without the speed bonus, and its piles become spoils (D8);
+  - **real time while a human plays on the screen:** watching does not change the pace; a disconnected human counts as
+    off the screen; on the map, a dominated creep in a battle plays by its gambits (D11, D13);
+  - **the battle in the world view:** through the fog, its cell, the bubble, the participants "in battle" and their
+    sides; a sign on the map to watch it (D16);
+  - **the movement drawing:** the four lab options in the network panel, from the lab's default, until PLAYTEST group
+    7; prediction waits for P (D19).
 
 ## Proposal
 See [ADR-0001](../adr/0001-world-and-battle-as-separate-simulations.md). The world side of the contract is
-[ADR-0010](../adr/0010-world-side-of-the-battle-contract.md) (`Proposed`): battle instances next to the world, run by
+[ADR-0010](../adr/0010-world-side-of-the-battle-contract.md) (`Accepted`): battle instances next to the world, run by
 a junction host; the world log keeps only the results.
-- **Exit:** a participant that dies or escapes leaves the battle in the world on the same tick; an escapee comes back
-  on the world cell under the border it left by, with slice A's run home ([junction spec](../specs/m2-junction/spec.md)
-  D7, D8; agent).
-- **The bubble is the arena's window** (agent, junction spec D5, D6): 9 × 5 world cells around the battle's cell, each
-  a 5 × 5 block of arena (provisional); whoever enters it with an attack approach on a participant joins.
 - **Short battles** (agent): 1 to 2 minutes; each human controls only the creep they dominate.
 - **Dialogue only at the opening** (agent): whoever joins mid-fight skips the conversation; the chronicle records the
   entry ([08](08-chronicle-chat-and-console.md)).

@@ -1,11 +1,11 @@
 # M2 spec — The junction
 
-**Status:** Draft · **Date:** 2026-11-24 · **Milestone:** M2 — The ambush ([ROADMAP](../../ROADMAP.md)), slice D
+**Status:** Approved (2026-11-24) · **Date:** 2026-11-24 · **Milestone:** M2 — The ambush ([ROADMAP](../../ROADMAP.md)), slice D
 **Related GDD:** [02](../../gdd/02-creeps-and-domination.md) (HP, domination), [03](../../gdd/03-economy-and-logistics.md)
 (loot, spoils), [05](../../gdd/05-tribes-and-diplomacy.md) (the wanderers), [06](../../gdd/06-battles.md) (the
 instance, the bubble, world time), [07](../../gdd/07-autopilot.md) (reactions, gambits),
 [08](../../gdd/08-chronicle-chat-and-console.md) (chronicle) ·
-**ADR:** [0010](../../adr/0010-world-side-of-the-battle-contract.md) (the world side of the contract, `Proposed`);
+**ADR:** [0010](../../adr/0010-world-side-of-the-battle-contract.md) (the world side of the contract, `Accepted`);
 [0001](../../adr/0001-world-and-battle-as-separate-simulations.md), [0008](../../adr/0008-battle-package.md)
 
 ## 1. Hypothesis
@@ -43,9 +43,9 @@ A summary; the source is the GDD.
 
 ## 3. Scope decisions this spec assumes
 
-Decisions marked **owner** were chosen by the owner in the interactive round of 2026-11-24 and are in the GDD. The
-others are the **agent's proposal**, which only holds with the owner's acceptance of this spec. Those marked
-**(gameplay)** complete the GDD. The numbers are in §6 and are guesses.
+Decisions marked **owner** were chosen by the owner in the interactive round of 2026-11-24. The others were the
+**agent's proposal**, **accepted by the owner with the spec** (2026-11-24). Those marked **(gameplay)** complete the
+GDD and are in it. The numbers are in §6 and are guesses.
 
 | # | Decision | Default | Why |
 |---|---|---|---|
@@ -233,8 +233,9 @@ the slice's start (slice A's encounter with the roll), measured in F1.
 
 ## 9. Prerequisites before the `plan.md`
 
-- The owner's acceptance of D1–D19 (the agent's ones included).
-- **ADR-0010 — The world side of the battle contract** `Accepted` (`Proposed`, 2026-11-24).
+- The owner's acceptance of D1–D19 ✅ (2026-11-24, with the spec); the gameplay ones are in the GDD (02, 05, 06, 07,
+  08).
+- **ADR-0010 — The world side of the battle contract** ✅ `Accepted` (2026-11-24).
 
 ## 10. Open questions
 

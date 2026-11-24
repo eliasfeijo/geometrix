@@ -35,7 +35,9 @@
   100 ms, provisional; lab plan, P12). At the lab checkpoint: "it does its job".
 - **Reactions at the junction** (owner, 2026-11-24; [junction spec](../specs/m2-junction/spec.md) D1, D2): the roll
   and its flee leave. A free creep whose reaction rule says **flee** enters the battle with the **carrier** gambits;
-  with **fight**, or with no rule, with its DNA's preset. Extortion still ends in pay or refuse.
+  with **fight**, or with no rule, with its DNA's preset. Extortion still ends in pay or refuse. World creeps fight
+  with the **normal** reaction; **no battle gambits editor in the world client** in slice D (spec D10, owner with the
+  spec).
 
 ## Proposal
 - Humans, macros, autopilot and bots emit the **same commands** ([ADR-0002](../adr/0002-every-action-is-a-command.md)).

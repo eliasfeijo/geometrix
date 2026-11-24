@@ -39,6 +39,11 @@
 - **M2 slice B, the battle lab** (owner, 2026-11-15; [lab spec](../specs/m2-battle-lab/spec.md) D6): the base combat
   stats per DNA (max HP, damage, range, cooldown, battle speed, projectile speed, capacity) live in the battle
   package's params until the junction, which picks a single source for what exists on both sides.
+- **M2 slice D, the junction** (owner, 2026-11-24; [junction spec](../specs/m2-junction/spec.md) D9, D12): **the
+  world owns max HP and capacity** (capacity has the upgrade, so it is the creep's); the battle receives them with each
+  participant and keeps only combat stats. HP crosses in whole points. **Domination in battle:** dominating a creep of
+  one's team in a battle takes it from its gambits, with no countdown; releasing it gives it back; the domination goes
+  on in the world after the battle.
 
 ## Proposal
 - Dominating only changes **who emits the creep's commands**. See [ADR-0002](../adr/0002-every-action-is-a-command.md).

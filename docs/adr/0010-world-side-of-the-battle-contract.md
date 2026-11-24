@@ -1,6 +1,6 @@
 # ADR-0010: The world side of the battle contract: battle instances next to the world
 
-**Status:** Proposed · **Date:** 2026-11-24
+**Status:** Accepted (2026-11-24) · **Date:** 2026-11-24
 **Related:** ADR-0001 (world and battle separated; this ADR places the instances), ADR-0003 (pure, integer
 simulation), ADR-0004 (the command log; it gains the battle logs), ADR-0006 (the per-team deltas), ADR-0008 (the
 battle package; rule 8 leaves the world side to slice D), [junction spec](../specs/m2-junction/spec.md),
@@ -34,7 +34,7 @@ The owner's decisions in the junction spec fix the forces:
 
 ## Alternatives
 
-- **A. Separate instances next to the world, driven by a junction host** (recommended).
+- **A. Separate instances next to the world, driven by a junction host** (chosen).
   - What it is: the world keeps only a **stub** of each battle (its cell, its window, its participants' ids and
     sides) and locks the participants. A **junction host**, which depends on the `sim` and the battle, owns the
     instances: it builds the setup from the world, steps each battle on its pace, passes joins in, and turns exits and
@@ -57,7 +57,7 @@ The owner's decisions in the junction spec fix the forces:
 
 ## Decision
 
-Proposed: **alternative A**, with these rules.
+**Alternative A** (owner, 2026-11-24: a battle change must not touch the world), with these rules.
 
 1. **Three pieces, one direction.** The `sim` does not import the battle; the battle imports neither the `sim` nor the
    `protocol` (ADR-0008); the **junction host** imports both and is the only place that knows the two. The battle's

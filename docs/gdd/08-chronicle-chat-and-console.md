@@ -18,6 +18,9 @@
   - The slice A chronicle has encounters (with the aggressor's declaration), escapes, fights, deaths, loot and births.
     A team sees an event one of its creeps takes part in or that happens in its sight.
   - **The agent writes the initial sentence bank and the owner reviews the tone.**
+- **M2 slice D, the junction** (owner, 2026-11-24, with the [junction spec](../specs/m2-junction/spec.md) D15): the
+  chronicle gains the battle opened (with its sides), joined, escaped (by the border or by inactivity), the battle
+  ended (winner, loot and spoils) and the wanderer born; the blow-by-blow stays on the battle screen.
 
 Chat, console and macros were slice C of M2, which left the milestone (2026-11-20): they wait for a milestone.
 

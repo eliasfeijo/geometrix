@@ -14,4 +14,4 @@ Flow: a draft enters as `Proposed` and only becomes `Accepted` with the owner's 
 | [0007](0007-sim-events.md) | `sim` events: output derived from `step`, outside the state | Accepted | 2026-11-15 |
 | [0008](0008-battle-package.md) | Battle package: its own deterministic simulation and the internal contract v0 | Accepted | 2026-11-15 |
 | [0009](0009-prediction-in-the-lab.md) | Predicting your own creep as a lab experiment option | Proposed | 2026-11-20 |
-| [0010](0010-world-side-of-the-battle-contract.md) | The world side of the battle contract: battle instances next to the world | Proposed | 2026-11-24 |
+| [0010](0010-world-side-of-the-battle-contract.md) | The world side of the battle contract: battle instances next to the world | Accepted | 2026-11-24 |
