@@ -12,8 +12,8 @@
 |---|---|
 | **Milestone** | **M2 — The ambush** ([ROADMAP](../ROADMAP.md)). M0, M1 and M1.5 ✅ |
 | **Slices** | **A — The encounter** ([spec](../specs/m2-encounter/spec.md) · [plan](../specs/m2-encounter/plan.md) · [tasks](../specs/m2-encounter/tasks.md)) ✅ 2026-11-17 · **B — The battle lab** ([spec](../specs/m2-battle-lab/spec.md) · [plan](../specs/m2-battle-lab/plan.md) · [tasks](../specs/m2-battle-lab/tasks.md)) ✅ 2026-11-20 |
-| **In progress** | **D — The junction, F0** (branch `m2/junction-f0-spec`): the [spec](../specs/m2-junction/spec.md) ✅ approved 2026-11-24 (GDD 02, 05–08); the `plan.md` and `tasks.md` in writing |
-| **Next front** | The owner's approval of D's `plan.md`, then F1 |
+| **In progress** | **D — The junction, F0** (branch `m2/junction-f0-spec`): the [spec](../specs/m2-junction/spec.md) ✅ approved 2026-11-24 (GDD 02, 05–08); the [plan](../specs/m2-junction/plan.md) and [tasks](../specs/m2-junction/tasks.md) drafts |
+| **Next front** | The owner's approval of D's plan (P1–P11, the `junction` commit scope), then F1 |
 | **Then** | **P — The friends' playtest** (ROADMAP); E's order vs. P decided at D's checkpoint |
 | **Waiting on the owner** | (1) [ADR-0009](../adr/0009-prediction-in-the-lab.md) (`Proposed`): prediction as a lab experiment option. (2) `gambits.meleeBerthSteps` 3 (provisional, lab F7). (3) Whenever the owner wants: [PLAYTEST](../PLAYTEST.md) lab group 7 (the four movement options at 0 and 150 ms), which feeds the prediction decision |
 | **Blockers** | None |
@@ -29,7 +29,8 @@
    silently falls back to "gather matéria"; a dominated creep runs no rules. **A short fix session** (repro, test,
    fix), before D or alongside it: the "15 minutes a day" style depends on the presets.
 3. **D's spec** ✅ approved (2026-11-24), with [ADR-0010](../adr/0010-world-side-of-the-battle-contract.md) ✅
-   (battle instances next to the world, run by a junction host). Next: the `plan.md` and `tasks.md`.
+   (battle instances next to the world, run by a junction host). The plan and tasks are drafts
+   waiting for the owner (P1–P11).
 4. **Session findings** for the rounds that touch them: the roll-only fight does not pay off the risk (D replaces
    it); extortion against the bot is almost free; the mid-game at ×6 empties after exploring (encounter F6, C14); the
    battle AI is predictable in the corridors (GDD 06, parked).
