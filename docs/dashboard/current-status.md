@@ -6,16 +6,16 @@
 
 ## Now
 
-**Updated:** 2026-11-20
+**Updated:** 2026-11-24
 
 | | |
 |---|---|
 | **Milestone** | **M2 — The ambush** ([ROADMAP](../ROADMAP.md)). M0, M1 and M1.5 ✅ |
 | **Slices** | **A — The encounter** ([spec](../specs/m2-encounter/spec.md) · [plan](../specs/m2-encounter/plan.md) · [tasks](../specs/m2-encounter/tasks.md)) ✅ 2026-11-17 · **B — The battle lab** ([spec](../specs/m2-battle-lab/spec.md) · [plan](../specs/m2-battle-lab/plan.md) · [tasks](../specs/m2-battle-lab/tasks.md)) ✅ 2026-11-20 |
-| **In progress** | No phase |
-| **Next front** | **D — The junction**: the spec (skill `spec-slice`, `docs/specs/m2-junction/`) |
+| **In progress** | **D — The junction, F0** (branch `m2/junction-f0-spec`): the [spec](../specs/m2-junction/spec.md) draft, after the design round of 2026-11-24 (recorded in GDD 05, 06, 07) |
+| **Next front** | D's `plan.md` and `tasks.md`, once the spec and ADR-0010 are approved |
 | **Then** | **P — The friends' playtest** (ROADMAP); E's order vs. P decided at D's checkpoint |
-| **Waiting on the owner** | (1) [ADR-0009](../adr/0009-prediction-in-the-lab.md) (`Proposed`): prediction as a lab experiment option. (2) `gambits.meleeBerthSteps` 3 (provisional, lab F7). (3) Whenever the owner wants: [PLAYTEST](../PLAYTEST.md) lab group 7 (the four movement options at 0 and 150 ms), which feeds the prediction decision |
+| **Waiting on the owner** | (0) **The junction spec** (D1–D19; the agent's proposals included) and [ADR-0010](../adr/0010-world-side-of-the-battle-contract.md) (`Proposed`): battles inside the world state. (1) [ADR-0009](../adr/0009-prediction-in-the-lab.md) (`Proposed`): prediction as a lab experiment option. (2) `gambits.meleeBerthSteps` 3 (provisional, lab F7). (3) Whenever the owner wants: [PLAYTEST](../PLAYTEST.md) lab group 7 (the four movement options at 0 and 150 ms), which feeds the prediction decision |
 | **Blockers** | None |
 
 ### Next steps
@@ -28,10 +28,9 @@
    picking mode has no preview or feedback; the target is accepted without checking a road is possible, and the creep
    silently falls back to "gather matéria"; a dominated creep runs no rules. **A short fix session** (repro, test,
    fix), before D or alongside it: the "15 minutes a day" style depends on the presets.
-3. **D's spec.** It inherits: the world side of the contract with mid-fight joins (an ADR, `Proposed`); the bubble's
-   radius and the world time during a battle (GDD 06, open questions); the arena from the encounter's terrain (GDD 06,
-   proposal); the single source for max HP and capacity (ADR-0008); client prediction (ADR-0008 item 9, ADR-0009,
-   PLAYTEST group 7); the wanderers (GDD 05).
+3. **D's spec** (draft, 2026-11-24): the owner's design round answered world time, auto-resolve, joining, the
+   arena, fleeing, loot, the battle screen, taking over and the wanderers (GDD 05, 06, 07). Waiting for the owner's
+   approval of the spec and ADR-0010; then the `plan.md` and `tasks.md`.
 4. **Session findings** for the rounds that touch them: the roll-only fight does not pay off the risk (D replaces
    it); extortion against the bot is almost free; the mid-game at ×6 empties after exploring (encounter F6, C14); the
    battle AI is predictable in the corridors (GDD 06, parked).

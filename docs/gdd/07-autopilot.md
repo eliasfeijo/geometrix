@@ -33,6 +33,9 @@
   non-dominated creep follows an ordered condition → action list, like the world autopilot. Presets per DNA
   (frontline, marksman, skirmisher, carrier), editable in the lab. The AI decides with a **reaction time** (250 ms ±
   100 ms, provisional; lab plan, P12). At the lab checkpoint: "it does its job".
+- **Reactions at the junction** (owner, 2026-11-24; [junction spec](../specs/m2-junction/spec.md) D1, D2): the roll
+  and its flee leave. A free creep whose reaction rule says **flee** enters the battle with the **carrier** gambits;
+  with **fight**, or with no rule, with its DNA's preset. Extortion still ends in pay or refuse.
 
 ## Proposal
 - Humans, macros, autopilot and bots emit the **same commands** ([ADR-0002](../adr/0002-every-action-is-a-command.md)).
