@@ -19,6 +19,12 @@
   random reachable cells of the band; the first at world hour 1, then one every 60 world minutes shrinking linearly to
   one every 15 by the end of day 3, at most 4 alive; HP 60 and damage 12, the rest of the circle's kit; they join a
   battle between teams they see, on their own side; teams may attack them, not extort them.
+- **The wanderers' gaps** (owner, 2026-11-25, F6 of the junction; numbers provisional):
+  - a wounded wanderer **regenerates on the map like a creep** (the map rate; it is never in a core zone);
+  - it joins **any battle with a team in it** that it sees, not only one between two teams, on the one wanderers'
+    side (up to the side cap): wanderers gang up on the same creep;
+  - it chases a loaded creep while it sees it, also out of the band, but **never enters a core zone**: a creep that
+    reaches home is safe from them.
 
 ## Proposal
 
