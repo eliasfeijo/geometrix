@@ -119,7 +119,7 @@ describe("geo sweep", () => {
       .trimEnd()
       .split("\n");
     expect(csv).toHaveLength(5);
-    expect(csv[0]!.startsWith("value,seed,finalHash,")).toBe(true);
+    expect(csv[0]!.startsWith("value,seed,multiplier,finalHash,")).toBe(true);
 
     const report = readFileSync(join(dir, "report.md"), "utf8");
     expect(report).toContain(
@@ -151,6 +151,45 @@ describe("geo sweep", () => {
       csv[1]!.split(",")[header.indexOf("deliveredMateriaByTeam")];
     expect(perTeam).toMatch(/^\d+;\d+$/);
     // Four 1 h worlds: ~0.8 s alone, past 5 s with other suites running.
+  }, 30_000);
+
+  test("a sweep of world.multiplier reads each run at its ×N; --mult overrides it", () => {
+    const out = join(scratch, "mult");
+    const argv = (id: string, ...more: string[]) => [
+      "sweep",
+      "--set",
+      "world.multiplier=6,12",
+      "--seeds",
+      "1",
+      "--hours",
+      "1",
+      "--out",
+      out,
+      "--id",
+      id,
+      ...more,
+    ];
+    expect(run(argv("each"), capture())).toBe(0);
+    const each = readFileSync(join(out, "each", "report.md"), "utf8");
+    expect(each).toContain(
+      "| Duração de cada mundo | 1,0 h de mundo; 10 min reais a ×6 · 5,0 min reais a ×12 |",
+    );
+    // A moment's row in world time, then the same in real minutes per ×N.
+    const rows = each.split("\n");
+    const at = rows.findIndex((r) => r.startsWith("| 1ª entrega de matéria"));
+    const world = rows[at]!.split(" | ");
+    const real = rows[at + 1]!.split(" | ");
+    expect(real[0]).toBe("| ↳ em minutos reais");
+    expect(Number(real[1]!.replace(",", "."))).toBeCloseTo(
+      Number(world[1]!.replace(",", ".")) / 6,
+      0,
+    );
+
+    expect(run(argv("fixed", "--mult", "3"), capture())).toBe(0);
+    const fixed = readFileSync(join(out, "fixed", "report.md"), "utf8");
+    expect(fixed).toContain(
+      "| Duração de cada mundo | 1,0 h de mundo; 20 min reais a ×3 |",
+    );
   }, 30_000);
 
   test("--keep-runs writes each run in full", () => {

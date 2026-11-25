@@ -78,6 +78,27 @@ export const percent = (part: number, whole: number) =>
 export const hours = (seconds: number) => `${number(seconds / HOUR, 1)} h`;
 export const minutes = (seconds: number) => `${number(seconds / 60)} min`;
 
+/** World seconds as real minutes at the time multiplier ×N (M2 R plan P1). */
+export const realMinutes = (seconds: number, multiplier: number) =>
+  seconds / multiplier / 60;
+
+/**
+ * World seconds as real time at ×N: minutes (one decimal under 10) up to two
+ * hours, hours beyond.
+ */
+export function realTime(seconds: number, multiplier: number): string {
+  const m = realMinutes(seconds, multiplier);
+  if (m >= 120) return `${number(m / 60, 1)} h reais`;
+  return `${number(m, m < 10 ? 1 : 0)} min reais`;
+}
+
+/** World time with its real time beside it: "3,0 h (30 min reais)". */
+export const worldAndReal = (
+  seconds: number,
+  multiplier: number,
+  format: (seconds: number) => string = hours,
+) => `${format(seconds)} (${realTime(seconds, multiplier)})`;
+
 export function table(header: string[], rows: string[][]): string {
   const line = (cells: string[]) => `| ${cells.join(" | ")} |`;
   return [line(header), line(header.map(() => "---")), ...rows.map(line)].join(
@@ -103,9 +124,12 @@ export function renderReport(run: RunData): string {
   const perTeam = (cell: (team: number) => string) => teamIds.map(cell);
   const teamHeader = ["Métrica", ...teamIds.map((t) => `Time ${t}`)];
   const mapCells = params.map.width * params.map.height;
-  /** A tick as world time, or "—" for null. */
+  const mult = meta.multiplier;
+  /** A moment in world time, with its real time at ×N. */
+  const moment = (s: number, format = hours) => worldAndReal(s, mult, format);
+  /** A tick as world and real time, or "—" for null. */
   const atTick = (tick: number | null, format = hours) =>
-    tick === null ? "—" : format(tick * meta.tickSeconds);
+    tick === null ? "—" : moment(tick * meta.tickSeconds, format);
 
   /** Seconds at which `when` first holds for the team, as hours, or "—". */
   const firstTime = (
@@ -113,7 +137,7 @@ export function renderReport(run: RunData): string {
     when: (t: MetricsSample["teams"][number]) => boolean,
   ) => {
     const hit = samples.find((s) => when(s.teams[team]!));
-    return hit === undefined ? "—" : hours(seconds(hit));
+    return hit === undefined ? "—" : moment(seconds(hit));
   };
 
   const lines: string[] = [];
@@ -128,7 +152,11 @@ export function renderReport(run: RunData): string {
         ["Seed", `${meta.seed} (mapa gerado com ${meta.mapSeed})`],
         [
           "Duração",
-          `${hours(total)} de mundo (${number(meta.ticks)} ticks de ${meta.tickSeconds} s)`,
+          `${hours(total)} de mundo (${number(meta.ticks)} ticks de ${meta.tickSeconds} s); ${realTime(total, mult)} a ×${mult}`,
+        ],
+        [
+          "Multiplicador de tempo",
+          `×${mult}: os tempos reais do relatório são o tempo de mundo ÷ ${mult}`,
         ],
         [
           "Estrategistas",
@@ -295,7 +323,7 @@ export function renderReport(run: RunData): string {
   out(
     "## Linha do tempo",
     "",
-    `Janelas de ${hours(window)}. Estoque, creeps, mapa explorado, creeps com ordem de explorar e HP médio no fim da janela; vazão, tempo dos creeps, encontros abertos e mortes dentro dela.`,
+    `Janelas de ${hours(window)} (${realTime(window, mult)}). Estoque, creeps, mapa explorado, creeps com ordem de explorar e HP médio no fim da janela; vazão, tempo dos creeps, encontros abertos e mortes dentro dela.`,
     "",
   );
   for (const team of teamIds) {
@@ -314,6 +342,7 @@ export function renderReport(run: RunData): string {
         percent(b.activitySeconds[x] - a.activitySeconds[x], busy);
       rows.push([
         `${number(seconds(from) / HOUR, 1)}–${number(seconds(to) / HOUR, 1)}`,
+        `${number(realMinutes(seconds(from), mult))}–${number(realMinutes(seconds(to), mult))}`,
         String(creepTotal(b)),
         pair(b.stock.materia, b.stock.cristal),
         pair(
@@ -339,6 +368,7 @@ export function renderReport(run: RunData): string {
       table(
         [
           "Horas",
+          "Min reais",
           "Creeps",
           "Estoque m / c",
           "Vazão m / c por hora",
@@ -392,7 +422,7 @@ export function renderReport(run: RunData): string {
           number(d.amount),
           d.emptiedAtTick === null
             ? "—"
-            : hours(d.emptiedAtTick * meta.tickSeconds),
+            : moment(d.emptiedAtTick * meta.tickSeconds),
           hours(d.contestedSeconds),
         ];
       }),
@@ -411,7 +441,7 @@ export function renderReport(run: RunData): string {
     "## Fatos para a revisão",
     "",
     cristalLeft === 0
-      ? `- Todo o cristal do mapa se esgotou em ${hours(lastEmptied * meta.tickSeconds)} (${percent(lastEmptied * meta.tickSeconds, total)} da duração).`
+      ? `- Todo o cristal do mapa se esgotou em ${moment(lastEmptied * meta.tickSeconds)}, ${percent(lastEmptied * meta.tickSeconds, total)} da duração.`
       : `- Restam ${number(cristalLeft)} de cristal no mapa, em ${cristal.filter((d) => d.amount > 0).length} de ${cristal.length} depósitos.`,
     `- Depósitos de matéria que zeraram alguma vez: ${materia.filter((d) => d.emptiedAtTick !== null).length} de ${materia.length}; quantidade média no fim: ${number(materia.reduce((s, d) => s + d.amount, 0) / Math.max(1, materia.length))} (inicial ${number(params.deposits.materia.amount)}).`,
     ...teamIds.map((t) => {

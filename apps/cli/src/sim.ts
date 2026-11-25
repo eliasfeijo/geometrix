@@ -32,6 +32,11 @@ export type RunMeta = {
   mapSeed: number;
   ticks: number;
   tickSeconds: number;
+  /**
+   * The time multiplier (×N) the run's real time is read at: world seconds
+   * per real second (M2 R plan P1). It changes nothing in the world.
+   */
+  multiplier: number;
   /** One per team. */
   strategists: StrategistId[];
   balanced: typeof BALANCED;
@@ -59,6 +64,8 @@ export type SimOptions = {
   params: Params;
   paramsSource: string;
   ticks: number;
+  /** ×N for real time; the params' world.multiplier by default. */
+  multiplier?: number;
   strategists: StrategistId[];
 };
 
@@ -94,6 +101,7 @@ export function simulate(
       mapSeed: state.mapSeed,
       ticks,
       tickSeconds: params.world.tickSeconds,
+      multiplier: options.multiplier ?? params.world.multiplier,
       strategists,
       balanced: BALANCED,
       paramsSource: options.paramsSource,
@@ -150,7 +158,7 @@ export function writeRun(dir: string, result: SimResult): void {
     samples.map((s) => `${canonicalJson(s)}\n`).join(""),
   );
   write(RUN_FILES.encounters, `${JSON.stringify(encounters)}\n`);
-  write(RUN_FILES.csv, metricsCsv(samples, meta.tickSeconds));
+  write(RUN_FILES.csv, metricsCsv(samples, meta.tickSeconds, meta.multiplier));
   write(
     RUN_FILES.replay,
     `${canonicalJson({
@@ -182,6 +190,8 @@ export function readRun(dir: string): RunData {
   const { params, ...meta } = JSON.parse(
     readFileSync(join(dir, RUN_FILES.meta), "utf8"),
   ) as RunMeta & { params: Params };
+  // Runs written before the multiplier existed read at ×1.
+  meta.multiplier ??= params.world.multiplier ?? 1;
   const samples = readFileSync(join(dir, RUN_FILES.samples), "utf8")
     .split("\n")
     .filter((line) => line !== "")
@@ -211,12 +221,14 @@ function flatten(
 export function metricsCsv(
   samples: readonly MetricsSample[],
   tickSeconds: number,
+  multiplier: number,
 ): string {
   const rows = samples.flatMap((sample) =>
     sample.teams.map((team) => {
       const row: Record<string, string> = {
         tick: String(sample.tick),
         hours: ((sample.tick * tickSeconds) / 3600).toFixed(3),
+        realMinutes: ((sample.tick * tickSeconds) / multiplier / 60).toFixed(2),
         roadCells: String(sample.roadCells),
       };
       flatten(team, "", row);

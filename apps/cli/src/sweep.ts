@@ -20,7 +20,7 @@ import {
   type Fate,
   type Role,
 } from "./encounters.ts";
-import { HOUR, hours, number, table } from "./report.ts";
+import { HOUR, hours, number, realTime, table } from "./report.ts";
 import {
   metaJson,
   RUN_FILES,
@@ -83,6 +83,8 @@ export function withParam(params: Params, path: string, value: number): Params {
 export type RunSummary = {
   value: number;
   seed: number;
+  /** The ×N the run's real time is read at (M2 R plan P1). */
+  multiplier: number;
   finalHash: string;
   wallSeconds: number;
   creeps: number;
@@ -223,6 +225,7 @@ export function summarize(result: SimResult, value: number): RunSummary {
   return {
     value,
     seed: meta.seed,
+    multiplier: meta.multiplier,
     finalHash: meta.finalHash,
     wallSeconds: meta.wallSeconds,
     creeps: perTeam(creepsOf),
@@ -295,10 +298,31 @@ type ScalarKey = {
   [K in keyof RunSummary]: RunSummary[K] extends number | null ? K : never;
 }[keyof RunSummary];
 
-const COLUMNS: { key: ScalarKey; label: string; digits: number }[] = [
+/**
+ * A column's time unit, for the row of its real minutes at the run's ×N
+ * beside it: the moments a run reaches something, not durations.
+ */
+type Moment = "hours" | "minutes";
+
+const COLUMNS: {
+  key: ScalarKey;
+  label: string;
+  digits: number;
+  moment?: Moment;
+}[] = [
   { key: "creeps", label: "Creeps no fim", digits: 1 },
-  { key: "capHours", label: "Teto de população atingido (h)", digits: 1 },
-  { key: "upgradeHours", label: "Upgrade comprado (h)", digits: 1 },
+  {
+    key: "capHours",
+    label: "Teto de população atingido (h)",
+    digits: 1,
+    moment: "hours",
+  },
+  {
+    key: "upgradeHours",
+    label: "Upgrade comprado (h)",
+    digits: 1,
+    moment: "hours",
+  },
   { key: "deliveredMateria", label: "Matéria entregue", digits: 0 },
   { key: "deliveredCristal", label: "Cristal entregue", digits: 0 },
   { key: "stockMateria", label: "Estoque de matéria no fim", digits: 0 },
@@ -308,16 +332,23 @@ const COLUMNS: { key: ScalarKey; label: string; digits: number }[] = [
   { key: "coreIdlePercent", label: "Núcleo ocioso (%)", digits: 0 },
   { key: "tripMinutes", label: "Tempo médio por viagem (min)", digits: 1 },
   { key: "roadCells", label: "Estradas no mapa (células)", digits: 0 },
-  { key: "cristalGoneHours", label: "Cristal esgotado (h)", digits: 1 },
+  {
+    key: "cristalGoneHours",
+    label: "Cristal esgotado (h)",
+    digits: 1,
+    moment: "hours",
+  },
   {
     key: "firstMateriaMinutes",
     label: "1ª entrega de matéria, time mais lento (min)",
     digits: 0,
+    moment: "minutes",
   },
   {
     key: "firstCristalMinutes",
     label: "1ª entrega de cristal, time mais lento (min)",
     digits: 0,
+    moment: "minutes",
   },
   {
     key: "firstMateriaGapMinutes",
@@ -329,7 +360,12 @@ const COLUMNS: { key: ScalarKey; label: string; digits: number }[] = [
     label: "Diferença entre os times na matéria entregue",
     digits: 0,
   },
-  { key: "enemyCoreSeenHours", label: "Núcleo inimigo visto (h)", digits: 1 },
+  {
+    key: "enemyCoreSeenHours",
+    label: "Núcleo inimigo visto (h)",
+    digits: 1,
+    moment: "hours",
+  },
   { key: "exploredPercent", label: "Mapa explorado no fim (%)", digits: 0 },
   {
     key: "cristalStockPercent",
@@ -463,6 +499,11 @@ export type SweepOptions = {
   values: number[];
   seeds: number[];
   ticks: number;
+  /**
+   * ×N for real time; null reads each variant's world.multiplier, so a sweep
+   * of world.multiplier compares the ×N candidates on one world.
+   */
+  multiplier: number | null;
   strategists: StrategistId[];
 };
 
@@ -486,6 +527,7 @@ export function sweep(
         params,
         paramsSource: `${options.paramsSource} com ${options.path}=${value}`,
         ticks: options.ticks,
+        multiplier: options.multiplier ?? params.world.multiplier,
         strategists: options.strategists,
       });
       const summary = summarize(result, value);
@@ -503,6 +545,7 @@ export function renderSweepReport({ options, runs }: SweepResult): string {
   const { path, values, seeds, ticks } = options;
   const wall = runs.reduce((sum, r) => sum + r.wallSeconds, 0);
   const tickSeconds = options.params.world.tickSeconds;
+  const multipliers = [...new Set(runs.map((r) => r.multiplier))];
   const lines = [
     `# Varredura — ${options.id}`,
     "",
@@ -511,7 +554,12 @@ export function renderSweepReport({ options, runs }: SweepResult): string {
       [
         ["Parâmetro", `\`${path}\` = ${values.join(", ")}`],
         ["Seeds", seeds.join(", ")],
-        ["Duração de cada mundo", hours(ticks * tickSeconds)],
+        [
+          "Duração de cada mundo",
+          `${hours(ticks * tickSeconds)} de mundo; ${multipliers
+            .map((m) => `${realTime(ticks * tickSeconds, m)} a ×${m}`)
+            .join(" · ")}`,
+        ],
         [
           "Estrategistas",
           options.strategists.map((s, t) => `time ${t}: ${s}`).join(" · "),
@@ -528,15 +576,25 @@ export function renderSweepReport({ options, runs }: SweepResult): string {
     "",
     table(
       ["Métrica", ...values.map((v) => `${path}=${v}`)],
-      COLUMNS.map(({ key, label, digits }) => [
-        label,
-        ...values.map((value) =>
-          cell(
-            runs.filter((r) => r.value === value).map((r) => r[key]),
-            digits,
+      COLUMNS.flatMap(({ key, label, digits, moment }) => {
+        const row = (name: string, read: (r: RunSummary) => number | null) => [
+          name,
+          ...values.map((value) =>
+            cell(runs.filter((r) => r.value === value).map(read), digits),
           ),
-        ),
-      ]),
+        ];
+        const rows = [row(label, (r) => r[key])];
+        if (moment !== undefined) {
+          const perMinute = moment === "hours" ? 60 : 1;
+          rows.push(
+            row("↳ em minutos reais", (r) => {
+              const v = r[key];
+              return v === null ? null : (v * perMinute) / r.multiplier;
+            }),
+          );
+        }
+        return rows;
+      }),
     ),
     "",
     "## Runs",

@@ -110,7 +110,13 @@ describe("runs/<id>/", () => {
   test("metrics.csv has one row per team per sample", () => {
     const rows = file(RUN_FILES.csv).trimEnd().split("\n");
     const header = rows[0]!.split(",");
-    expect(header.slice(0, 4)).toEqual(["tick", "hours", "roadCells", "team"]);
+    expect(header.slice(0, 5)).toEqual([
+      "tick",
+      "hours",
+      "realMinutes",
+      "roadCells",
+      "team",
+    ]);
     expect(header).toEqual(
       expect.arrayContaining([
         "stock.materia",
@@ -122,7 +128,8 @@ describe("runs/<id>/", () => {
     );
     expect(rows).toHaveLength(1 + 2 * result.samples.length);
     for (const row of rows) expect(row.split(",")).toHaveLength(header.length);
-    expect(rows.at(-1)!.startsWith(`${ticks},2.008,`)).toBe(true);
+    // 2 h 30 s of world at ×6 (params/default.json) are 20.08 real minutes.
+    expect(rows.at(-1)!.startsWith(`${ticks},2.008,20.08,`)).toBe(true);
   });
 
   test("samples.jsonl and run.json read back into the same report", () => {
@@ -184,6 +191,20 @@ describe("runs/<id>/", () => {
     expect(report).toContain(`\`${result.meta.finalHash}\``);
   });
 
+  test("report.md gives every moment in real time at the run's ×N (M2 R PA-2)", () => {
+    expect(result.meta.multiplier).toBe(params.world.multiplier);
+    const report = file(RUN_FILES.report);
+    expect(report).toContain("| Multiplicador de tempo | ×6:");
+    expect(report).toContain(
+      "2,0 h de mundo (7.230 ticks de 1 s); 20 min reais a ×6",
+    );
+    expect(report).toContain("| Horas | Min reais | Creeps |");
+    // The first delivery, in world minutes and real minutes.
+    expect(report).toMatch(
+      /\| 1ª entrega \(matéria \/ cristal\) em \| \d+ min \([\d,]+ min reais\)/,
+    );
+  });
+
   test("refuses to overwrite a run", () => {
     expect(() => writeRun(dir, result)).toThrow(/EEXIST/);
   });
@@ -212,7 +233,9 @@ describe("geo sim / geo report", () => {
         io,
       ),
     ).toBe(0);
-    expect(io.lines[0]).toBe("geo sim --seed 3: 3600 ticks, balanced x none");
+    expect(io.lines[0]).toBe(
+      "geo sim --seed 3: 3600 ticks at ×6, balanced x none",
+    );
     const meta = JSON.parse(
       readFileSync(join(out, "one", RUN_FILES.meta), "utf8"),
     );
@@ -224,11 +247,29 @@ describe("geo sim / geo report", () => {
     expect(report.lines).toEqual([join(out, "one", RUN_FILES.report)]);
   });
 
+  test("--mult reads the run's real time at another ×N", () => {
+    const io = capture();
+    const argv = ["sim", "--hours", "1", "--mult", "12", "--out", out];
+    expect(run([...argv, "--id", "x12"], io)).toBe(0);
+    expect(io.lines[0]).toBe(
+      "geo sim --seed 42: 3600 ticks at ×12, balanced x balanced",
+    );
+    const meta = JSON.parse(
+      readFileSync(join(out, "x12", RUN_FILES.meta), "utf8"),
+    );
+    expect(meta.multiplier).toBe(12);
+    const report = readFileSync(join(out, "x12", RUN_FILES.report), "utf8");
+    expect(report).toContain(
+      "1,0 h de mundo (3.600 ticks de 1 s); 5,0 min reais a ×12",
+    );
+  });
+
   test.each([
     [["sim", "--days", "1", "--hours", "2"], "use --days or --hours, not both"],
     [["sim", "--strategist", "greedy"], "unknown strategist: greedy"],
     [["sim", "--strategist", "balanced,none,none"], "needs 1 or 2 names"],
     [["sim", "--hours", "0"], "--hours must be an integer >= 1"],
+    [["sim", "--mult", "0"], "--mult must be an integer >= 1"],
     [["report"], "geo report takes one run directory"],
   ])("%j is a usage error (exit 2)", (argv, message) => {
     const io = capture();

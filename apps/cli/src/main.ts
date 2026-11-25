@@ -38,6 +38,8 @@ commands:
            --params <file>       params JSON (default params/default.json)
            --days <n> | --hours <n>
                                  world time (default world.durationSeconds)
+           --mult <n>            time multiplier the report's real time is
+                                 read at (default world.multiplier)
            --strategist <a[,b]>  per team: ${STRATEGISTS.join(" | ")}
                                  (default balanced; one name = both teams)
            --out <dir>           runs directory (default runs)
@@ -49,6 +51,9 @@ commands:
            --set <path=v1,v2,...>  e.g. creep.cost.materia=30,40,50
            --seeds <list>        e.g. 1-5 or 1,4,9 (default 1-5)
            --days, --hours, --params, --strategist, --out, --id as in sim
+           --mult <n>            as in sim (default each variant's
+                                 world.multiplier, so world.multiplier=6,8,12
+                                 compares the candidates on one world)
            --keep-runs           also write every run's full directory
   report   rewrites report.md of a run from its files
            geo report <run dir>
@@ -157,6 +162,11 @@ function parseTicks(
   return Math.floor(seconds / tickSeconds);
 }
 
+/** --mult, or null to read the params' world.multiplier. */
+function parseMultiplier(raw: string | undefined): number | null {
+  return raw === undefined ? null : parseUint("mult", raw, 1);
+}
+
 /** Two teams in M1 (spec D6). */
 const TEAMS = 2;
 
@@ -168,6 +178,7 @@ function runSim(args: string[], out: Output): number {
       params: { type: "string" },
       days: { type: "string" },
       hours: { type: "string" },
+      mult: { type: "string" },
       strategist: { type: "string", default: "balanced" },
       out: { type: "string", default: "runs" },
       id: { type: "string" },
@@ -178,6 +189,7 @@ function runSim(args: string[], out: Output): number {
   const seed = parseSeed(values.seed);
   const params = loadParams(values.params ?? DEFAULT_PARAMS);
   const ticks = parseTicks(values, params);
+  const multiplier = parseMultiplier(values.mult) ?? params.world.multiplier;
   const strategists = parseStrategists(values.strategist, TEAMS);
   const maxSeconds =
     values["max-seconds"] === undefined
@@ -187,7 +199,9 @@ function runSim(args: string[], out: Output): number {
   const dir = join(values.out, id);
   if (existsSync(dir)) throw new UsageError(`run already exists: ${dir}`);
 
-  out.log(`geo sim --seed ${seed}: ${ticks} ticks, ${strategists.join(" x ")}`);
+  out.log(
+    `geo sim --seed ${seed}: ${ticks} ticks at ×${multiplier}, ${strategists.join(" x ")}`,
+  );
   const result = simulate(
     {
       id,
@@ -195,6 +209,7 @@ function runSim(args: string[], out: Output): number {
       params,
       paramsSource: paramsSource(values.params),
       ticks,
+      multiplier,
       strategists,
     },
     out.clock,
@@ -222,6 +237,7 @@ function runSweepCommand(args: string[], out: Output): number {
       params: { type: "string" },
       days: { type: "string" },
       hours: { type: "string" },
+      mult: { type: "string" },
       strategist: { type: "string", default: "balanced" },
       out: { type: "string", default: "runs" },
       id: { type: "string" },
@@ -253,6 +269,7 @@ function runSweepCommand(args: string[], out: Output): number {
       values: settings,
       seeds,
       ticks,
+      multiplier: parseMultiplier(values.mult),
       strategists,
     },
     values["keep-runs"],
