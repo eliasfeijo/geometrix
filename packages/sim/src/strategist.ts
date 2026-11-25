@@ -540,8 +540,10 @@ function withoutWrappers(rules: readonly Rule[], params: Params): Rule[] {
   const defense = canonicalJson(defenseRule(params));
   const pickup = canonicalJson(pickupRule());
   const wraps = (rule: Rule) =>
-    (rule.when.type === "always" && rule.then.type === "follow") ||
-    [defense, pickup].includes(canonicalJson(rule));
+    rule.when.type === "always" &&
+    (rule.then.type === "follow" ||
+      (rule.then.type === "approach" && canonicalJson(rule) === defense) ||
+      (rule.then.type === "pickup" && canonicalJson(rule) === pickup));
   let at = 0;
   while (at < rules.length && wraps(rules[at]!)) at++;
   return rules.slice(at);

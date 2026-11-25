@@ -158,15 +158,24 @@ let responses: { pay: string; flee: string; fight: string } | null = null;
 export function responseOf(
   rules: readonly Rule[],
 ): "pay" | "dropFlee" | "dropFight" | null {
+  // Every response has three rules and starts with its own action: most
+  // creeps' rules are told apart without serializing them.
+  const first = rules[0]?.then.type;
+  if (
+    rules.length !== 3 ||
+    (first !== "pay" && first !== "flee" && first !== "fight")
+  ) {
+    return null;
+  }
   responses ??= {
     pay: canonicalJson(payRules()),
     flee: canonicalJson(dropFleeRules()),
     fight: canonicalJson(dropFightRules()),
   };
   const json = canonicalJson(rules);
-  if (json === responses.pay) return "pay";
-  if (json === responses.flee) return "dropFlee";
-  if (json === responses.fight) return "dropFight";
+  if (first === "pay" && json === responses.pay) return "pay";
+  if (first === "flee" && json === responses.flee) return "dropFlee";
+  if (first === "fight" && json === responses.fight) return "dropFight";
   return null;
 }
 
