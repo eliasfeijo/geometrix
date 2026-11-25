@@ -1,12 +1,12 @@
 # M2 plan — The DNA kits
 
-**Status:** Draft · **Date:** 2026-11-25
+**Status:** Approved (2026-11-25) · **Date:** 2026-11-25
 **Spec:** [spec.md](spec.md) · **ADRs:** [0008](../../adr/0008-battle-package.md) (battle package),
 [0010](../../adr/0010-world-side-of-the-battle-contract.md) (the world side of the contract),
 [0002](../../adr/0002-every-action-is-a-command.md) (command vocabulary), [0003](../../adr/0003-typescript-node-pure-integer-simulation.md)
 (determinism)
 
-The decisions that need the owner's OK are marked **(P*n*)** and listed in §12.
+The decisions the owner approved with the plan (2026-11-25) are marked **(P*n*)** and listed in §12.
 
 ## 1. What the code does today and what changes
 
@@ -212,7 +212,7 @@ The pipeline of the lab plan §7, with one new stage and the changes in bold:
 - **G** (groups and formations) designs on top of K's kits (the guard shields whoever is behind it); its code comes
   after K's merge.
 
-## 12. Decisions for the owner
+## 12. Decisions (approved by the owner, 2026-11-25)
 
 | # | Proposal | Alternative |
 |---|---|---|

@@ -1,13 +1,13 @@
 # M2 tasks — The DNA kits
 
-**Status:** F0 in progress (the plan waits for the owner). Branches `m2/kits-f<n>-<slug>` (skill `commit`).
+**Status:** F0 done (2026-11-25); F1 next. Branches `m2/kits-f<n>-<slug>` (skill `commit`).
 **Spec:** [spec.md](spec.md) · **Plan:** [plan.md](plan.md)
 
 ## F0 — Spec and plan
 
 - [x] Design round with the owner (2026-11-25), recorded in GDD 02 and 06
 - [x] The kits' details answered by the owner (D3–D8) and the spec approved (2026-11-25), in GDD 02, 05, 06 and 07
-- [ ] **Checkpoint:** the owner approves the plan (P1–P10)
+- [x] **Checkpoint:** the owner approves the plan (P1–P10) (2026-11-25)
 
 ## F1 — The bar and the strike
 
