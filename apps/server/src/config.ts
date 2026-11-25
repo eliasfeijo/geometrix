@@ -17,6 +17,8 @@ export type ServerConfig = {
   metricsEveryTicks: number;
   /** Ticks a late loop may run at once before it drops the backlog. */
   maxCatchUpTicks: number;
+  /** The same for the battle clock's real-time ticks (2 s of battle). */
+  maxCatchUpBattleTicks: number;
   /** Most frequent state broadcast: 200 ms = 5 per second (plan P3). */
   broadcastIntervalMs: number;
   /**
@@ -43,6 +45,7 @@ export const DEFAULT_CONFIG: ServerConfig = {
   snapshotEveryTicks: 300,
   metricsEveryTicks: 60,
   maxCatchUpTicks: 100,
+  maxCatchUpBattleTicks: 40,
   broadcastIntervalMs: 200,
   viewHashEveryTicks: 60,
   deltaBufferMs: 30 * 1000,
@@ -71,6 +74,7 @@ export function loadConfig(env: NodeJS.ProcessEnv): ServerConfig {
     snapshotEveryTicks: DEFAULT_CONFIG.snapshotEveryTicks,
     metricsEveryTicks: DEFAULT_CONFIG.metricsEveryTicks,
     maxCatchUpTicks: DEFAULT_CONFIG.maxCatchUpTicks,
+    maxCatchUpBattleTicks: DEFAULT_CONFIG.maxCatchUpBattleTicks,
     broadcastIntervalMs: DEFAULT_CONFIG.broadcastIntervalMs,
     viewHashEveryTicks: DEFAULT_CONFIG.viewHashEveryTicks,
     deltaBufferMs: DEFAULT_CONFIG.deltaBufferMs,

@@ -9,17 +9,31 @@
 // junction host (junction plan P5, section 7): its battles' results enter
 // the tick's log after the players' commands, as the system player's.
 
-import { BATTLE_VERSION, type BattleParams } from "@geometrix/battle";
+import {
+  BATTLE_VERSION,
+  battleView,
+  type BattleEvent,
+  type BattleParams,
+} from "@geometrix/battle";
 import {
   addInstances,
   createHost,
   instanceRecord,
+  participantOf,
   rebuildInstance,
   stepJunction,
+  stepRealtime,
   type Instance,
   type JunctionHost,
 } from "@geometrix/junction";
-import type { RejectReason, WorldStatus } from "@geometrix/protocol";
+import type {
+  BattleFrameMessage,
+  BattleInputCommand,
+  BattleOpenMessage,
+  BattleRoster,
+  RejectReason,
+  WorldStatus,
+} from "@geometrix/protocol";
 import {
   createWorld,
   findPlayer,
@@ -72,6 +86,9 @@ export class RecoveryError extends Error {}
 
 type Bot = { playerId: number; team: number };
 
+/** Who shows a battle screen: a player of a team with a side in it. */
+type Screen = { playerId: number; team: number; battleId: number };
+
 export class WorldHost {
   readonly id: number;
   readonly multiplier: number;
@@ -89,6 +106,14 @@ export class WorldHost {
   private readonly storedTicks = new Map<number, number>();
   /** Battles that ended since the last commit, outside a world tick. */
   private ended: Instance[] = [];
+  /**
+   * The battle screens open, by viewer (a socket): frames go to them (N-2),
+   * and a dominating player's screen sets the pace (D13).
+   */
+  private readonly screens = new Map<object, Screen>();
+  /** Battle inputs for the next real-time battle tick, by battle (C-2). */
+  private inputs = new Map<number, BattleInputCommand[]>();
+  private readonly frameListeners: ((frame: BattleFrameMessage) => void)[] = [];
 
   private constructor(
     context: HostContext,
@@ -321,6 +346,7 @@ export class WorldHost {
     this.pending = [];
     const tick = state.tick;
     const before = [...this.junction.instances];
+    this.syncScreens();
     const done = stepJunction(state, this.junction, players);
     const commands: LoggedCommand[] = [
       ...players,
@@ -367,6 +393,197 @@ export class WorldHost {
     if (ended) this.status = "ended";
     this.remember(events);
     for (const listener of this.listeners) listener(events);
+    // Inputs wait only for a battle on the real pace (or about to be).
+    for (const id of [...this.inputs.keys()]) {
+      const instance = this.instance(id);
+      if (instance === undefined || instance.pace === "world") {
+        this.inputs.delete(id);
+      }
+    }
+    for (const { battleId, events: battleEvents } of done.stepped) {
+      const instance = before.find((i) => i.battleId === battleId)!;
+      this.frame(instance, battleEvents);
+    }
+  }
+
+  /**
+   * One real-time battle tick (T-2) of each battle on the real pace, with the
+   * inputs that arrived since the last; the battle clock calls it every 50 ms.
+   * The results wait for the next world tick (P5).
+   */
+  realtimeTick(): void {
+    if (this.status === "ended") return;
+    for (const instance of [...this.junction.instances]) {
+      if (instance.pace !== "real") continue;
+      const inputs = this.inputs.get(instance.battleId) ?? [];
+      this.inputs.delete(instance.battleId);
+      const { events, finished } = stepRealtime(
+        this.state,
+        this.junction,
+        instance.battleId,
+        inputs,
+      );
+      if (finished.length > 0) this.ended.push(instance);
+      this.frame(instance, events);
+    }
+  }
+
+  private instance(battleId: number): Instance | undefined {
+    return this.junction.instances.find((i) => i.battleId === battleId);
+  }
+
+  /**
+   * Opens `viewer`'s battle screen (N-2): a player of a team with a side in
+   * the battle. Replaces the screen it had.
+   */
+  openScreen(
+    viewer: object,
+    player: { id: number; team: number },
+    battleId: number,
+  ): RejectReason | null {
+    const stub = this.state.battles.find((b) => b.id === battleId);
+    if (stub === undefined || this.instance(battleId) === undefined) {
+      return "unknownBattle";
+    }
+    const side = stub.sides.some(
+      (s) => s.kind === "team" && s.team === player.team,
+    );
+    if (!side) return "notYourBattle";
+    this.screens.set(viewer, {
+      playerId: player.id,
+      team: player.team,
+      battleId,
+    });
+    this.syncScreens();
+    return null;
+  }
+
+  /** Back to the map, or the viewer left. */
+  closeScreen(viewer: object): void {
+    if (this.screens.delete(viewer)) this.syncScreens();
+  }
+
+  /** The battle `viewer` shows, or null. */
+  screenOf(viewer: object): number | null {
+    return this.screens.get(viewer)?.battleId ?? null;
+  }
+
+  /**
+   * The creeps whose dominating player shows their battle (D13): the host's
+   * screens, which set the pace and the controller from the next tick.
+   */
+  private syncScreens(): void {
+    const open = [...this.screens.values()];
+    this.junction.screens = this.state.creeps
+      .filter(
+        (c) =>
+          c.battle !== null &&
+          c.dominatedBy !== null &&
+          open.some(
+            (s) => s.playerId === c.dominatedBy && s.battleId === c.battle,
+          ),
+      )
+      .map((c) => c.id)
+      .sort((a, b) => a - b);
+  }
+
+  /**
+   * Queues a battle command of `playerId` for its battle's next real-time
+   * tick (C-2): only for the participant of the creep it dominates. On the
+   * world clock, the inputs are dropped at the next world tick.
+   */
+  battleInput(
+    playerId: number,
+    battleId: number,
+    command: BattleInputCommand,
+  ): RejectReason | null {
+    if (this.status === "ended") return "worldEnded";
+    const instance = this.instance(battleId);
+    if (instance === undefined) return "unknownBattle";
+    const creep = this.state.creeps.find((c) => c.dominatedBy === playerId);
+    if (creep === undefined || creep.battle !== battleId) {
+      return "notYourParticipant";
+    }
+    if (participantOf(instance, creep.id) !== command.id) {
+      return "notYourParticipant";
+    }
+    const queued = this.inputs.get(battleId) ?? [];
+    queued.push(command);
+    this.inputs.set(battleId, queued);
+    return null;
+  }
+
+  /** Who is who in a battle; null once the world closed it. */
+  private roster(instance: Instance): BattleRoster | null {
+    const stub = this.state.battles.find((b) => b.id === instance.battleId);
+    if (stub === undefined) return null;
+    return {
+      members: instance.members.map((m) => ({ ...m })),
+      sides: instance.sideOf.map((side) => ({ ...stub.sides[side]! })),
+    };
+  }
+
+  /** What a screen gets once when it opens (P9), or null. */
+  battleOpen(battleId: number): BattleOpenMessage | null {
+    const instance = this.instance(battleId);
+    const roster = instance && this.roster(instance);
+    if (instance === undefined || roster === null || roster === undefined) {
+      return null;
+    }
+    return {
+      type: "battleOpen",
+      battleId,
+      arena: instance.state.arena,
+      params: instance.state.params,
+      roster,
+    };
+  }
+
+  /** The battle as it is now, for a screen that just opened. */
+  currentFrame(battleId: number): BattleFrameMessage | null {
+    const instance = this.instance(battleId);
+    if (instance === undefined) return null;
+    return {
+      type: "battleFrame",
+      battleId,
+      view: battleView(instance.state),
+      events: [],
+    };
+  }
+
+  /**
+   * Hands the listeners a frame of `instance` when a screen shows it; after
+   * the last frame (the battle ended), its screens close.
+   */
+  private frame(instance: Instance, events: BattleEvent[]): void {
+    const { battleId } = instance;
+    const watched = [...this.screens.values()].some(
+      (s) => s.battleId === battleId,
+    );
+    if (watched) {
+      const roster = events.some((e) => e.type === "joined")
+        ? this.roster(instance)
+        : null;
+      const frame: BattleFrameMessage = {
+        type: "battleFrame",
+        battleId,
+        view: battleView(instance.state),
+        events,
+        ...(roster === null ? {} : { roster }),
+      };
+      for (const listener of this.frameListeners) listener(frame);
+    }
+    if (instance.state.ended !== null) {
+      for (const [viewer, screen] of this.screens) {
+        if (screen.battleId === battleId) this.screens.delete(viewer);
+      }
+      this.syncScreens();
+    }
+  }
+
+  /** Calls `listener` with each battle frame some screen shows. */
+  onBattleFrame(listener: (frame: BattleFrameMessage) => void): void {
+    this.frameListeners.push(listener);
   }
 
   /**

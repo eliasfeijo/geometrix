@@ -5,6 +5,7 @@ import type { BattleParams } from "@geometrix/battle";
 import type { CreateWorldRequest } from "@geometrix/protocol";
 import type { Params } from "@geometrix/sim";
 import type { ServerConfig } from "./config.ts";
+import { BattleClock } from "./battle-clock.ts";
 import { TickLoop, type Timers } from "./loop.ts";
 import type { Store } from "./persistence.ts";
 import type { PresenceTracker } from "./presence.ts";
@@ -19,7 +20,7 @@ export class Worlds {
   private readonly presence: PresenceTracker;
   private readonly hosted = new Map<
     number,
-    { host: WorldHost; loop: TickLoop }
+    { host: WorldHost; loop: TickLoop; clock: BattleClock }
   >();
 
   /** `params` and `battleParams` are the ones new worlds start with. */
@@ -84,7 +85,10 @@ export class Worlds {
     return failures;
   }
 
-  /** Starts hosting `host`; its loop runs while the world is running. */
+  /**
+   * Starts hosting `host`; its loop and its battle clock run while the world
+   * is running.
+   */
   host(host: WorldHost): void {
     const loop = new TickLoop(
       host,
@@ -92,14 +96,23 @@ export class Worlds {
       this.config.maxCatchUpTicks,
       () => this.presence.check(host),
     );
-    this.hosted.set(host.id, { host, loop });
+    const { ticksPerSecond } = host.junction.battleParams.tick;
+    const clock = new BattleClock(
+      host,
+      this.timers,
+      1000 / ticksPerSecond,
+      this.config.maxCatchUpBattleTicks,
+    );
+    this.hosted.set(host.id, { host, loop, clock });
     loop.start();
+    clock.start();
   }
 
   /** Stops every loop and snapshots the running worlds (clean shutdown). */
   stopAll(): void {
-    for (const { host, loop } of this.hosted.values()) {
+    for (const { host, loop, clock } of this.hosted.values()) {
       loop.stop();
+      clock.stop();
       if (host.status === "running") host.snapshot();
     }
   }
