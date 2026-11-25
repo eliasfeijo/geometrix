@@ -1,6 +1,6 @@
 # M2 junction tasks — Slice D
 
-**Status:** F3 done (2026-11-24); F6 at checkpoint C1b (2026-11-25). Branches `m2/junction-f<n>-<slug>` (skill `commit`).
+**Status:** F3 done (2026-11-24); F6 done (2026-11-25); F4 next. Branches `m2/junction-f<n>-<slug>` (skill `commit`).
 **Spec:** [spec.md](spec.md) · **Plan:** [plan.md](plan.md)
 
 ## F0 — Spec, ADR and plan
@@ -194,7 +194,7 @@ again; the strategist unchanged until then (C1-4). Interpretations 2–6 stand; 
 - [x] In battle: their setup (HP 60, damage 12, marksman); carrying the loot; spoils or pile on death
 - [x] Teams attack them, an extortion refused; the strategist counts them; the raider ignores them
 - [x] Fog and view; drawing in a neutral color; chronicle (`wandererBorn`); metrics
-- [ ] **Checkpoint C1b:** the matrix, the zones' value, and the bot × bot report with wanderers against C1; whether
+- [x] **Checkpoint C1b:** the matrix, the zones' value, and the bot × bot report with wanderers against C1; whether
       the bots need changing (C1-4)
 
 ### F6 record
@@ -274,10 +274,14 @@ the pressure.
 11. W-7's sparing starts when either of the pair leaves the battle alive (an escape or the end), 10 minutes from then.
 12. In the report, a team's side whose victim escaped "lost" (the wanderer was left alone and won).
 
+**C1b decisions** (owner, 2026-11-25; plan §12, "Decided at checkpoint C1b"): the zones' distance **750‰**; the
+wanderers' **cap stays 4** until the playtest; **the strategist unchanged** until the playtest (C1-4 closed); the
+square against the circle **watched in the playtest** (GDD 06). All provisional numbers; interpretations 1–12 stand.
+
 ## F4 — Network and server
 
 - [ ] Protocol: `battleInput`, `battleScreen`, `battleOpen`, `battleFrame`; the system commands refused from clients;
-      battles in the delta; `PROTOCOL_VERSION` 5
+      battles in the delta; `PROTOCOL_VERSION` 7 (F6 took 6)
 - [ ] `WorldHost` through the `JunctionHost`; the results committed with the tick
 - [ ] The `battles` and `battle_ticks` tables, in the tick's transaction; recovery rebuilding the instances
 - [ ] Presence of the battle screen; the battle clock (50 ms); the pace switch (D13)

@@ -6,26 +6,24 @@
 
 ## Now
 
-**Updated:** 2026-11-25 (F6 at checkpoint C1b)
+**Updated:** 2026-11-25 (end of F6)
 
 | | |
 |---|---|
 | **Milestone** | **M2 — The ambush** ([ROADMAP](../ROADMAP.md)). M0, M1 and M1.5 ✅ |
 | **Slices** | **A — The encounter** ([spec](../specs/m2-encounter/spec.md) · [plan](../specs/m2-encounter/plan.md) · [tasks](../specs/m2-encounter/tasks.md)) ✅ 2026-11-17 · **B — The battle lab** ([spec](../specs/m2-battle-lab/spec.md) · [plan](../specs/m2-battle-lab/plan.md) · [tasks](../specs/m2-battle-lab/tasks.md)) ✅ 2026-11-20 |
-| **In progress** | **D — The junction** ([spec](../specs/m2-junction/spec.md) · [plan](../specs/m2-junction/plan.md) · [tasks](../specs/m2-junction/tasks.md)), spec and plan ✅ 2026-11-24. **F1** ✅ (the baseline, the battle contract, the `junction` package) · **F2** ✅ (the world side: stub, lock, joins, the result commands; `SIM_VERSION` 10) · **F3** ✅ (the junction host, every harness caller through it, `geo verify` with the two logs, the battle metrics; checkpoint C1 decided) · **F6** implemented on `m2/junction-f6-wanderers`, not merged: the junction matrix, the zones' distance as a param (750‰, provisional), the wanderers (`SIM_VERSION` 11, `PROTOCOL_VERSION` 6); **at checkpoint C1b** |
-| **Next front** | **The owner's answers to C1b** (below), then F6's closing (record them, the dashboard, the merge) and **F4** |
-| **Then** | F4 (network and server), F5 (client), F7 (soak and playtest); then **P — The friends' playtest**; E's order vs. P decided at D's checkpoint C2 |
-| **Waiting on the owner** | **Checkpoint C1b** (numbers in the [tasks](../specs/m2-junction/tasks.md) F6 record): **C1b-1** the zones' distance at 750‰ (fleeing: an empty victim dies 13%, a full one 37%; fights unchanged)? **C1b-2** the wanderers' pressure: at cap 4 a team loses 2.6 of 6 creeps in 6 h (C1: 0.6) and in 3 days seed 42 ends with 15 / 10 creeps (C1: 30 / 30); the cap sets it (1: 1.8, 2: 2.2), the damage does not. **C1b-3** (C1-4) the bots: no battles between teams left in 3 days (0 encounters), 37 spoils piles nobody picks up; change the strategist now, or keep it until the playtest? **C1b-4** a circle beats a square in every junction battle (the matrix: 100%, any wanderer damage): act now, or watch it in the playtest? · (1) [ADR-0009](../adr/0009-prediction-in-the-lab.md) (`Proposed`): prediction as a lab experiment option. (2) `gambits.meleeBerthSteps` 3 (provisional, lab F7). (3) Whenever the owner wants: [PLAYTEST](../PLAYTEST.md) lab group 7 (the four movement options at 0 and 150 ms), which feeds the prediction decision |
+| **In progress** | **D — The junction** ([spec](../specs/m2-junction/spec.md) · [plan](../specs/m2-junction/plan.md) · [tasks](../specs/m2-junction/tasks.md)), spec and plan ✅ 2026-11-24. **F1** ✅ (the baseline, the battle contract, the `junction` package) · **F2** ✅ (the world side; `SIM_VERSION` 10) · **F3** ✅ (the junction host, the harness through it; checkpoint C1 decided) · **F6** ✅ 2026-11-25 (the junction matrix, the zones' distance as a param, the wanderers; `SIM_VERSION` 11, `PROTOCOL_VERSION` 6; checkpoint C1b decided) |
+| **Next front** | **F4 — Network and server** (branch `m2/junction-f4-network`): the server through the `JunctionHost`, the battle tables, the battle clock and screen presence, the battle messages; `PROTOCOL_VERSION` 7 |
+| **Then** | F5 (client), F7 (soak and playtest); then **P — The friends' playtest**; E's order vs. P decided at D's checkpoint C2 |
+| **Waiting on the owner** | (1) [ADR-0009](../adr/0009-prediction-in-the-lab.md) (`Proposed`): prediction as a lab experiment option. (2) `gambits.meleeBerthSteps` 3 (provisional, lab F7). (3) Whenever the owner wants: [PLAYTEST](../PLAYTEST.md) lab group 7 (the four movement options at 0 and 150 ms), which feeds the prediction decision |
 | **Blockers** | None |
 
 ### Next steps
 
-1. **F6** from the [tasks](../specs/m2-junction/tasks.md), up to checkpoint C1b (stop before the merge with the
-   numbers and numbered questions). Why it moved up: the F3 record's "C1 decisions" (the C1 bot × bot battles were
-   all early, 1 × 1, from refused extortions, with outcomes set by the victim's DNA; causes: the bots' policy and the
-   spawn zones ~10 cells from the exit ring). The matrix comes first: `geo battle sweep`'s shape, but each battle
-   built by `battleSetup` from a hand-built world stub (DNA × DNA, loaded or empty, fight or carrier), so it measures
-   the junction's real arenas and setups, apart from the strategist.
+1. **F4** from the [tasks](../specs/m2-junction/tasks.md): the server through the junction host. The F6 record has
+   what C1b measured (the wanderers open almost every battle in the bot × bot worlds and kill most of the creeps
+   that die) and what was decided (zones 750‰, cap 4 and the strategist unchanged until the playtest, the square
+   against the circle watched there): F4 does not touch balance.
 2. **🐞 The road-builder preset does not work for the player** (owner, 2026-11-20, seen since before slice A): it asks
    for a point on the map, but nothing happens on click or mouse move (no road or cost preview); a road can only be
    built by dominating a creep, in road mode. The bots build with the same preset, so the `sim` works. Hypotheses: the
@@ -80,9 +78,15 @@
   never end yet. Events: `battleOpened`, `battleJoined`, `battleLeft`
   (edge, idle), `battleEnded` (winner, loot, spoils), `died` with its battle; a team with a side hears them all.
 - **Already in place for F4/F5:** the protocol's delta carries the stubs, the replay schema the system commands,
-  `PROTOCOL_VERSION` 5; the client's reaction panel is pay or refuse, the chronicle has one plain sentence per battle
+  `PROTOCOL_VERSION` 6; the client's reaction panel is pay or refuse, the chronicle has one plain sentence per battle
   event. The protocol's diff property test lost its death and spoil floors until it runs through the host (F4; the
   protocol does not depend on the junction, so the test has to move or the dependency be added).
+- **The wanderers** (`packages/sim/src/wanderers.ts`, F6): `state.wanderers` (`Wanderer`, no team), `Fighter =
+  Creep | Wanderer` and `findFighter` wherever a battle participant is looked up; a battle side is `{ kind: "team",
+  team }` or `{ kind: "wanderers" }` (`sideTeam`); `CreepRef.team`, `battleOpened.encounter` and the battle events'
+  teams may be `null`; the event `wandererBorn`; `TeamView.wanderers` and the delta's `wanderers` collection
+  (`PROTOCOL_VERSION` 6). The server and the client already carry them through the view; F4's battle messages must
+  accept a side with no team. `geo junction matrix` measures the junction's battles apart from the bots.
 - **The server** (`apps/server`): WebSocket, SQLite command log with snapshots, the lobby with 2 teams and up to 3
   humans each (`teams.maxHumans`), the player token in the URL fragment.
 - **Screenshots and clicks in Chromium:** the headless Chromium in the Playwright cache accepts CDP
