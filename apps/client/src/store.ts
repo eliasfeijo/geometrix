@@ -18,6 +18,8 @@ import {
   type TeamEvent,
   type TeamView,
 } from "@geometrix/sim";
+import type { BattleScreen } from "./battle-session.ts";
+import type { MotionMode } from "./battle/motion.ts";
 import { viewHash } from "./hash.ts";
 import { knownTerrain } from "./map/terrain.ts";
 import { NetStats } from "./net-stats.ts";
@@ -86,6 +88,15 @@ export class GameStore {
   readonly pointer = signal<Point | null>(null);
   /** Last order target, drawn briefly as feedback. */
   readonly ping = signal<{ cell: Cell; id: number } | null>(null);
+  /**
+   * The battle whose screen this client shows in place of the map (junction
+   * D11), or null for the map; its opening may still be on its way.
+   */
+  readonly shownBattle = signal<number | null>(null);
+  /** That battle as its opening and frames built it, once they came. */
+  readonly battleScreen = signal<BattleScreen | null>(null);
+  /** How the battle screen draws the creeps moving (junction D19). */
+  readonly motion = signal<MotionMode>("tick");
 
   /**
    * The view's known array: computed only so that `map` changes when the

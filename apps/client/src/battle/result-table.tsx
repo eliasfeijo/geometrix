@@ -28,7 +28,7 @@ export function ResultTable({
       <h2>
         {ended.winnerSide === null
           ? "Ninguém vence"
-          : capitalized(`${sides.name(ended.winnerSide)} vence`)}
+          : capitalized(sides.wins(ended.winnerSide))}
         <span class="battle-hint"> · {seconds.toFixed(1)} s</span>
       </h2>
       <div class="battle-table-wrap">

@@ -334,7 +334,7 @@ their rows); a real-time battle tick with its frame 22–33 µs, against the 50 
 ## F5 — Client
 
 - [x] The arena view, input, motion and effects moved to `apps/client/src/battle/`; the lab unchanged on top of it
-- [ ] The battle screen: opens by itself (N-1), back to the map, return; countdown, signs, end table
+- [x] The battle screen: opens by itself (N-1), back to the map, return; countdown, signs, end table
 - [ ] Watching from the battle sign (teams with a participant)
 - [ ] The map: the bubble, the battle sign, participants "in battle"; the inspector
 - [ ] The reaction panel with pay and refuse only; the mid-fight flee button removed

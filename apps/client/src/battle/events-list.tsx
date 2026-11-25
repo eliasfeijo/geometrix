@@ -5,10 +5,15 @@ import type { BattleEvent, ParticipantRef } from "@geometrix/battle";
 import { LAB_SIDES, type SideStyle } from "./arena-view.tsx";
 import { DNA_GLYPHS } from "./labels.ts";
 
-/** One event as a line of text, or null for the ones the list leaves out. */
+/**
+ * One event as a line of text, or null for the ones the list leaves out.
+ * `you` is the participant this page plays, when someone else may play the
+ * others (the world client); the lab plays every human one.
+ */
 export function eventText(
   event: BattleEvent,
   sides: SideStyle = LAB_SIDES,
+  you?: number | null,
 ): string | null {
   const who = (p: ParticipantRef) =>
     `${p.name} (${sides.tag(p.side)} ${DNA_GLYPHS[p.dna]})`;
@@ -33,13 +38,16 @@ export function eventText(
         ? `${who(event.participant)} foge pela borda`
         : `${who(event.participant)} foge por inatividade`;
     case "controlChanged":
-      return event.controller === "human"
+      if (event.controller !== "human") {
+        return `${who(event.participant)} volta aos gambits`;
+      }
+      return you === undefined || you === event.participant.id
         ? `você domina ${who(event.participant)}`
-        : `${who(event.participant)} volta aos gambits`;
+        : `um jogador domina ${who(event.participant)}`;
     case "ended":
       return event.winnerSide === null
         ? "fim: ninguém vence"
-        : `fim: ${sides.name(event.winnerSide)} vence`;
+        : `fim: ${sides.wins(event.winnerSide)}`;
   }
 }
 
@@ -50,10 +58,11 @@ export function eventLines(
   events: readonly BattleEvent[],
   ticksPerSecond: number,
   sides: SideStyle = LAB_SIDES,
+  you?: number | null,
 ): EventLine[] {
   const lines: EventLine[] = [];
   for (const event of events) {
-    const text = eventText(event, sides);
+    const text = eventText(event, sides, you);
     if (text === null) continue;
     lines.push({
       key: `${event.tick}.${event.index}`,

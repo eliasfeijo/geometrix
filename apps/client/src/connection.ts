@@ -7,6 +7,9 @@
 
 import { NetStats, type WelcomeCause } from "./net-stats.ts";
 import type {
+  BattleFrameMessage,
+  BattleInputCommand,
+  BattleOpenMessage,
   ClientCommand,
   ClientMessage,
   RejectReason,
@@ -35,8 +38,13 @@ export type WorldMessage = Extract<
   { type: "welcome" | "delta" }
 >;
 
+/** What the battle screen gets (junction plan section 7). */
+export type BattleMessage = BattleOpenMessage | BattleFrameMessage;
+
 export type ConnectionEvents = {
   message(message: WorldMessage): void;
+  /** A battle screen's opening or frame (junction N-2). */
+  battle?(message: BattleMessage): void;
   status(status: ConnectionStatus): void;
   fatal(reason: FatalReason): void;
   /** A resync was asked for (spec C-2, C-3): an incident worth logging. */
@@ -104,14 +112,41 @@ export class Connection {
 
   /** Sends a command; resolves with the ack or the reject. */
   send(command: ClientCommand): Promise<CommandResult> {
+    return this.request((ref) => ({ type: "command", ref, command }));
+  }
+
+  /**
+   * Shows a battle screen, or the map with null (junction N-2): an open one
+   * gets the battle's opening, then its frames, through `events.battle`.
+   */
+  battleScreen(battleId: number | null): Promise<CommandResult> {
+    return this.request((ref) => ({ type: "battleScreen", ref, battleId }));
+  }
+
+  /** A battle command for the participant this player dominates (C-2). */
+  battleInput(
+    battleId: number,
+    command: BattleInputCommand,
+  ): Promise<CommandResult> {
+    return this.request((ref) => ({
+      type: "battleInput",
+      ref,
+      battleId,
+      command,
+    }));
+  }
+
+  /** Sends a message with the next ref; resolves with its ack or reject. */
+  private request(
+    message: (ref: number) => ClientMessage,
+  ): Promise<CommandResult> {
     if (this.socket === null || !this.isOpen) {
       return Promise.resolve({ ok: false, reason: "disconnected" });
     }
     const ref = this.nextRef++;
-    const message: ClientMessage = { type: "command", ref, command };
     return new Promise((resolve) => {
       this.pending.set(ref, resolve);
-      this.socket!.send(JSON.stringify(message));
+      this.socket!.send(JSON.stringify(message(ref)));
     });
   }
 
@@ -205,6 +240,10 @@ export class Connection {
         this.stats.seq = message.seq;
         this.stats.deltas++;
         this.events.message(message);
+        break;
+      case "battleOpen":
+      case "battleFrame":
+        this.events.battle?.(message);
         break;
       case "ack":
       case "reject": {

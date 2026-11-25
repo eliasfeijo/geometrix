@@ -1,6 +1,7 @@
 import type { ClientCommand } from "@geometrix/protocol";
 import { createContext } from "preact";
 import { useContext } from "preact/hooks";
+import type { BattleControl } from "./battle-control.ts";
 import type { GameStore } from "./store.ts";
 
 /**
@@ -14,6 +15,8 @@ export type Game = {
   viewer: Viewer;
   /** Sends a command; a reject shows up as a notice. True when acked. */
   send(command: ClientCommand): Promise<boolean>;
+  /** The battle screen (junction D11); none in a replay. */
+  battles?: BattleControl;
 };
 
 export const GameContext = createContext<Game | null>(null);

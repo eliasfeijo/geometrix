@@ -1163,3 +1163,125 @@ button.danger {
 .facts .engaged {
   color: #ffd166;
 }
+
+/* The battle screen (junction D11): in place of the map, over it, so the map
+   keeps its pan and zoom; the arena on the left, the roster, the battle's
+   events and the chronicle on the right, stacked on a narrow screen. */
+.battle-screen {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  background: var(--bg);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 10px;
+  padding: 10px;
+  overflow: hidden;
+  /* The bar, the hints and the gaps over the arena, plus the top bar. */
+  --battle-chrome: 150px;
+}
+
+/* Ended: the arena makes room for the end table under it. */
+.battle-screen.is-ended {
+  --battle-chrome: 340px;
+}
+
+.battle-main {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.battle-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+}
+
+.battle-title {
+  font-family: var(--font-game);
+  font-size: 1.1rem;
+}
+
+.battle-sides {
+  font-family: var(--font-game);
+  font-weight: 600;
+}
+
+.battle-clock {
+  font-variant-numeric: tabular-nums;
+}
+
+.battle-bar-end {
+  margin-left: auto;
+}
+
+.battle-idle-meter {
+  min-height: 1.2em;
+}
+
+.battle-stage {
+  min-height: 0;
+}
+
+.battle-side {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.battle-roster {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.battle-roster li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.battle-roster li.battle-played {
+  background: rgb(255 255 255 / 0.05);
+  border-radius: 3px;
+}
+
+.battle-who-cell {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+@media (max-width: 820px) {
+  .battle-screen {
+    grid-template-columns: minmax(0, 1fr);
+    overflow-y: auto;
+  }
+}
+
+/* Back to the dominated creep's battle, over the map (junction D11). */
+.battle-return {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 10px;
+  background: #3a2326;
+  border: 1px solid var(--danger);
+  border-radius: 6px;
+  z-index: 3;
+  max-width: calc(100% - 32px);
+}

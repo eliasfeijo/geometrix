@@ -15,6 +15,15 @@
 
 import type { Bag, BattleCommand, Dir } from "@geometrix/battle";
 
+/**
+ * What the keyboard sends: the commands a participant takes from whoever
+ * controls it (the world's battle inputs, junction C-2).
+ */
+export type InputCommand = Extract<
+  BattleCommand,
+  { type: "intent" | "attackOnce" | "face" | "drop" | "pickup" }
+>;
+
 export type KeyLike = {
   code: string;
   shiftKey: boolean;
@@ -39,7 +48,7 @@ const MOVE_KEYS: Record<string, Dir> = {
 export type KeyResult = {
   /** The key belongs to the lab: the page stops its default. */
   handled: boolean;
-  commands: BattleCommand[];
+  commands: InputCommand[];
   /** Tab: dominate the next participant. */
   cycle?: boolean;
   /** 0: release the domination. */
@@ -95,7 +104,7 @@ export class KeyboardInput {
       dir !== undefined || ["Space", "KeyQ", "KeyE"].includes(key.code);
     if (!known) return IGNORED;
     if (key.repeat || id === null) return { handled: true, commands: [] };
-    const commands: BattleCommand[] = [];
+    const commands: InputCommand[] = [];
     if (dir !== undefined) {
       if (key.shiftKey) {
         commands.push({ type: "face", id, dir });
@@ -129,7 +138,7 @@ export class KeyboardInput {
   }
 
   /** The page lost the keyboard (blur): everything is released. */
-  releaseAll(id: number | null): BattleCommand[] {
+  releaseAll(id: number | null): InputCommand[] {
     this.held = [];
     this.attack = false;
     this.bags = [];
@@ -140,13 +149,13 @@ export class KeyboardInput {
    * The domination moved to `id`: it starts still (spec D12), so what is
    * still held goes to it again.
    */
-  retarget(id: number): BattleCommand[] {
+  retarget(id: number): InputCommand[] {
     this.sent = { move: null, attack: false, bag: null };
     return this.intent(id);
   }
 
   /** The intent, if it changed; `bag` only while a bag key is held. */
-  private intent(id: number): BattleCommand[] {
+  private intent(id: number): InputCommand[] {
     const move = this.held.at(-1) ?? null;
     const bag = this.bags.at(-1) ?? null;
     const { sent } = this;

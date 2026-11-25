@@ -37,15 +37,15 @@ export const sideColor = (side: number) => SIDE_COLORS[side] ?? COLORS.outline;
  */
 export type SideStyle = {
   color(side: number): string;
-  /** The winner in the end banner ("o lado A", "Azul"). */
-  name(side: number): string;
+  /** The win of a side, for the end ("o lado A vence", "Azul vence"). */
+  wins(side: number): string;
   /** The side's tag after a participant's name ("A", "Azul"). */
   tag(side: number): string;
 };
 
 export const LAB_SIDES: SideStyle = {
   color: sideColor,
-  name: (side) => `o lado ${sideLetter(side)}`,
+  wins: (side) => `o lado ${sideLetter(side)} vence`,
   tag: sideLetter,
 };
 
@@ -728,7 +728,7 @@ export function ArenaView(props: Props) {
         >
           {current.ended.winnerSide === null
             ? "fim: ninguém vence"
-            : `fim: ${sides.name(current.ended.winnerSide)} vence`}
+            : `fim: ${sides.wins(current.ended.winnerSide)}`}
         </text>
       )}
     </svg>

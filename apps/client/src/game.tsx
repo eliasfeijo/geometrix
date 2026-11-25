@@ -4,6 +4,7 @@ import type { ClientCommand } from "@geometrix/protocol";
 import { effect } from "@preact/signals";
 import { useEffect, useMemo } from "preact/hooks";
 import { listWorlds } from "./api.ts";
+import { BattleControl } from "./battle-control.ts";
 import { browserDeps, Connection, socketUrl } from "./connection.ts";
 import type { Game as GameValue } from "./context.ts";
 import { FATAL_TEXTS, REJECT_TEXTS } from "./format.ts";
@@ -28,13 +29,25 @@ type Props = {
 
 export function Game({ session, onLeave, onInvalid }: Props) {
   const store = useMemo(() => new GameStore(), []);
+  // The connection is made after it, so its messages find it.
+  const battles = useMemo<{ control: BattleControl | null }>(
+    () => ({ control: null }),
+    [],
+  );
   const connection = useMemo(
     () =>
       new Connection(
         socketUrl(window.location, session.token),
         {
           message: (m) => store.receive(m, performance.now()),
-          status: (s) => (store.connection.value = s),
+          battle: (m) => battles.control?.receive(m, performance.now()),
+          status: (s) => {
+            const was = store.connection.value;
+            store.connection.value = s;
+            if (s === "open" && was === "reconnecting") {
+              battles.control?.reconnected();
+            }
+          },
           fatal: (reason) => {
             if (reason !== "outdated") return onInvalid(FATAL_TEXTS[reason]);
             // Spec C-5: a tab older than the server reloads.
@@ -49,9 +62,23 @@ export function Game({ session, onLeave, onInvalid }: Props) {
       ),
     [],
   );
+  const control = useMemo(() => {
+    const made = new BattleControl(store, connection, () => performance.now());
+    battles.control = made;
+    return made;
+  }, []);
   useEffect(() => {
     store.hashMismatch = () => connection.resync("hashMismatch");
   }, []);
+  // N-1: the dominated creep's battle opens its screen by itself.
+  useEffect(
+    () =>
+      effect(() => {
+        const mine = store.myCreep.value;
+        control.follow(mine === null ? null : mine);
+      }),
+    [],
+  );
   useEffect(() => () => connection.close(), []);
   useEffect(() => fetchNamesWhenMissing(store, session.worldId), []);
 
@@ -66,6 +93,7 @@ export function Game({ session, onLeave, onInvalid }: Props) {
         }
         return result.ok;
       },
+      battles: control,
     }),
     [],
   );
