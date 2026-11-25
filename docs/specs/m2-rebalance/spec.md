@@ -1,6 +1,6 @@
 # M2 spec — Rebalance and pace
 
-**Status:** Draft · **Date:** 2026-11-25 · **Milestone:** M2 — The ambush ([ROADMAP](../../ROADMAP.md)), slice R
+**Status:** Approved (2026-11-25) · **Date:** 2026-11-25 · **Milestone:** M2 — The ambush ([ROADMAP](../../ROADMAP.md)), slice R
 **Related GDD:** [01](../../gdd/01-world.md) (the pace of the friends' playtest), [03](../../gdd/03-economy-and-logistics.md)
 (the snowball, dropping the load), [05](../../gdd/05-tribes-and-diplomacy.md) (the wanderers in the new pace),
 [06](../../gdd/06-battles.md) (the opening countdown for humans, the hostile sign, pausing a battle),
@@ -58,8 +58,8 @@ A summary of the R and E-min design round and of this spec's review (both 2026-1
 
 ## 3. Scope decisions this spec assumes
 
-Decisions marked **owner** come from the design round or the spec's review (§2). The others are the **agent's proposal**, pending the
-owner's acceptance with the spec. Those marked **(gameplay)** complete the GDD and go into it when accepted. The
+Decisions marked **owner** come from the design round or the spec's review (§2). The others were the **agent's proposal**, **accepted by
+the owner with the spec** (2026-11-25). Those marked **(gameplay)** complete the GDD and are in it. The
 numbers are in §6 and are guesses.
 
 | # | Decision | Default | Why |
@@ -92,7 +92,7 @@ numbers are in §6 and are guesses.
 | D26 | The bot's difficulty **(gameplay; owner, the levels by the agent)** | **Per bot**, chosen when the world is created (the lobby, `dev:multi --bot-difficulty`, the harness's strategist option); **default hard**. The battle's three names: **hard:** the static posture (D17), the encounter reactions (D27), defense, groups and escort, its creeps' battle reaction `hard`; **normal:** the static posture, defense and groups, no D27, battle reaction `normal`; **easy:** slice D's posture (the triangle pays, the circle flees), no defense, groups or escort, battle reaction `easy`. **R tunes hard;** normal and easy are measured, not tuned | Owner: the hardest by default, for now, configurable. The battle already has the three reaction levels |
 | D27 | The bot reacts to each encounter **(gameplay; owner, the strategy by the agent)** | At hard, when a creep of the bot is targeted (D25) or an encounter opens on it, the bot decides **on the next world tick**, from its view. **The estimated risk** weighs the enemies near the spot against the bot's creeps that can reach it before the fight is likely over, by DNA and HP (the weights from the junction matrix, in the strategist's settings; the plan writes the formula). **Help is coming** → keep the load, refuse, fight, and send the helper (`follow` or `joinBattle`). **No help, the enemy stronger** → pay a demand of at most 250‰ of the load, otherwise drop (D24) and flee lighter. **No help, even or stronger** → drop and fight with no carry brake, and pick the spoils up afterwards | Owner: a fitting strategy per encounter, by difficulty and estimated risk |
 | D28 | Pausing a battle **(gameplay; owner, details by the agent)** | In a real-time battle, a human who **controls a participant** presses **P**: everyone on the battle screen sees a 3 s countdown, then the battle stops (no battle ticks; the world keeps its pace and the participants stay locked, junction D3). **Any human who controls a participant** presses P to resume: 3 s, then it runs. Watchers cannot pause; P during a countdown does nothing; no limit on the number or length of pauses in R (a limit is parked). When no human controls a participant on the screen any more, a paused battle resumes after 3 s on the world clock (junction D13), so no battle freezes forever. The opening pause (D6) and this one are one state of the host. P is already the lab's pause key | Owner. Friends can talk a pause over; a limit can come after P |
-| D29 | Formations go to slice G **(agent; scope)** | Not in R: **formations in the world** (the default formation by DNA, the side each DNA engages from), **tactical formations in battle** for humans and the battle bots, and the **battle bot's load experiment** (drop, or hold the load when help is coming, world → battle). They form slice **G — Groups and formations**, proposed after K and before P, lab first, with its own design round (ROADMAP). R's "follow" keeps followers within 2 cells, with no slot | The engaging side changes where a joiner is born in the arena (junction D6); the battle formation is built on K's kits (the triangle's guard shields whoever is behind it). R is already M2's largest slice. Alternative: G after P, with P playing "follow" without formations |
+| D29 | Formations go to slice G **(agent; scope)** | Not in R: **formations in the world** (the default formation by DNA, the side each DNA engages from), **tactical formations in battle** for humans and the battle bots, and the **battle bot's load experiment** (drop, or hold the load when help is coming, world → battle). They form slice **G — Groups and formations**, after K and before P, lab first, with its own design round in a parallel session (ROADMAP; owner, 2026-11-25). R's "follow" keeps followers within 2 cells, with no slot | The engaging side changes where a joiner is born in the arena (junction D6); the battle formation is built on K's kits (the triangle's guard shields whoever is behind it). R is already M2's largest slice. Alternative: G after P, with P playing "follow" without formations |
 
 ## 4. Scope
 
@@ -315,8 +315,8 @@ judged in the owner's sessions, which also choose the ×N among the candidates t
 
 ## 9. Prerequisites before the `plan.md`
 
-- The owner's acceptance of D1–D29; the gameplay ones go into the GDD (01, 03, 05, 06, 07). The owner's items of the
-  review are in the GDD already (03, 06, 07); the agent's details go in with the acceptance.
+- The owner's acceptance of D1–D29 ✅ (2026-11-25, with the spec); the gameplay ones are in the GDD (01, 03, 05,
+  06, 07).
 - **The fog spec's D7 changes** with the hostile sign (D25): another team's creep in sight shows its hostile intent.
   Not an ADR: a view field under the fog's rules.
 - **No new ADR expected.** The pause is a third state of a battle's pace inside the host and the server, beside the

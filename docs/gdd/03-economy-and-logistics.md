@@ -38,6 +38,10 @@
   map (a world order for a dominated creep and an autopilot action), which leaves it as spoils on its cell. It opens
   new behaviors for the bots' strategist, which reacts to each encounter by its difficulty and the estimated risk
   ([07](07-autopilot.md)).
+- **Dropping the load, details** (agent, approved with the [R spec](../specs/m2-rebalance/spec.md) D24, 2026-11-25): the
+  whole load becomes slice A's spoils on the creep's cell; refused with an empty load or in a battle (the arena has
+  its own drop); **during an extortion, dropping is a refusal**: the battle opens with the victim empty and the
+  spoils stay on the world cell.
 
 ## Proposal
 

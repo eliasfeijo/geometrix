@@ -6,21 +6,25 @@
 
 ## Now
 
-**Updated:** 2026-11-25 (the R and E-min design round)
+**Updated:** 2026-11-25 (R's spec approved; slice G placed)
 
 | | |
 |---|---|
 | **Milestone** | **M2 — The ambush** ([ROADMAP](../ROADMAP.md)). M0, M1 and M1.5 ✅ |
 | **Slices** | A ✅ 2026-11-17 · B ✅ 2026-11-20 · D ✅ 2026-11-25 · **R — Rebalance and pace**, **E-min — The minimal end** and **K — The DNA kits**: design round done 2026-11-25, specs to write |
-| **In progress** | Three spec drafts (2026-11-25), waiting for the owner: [R](../specs/m2-rebalance/spec.md), [E-min](../specs/m2-minimal-end/spec.md) and [K](../specs/m2-kits/spec.md) |
+| **In progress** | **R's plan** (the [R spec](../specs/m2-rebalance/spec.md) approved 2026-11-25); **G's design round** in a parallel session; spec drafts waiting for the owner: [E-min](../specs/m2-minimal-end/spec.md) and [K](../specs/m2-kits/spec.md) |
 | **Next front** | The specs of **R**, **E-min** and **K** (`spec-slice` skill), one session each; they can run in parallel (R: `sim` params, autopilot, strategist, map UI; E-min: the end rule, end screen and replay; K: `packages/battle`, gambits, lab, battle screen). R's final balance pass runs after K's merge |
-| **Then** | **P — The friends' playtest** (two teams: humans against humans, or co-op against the bot); after it, **E** (siege and repair) or **T** (more teams), chosen at P's checkpoint |
-| **Waiting on the owner** | (1) Each spec's approval; R's draft, revised with the owner's review, has D1–D29 to accept and no open question; slice G (groups and formations, after K, before P) is a proposal in the [ROADMAP](../ROADMAP.md). (2) [ADR-0009](../adr/0009-prediction-in-the-lab.md) (`Proposed`): prediction as a lab experiment option. (3) `gambits.meleeBerthSteps` 3 (provisional, lab F7). (4) Whenever the owner wants: PLAYTEST lab group 7 (the movement options) |
+| **Then** | **G — Groups and formations** (after K: formations in the world and in battle, the side each DNA engages from, the battle bot's load experiment; lab first), then **P — The friends' playtest** (two teams: humans against humans, or co-op against the bot); after it, **E** (siege and repair) or **T** (more teams), chosen at P's checkpoint |
+| **Waiting on the owner** | (1) The E-min and K specs' approval; R's plan, when written. (2) [ADR-0009](../adr/0009-prediction-in-the-lab.md) (`Proposed`): prediction as a lab experiment option. (3) `gambits.meleeBerthSteps` 3 (provisional, lab F7). (4) Whenever the owner wants: PLAYTEST lab group 7 (the movement options) |
 | **Blockers** | None |
 
 ### Next steps
 
-1. **The R spec.** What the round decided is in the GDD (01, 03, 05, 06, 07) and the [ROADMAP](../ROADMAP.md) row:
+1. **R's plan** from the [approved spec](../specs/m2-rebalance/spec.md) (D1–D29, 2026-11-25, with the owner's review:
+   the actors' list on a click, the hostile sign, the bot's difficulty and its encounter reactions, dropping the load,
+   pausing a battle with P). **G's design round** runs in a parallel session (formations in the world and in battle,
+   the side each DNA engages from, the battle bot's load experiment; [GDD 06](../gdd/06-battles.md),
+   [GDD 07](../gdd/07-autopilot.md)). The spec's starting point, from the round, in the GDD (01, 03, 05, 06, 07):
    a 2-hour match through a shorter world at a moderate ×N with faster DNAs (sweeps with targets for 2 hours; at C2
    the economy gave a first extra creep at ~3 world hours, the first wanderer came at world hour 1 and the map was
    explored by hour 3); the wanderers early and regular; only the pace rescale against the snowball; the opening
