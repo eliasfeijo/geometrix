@@ -112,7 +112,10 @@
   - **the squad's orders, a minimal set for P:** **follow in formation** (the default), **hold position**, **attack a
     target** (the whole squad engages, each DNA from its side: the square from any direction, the triangles by the
     flanks, the circle from the side of the ally with the highest HP) and **release**. Choosable formation shapes
-    (line, column, wedge) come later;
+    (line, column, wedge) come later. They are given **through Z** (1 to 9, 0 cancels) to the selected creeps of the
+    squad or the whole squad (owner, G's spec review, 2026-11-25);
+  - **a plain order to a free creep is one-shot** (owner, G's spec review): it does the order and goes back to its
+    rules, without joining a squad ([02](02-creeps-and-domination.md));
   - **the bots' strategists lead several squads**, their number and behavior by the difficulty, configurable.
 - Humans, macros, autopilot and bots emit the **same commands** ([ADR-0002](../adr/0002-every-action-is-a-command.md)).
   A script never has more power than a human.

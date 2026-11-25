@@ -80,12 +80,21 @@
   difference between a *dominated* and a *selected* creep was vague, and dominating was an extra step whose only gain
   was control. Three layers:
   - **selecting only inspects** (any creep, of any side), as today;
-  - **the squad** is the set of creeps a player commands. A free creep of the team **joins the player's squad when the
-    player gives it an order** (a right click), with no "Dominar" button in between; it then takes commands **only
-    from that player until it is released**. Each player has their own squad, and a creep is in at most one;
+  - **the squad** is the set of creeps a player commands. **The player builds it with Ctrl:** a drag box with Ctrl
+    adds the selected creeps, **Ctrl+click toggles** a creep in or out, with the squad's symbol appearing or
+    disappearing on it; dominating a free creep also adds it. A squad creep takes commands **only from that player
+    until it is released**. Each player has their own squad, and a creep is in at most one. **A plain order to a free
+    creep is one-shot:** the creep does it and goes back to its autopilot rules, never joining the squad (owner, G's
+    spec review, 2026-11-25, revising the design round, in which an order put the creep in the squad: creeps left on
+    autopilot take an occasional order without following the squad);
   - **the embodied creep** (o encarnado) is the hero of pillar 3: the squad's creep the player plays directly.
-    **Dominating is how a player picks the embodied creep**, at most one per player. **Tab** (Shift+Tab backwards)
-    dominates the squad's next creep and centers the map on it, in the world as in battle.
+    **Dominating is how a player picks the embodied creep**, at most one per player, by **Shift+N** (the squad's
+    creep N) or "Dominar"; it is always **number 1** of the squad's list (owner, G's spec review; in the design round
+    Tab dominated the next creep).
+  - **Selecting and the keys** (owner, G's spec review, 2026-11-25): a click selects, a **drag box** selects several,
+    **Shift+click toggles** a creep in the selection, **N** (1–9) selects the squad's creep N, **Tab** moves the
+    selection along the squad and **0** clears it, in the world as in battle. **Z** opens the formation options (1 to
+    9, 0 cancels), for the selected creeps of the squad or, with none, the whole squad.
   - **The embodied creep is visible to everyone** (allies and enemies, humans and bots): a **glow** on the creep and
     **the player's name, visible at every zoom level**, in the world and in battle. ("cada encarnado tem um efeito de
     'glow' no creep e o nome do jogador visível em todos os níveis de zoom, e o mesmo se aplica durante a batalha.")
@@ -97,14 +106,15 @@
   - **The bots' strategists lead several squads**, how many and how they behave by the difficulty, configurable
     ([07](07-autopilot.md)). **A bot's squad shows its symbol but no glow** (owner, G's spec review, 2026-11-25): the
     glow means a human plays that creep.
-- **The team's roster** (owner, slice G's design round, 2026-11-25): a key toggles a **fixed panel** with the list of
-  the team's creeps, which stays open while the player clicks its actions (Esc closes it). Each line has actions:
-  **select, dominate, center on the map**. Tab stays free for the cycle above.
+- **The panel** (owner, slice G's design round and spec review, 2026-11-25): **C** toggles one **fixed panel**, in
+  the world and in battle, which stays open while the player clicks its actions (Esc closes it): **the squad on top,
+  numbered 1 to 9** like the number keys, in an order the player changes (drag and drop, or Shift+↑/↓), the embodied
+  creep always 1; the rest of the team below. Each line has actions: **select, dominate, center on the map**.
 
 ## Proposal
-- **Slice G's control details** (agent, slice G's design round, 2026-11-25; to approve in G's spec): shift+click and a
-  drag box give the order to several creeps at once (all join the squad); the roster's line also shows the DNA, name,
-  HP, load, current action, squad symbol and who leads it, and an **"Entrar"** for a creep in a battle; the symbol is
+- **Slice G's control details** (agent, slice G's design round, 2026-11-25; to approve in
+  [G's spec](../specs/m2-groups/spec.md)): the panel's line also shows the DNA, name, HP, load, current action, squad
+  symbol and who leads it, and an **"Entrar"** for a creep in a battle; the symbol is
   picked in the lobby and can be changed in the match, one per squad within a team; an enemy sees the embodied
   creep's glow and name only when the creep is in its sight (the fog holds); the squad's size is a param, tuned in
   the lab with the battle's side cap (5 today, `maxPerSide`): two squads of one team in one battle exceed it.

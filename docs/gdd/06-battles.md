@@ -152,10 +152,11 @@
     followers come in, each player commands their own squad. With the leader not playing in that battle, another
     player of the team may play one of its creeps on loan; **when the leader comes in, the loan ends at once** (owner,
     G's spec review, 2026-11-25);
-  - **the human plays the embodied creep** (WASD, Space) and **Tab** moves the embodiment to the squad's next
-    participant, as the lab's Tab already moves the domination;
-  - **tactical commands by the number keys**, to the squad's other participants: **1 form on me, 2 hold position, 3
-    attack freely, 4 fall back** (flee by the border). The pause (slice R) gives time to think; **the battle bots use
+  - **the human plays the embodied creep** (WASD, Space); **Shift+N** plays the squad's participant N; N and Tab
+    select (owner, G's spec review, 2026-11-25: Tab no longer moves the embodiment, as the lab's Tab does);
+  - **tactical commands through Z** (owner, G's spec review; the design round had them on the bare number keys): Z
+    then **1 form on me, 2 hold position, 3 attack freely, 4 fall back** (flee by the border), 0 cancels, to the
+    selected participants of the squad or, with none, all but the one played. The pause (slice R) gives time to think; **the battle bots use
     the same commands**. **Attack freely is the default** before any key (owner, G's spec review, 2026-11-25), so a
     battle where nobody commands plays as before;
   - **the embodied creep's glow and its player's name** show in the arena too.
