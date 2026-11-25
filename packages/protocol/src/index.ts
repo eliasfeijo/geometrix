@@ -58,6 +58,10 @@ const condition = z.discriminatedUnion("type", [
   }),
   z.object({ type: z.literal("hpBelow"), permille: permille }),
   z.object({ type: z.literal("demandAtMost"), permille: permille }),
+  z.object({
+    type: z.literal("allyInBattle"),
+    radius: z.number().int().nonnegative(),
+  }),
 ]);
 
 const action = z.discriminatedUnion("type", [
@@ -76,6 +80,7 @@ const action = z.discriminatedUnion("type", [
     minCargo: z.number().int().nonnegative(),
   }),
   z.object({ type: z.literal("follow"), creepId: id }),
+  z.object({ type: z.literal("joinBattle"), minHpPermille: permille }),
   z.object({ type: z.literal("pay") }),
   z.object({ type: z.literal("fight") }),
   z.object({ type: z.literal("flee") }),

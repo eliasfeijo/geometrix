@@ -366,6 +366,14 @@ function ConditionField(props: {
           onChange={(radius) => onChange({ ...value, radius })}
         />
       )}
+      {value.type === "allyInBattle" && (
+        <CountInput
+          title="raio R, em células"
+          value={value.radius}
+          disabled={disabled}
+          onChange={(radius) => onChange({ ...value, radius })}
+        />
+      )}
       {value.type === "stockBelow" && (
         <CountInput
           title="quantidade N"
@@ -510,6 +518,14 @@ function ActionField(props: {
           value={value.resource}
           disabled={disabled}
           onChange={(resource) => onChange({ ...value, resource })}
+        />
+      )}
+      {value.type === "joinBattle" && (
+        <PercentInput
+          title="HP mínimo, % do máximo"
+          permille={value.minHpPermille}
+          disabled={disabled}
+          onChange={(minHpPermille) => onChange({ ...value, minHpPermille })}
         />
       )}
       {value.type === "approach" && (

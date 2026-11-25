@@ -14,6 +14,7 @@ import {
   teamOf,
 } from "./economy.ts";
 import { opening, stockTotal } from "./approach.ts";
+import { deliversFirst, findFighter } from "./battle.ts";
 import { findCreep } from "./domination.ts";
 import { isInMap, isRotatedSide, manhattan, type Cell } from "./map.ts";
 import { cellModifier } from "./movement.ts";
@@ -30,6 +31,7 @@ import { costWithin, nearestTargets } from "./pathfinding.ts";
 import { canBuildRoad, nextSegment } from "./roads.ts";
 import {
   maxHp,
+  type Battle,
   type Creep,
   type Deposit,
   type Encounter,
@@ -61,7 +63,12 @@ export type Condition =
    * In an extortion, the demand is at most `permille` of the cargo; false
    * outside one. Only reaction rules see it hold.
    */
-  | { type: "demandAtMost"; permille: number };
+  | { type: "demandAtMost"; permille: number }
+  /**
+   * A battle with a creep of the team in it, its cell within `radius`
+   * (Manhattan) and in the team's sight (R spec D10, H-1).
+   */
+  | { type: "allyInBattle"; radius: number };
 
 export type Action =
   /**
@@ -99,6 +106,13 @@ export type Action =
    * impossible once it is dead or of another team (F-4).
    */
   | { type: "follow"; creepId: number }
+  /**
+   * Join the nearest battle a teammate is in, by an attack approach on its
+   * nearest enemy participant in sight (R spec D10, H-2); impossible below
+   * `minHpPermille` of the creep's HP. Loaded, the creep delivers first when
+   * its core is the cheaper path (H-4).
+   */
+  | { type: "joinBattle"; minHpPermille: number }
   /**
    * Reactions: decided only in an encounter (plan section 6). Since the
    * junction (D2), fight and flee choose how the creep enters the battle
@@ -333,7 +347,93 @@ function holds(
         cargoTotal(creep) * condition.permille
       );
     }
+    case "allyInBattle": {
+      const battle = nearestAlliedBattle(state, creep);
+      return battle !== null && manhattan(creep, battle) <= condition.radius;
+    }
   }
+}
+
+/** A cell's index in the team's frame (ties like explore). */
+function frameIndex(state: WorldState, team: number, c: Cell): number {
+  const { width, height } = state.map;
+  return isRotatedSide(team)
+    ? (height - 1 - c.y) * width + (width - 1 - c.x)
+    : c.y * width + c.x;
+}
+
+/**
+ * The battle with a teammate in it whose cell the team sees, nearest the
+ * creep by Manhattan distance, ties by the cell in the team's frame, then
+ * id (R spec D10). The battle stubs are public in the state; only those in
+ * sight count, so deciding by them leaks nothing.
+ */
+function nearestAlliedBattle(state: WorldState, creep: Creep): Battle | null {
+  if (state.battles.length === 0) return null;
+  const { visible } = known(state, creep);
+  let best: Battle | null = null;
+  for (const battle of state.battles) {
+    if (visible[battle.y * state.map.width + battle.x] !== 1) continue;
+    const allied = battle.participants.some((p) => {
+      const side = battle.sides[p.side]!;
+      return side.kind === "team" && side.team === creep.team;
+    });
+    if (!allied) continue;
+    if (best === null) {
+      best = battle;
+      continue;
+    }
+    const d = manhattan(creep, battle) - manhattan(creep, best);
+    const tie =
+      frameIndex(state, creep.team, battle) -
+      frameIndex(state, creep.team, best);
+    if (d < 0 || (d === 0 && tie < 0)) best = battle;
+  }
+  return best;
+}
+
+/**
+ * The order of joinBattle (R spec D10, H-2, H-4): an attack approach on the
+ * nearest enemy participant in sight of the nearest allied battle, ties by
+ * the frame, then id; a deliver first when loaded and the core is cheaper;
+ * null below the HP floor, or with no battle or no enemy in sight.
+ */
+function joinBattleFor(
+  state: WorldState,
+  creep: Creep,
+  action: Extract<Action, { type: "joinBattle" }>,
+): Order | null {
+  if (creep.hp * 1000 < maxHp(state.params, creep.dna) * action.minHpPermille) {
+    return null;
+  }
+  const battle = nearestAlliedBattle(state, creep);
+  if (battle === null) return null;
+  const { visible } = known(state, creep);
+  const { width } = state.map;
+  let best: Fighter | null = null;
+  for (const participant of battle.participants) {
+    const side = battle.sides[participant.side]!;
+    if (side.kind === "team" && side.team === creep.team) continue;
+    const enemy = findFighter(state, participant.id);
+    if (enemy === undefined || visible[enemy.y * width + enemy.x] !== 1) {
+      continue;
+    }
+    if (opening(state, creep, enemy, "attack") !== "open") continue;
+    if (best === null) {
+      best = enemy;
+      continue;
+    }
+    const d = manhattan(creep, enemy) - manhattan(creep, best);
+    const tie =
+      frameIndex(state, creep.team, enemy) -
+      frameIndex(state, creep.team, best);
+    if (d < 0 || (d === 0 && tie < 0)) best = enemy;
+  }
+  if (best === null) return null;
+  if (cargoTotal(creep) > 0 && deliversFirst(state, creep, battle)) {
+    return { type: "deliver" };
+  }
+  return { type: "approach", targetId: best.id, intent: "attack" };
 }
 
 type EnemyFilter = { radius: number; dna?: Dna[]; minCargo: number };
@@ -431,6 +531,8 @@ function orderFor(
       }
       return { type: "follow", targetId: target.id };
     }
+    case "joinBattle":
+      return joinBattleFor(state, creep, action);
     case "pay":
     case "fight":
     case "flee":

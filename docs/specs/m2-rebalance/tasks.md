@@ -153,7 +153,7 @@ which R F5 also touches (`battle.hold`): a small rebase.
 
 - [x] `follow`: the order, the action, walking within `autopilot.followCells`, joining the target's battle, the end,
       the cycle refused (F-1..F-5)
-- [ ] `allyInBattle` and `joinBattle` with `minHpPermille` and the load check (H-1, H-2, H-4, F-6)
+- [x] `allyInBattle` and `joinBattle` with `minHpPermille` and the load check (H-1, H-2, H-4, F-6)
 - [ ] `drop`: the order and the action, the `dropped` event, the refusals; during an extortion, a refusal (DR-1..DR-3)
 - [ ] `buildRoad` with no cell; `roadTarget` into `roads.ts`; the road-builder preset with no target (RB-1, RB-2)
 - [ ] `presetRules(preset, dna)` with the help rule in every preset (H-3)

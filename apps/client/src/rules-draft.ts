@@ -23,6 +23,7 @@ export const CONDITION_TYPES = [
   "enemyInSight",
   "hpBelow",
   "demandAtMost",
+  "allyInBattle",
 ] as const satisfies readonly Condition["type"][];
 
 export const ACTION_TYPES = [
@@ -33,6 +34,7 @@ export const ACTION_TYPES = [
   "explore",
   "pickup",
   "approach",
+  "joinBattle",
   "stop",
   "pay",
   "fight",
@@ -72,6 +74,7 @@ export const CONDITION_LABELS: Record<Condition["type"], string> = {
   enemyInSight: "inimigo à vista",
   hpBelow: "HP abaixo de",
   demandAtMost: "exigência até",
+  allyInBattle: "aliado em batalha a até R células",
 };
 
 export const ACTION_LABELS: Record<Action["type"], string> = {
@@ -87,6 +90,7 @@ export const ACTION_LABELS: Record<Action["type"], string> = {
   fight: "lutar (quando abordado)",
   flee: "fugir (quando abordado)",
   follow: "seguir",
+  joinBattle: "entrar na batalha do aliado",
 };
 
 /**
@@ -132,6 +136,11 @@ export function conditionOf(
         type,
         permille: "permille" in from ? from.permille : DEFAULT_PERMILLE,
       };
+    case "allyInBattle":
+      return {
+        type,
+        radius: "radius" in from ? from.radius : DEFAULT_RADIUS,
+      };
   }
 }
 
@@ -164,6 +173,12 @@ export function actionOf(
       const point = "x" in from ? { x: from.x, y: from.y } : cell;
       return { type, ...point };
     }
+    case "joinBattle":
+      return {
+        type,
+        minHpPermille:
+          from.type === type ? from.minHpPermille : DEFAULT_PERMILLE,
+      };
     case "follow":
       // Not offered by the editor's list: "Seguir…" picks the ally (R F6).
       return { type, creepId: "creepId" in from ? from.creepId : 0 };

@@ -86,6 +86,8 @@ function copyCondition(c: Condition): Condition | null {
       return isPermille(c.permille)
         ? { type: c.type, permille: c.permille }
         : null;
+    case "allyInBattle":
+      return isCount(c.radius) ? { type: c.type, radius: c.radius } : null;
     default:
       return null;
   }
@@ -113,6 +115,10 @@ function copyAction(a: Action, map: GameMap): Action | null {
         : null;
     case "follow":
       return isCount(a.creepId) ? { type: a.type, creepId: a.creepId } : null;
+    case "joinBattle":
+      return isPermille(a.minHpPermille)
+        ? { type: a.type, minHpPermille: a.minHpPermille }
+        : null;
     case "moveTo":
     case "buildRoad":
       return isInMap(map, a) ? { type: a.type, x: a.x, y: a.y } : null;

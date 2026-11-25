@@ -132,6 +132,8 @@ export function conditionText(c: Condition): string {
       return `HP abaixo de ${c.permille / 10}%`;
     case "demandAtMost":
       return `exigência até ${c.permille / 10}% da carga`;
+    case "allyInBattle":
+      return `aliado em batalha a até ${c.radius} células`;
   }
 }
 
@@ -169,6 +171,8 @@ export function actionText(a: Action): string {
       return "fugir";
     case "follow":
       return `seguir o creep #${a.creepId}`;
+    case "joinBattle":
+      return `entrar na batalha do aliado (HP ≥ ${a.minHpPermille / 10}%)`;
   }
 }
 
