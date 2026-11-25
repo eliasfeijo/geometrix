@@ -5,8 +5,16 @@
 // validates it again. Time is not read here; the TickLoop decides when a tick
 // runs, so tests drive ticks directly. The events of each tick go to the
 // listeners, and each team's latest ones stay in memory: the chronicle a new
-// stream starts from (M2 encontro spec N-1).
+// stream starts from (M2 encontro spec N-1). The world steps through the
+// junction host (junction plan P5, section 7): its battles' results enter
+// the tick's log after the players' commands, as the system player's.
 
+import type { BattleParams } from "@geometrix/battle";
+import {
+  createHost,
+  stepJunction,
+  type JunctionHost,
+} from "@geometrix/junction";
 import type { RejectReason, WorldStatus } from "@geometrix/protocol";
 import {
   createWorld,
@@ -47,6 +55,8 @@ export type HostContext = {
 export type NewWorld = {
   seed: number;
   params: Params;
+  /** Kept with the world, like `params` (junction F4). */
+  battleParams: BattleParams;
   multiplier: number;
   /** Teams that get a balanced bot (spec section 5, F6 details). */
   botTeams: readonly number[];
@@ -61,6 +71,8 @@ export class WorldHost {
   readonly id: number;
   readonly multiplier: number;
   readonly state: WorldState;
+  /** The battle instances next to the world (ADR-0010). */
+  readonly junction: JunctionHost;
   status: WorldStatus;
   private readonly context: HostContext;
   private readonly bots: readonly Bot[];
@@ -74,6 +86,7 @@ export class WorldHost {
     id: number,
     multiplier: number,
     state: WorldState,
+    junction: JunctionHost,
     bots: readonly Bot[],
     status: WorldStatus,
   ) {
@@ -81,6 +94,7 @@ export class WorldHost {
     this.id = id;
     this.multiplier = multiplier;
     this.state = state;
+    this.junction = junction;
     this.bots = bots;
     this.status = status;
     this.recent = state.teams.map(() => []);
@@ -94,6 +108,7 @@ export class WorldHost {
       const id = store.createWorld({
         seed: world.seed,
         params: world.params,
+        battleParams: world.battleParams,
         simVersion: SIM_VERSION,
         multiplier: world.multiplier,
         createdAt: world.createdAt,
@@ -114,6 +129,7 @@ export class WorldHost {
         id,
         world.multiplier,
         state,
+        createHost(world.battleParams),
         bots,
         "running",
       );
@@ -132,7 +148,11 @@ export class WorldHost {
    * entries are then read back. Players stored without a join in the state
    * (it was still queued when the process stopped) join again.
    */
-  static recover(context: HostContext, row: WorldRow): WorldHost {
+  static recover(
+    context: HostContext,
+    row: WorldRow,
+    serverBattleParams: BattleParams,
+  ): WorldHost {
     const { store } = context;
     if (row.simVersion !== SIM_VERSION) {
       throw new RecoveryError(
@@ -160,6 +180,12 @@ export class WorldHost {
         store.putChronicle(row.id, step(state, commands));
       }
     });
+    const junction = createHost(row.battleParams ?? serverBattleParams);
+    if (state.battles.length > 0) {
+      throw new RecoveryError(
+        `world ${row.id}: ${state.battles.length} battles open, and their instances are not stored`,
+      );
+    }
     const players = store.players(row.id);
     const bots = players
       .filter((p) => p.bot)
@@ -169,6 +195,7 @@ export class WorldHost {
       row.id,
       row.multiplier,
       state,
+      junction,
       bots,
       row.status,
     );
@@ -238,7 +265,11 @@ export class WorldHost {
     );
   }
 
-  /** Runs one tick: bot decisions, step, then one stored transaction. */
+  /**
+   * Runs one tick: bot decisions, the step through the junction host, then
+   * one stored transaction with the players' commands and the battles'
+   * results (ADR-0010 rule 5).
+   */
   tick(): void {
     if (this.status === "ended") return;
     const { state } = this;
@@ -256,9 +287,20 @@ export class WorldHost {
         }
       }
     }
-    const commands = this.pending;
+    const players = this.pending;
     this.pending = [];
-    const events = step(state, commands);
+    const tick = state.tick;
+    const done = stepJunction(state, this.junction, players);
+    const commands: LoggedCommand[] = [
+      ...players,
+      ...done.results.map(({ playerId, command }, i) => ({
+        tick,
+        seq: players.length + i,
+        playerId,
+        command,
+      })),
+    ];
+    const { events } = done;
 
     const { snapshotEveryTicks, metricsEveryTicks } = this.context.config;
     const ended = state.tick >= this.durationTicks;

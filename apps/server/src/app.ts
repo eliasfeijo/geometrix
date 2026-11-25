@@ -2,6 +2,7 @@
 
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
+import type { BattleParams } from "@geometrix/battle";
 import type { Params } from "@geometrix/sim";
 import type { ServerConfig } from "./config.ts";
 import { createHttpHandler } from "./http.ts";
@@ -17,6 +18,8 @@ export type AppOptions = {
   timers: Timers;
   /** Params for new worlds. */
   params: Params;
+  /** Battle params for new worlds (and for those stored without them). */
+  battleParams: BattleParams;
   /** ISO timestamp, for new worlds. */
   clock: () => string;
   /** Server log for incidents (default console.log). */
@@ -35,9 +38,16 @@ export type App = {
 };
 
 export async function startApp(options: AppOptions): Promise<App> {
-  const { store, config, timers, params, clock, log } = options;
+  const { store, config, timers, params, battleParams, clock, log } = options;
   const presence = new PresenceTracker(timers, config);
-  const worlds = new Worlds(store, config, timers, params, presence);
+  const worlds = new Worlds(
+    store,
+    config,
+    timers,
+    params,
+    battleParams,
+    presence,
+  );
   const recoveryFailures = worlds.recoverAll();
   const server = createServer(
     createHttpHandler({ store, worlds, staticDir: config.staticDir, clock }),

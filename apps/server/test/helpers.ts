@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { parseBattleParams, type BattleParams } from "@geometrix/battle";
 import { parseParams, type Params } from "@geometrix/sim";
 import { startApp } from "../src/app.ts";
 import { DEFAULT_CONFIG, type ServerConfig } from "../src/config.ts";
@@ -10,6 +11,18 @@ export function testParams(): Params {
     JSON.parse(
       readFileSync(
         new URL("../../../packages/sim/test/params.json", import.meta.url),
+        "utf8",
+      ),
+    ),
+  );
+}
+
+/** The battle tests' fixed params, for the same reason. */
+export function testBattleParams(): BattleParams {
+  return parseBattleParams(
+    JSON.parse(
+      readFileSync(
+        new URL("../../../packages/battle/test/params.json", import.meta.url),
         "utf8",
       ),
     ),
@@ -67,6 +80,7 @@ export async function testApp(
     config: { ...DEFAULT_CONFIG, port: 0, dbFile: ":memory:", ...config },
     timers,
     params,
+    battleParams: testBattleParams(),
     clock: () => "2026-11-14T00:00:00.000Z",
     log: (line) => logs.push(line),
   });

@@ -10,7 +10,7 @@ import {
   WorldHost,
   type HostContext,
 } from "../src/world-host.ts";
-import { testApp, testParams } from "./helpers.ts";
+import { testApp, testBattleParams, testParams } from "./helpers.ts";
 
 const config = {
   snapshotEveryTicks: 300,
@@ -27,6 +27,7 @@ function newWorld(store: Store): WorldHost {
     {
       seed: 42,
       params: testParams(),
+      battleParams: testBattleParams(),
       multiplier: 36,
       botTeams: [1],
       createdAt: "2026-11-14T00:00:00.000Z",
@@ -91,7 +92,11 @@ describe("recovery after a restart", () => {
 
     store = new Store(file);
     const context: HostContext = { store, config };
-    const recovered = WorldHost.recover(context, store.world(crashed.id)!);
+    const recovered = WorldHost.recover(
+      context,
+      store.world(crashed.id)!,
+      testBattleParams(),
+    );
     expect(store.latestSnapshot(crashed.id)?.tick).toBe(600);
     expect(recovered.state.tick).toBe(650);
     expect(stateHash(recovered.state)).not.toBe(stateHash(reference.state));
@@ -126,6 +131,7 @@ describe("recovery after a restart", () => {
     const recovered = WorldHost.recover(
       { store, config },
       store.world(crashed.id)!,
+      testBattleParams(),
     );
     expect(store.chronicleCount(crashed.id)).toBe(rows);
     expect(rows).toBe(steady.chronicleCount(reference.id));
@@ -151,6 +157,7 @@ describe("recovery after a restart", () => {
     const recovered = WorldHost.recover(
       { store, config },
       store.world(host.id)!,
+      testBattleParams(),
     );
     recovered.tick();
     expect(recovered.state.players.map((p) => p.id)).toContain(late);
@@ -160,9 +167,9 @@ describe("recovery after a restart", () => {
     const store = new Store(":memory:");
     const host = newWorld(store);
     const row = { ...store.world(host.id)!, simVersion: 0 };
-    expect(() => WorldHost.recover({ store, config }, row)).toThrow(
-      RecoveryError,
-    );
+    expect(() =>
+      WorldHost.recover({ store, config }, row, testBattleParams()),
+    ).toThrow(RecoveryError);
   });
 
   test("the app hosts stored worlds again on start, clock and all", async () => {

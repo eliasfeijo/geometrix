@@ -282,7 +282,7 @@ square against the circle **watched in the playtest** (GDD 06). All provisional 
 
 - [x] Protocol: `battleInput`, `battleScreen`, `battleOpen`, `battleFrame`; the system commands refused from clients;
       battles in the delta; `PROTOCOL_VERSION` 7 (F6 took 6)
-- [ ] `WorldHost` through the `JunctionHost`; the results committed with the tick
+- [x] `WorldHost` through the `JunctionHost`; the results committed with the tick
 - [ ] The `battles` and `battle_ticks` tables, in the tick's transaction; recovery rebuilding the instances
 - [ ] Presence of the battle screen; the battle clock (50 ms); the pace switch (D13)
 - [ ] Battle inputs only for the dominated participant (C-2); frames only to the open screens (N-2)

@@ -43,7 +43,7 @@ Node 26 (`.nvmrc`). Node runs `.ts` directly; only the client has a build (Vite)
 | `npm run geo -- junction matrix` | The junction's battles without the bots (seeds 1–100, ~10 s): on each seed's world, every aggressor DNA × victim DNA, empty or full, fighting or fleeing, built by `battleSetup`; `--set path=v1,v2` compares a param's values. Report in `runs/<id>/junction.md` |
 | `npm run geo -- battle verify` | Battle determinism (seeds 1, 42, 649); `--log <file>` replays a log exported by the lab and checks the hash |
 | `npm run lab` | The battle lab (`lab.html`, Vite): the battle in a worker, simulated network, blind sessions |
-| `npm run server` | Server at `http://localhost:8080` (`GEO_PORT`, `GEO_DB`, `GEO_PARAMS`); serves the client build |
+| `npm run server` | Server at `http://localhost:8080` (`GEO_PORT`, `GEO_DB`, `GEO_PARAMS`, `GEO_BATTLE_PARAMS`); serves the client build |
 | `npm run build` | Client build (Vite) into `apps/client/dist`, which the server serves |
 | `npm run client` | Vite dev server (port 5173) proxying `/api` and `/ws` to the server on `GEO_PORT` |
 | `npm run dev:multi -- --clients 3` | Build + server + a world with K players (Blue/Orange alternating), one tab per player (`--seed`, `--mult`, `--no-build`, `--no-open`, `--net` for the `?net=1` network panel, `--bot` for the bot on Orange with everyone on Blue) |

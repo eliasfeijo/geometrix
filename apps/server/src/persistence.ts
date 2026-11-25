@@ -6,6 +6,7 @@
 // P7) is derived data (ADR-0007 rule 6): one row per event and team of its
 // audience, written with the tick, rebuilt from the log on recovery.
 
+import type { BattleParams } from "@geometrix/battle";
 import Database from "better-sqlite3";
 import {
   eventsFor,
@@ -23,6 +24,11 @@ export type WorldRow = {
   id: number;
   seed: number;
   params: Params;
+  /**
+   * The params of the world's battles (junction F4); null for a world stored
+   * before they were kept, which gets the server's.
+   */
+  battleParams: BattleParams | null;
   simVersion: number;
   multiplier: number;
   status: WorldStatus;
@@ -58,6 +64,7 @@ CREATE TABLE IF NOT EXISTS worlds (
   id          INTEGER PRIMARY KEY,
   seed        INTEGER NOT NULL,
   params_json TEXT    NOT NULL,
+  battle_params_json TEXT,
   sim_version INTEGER NOT NULL,
   multiplier  INTEGER NOT NULL,
   status      TEXT    NOT NULL,
@@ -108,6 +115,7 @@ type WorldRecord = {
   id: number;
   seed: number;
   params_json: string;
+  battle_params_json: string | null;
   sim_version: number;
   multiplier: number;
   status: WorldStatus;
@@ -119,6 +127,10 @@ const toWorld = (r: WorldRecord): WorldRow => ({
   id: r.id,
   seed: r.seed,
   params: JSON.parse(r.params_json) as Params,
+  battleParams:
+    r.battle_params_json === null
+      ? null
+      : (JSON.parse(r.battle_params_json) as BattleParams),
   simVersion: r.sim_version,
   multiplier: r.multiplier,
   status: r.status,
@@ -151,6 +163,15 @@ export class Store {
     this.db.pragma("journal_mode = WAL");
     this.db.pragma("foreign_keys = ON");
     this.db.exec(SCHEMA);
+    this.migrate();
+  }
+
+  /** Columns added after a table first shipped, for older files. */
+  private migrate(): void {
+    const columns = this.db.pragma("table_info(worlds)") as { name: string }[];
+    if (!columns.some((c) => c.name === "battle_params_json")) {
+      this.db.exec("ALTER TABLE worlds ADD COLUMN battle_params_json TEXT");
+    }
   }
 
   close(): void {
@@ -165,18 +186,20 @@ export class Store {
   createWorld(world: {
     seed: number;
     params: Params;
+    battleParams: BattleParams;
     simVersion: number;
     multiplier: number;
     createdAt: string;
   }): number {
     const result = this.db
       .prepare(
-        `INSERT INTO worlds (seed, params_json, sim_version, multiplier, status, created_at)
-         VALUES (?, ?, ?, ?, 'running', ?)`,
+        `INSERT INTO worlds (seed, params_json, battle_params_json, sim_version, multiplier, status, created_at)
+         VALUES (?, ?, ?, ?, ?, 'running', ?)`,
       )
       .run(
         world.seed,
         JSON.stringify(world.params),
+        JSON.stringify(world.battleParams),
         world.simVersion,
         world.multiplier,
         world.createdAt,

@@ -7,6 +7,8 @@ export type ServerConfig = {
   dbFile: string;
   /** Params for new worlds. */
   paramsFile: string;
+  /** Battle params for new worlds (junction F4). */
+  battleParamsFile: string;
   /** Built client served over HTTP (apps/client/dist); skipped if missing. */
   staticDir: string;
   /** World ticks between snapshots (plan: 300, 5 world minutes). */
@@ -36,6 +38,7 @@ export const DEFAULT_CONFIG: ServerConfig = {
   port: 8080,
   dbFile: "data/geometrix.db",
   paramsFile: "params/default.json",
+  battleParamsFile: "params/battle.json",
   staticDir: "apps/client/dist",
   snapshotEveryTicks: 300,
   metricsEveryTicks: 60,
@@ -63,6 +66,7 @@ export function loadConfig(env: NodeJS.ProcessEnv): ServerConfig {
     port: int("GEO_PORT", DEFAULT_CONFIG.port),
     dbFile: env.GEO_DB ?? DEFAULT_CONFIG.dbFile,
     paramsFile: env.GEO_PARAMS ?? DEFAULT_CONFIG.paramsFile,
+    battleParamsFile: env.GEO_BATTLE_PARAMS ?? DEFAULT_CONFIG.battleParamsFile,
     staticDir: env.GEO_STATIC ?? DEFAULT_CONFIG.staticDir,
     snapshotEveryTicks: DEFAULT_CONFIG.snapshotEveryTicks,
     metricsEveryTicks: DEFAULT_CONFIG.metricsEveryTicks,

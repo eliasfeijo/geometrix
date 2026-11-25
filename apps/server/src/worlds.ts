@@ -1,6 +1,7 @@
 // The worlds this process hosts, each with its tick loop (plan section 7).
 
 import { randomInt } from "node:crypto";
+import type { BattleParams } from "@geometrix/battle";
 import type { CreateWorldRequest } from "@geometrix/protocol";
 import type { Params } from "@geometrix/sim";
 import type { ServerConfig } from "./config.ts";
@@ -14,24 +15,27 @@ export class Worlds {
   private readonly config: ServerConfig;
   private readonly timers: Timers;
   private readonly params: Params;
+  private readonly battleParams: BattleParams;
   private readonly presence: PresenceTracker;
   private readonly hosted = new Map<
     number,
     { host: WorldHost; loop: TickLoop }
   >();
 
-  /** `params` are the ones new worlds start with. */
+  /** `params` and `battleParams` are the ones new worlds start with. */
   constructor(
     store: Store,
     config: ServerConfig,
     timers: Timers,
     params: Params,
+    battleParams: BattleParams,
     presence: PresenceTracker,
   ) {
     this.store = store;
     this.config = config;
     this.timers = timers;
     this.params = params;
+    this.battleParams = battleParams;
     this.presence = presence;
   }
 
@@ -46,6 +50,7 @@ export class Worlds {
       {
         seed: request.seed ?? randomInt(2 ** 32),
         params: this.params,
+        battleParams: this.battleParams,
         multiplier: request.multiplier ?? 1,
         botTeams: request.botTeams ?? [],
         createdAt,
@@ -65,7 +70,11 @@ export class Worlds {
     for (const row of this.store.worlds()) {
       try {
         this.host(
-          WorldHost.recover({ store: this.store, config: this.config }, row),
+          WorldHost.recover(
+            { store: this.store, config: this.config },
+            row,
+            this.battleParams,
+          ),
         );
       } catch (error) {
         if (!(error instanceof RecoveryError)) throw error;

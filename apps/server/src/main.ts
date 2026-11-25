@@ -4,6 +4,7 @@
 
 import { mkdirSync, readFileSync } from "node:fs";
 import { dirname } from "node:path";
+import { parseBattleParams } from "@geometrix/battle";
 import { parseParams } from "@geometrix/sim";
 import { startApp } from "./app.ts";
 import { loadConfig } from "./config.ts";
@@ -16,11 +17,15 @@ if (config.dbFile !== ":memory:") {
 }
 const store = new Store(config.dbFile);
 const params = parseParams(JSON.parse(readFileSync(config.paramsFile, "utf8")));
+const battleParams = parseBattleParams(
+  JSON.parse(readFileSync(config.battleParamsFile, "utf8")),
+);
 const app = await startApp({
   store,
   config,
   timers: realTimers,
   params,
+  battleParams,
   clock: () => new Date().toISOString(),
 });
 for (const { worldId, error } of app.recoveryFailures) {

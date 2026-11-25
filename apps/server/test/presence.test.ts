@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import { Store, type PlayerRow } from "../src/persistence.ts";
 import { PresenceTracker } from "../src/presence.ts";
 import { WorldHost } from "../src/world-host.ts";
-import { FakeTimers, testParams } from "./helpers.ts";
+import { FakeTimers, testBattleParams, testParams } from "./helpers.ts";
 
 const SECOND = 1000;
 
@@ -21,6 +21,7 @@ function setup() {
     {
       seed: 42,
       params: testParams(),
+      battleParams: testBattleParams(),
       multiplier: 1,
       botTeams: [1],
       createdAt: "2026-11-14T00:00:00.000Z",
