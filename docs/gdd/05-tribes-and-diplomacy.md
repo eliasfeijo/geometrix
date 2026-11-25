@@ -25,6 +25,10 @@
     side (up to the side cap): wanderers gang up on the same creep;
   - it chases a loaded creep while it sees it, also out of the band, but **never enters a core zone**: a creep that
     reaches home is safe from them.
+  - after a battle, a wanderer **leaves alone the creeps that were in it with it** for a while (10 world minutes,
+    provisional), like slice A's extortion block; it still attacks other loaded creeps. Without it, a creep that
+    escaped by the border came back a few cells from the wanderer and was attacked again at once (owner,
+    2026-11-25, after a bot × bot run with 638 battles of one wanderer against one gatherer in 6 h).
 
 ## Proposal
 
