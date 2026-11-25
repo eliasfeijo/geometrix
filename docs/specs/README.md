@@ -13,7 +13,7 @@ findings.
 | B — The battle lab | M2 | [m2-battle-lab](m2-battle-lab/spec.md) | ✅ Done (2026-11-20) |
 | D — The junction | M2 | [m2-junction](m2-junction/spec.md) | ✅ Done (2026-11-25) |
 | R — Rebalance and pace | M2 | [m2-rebalance](m2-rebalance/spec.md) | Spec draft (2026-11-25), waiting for the owner's approval |
-| E-min — The minimal end | M2 | — | Spec next |
+| E-min — The minimal end | M2 | [m2-minimal-end](m2-minimal-end/spec.md) | Spec draft (2026-11-25), waiting for the owner's approval |
 | K — The DNA kits | M2 | — | Spec next |
 | P — The friends' playtest | M2 | — | After R, E-min and K |
 | E — Siege and repair | M2 | — | After P |
