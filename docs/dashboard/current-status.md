@@ -6,15 +6,15 @@
 
 ## Now
 
-**Updated:** 2026-11-25 (R's F1: the pace harness and the baseline)
+**Updated:** 2026-11-25 (R's F1: the pace harness and the baseline; G's spec approved, plan draft)
 
 | | |
 |---|---|
 | **Milestone** | **M2 — The ambush** ([ROADMAP](../ROADMAP.md)). M0, M1 and M1.5 ✅ |
 | **Slices** | A ✅ 2026-11-17 · B ✅ 2026-11-20 · D ✅ 2026-11-25 · **R — Rebalance and pace** (F1 done 2026-11-25, F2 next), **E-min — The minimal end** (spec and plan approved 2026-11-25, F1 next) and **K — The DNA kits** (spec and plan approved 2026-11-25, F1 next) |
-| **In progress** | **R's F2** (the world vocabulary: follow, help, drop, the road builder, the hostile intent, the difficulty; `SIM_VERSION` 12) after F1's merge, branch `m2/rebalance-f2-world-vocabulary`, worktree `~/workspace/geometrix/rebalance-f2` ([tasks](../specs/m2-rebalance/tasks.md)); **G's design round done** (2026-11-25, on `docs/g-design`: squads, the embodied creep, the roster, formations; GDD 02, 06, 07); **E-min's F1** (the end in the world) in a new session: the [E-min spec](../specs/m2-minimal-end/spec.md) and [plan](../specs/m2-minimal-end/plan.md) approved 2026-11-25, worktree `~/workspace/geometrix/emin-f1` on `m2/emin-f1-world`; **K's F1** (the bar and the strike) in a new session: the [K spec](../specs/m2-kits/spec.md) and [plan](../specs/m2-kits/plan.md) approved 2026-11-25, worktree `~/workspace/geometrix/kits-f1` on `m2/kits-f1-bar-strike` |
+| **In progress** | **R's F2** (the world vocabulary: follow, help, drop, the road builder, the hostile intent, the difficulty; `SIM_VERSION` 12) after F1's merge, branch `m2/rebalance-f2-world-vocabulary`, worktree `~/workspace/geometrix/rebalance-f2` ([tasks](../specs/m2-rebalance/tasks.md)); **G's design round done** (2026-11-25, on `docs/g-design`: squads, the embodied creep, the panel, formations; the [spec](../specs/m2-groups/spec.md) approved and the [plan](../specs/m2-groups/plan.md) drafted; GDD 02, 06, 07); **E-min's F1** (the end in the world) in a new session: the [E-min spec](../specs/m2-minimal-end/spec.md) and [plan](../specs/m2-minimal-end/plan.md) approved 2026-11-25, worktree `~/workspace/geometrix/emin-f1` on `m2/emin-f1-world`; **K's F1** (the bar and the strike) in a new session: the [K spec](../specs/m2-kits/spec.md) and [plan](../specs/m2-kits/plan.md) approved 2026-11-25, worktree `~/workspace/geometrix/kits-f1` on `m2/kits-f1-bar-strike` |
 | **Next front** | The phases of **R**, **E-min** and **K**, one session each, in parallel (R: `sim` vocabulary, strategist, params, map UI; E-min: the end rule, end screen and replay; K: `packages/battle`, gambits, lab, battle screen). R's final balance pass runs after K's merge |
-| **Then** | **G — Groups and formations** (after K; design round done 2026-11-25, spec next: squads and the embodied creep, the team's roster and the Tab cycle, formations in the world and in battle, the side each DNA engages from, the battle bot's load experiment; lab first; **scope warning:** about R's size), then **P — The friends' playtest** (two teams: humans against humans, or co-op against the bot); after it, **E** (siege and repair) or **T** (more teams), chosen at P's checkpoint |
+| **Then** | **G — Groups and formations** (after K; spec approved and [plan](../specs/m2-groups/plan.md) drafted 2026-11-25: squads built with Ctrl and the embodied creep, the panel and the selection keys, formations in the world and in battle, the side each DNA engages from, the battle bot's load experiment; lab first; **scope warning:** about R's size), then **P — The friends' playtest** (two teams: humans against humans, or co-op against the bot); after it, **E** (siege and repair) or **T** (more teams), chosen at P's checkpoint |
 | **Waiting on the owner** | (1) [ADR-0009](../adr/0009-prediction-in-the-lab.md) (`Proposed`): prediction as a lab experiment option. (2) `gambits.meleeBerthSteps` 3 (provisional, lab F7). (3) K's checkpoint K1 when F5 ends. (4) Whenever the owner wants: PLAYTEST lab group 7 (the movement options) |
 | **Blockers** | None |
 
@@ -25,10 +25,10 @@
    (D1–D29). **F1 is done:** the pace harness (`--mult`, real minutes, the §7 targets table, `--shock`) and the
    baseline of the 72-hour world at ×6 (F1 record in the tasks): of the measured targets it misses the length (720
    real minutes), the crossing (3.6 min), the opening (first extra creep at real minute 212), exploring (124), the first
-   wanderer (10), the population (7/20 seeds) and the recovery (0/20 seeds back within 15 minutes; 15 never). **G's design round** is done (2026-11-25): squads (an order puts a free creep in the
-   player's squad), dominating picks the embodied creep (glow and name for all), the roster panel, Tab, the minimal
-   squad orders and the battle's keys 1–4, in [GDD 02](../gdd/02-creeps-and-domination.md),
-   [GDD 06](../gdd/06-battles.md) and [GDD 07](../gdd/07-autopilot.md); G's spec is next (`spec-slice`). The spec's starting point, from the round, in the GDD (01, 03, 05, 06, 07):
+   wanderer (10), the population (7/20 seeds) and the recovery (0/20 seeds back within 15 minutes; 15 never). **G's design round** is done (2026-11-25): squads (built with Ctrl; a plain order to a
+   free creep is one-shot), dominating (Shift+N) picks the embodied creep (glow and name for all), C's panel, the
+   selection keys, the minimal squad orders and the battle's commands through Z, in [GDD 02](../gdd/02-creeps-and-domination.md),
+   [GDD 06](../gdd/06-battles.md) and [GDD 07](../gdd/07-autopilot.md); G's [spec](../specs/m2-groups/spec.md) is approved (2026-11-25, D1–D28) and its [plan](../specs/m2-groups/plan.md) (P1–P15, F0–F7) waits for the owner; F1 starts after R's F2 and F3 are in `main`, F3 after K's merge. The spec's starting point, from the round, in the GDD (01, 03, 05, 06, 07):
    a 2-hour match through a shorter world at a moderate ×N with faster DNAs (sweeps with targets for 2 hours; at C2
    the economy gave a first extra creep at ~3 world hours, the first wanderer came at world hour 1 and the map was
    explored by hour 3); the wanderers early and regular; only the pace rescale against the snowball; the opening
