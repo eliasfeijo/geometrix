@@ -1,7 +1,8 @@
 // What a world creep takes into a battle (junction spec O-3, D2, D9, D10):
 // its whole HP points (at least 1), its max HP and capacity from the world's
 // params, its load, its DNA's preset (or the carrier's, entering as a flee)
-// and the normal reaction. And the battle's seed, derived from the world seed
+// and its team's bot difficulty as the reaction, normal without a bot (R plan
+// P8). And the battle's seed, derived from the world seed
 // and the stub id by an integer mix, so opening a battle never draws from the
 // world's rng (plan section 4).
 
@@ -10,6 +11,7 @@ import {
   presetGambits,
   type BattleSetup,
   type ParticipantSetup,
+  type Reaction,
 } from "@geometrix/battle";
 import {
   findFighter,
@@ -49,8 +51,19 @@ export function participantSetup(
       stance === "flee"
         ? presetGambits("carrier")
         : defaultGambits(fighter.dna),
-    reaction: "normal",
+    reaction: isWanderer(fighter)
+      ? "normal"
+      : teamReaction(state, fighter.team),
   };
+}
+
+/**
+ * The battle reaction of a team's creeps: the difficulty of its first bot
+ * player by id, or normal when the team has none (R plan P8).
+ */
+export function teamReaction(state: WorldState, team: number): Reaction {
+  const bot = state.players.find((p) => p.team === team && p.bot);
+  return bot?.difficulty ?? "normal";
 }
 
 /**

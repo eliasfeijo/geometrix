@@ -70,6 +70,7 @@ export const REJECT_TEXTS: Record<RejectReason | "disconnected", string> = {
   alreadyJoined: "Você já está neste mundo.",
   unknownTeam: "Esse time não existe.",
   teamFull: "Esse time já tem o máximo de humanos.",
+  humanDifficulty: "Só um bot tem dificuldade.",
   unknownPlayer: "Sua entrada no mundo ainda não foi processada.",
   unknownCreep: "Seu time não tem esse creep.",
   alreadyDominating: "Você já domina esse creep.",

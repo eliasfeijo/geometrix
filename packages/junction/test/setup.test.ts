@@ -1,11 +1,12 @@
 import { createBattle, presetGambits, defaultGambits } from "@geometrix/battle";
-import { capacity, windowAround, type Battle } from "@geometrix/sim";
+import { capacity, join, windowAround, type Battle } from "@geometrix/sim";
 import { describe, expect, test } from "vitest";
 import {
   battleHp,
   battleSeed,
   battleSetup,
   participantSetup,
+  teamReaction,
 } from "../src/setup.ts";
 import { creepOf, loadBattleParams, textWorld } from "./helpers.ts";
 
@@ -41,6 +42,20 @@ describe("the setups (junction O-3, D2, D9, D10)", () => {
     );
     creep.hp = 400;
     expect(battleHp(creep)).toBe(1);
+  });
+
+  test("the reaction is the team's first bot's difficulty, normal with no bot (R plan P8)", () => {
+    const world = textWorld(MAP);
+    const own = creepOf(world, 0, "square");
+    const other = creepOf(world, 1, "square");
+    expect(participantSetup(world, own, "fight").reaction).toBe("normal");
+    join(world, 1, 0, false);
+    join(world, 3, 0, true, "easy");
+    join(world, 5, 0, true, "normal");
+    join(world, 2, 1, true);
+    expect(participantSetup(world, own, "fight").reaction).toBe("easy");
+    expect(participantSetup(world, other, "flee").reaction).toBe("hard");
+    expect(teamReaction(world, 0)).toBe("easy");
   });
 
   test("the DNA's preset when fighting, the carrier's when fleeing", () => {

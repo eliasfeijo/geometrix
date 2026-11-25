@@ -94,7 +94,8 @@ export type WandererView = Pick<
 export type ForeignTeam = { id: number; core: Cell | null };
 
 /** Another team's player (spec D8): who plays, not when they dominated. */
-export type ForeignPlayer = Omit<Player, "lastDominateTick">;
+/** Another team's player: not its cooldown, nor its bot's difficulty (P8). */
+export type ForeignPlayer = Omit<Player, "lastDominateTick" | "difficulty">;
 
 export type TeamView = {
   tick: number;

@@ -13,6 +13,7 @@ import {
 import type { Params } from "../src/params.ts";
 import { collectorRules } from "../src/presets.ts";
 import { step } from "../src/step.ts";
+import { view } from "../src/view.ts";
 import type { WorldState } from "../src/world.ts";
 import { paramsWith, run, textWorld } from "./helpers.ts";
 
@@ -38,9 +39,9 @@ describe("join", () => {
     join(w, 2, 0, false);
     join(w, 7, 1, true);
     expect(w.players).toEqual([
-      { id: 2, team: 0, bot: false, lastDominateTick: null },
-      { id: 5, team: 1, bot: false, lastDominateTick: null },
-      { id: 7, team: 1, bot: true, lastDominateTick: null },
+      { id: 2, team: 0, bot: false, difficulty: null, lastDominateTick: null },
+      { id: 5, team: 1, bot: false, difficulty: null, lastDominateTick: null },
+      { id: 7, team: 1, bot: true, difficulty: "hard", lastDominateTick: null },
     ]);
   });
 
@@ -62,6 +63,32 @@ describe("join", () => {
     expect(joinRefusal(w, 1, 1, false)).toBe("alreadyJoined");
     expect(joinRefusal(w, 9, 2, false)).toBe("unknownTeam");
     expect(joinRefusal(w, 9, 1, false)).toBeNull();
+  });
+
+  test("a bot joins with its difficulty, hard by default; a human has none (R plan P8)", () => {
+    const w = textWorld(ROW);
+    expect(joinRefusal(w, 4, 0, true, "easy")).toBeNull();
+    expect(joinRefusal(w, 4, 0, false, "easy")).toBe("humanDifficulty");
+    join(w, 4, 0, true, "easy");
+    join(w, 6, 1, true);
+    join(w, 8, 1, false);
+    expect(w.players.map((p) => p.difficulty)).toEqual(["easy", "hard", null]);
+  });
+
+  test("the team sees its own bot's difficulty, not another team's", () => {
+    const w = textWorld(ROW);
+    join(w, 4, 0, true, "normal");
+    join(w, 6, 1, true, "easy");
+    expect(view(w, 0).players).toEqual([
+      {
+        id: 4,
+        team: 0,
+        bot: true,
+        difficulty: "normal",
+        lastDominateTick: null,
+      },
+      { id: 6, team: 1, bot: true },
+    ]);
   });
 });
 

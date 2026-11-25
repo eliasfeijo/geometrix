@@ -15,11 +15,17 @@ import { buildRoadOrder } from "./roads.ts";
 import type { Creep, Reply, WorldState } from "./world.ts";
 
 /** Player ids come from the server; players are kept ordered by id. */
+/** A bot's difficulty (R spec D26, plan P8); its battle reaction too. */
+export const DIFFICULTIES = ["easy", "normal", "hard"] as const;
+export type Difficulty = (typeof DIFFICULTIES)[number];
+
 export type Player = {
   id: number;
   team: number;
   /** A harness or server bot (spec section 5, F6 details): not a human. */
   bot: boolean;
+  /** A bot's difficulty (hard unless its join says); null for a human (P8). */
+  difficulty: Difficulty | null;
   /** Tick of the last accepted dominate, for the cooldown; null before any. */
   lastDominateTick: number | null;
 };
@@ -85,7 +91,8 @@ export function dominatedCreep(
   return state.creeps.find((c) => c.dominatedBy === playerId);
 }
 
-export type JoinRefusal = "alreadyJoined" | "unknownTeam" | "teamFull";
+export type JoinRefusal =
+  "alreadyJoined" | "unknownTeam" | "teamFull" | "humanDifficulty";
 
 /**
  * Why the player cannot join `team`, or null. A team takes at most
@@ -96,8 +103,11 @@ export function joinRefusal(
   playerId: number,
   team: number,
   bot: boolean,
+  difficulty?: Difficulty,
 ): JoinRefusal | null {
   if (findPlayer(state, playerId) !== undefined) return "alreadyJoined";
+  // Only a bot has a difficulty (P8).
+  if (!bot && difficulty !== undefined) return "humanDifficulty";
   if (state.teams[team] === undefined) return "unknownTeam";
   const humans = state.players.filter((p) => p.team === team && !p.bot);
   if (!bot && humans.length >= state.params.teams.maxHumans) return "teamFull";
@@ -109,8 +119,15 @@ export function join(
   playerId: number,
   team: number,
   bot: boolean,
+  difficulty?: Difficulty,
 ): void {
-  const player: Player = { id: playerId, team, bot, lastDominateTick: null };
+  const player: Player = {
+    id: playerId,
+    team,
+    bot,
+    difficulty: bot ? (difficulty ?? "hard") : null,
+    lastDominateTick: null,
+  };
   const at = state.players.findIndex((p) => p.id > playerId);
   state.players.splice(at < 0 ? state.players.length : at, 0, player);
 }

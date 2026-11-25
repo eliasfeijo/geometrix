@@ -451,7 +451,12 @@ const loggedCommand = z.object({
   playerId: count,
   command: z.union([
     clientCommand,
-    z.object({ type: z.literal("join"), team: count, bot: z.boolean() }),
+    z.object({
+      type: z.literal("join"),
+      team: count,
+      bot: z.boolean(),
+      difficulty: z.enum(["easy", "normal", "hard"]).optional(),
+    }),
     z.object({
       type: z.literal("battleExit"),
       battleId: id,
