@@ -1,12 +1,12 @@
 # M2 plan — Rebalance and pace
 
-**Status:** Draft · **Date:** 2026-11-25
+**Status:** Approved (2026-11-25) · **Date:** 2026-11-25
 **Spec:** [spec.md](spec.md) · **ADRs:** [0010](../../adr/0010-world-side-of-the-battle-contract.md) (the world side
 of the battle contract: the host and its paces), [0007](../../adr/0007-sim-events.md) (`sim` events),
 [0006](../../adr/0006-world-sync.md) (view deltas), [0004](../../adr/0004-persistence-sqlite-command-log.md) (log and
 snapshots), [0002](../../adr/0002-every-action-is-a-command.md) (command vocabulary)
 
-The decisions that need the owner's OK are marked **(P*n*)** and listed in §12.
+The decisions the owner approved with the plan (2026-11-25) are marked **(P*n*)** and listed in §12.
 
 ## 1. What the code does today and what changes
 
@@ -282,7 +282,7 @@ apps/client/src/
 - **Pauses abused:** no limit in R (D28); a human can freeze a battle with another team's human in it. The playtest
   is among friends; a limit is parked.
 
-## 12. Decisions for the owner
+## 12. Decisions (approved 2026-11-25)
 
 | # | Proposal | Alternative |
 |---|---|---|

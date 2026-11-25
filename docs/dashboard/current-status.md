@@ -6,21 +6,22 @@
 
 ## Now
 
-**Updated:** 2026-11-25 (K's spec approved, its plan drafted)
+**Updated:** 2026-11-25 (R's plan approved; K's plan drafted)
 
 | | |
 |---|---|
 | **Milestone** | **M2 — The ambush** ([ROADMAP](../ROADMAP.md)). M0, M1 and M1.5 ✅ |
-| **Slices** | A ✅ 2026-11-17 · B ✅ 2026-11-20 · D ✅ 2026-11-25 · **R — Rebalance and pace** (spec approved, plan draft), **E-min — The minimal end** (spec draft) and **K — The DNA kits** (spec approved 2026-11-25, plan draft) |
-| **In progress** | **R's plan draft**, waiting for the owner (the [R spec](../specs/m2-rebalance/spec.md) approved 2026-11-25); **G's design round** in a parallel session; the [E-min spec](../specs/m2-minimal-end/spec.md) draft waiting for the owner; **[K's plan](../specs/m2-kits/plan.md) draft**, waiting for the owner (the [K spec](../specs/m2-kits/spec.md) approved 2026-11-25) |
+| **Slices** | A ✅ 2026-11-17 · B ✅ 2026-11-20 · D ✅ 2026-11-25 · **R — Rebalance and pace** (spec and plan approved 2026-11-25, F1 next), **E-min — The minimal end** (spec draft) and **K — The DNA kits** (spec approved 2026-11-25, plan draft) |
+| **In progress** | **R's F1** (the pace harness) in a new session: the [R spec](../specs/m2-rebalance/spec.md) and [plan](../specs/m2-rebalance/plan.md) approved 2026-11-25, worktree `~/workspace/geometrix/rebalance-f1` on `m2/rebalance-f1-pace-harness`; **G's design round** in a parallel session; the [E-min spec](../specs/m2-minimal-end/spec.md) draft waiting for the owner; **[K's plan](../specs/m2-kits/plan.md) draft**, waiting for the owner (the [K spec](../specs/m2-kits/spec.md) approved 2026-11-25) |
 | **Next front** | The specs of **R**, **E-min** and **K** (`spec-slice` skill), one session each; they can run in parallel (R: `sim` params, autopilot, strategist, map UI; E-min: the end rule, end screen and replay; K: `packages/battle`, gambits, lab, battle screen). R's final balance pass runs after K's merge |
 | **Then** | **G — Groups and formations** (after K: formations in the world and in battle, the side each DNA engages from, the battle bot's load experiment; lab first), then **P — The friends' playtest** (two teams: humans against humans, or co-op against the bot); after it, **E** (siege and repair) or **T** (more teams), chosen at P's checkpoint |
-| **Waiting on the owner** | (1) The E-min spec's approval; [R's plan](../specs/m2-rebalance/plan.md) draft (P1–P15); [K's plan](../specs/m2-kits/plan.md) draft (P1–P10). (2) [ADR-0009](../adr/0009-prediction-in-the-lab.md) (`Proposed`): prediction as a lab experiment option. (3) `gambits.meleeBerthSteps` 3 (provisional, lab F7). (4) Whenever the owner wants: PLAYTEST lab group 7 (the movement options) |
+| **Waiting on the owner** | (1) The E-min spec's approval; [K's plan](../specs/m2-kits/plan.md) draft (P1–P10). (2) [ADR-0009](../adr/0009-prediction-in-the-lab.md) (`Proposed`): prediction as a lab experiment option. (3) `gambits.meleeBerthSteps` 3 (provisional, lab F7). (4) Whenever the owner wants: PLAYTEST lab group 7 (the movement options) |
 | **Blockers** | None |
 
 ### Next steps
 
-1. **R's plan** from the [approved spec](../specs/m2-rebalance/spec.md) (D1–D29, 2026-11-25, with the owner's review:
+1. **R's F1–F8** from the [approved plan](../specs/m2-rebalance/plan.md) ([tasks](../specs/m2-rebalance/tasks.md);
+   `implement-phase` skill), from the [approved spec](../specs/m2-rebalance/spec.md) (D1–D29, 2026-11-25, with the owner's review:
    the actors' list on a click, the hostile sign, the bot's difficulty and its encounter reactions, dropping the load,
    pausing a battle with P). **G's design round** runs in a parallel session (formations in the world and in battle,
    the side each DNA engages from, the battle bot's load experiment; [GDD 06](../gdd/06-battles.md),

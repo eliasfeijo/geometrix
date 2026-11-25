@@ -12,7 +12,7 @@ findings.
 | A — The encounter | M2 | [m2-encounter](m2-encounter/spec.md) | ✅ Done (2026-11-17) |
 | B — The battle lab | M2 | [m2-battle-lab](m2-battle-lab/spec.md) | ✅ Done (2026-11-20) |
 | D — The junction | M2 | [m2-junction](m2-junction/spec.md) | ✅ Done (2026-11-25) |
-| R — Rebalance and pace | M2 | [m2-rebalance](m2-rebalance/spec.md) | Spec approved (2026-11-25); plan draft, waiting for the owner |
+| R — Rebalance and pace | M2 | [m2-rebalance](m2-rebalance/spec.md) | Spec and plan approved (2026-11-25); F1 next |
 | E-min — The minimal end | M2 | [m2-minimal-end](m2-minimal-end/spec.md) | Spec draft (2026-11-25), waiting for the owner's approval |
 | K — The DNA kits | M2 | [m2-kits](m2-kits/spec.md) | Spec approved (2026-11-25); plan draft, waiting for the owner |
 | G — Groups and formations | M2 | — | Design round next (a parallel session); after K, before P |

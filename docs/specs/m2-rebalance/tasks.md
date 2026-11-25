@@ -1,13 +1,13 @@
 # M2 tasks — Rebalance and pace
 
-**Status:** F0 in progress (the plan waits for the owner). Branches `m2/rebalance-f<n>-<slug>` (skill `commit`).
+**Status:** F0 done (2026-11-25); F1 next. Branches `m2/rebalance-f<n>-<slug>` (skill `commit`).
 **Spec:** [spec.md](spec.md) · **Plan:** [plan.md](plan.md)
 
 ## F0 — Spec and plan
 
 - [x] Design round with the owner (2026-11-25), recorded in GDD 01, 03, 05, 06 and 07
 - [x] Spec approved (2026-11-25), with the owner's review (D23–D29) and slice G placed after K
-- [ ] **Checkpoint:** the owner approves the plan (P1–P15)
+- [x] **Checkpoint:** the owner approves the plan (P1–P15) (2026-11-25)
 
 ## F1 — Baseline and the pace harness
 
