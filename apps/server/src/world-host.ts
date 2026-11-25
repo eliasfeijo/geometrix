@@ -47,6 +47,7 @@ import {
   step,
   strategistActs,
   strategistCommands,
+  threatPass,
   validate,
   view,
   type Command,
@@ -336,19 +337,20 @@ export class WorldHost {
   tick(): void {
     if (this.status === "ended") return;
     const { state } = this;
-    if (strategistActs(state.tick)) {
-      for (const bot of this.bots) {
-        if (findPlayer(state, bot.playerId) === undefined) continue;
-        const seen = view(state, bot.team);
-        for (const command of strategistCommands(
-          "balanced",
-          seen,
-          state.map,
-          state.params,
-        )) {
-          this.submit(bot.playerId, command);
-        }
-      }
+    // The full decision once a minute; between them, the hard bots' threat
+    // pass on every tick (R spec D27, plan P9), as the harness runs them.
+    const acts = strategistActs(state.tick);
+    for (const bot of this.bots) {
+      if (findPlayer(state, bot.playerId) === undefined) continue;
+      const commands = acts
+        ? strategistCommands(
+            "balanced",
+            view(state, bot.team),
+            state.map,
+            state.params,
+          )
+        : threatPass(state, bot.team);
+      for (const command of commands) this.submit(bot.playerId, command);
     }
     const players = this.pending;
     this.pending = [];
