@@ -17,7 +17,7 @@ import {
 } from "./battle.ts";
 import { cargoTotal } from "./economy.ts";
 import { creepRef, emit, type EventLog } from "./events.ts";
-import { manhattan, Terrain, type Cell } from "./map.ts";
+import { manhattan, Terrain, type Cell, type GameMap } from "./map.ts";
 import { CELL_COST, movePointsPerTick } from "./movement.ts";
 import { halt } from "./orders.ts";
 import { findPath } from "./pathfinding.ts";
@@ -226,8 +226,29 @@ export function decideWanderers(state: WorldState): void {
 }
 
 /**
- * The wanderer's path to `target` on the real map, from its cache while the
- * target is the same cell.
+ * The real map with every core zone's cells as rock: the wanderers' routes
+ * go around the zones instead of stopping at their edge. Derived from the
+ * map and the cores, which a world never changes; a restore rebuilds it.
+ */
+const zonedMaps = new WeakMap<GameMap, GameMap>();
+
+function wandererMap(state: WorldState): GameMap {
+  const cached = zonedMaps.get(state.map);
+  if (cached !== undefined) return cached;
+  const { map } = state;
+  const terrain = map.terrain.map((t, i) =>
+    inAnyCoreZone(state, { x: i % map.width, y: Math.floor(i / map.width) })
+      ? Terrain.rock
+      : t,
+  );
+  const zoned: GameMap = { ...map, terrain };
+  zonedMaps.set(state.map, zoned);
+  return zoned;
+}
+
+/**
+ * The wanderer's path to `target` on the real map around the core zones,
+ * from its cache while the target is the same cell.
  */
 function wandererPath(
   state: WorldState,
@@ -238,7 +259,7 @@ function wandererPath(
   if (wanderer.path !== null && wanderer.path.target === index) {
     return wanderer.path.cells;
   }
-  const cells = findPath(state.map, wanderer, target, state.params);
+  const cells = findPath(wandererMap(state), wanderer, target, state.params);
   wanderer.path =
     cells === null
       ? null
@@ -250,8 +271,9 @@ type Walk = "arrived" | "moving" | "stuck";
 
 /**
  * A step of the creeps' movement (orders.ts walk) on the real map at the
- * circle's speed. It never enters a core zone (owner, 2026-11-25): it stops
- * at its edge instead.
+ * circle's speed. It never enters a core zone (owner, 2026-11-25): its
+ * route goes around them, and a target it cannot reach without entering
+ * one is "stuck".
  */
 function walkWanderer(
   state: WorldState,

@@ -207,6 +207,22 @@ describe("roaming and targets (W-2, owner 2026-11-25)", () => {
     expect(wanderer.order).toEqual({ type: "approach", targetId: out.id });
   });
 
+  test("its route goes around a core zone instead of stopping at its edge", () => {
+    const w = world();
+    // From (9, 0) to (0, 9) the shortest routes cross core A's zone
+    // (x + y <= 8); the wanderer walks along its edge instead.
+    const wanderer = addWanderer(w, 9, 0, {
+      order: { type: "roam", x: 0, y: 9 },
+    });
+    let arrived = false;
+    for (let i = 0; i < 400 && !arrived; i++) {
+      step(w, []);
+      expect(wanderer.x + wanderer.y).toBeGreaterThan(8);
+      arrived = wanderer.x === 0 && wanderer.y === 9;
+    }
+    expect(arrived).toBe(true);
+  });
+
   test("it joins a battle with a team in sight, on the wanderers' side", () => {
     const w = world();
     const a = place(creepOf(w, 0, "square"), 15, 4);
