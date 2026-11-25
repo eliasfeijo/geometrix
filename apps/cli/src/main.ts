@@ -14,6 +14,11 @@ import {
 import { parseBattleParams } from "@geometrix/battle";
 import { BATTLE_FILES, battleSweep, writeBattleSweep } from "./battle.ts";
 import { battleVerify, verifyLogFile } from "./battle-verify.ts";
+import {
+  junctionMatrix,
+  MATRIX_FILES,
+  writeMatrix,
+} from "./junction-matrix.ts";
 import { measureNet, NET_FILES, netVerdicts, writeNet } from "./net.ts";
 import { renderReport } from "./report.ts";
 import { readRun, RUN_FILES, runId, simulate, writeRun } from "./sim.ts";
@@ -75,7 +80,18 @@ commands:
              --seeds <list>      default 1,42,649
              --params <file>     default params/battle.json
              --log <file>        instead, replay a log exported by the lab
-                                 and compare with its finalHash`;
+                                 and compare with its finalHash
+  junction the junction's battles without the bots (M2 junction, C1-2):
+           geo junction matrix: on each seed's world and a battle cell in it,
+           every aggressor DNA against every victim DNA, the victim empty or
+           full, fighting or fleeing, built by the junction's battleSetup and
+           auto-resolved; writes runs/<id>/junction.md and junction.csv
+             --seeds <list>      default 1-100
+             --set <path=v1,...> run the matrix for each value of one sim
+                                 parameter, e.g. battle.zone.insetPermille
+             --params <file>     default params/default.json
+             --battle-params <file>  default params/battle.json
+             --out, --id         as in sim`;
 
 export type Output = {
   log(line: string): void;
@@ -437,6 +453,67 @@ function runBattle(args: string[], out: Output): number {
   }
 }
 
+function runJunctionMatrix(args: string[], out: Output): number {
+  const { values } = parseArgs({
+    args,
+    options: {
+      seeds: { type: "string", default: "1-100" },
+      set: { type: "string" },
+      params: { type: "string" },
+      "battle-params": { type: "string" },
+      out: { type: "string", default: "runs" },
+      id: { type: "string" },
+    },
+    strict: true,
+  });
+  const seeds = parseSeeds(values.seeds);
+  const set = values.set === undefined ? null : parseSet(values.set);
+  const params = loadParams(values.params ?? DEFAULT_PARAMS);
+  const battleFile = values["battle-params"];
+  const battleParams = parseBattleParams(
+    JSON.parse(readFileSync(battleFile ?? BATTLE_PARAMS, "utf8")),
+  );
+  const id = values.id ?? `${runId(seeds[0]!).replace(/-s\d+$/, "")}-junction`;
+  const dir = join(values.out, id);
+  if (existsSync(dir)) throw new UsageError(`run already exists: ${dir}`);
+
+  out.log(
+    `geo junction matrix: seeds ${seeds[0]}-${seeds.at(-1)}` +
+      (set === null ? "" : `, ${set.path}=${set.values.join(",")}`),
+  );
+  const result = junctionMatrix(
+    {
+      id,
+      params,
+      paramsSource: paramsSource(values.params),
+      battleParams,
+      battleParamsSource: battleParamsSource(battleFile),
+      seeds,
+      set,
+    },
+    out.clock,
+    (line) => out.log(line),
+  );
+  writeMatrix(dir, result);
+  const battles = result.runs.reduce(
+    (n, run) => n + [...run.records.values()].reduce((m, r) => m + r.length, 0),
+    0,
+  );
+  out.log(`  ${battles} battles in ${result.wallSeconds.toFixed(1)} s`);
+  out.log(`  ${join(dir, MATRIX_FILES.report)}`);
+  return 0;
+}
+
+function runJunction(args: string[], out: Output): number {
+  const [sub, ...rest] = args;
+  switch (sub) {
+    case "matrix":
+      return runJunctionMatrix(rest, out);
+    default:
+      throw new UsageError(`unknown junction command: ${String(sub)}`);
+  }
+}
+
 /** Runs the CLI and returns the exit code: 0 ok, 1 check failed, 2 usage. */
 export function run(argv: string[], out: Output = console): number {
   const [command, ...args] = argv;
@@ -454,6 +531,8 @@ export function run(argv: string[], out: Output = console): number {
         return runNet(args, out);
       case "battle":
         return runBattle(args, out);
+      case "junction":
+        return runJunction(args, out);
       case undefined:
       case "help":
       case "--help":

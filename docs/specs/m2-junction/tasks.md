@@ -185,7 +185,7 @@ again; the strategist unchanged until then (C1-4). Interpretations 2–6 stand; 
 
 ## F6 — The wanderers (runs after F3: C1-1)
 
-- [ ] The junction matrix (C1-2): `geo junction matrix`, battles auto-resolved from real world setups and arenas, DNA ×
+- [x] The junction matrix (C1-2): `geo junction matrix`, battles auto-resolved from real world setups and arenas, DNA ×
       DNA, loaded or empty, fight or flee (carrier), seeds 1–100; wins, deaths, escapes and durations per cell
 - [ ] The zones' distance to the border as a param (`battle.zone`), its value from the matrix (C1-3)
 - [ ] `Wanderer`, `state.wanderers`, the `wanderers` params (stats, band, curve, cap)

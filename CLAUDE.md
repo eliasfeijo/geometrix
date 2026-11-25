@@ -40,6 +40,7 @@ Node 26 (`.nvmrc`). Node runs `.ts` directly; only the client has a build (Vite)
 | `npm run geo -- verify --seed 42` | Determinism: 2 runs + snapshot → restore must give the same hash |
 | `npm run geo -- net --seed 42 --days 3` | Bandwidth and CPU of the view deltas against the M1.5 spec §7 targets, with the diff property on every tick. Report in `runs/<id>/net.md` |
 | `npm run geo -- battle sweep` | The AI battle matrix (presets × arenas × seeds 1–100, ~45 s): wins, duration, inactivity and the 3 × 3 cost against the target. Report in `runs/<id>/battle.md` |
+| `npm run geo -- junction matrix` | The junction's battles without the bots (seeds 1–100, ~10 s): on each seed's world, every aggressor DNA × victim DNA, empty or full, fighting or fleeing, built by `battleSetup`; `--set path=v1,v2` compares a param's values. Report in `runs/<id>/junction.md` |
 | `npm run geo -- battle verify` | Battle determinism (seeds 1, 42, 649); `--log <file>` replays a log exported by the lab and checks the hash |
 | `npm run lab` | The battle lab (`lab.html`, Vite): the battle in a worker, simulated network, blind sessions |
 | `npm run server` | Server at `http://localhost:8080` (`GEO_PORT`, `GEO_DB`, `GEO_PARAMS`); serves the client build |
