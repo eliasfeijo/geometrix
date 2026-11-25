@@ -70,8 +70,8 @@ export type TeamPace = {
   /** Of those, the battles some creep joined after the opening. */
   battlesWithJoin: number;
   /**
-   * The team's joins by the help rule or a follow; null until the world has
-   * them (R F2) and the harness tells them apart (R F3).
+   * The team's joins on a side it already had (the help rule, a follow or
+   * the defense); null when the run does not tell them apart.
    */
   helpJoins: number | null;
   /** First sample with creeps + production at the population cap, or null. */
@@ -270,10 +270,12 @@ export class PaceTracker {
     return Math.floor((seen * 1000) / this.reachableCells);
   }
 
+  /** `helpJoins`: each team's, from the encounter tally; null if not known. */
   finish(
     state: WorldState,
     samples: readonly MetricsSample[],
     wallSeconds: number,
+    helpJoins: readonly number[] = [],
   ): PaceFacts {
     const { params } = state;
     const tickSeconds = params.world.tickSeconds;
@@ -302,7 +304,7 @@ export class PaceTracker {
         exploredPermille: this.seenPermille(state, team.id),
         battles: battles.size,
         battlesWithJoin: [...battles].filter((b) => this.joined.has(b)).length,
-        helpJoins: null,
+        helpJoins: helpJoins[i] ?? null,
         capTick: capSample?.tick ?? null,
         creepsAtEnd: creeps(last.teams[i]!),
         lateMateria:

@@ -18,6 +18,7 @@ import {
   type StrategistId,
   type WorldState,
 } from "@geometrix/sim";
+import { strategistChoices } from "./choices.ts";
 import { EncounterTracker, type EncounterTally } from "./encounters.ts";
 import { runBots, type LoggedCommand } from "./harness.ts";
 import { PaceTracker, type PaceFacts } from "./pace.ts";
@@ -125,6 +126,12 @@ export function simulate(
   );
   const wallSeconds = (clock() - started) / 1000;
   const encounters = tracker.finish(state);
+  encounters.choices = strategistChoices(
+    log,
+    state.players,
+    strategists.length,
+    params,
+  );
   return {
     meta: {
       id: options.id,
@@ -155,7 +162,12 @@ export function simulate(
     params,
     samples,
     encounters,
-    pace: pace!.finish(state, samples, wallSeconds),
+    pace: pace!.finish(
+      state,
+      samples,
+      wallSeconds,
+      encounters.teams.map((t) => t.helpJoins),
+    ),
     log,
     state,
   };

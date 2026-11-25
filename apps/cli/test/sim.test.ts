@@ -140,6 +140,19 @@ describe("runs/<id>/", () => {
     expect(renderReport(data)).toBe(file(RUN_FILES.report));
   });
 
+  test("the bots' choices agree with what the world shows of them", () => {
+    const { encounters, pace } = result;
+    const choices = encounters.choices!;
+    for (const t of encounters.teams) {
+      const c = choices[t.team]!;
+      // A drop comes only from a drop response, and not every one lands.
+      expect(t.drops).toBeLessThanOrEqual(c.dropFlee + c.dropFight);
+      expect(t.helpJoins).toBeLessThanOrEqual(t.joins);
+      expect(c.helpers).toBeGreaterThanOrEqual(c.help);
+      expect(pace.teams[t.team]!.helpJoins).toBe(t.helpJoins);
+    }
+  });
+
   test("report.md covers the spec section 7 metrics", () => {
     const report = file(RUN_FILES.report);
     for (const heading of [
@@ -147,6 +160,7 @@ describe("runs/<id>/", () => {
       "## Metas do ritmo (spec R §7)",
       "## Resumo por time",
       "## Encontros",
+      "## Estrategista",
       "## Linha do tempo",
       "## Depósitos",
       "## Fatos para a revisão",
@@ -184,6 +198,12 @@ describe("runs/<id>/", () => {
       "Batalhas abertas:",
       "Catado de despojos",
       "Despojos:",
+      // The strategist (R spec §7, F3).
+      "Ameaças: ajuda / pagar / largar e fugir / largar e lutar",
+      "Entradas no lado do próprio time",
+      "Postos a seguir (grupo de incursão ou escolta)",
+      "Postos na defesa da zona do Núcleo",
+      "Largou a carga",
       "HP médio dos creeps no fim",
       "| Abordou / abordado | Mortes | HP médio |",
       "- Diferença entre os times no fim:",

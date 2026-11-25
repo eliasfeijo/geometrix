@@ -5,6 +5,7 @@
 // here goes into the state or its hash.
 
 import type { FinishedBattle } from "@geometrix/junction";
+import type { TeamChoices } from "./choices.ts";
 import {
   DNAS,
   inCoreZone,
@@ -118,6 +119,13 @@ export type TeamEncounters = {
   battles: Record<BattleResult, number>;
   /** Creeps of the team that joined a battle already open. */
   joins: number;
+  /**
+   * Of those, the joins on a side the team already had (a teammate fighting
+   * there): the help rule, a follow or the defense (R spec §7).
+   */
+  helpJoins: number;
+  /** The team's creeps that dropped their load into a spoil (D27). */
+  drops: number;
   /** Creeps of the team out by the arena's border, by DNA. */
   escapes: Record<Dna, number>;
   deaths: Record<Dna, number>;
@@ -154,6 +162,11 @@ export type EncounterTally = {
     leftCargo: Stock;
   };
   timeline: EncounterMark[];
+  /**
+   * The bots' choices from the command log (R F3); absent in a run written
+   * before them.
+   */
+  choices?: TeamChoices[];
 };
 
 const zeroStock = (): Stock => ({ materia: 0, cristal: 0 });
@@ -176,6 +189,8 @@ function teamEncounters(team: number): TeamEncounters {
     reactionsBy: countBy(DECIDERS),
     battles: countBy(BATTLE_RESULTS),
     joins: 0,
+    helpJoins: 0,
+    drops: 0,
     escapes: countBy(DNAS),
     deaths: countBy(DNAS),
     kills: 0,
@@ -340,6 +355,8 @@ export class EncounterTracker {
           if (battle !== undefined) {
             if (event.side === battle.sides.length) {
               battle.sides.push(event.creep.team);
+            } else if (event.creep.team !== null) {
+              teams[event.creep.team]!.helpJoins += 1;
             }
             this.enter(state, battle, event.creep);
           }
@@ -411,6 +428,9 @@ export class EncounterTracker {
           break;
         case "wandererBorn":
           wanderers.born += 1;
+          break;
+        case "dropped":
+          if (event.creep.team !== null) teams[event.creep.team]!.drops += 1;
           break;
         case "born":
           break;

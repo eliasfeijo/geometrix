@@ -203,7 +203,7 @@ more battles, from help and the bot's hard reaction, not overhead. F3/F7 should 
 - [x] The threat pass and the risk (D27, S-7); the harness runs it every tick like the server will
 - [x] `WorldHost`: the threat pass every tick for hard bots (moved from F5, see "Running the phases")
 - [x] Any number of teams in the new rules (D18, S-5)
-- [ ] The strategist's metrics in the reports: help joins, groups, defense, payments, drops, the D27 choices
+- [x] The strategist's metrics in the reports: help joins, groups, defense, payments, drops, the D27 choices
 - [ ] **Checkpoint C1:** bot × bot at each difficulty and hard against easy, the 72-hour world at ×6 in real time
 
 ## F4 — The balance pass
