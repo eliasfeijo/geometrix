@@ -1,8 +1,16 @@
 // The network panel (M1.5 spec D8): with ?net=1 in the URL, a corner of the
 // screen tells what the team stream is doing, to check it without DevTools.
-// Not game UI: small text, no interaction.
+// Not game UI: small text. Its one control is the battle screen's movement
+// drawing (junction D19), the lab's four options, until PLAYTEST group 7 and
+// P choose one; with it, the battle inputs' round trip.
 
+import type { Signal } from "@preact/signals";
 import { useEffect, useState } from "preact/hooks";
+import {
+  MOTION_LABELS,
+  MOTION_MODES,
+  type MotionMode,
+} from "./battle/motion.ts";
 import { BYTES_WINDOW_MS, type NetStats } from "./net-stats.ts";
 
 const REFRESH_MS = 1000;
@@ -19,7 +27,12 @@ export function keepNetPanel(search: string, current: string): string {
   return `?${params.toString()}`;
 }
 
-export function NetPanel({ stats }: { stats: NetStats }) {
+export function NetPanel(props: {
+  stats: NetStats;
+  motion: Signal<MotionMode>;
+  /** The battle inputs' round trip (ms), 0 before the first one. */
+  battleRttMs(): number;
+}) {
   const [now, setNow] = useState(() => performance.now());
   useEffect(() => {
     const timer = window.setInterval(
@@ -28,7 +41,39 @@ export function NetPanel({ stats }: { stats: NetStats }) {
     );
     return () => window.clearInterval(timer);
   }, []);
-  return <NetLines stats={stats} now={now} />;
+  const { stats, motion } = props;
+  const rtt = props.battleRttMs();
+  return (
+    <div class="net-panel" aria-label="Rede">
+      <NetLines stats={stats} now={now} />
+      <dl>
+        <div>
+          <dt>batalha</dt>
+          <dd>{rtt === 0 ? "—" : `ida e volta ${Math.round(rtt)} ms`}</dd>
+        </div>
+        <div>
+          <dt>movimento</dt>
+          <dd>
+            <select
+              value={motion.value}
+              title="Como a tela de batalha desenha os creeps andando (D19)"
+              onChange={(e) => {
+                motion.value = e.currentTarget.value as MotionMode;
+                // The battle keeps the arrows, not the select.
+                e.currentTarget.blur();
+              }}
+            >
+              {MOTION_MODES.map((mode) => (
+                <option key={mode} value={mode}>
+                  {MOTION_LABELS[mode]}
+                </option>
+              ))}
+            </select>
+          </dd>
+        </div>
+      </dl>
+    </div>
+  );
 }
 
 /** The panel's text at `now`; separate from the clock for tests. */
@@ -50,7 +95,7 @@ export function NetLines({ stats, now }: { stats: NetStats; now: number }) {
     ["hash", `✓ ${hashes.ok} · ✗ ${hashes.mismatch}`],
   ];
   return (
-    <dl class="net-panel" aria-label="Rede">
+    <dl>
       {rows.map(([label, value]) => (
         <div key={label}>
           <dt>{label}</dt>

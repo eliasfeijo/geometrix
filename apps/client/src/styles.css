@@ -427,9 +427,19 @@ h3 {
   pointer-events: none;
 }
 
-.net-panel > div {
+.net-panel dl {
+  margin: 0;
+}
+
+.net-panel dl > div {
   display: flex;
   gap: 8px;
+}
+
+.net-panel select {
+  pointer-events: auto;
+  font: inherit;
+  padding: 0 2px;
 }
 
 .net-panel dt {

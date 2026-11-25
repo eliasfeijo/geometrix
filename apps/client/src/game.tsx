@@ -105,7 +105,13 @@ export function Game({ session, onLeave, onInvalid }: Props) {
         header={<TopBar session={session} onLeave={onLeave} />}
         orders
       />
-      {showNetPanel(window.location) && <NetPanel stats={store.net} />}
+      {showNetPanel(window.location) && (
+        <NetPanel
+          stats={store.net}
+          motion={store.motion}
+          battleRttMs={() => control.rttMs}
+        />
+      )}
     </>
   );
 }

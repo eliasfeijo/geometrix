@@ -340,7 +340,7 @@ their rows); a real-time battle tick with its frame 22–33 µs, against the 50 
 - [x] The reaction panel with pay and refuse only; the mid-fight flee button removed (done with F2's
       vocabulary change, `88ddc6f`; tested in `encounter-actions.test.ts`)
 - [x] The chronicle sentences for the new events
-- [ ] The movement drawing selector in the `?net=1` panel (D19)
+- [x] The movement drawing selector in the `?net=1` panel (D19)
 
 ## F7 — Soak and playtest
 

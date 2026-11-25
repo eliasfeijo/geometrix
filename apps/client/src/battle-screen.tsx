@@ -55,6 +55,13 @@ export function BattleScreen() {
   const live = useRef({ played, screen });
   live.current = { played, screen };
 
+  // Another movement drawing starts its own glides (D19).
+  const motion = store.motion.value;
+  useEffect(() => {
+    stepGlides.current.reset();
+    predictor.current.reset();
+  }, [motion]);
+
   // A new battle on the screen starts from nothing held.
   useEffect(() => {
     input.current = new KeyboardInput();
