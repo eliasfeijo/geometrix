@@ -1,6 +1,6 @@
 # M2 tasks — Rebalance and pace
 
-**Status:** F0 done (2026-11-25); F1 next. Branches `m2/rebalance-f<n>-<slug>` (skill `commit`).
+**Status:** F0 and F1 done (2026-11-25); F2 next. Branches `m2/rebalance-f<n>-<slug>` (skill `commit`).
 **Spec:** [spec.md](spec.md) · **Plan:** [plan.md](plan.md)
 
 ## F0 — Spec and plan
@@ -17,7 +17,78 @@
 - [x] `apps/cli/src/pace.ts`: the §7 metrics (crossing, the first extra creep, exploring, the wanderers, population,
       fights, the creep gap) and the targets table with pass or fail (P13)
 - [x] The recovery scenario: `--shock team:count@minute`, not replayable, refused by `geo verify` (P12)
-- [ ] Baseline: `geo sim` and `geo sweep` (seeds 1–20, the full match) on the 72-hour world at ×6, quoted here
+- [x] Baseline: `geo sim` and `geo sweep` (seeds 1–20, the full match) on the 72-hour world at ×6, quoted here
+
+### F1 record
+
+**Baseline** (`main` at `aa0edb9` plus F1's harness, which changes no world rule; `SIM_VERSION` 11;
+`params/world-72h.json` read at ×6, the pace checkpoint C2 played; `runs/f1-baseline-72h`,
+`runs/f1-baseline-72h-shock`, `runs/f1-baseline-sim-s42-1`/`-2`, not versioned):
+
+- **`geo sim`, seed 42, the full 72-hour match (12 real hours at ×6):** 12.5 s and 13.3 s (two runs alone), hash
+  `70582f0f…`; **tick cost 48.4 and 51.4 µs per world tick** (the §7 tick-cost target's baseline: F4 onwards compares
+  with ~50 µs). 15 / 10 creeps at the end, 129,712 / 99,263 matéria delivered; the first extra creep at real minute
+  175 / 152; the map 80% seen at real minute 31; 218 battles (1.8 / 1.2 per team per 10 real minutes, 6 / 4 with a
+  join); the first wanderer at real minute 10, 22 born, 4 alive at once.
+- **`geo sweep`, seeds 1–20, the full match** (`--set world.multiplier=6`, a value that changes no rule), the §7
+  targets at ×6:
+
+  | Criterion | Target | Measured | |
+  |---|---|---|---|
+  | Length (PA-1) | 115–125 real min | 720 min on every seed | ❌ |
+  | Extortion window (PA-3) | ≥ 10 real s | 10 s | ✅ |
+  | Crossing (▲, core to core, no roads) | 1.5–2.5 min | mean 3.6 (2.6–4.7), 0/20 | ❌ |
+  | The opening (each team's first extra creep) | min 8–15 | mean 212 (142–336), 0/20 | ❌ |
+  | Exploring (80% of the reachable map) | min 20–60 | mean 124 (35–214), 2/20 | ❌ |
+  | First wanderer | min 4–6 | 10 on every seed | ❌ |
+  | A wanderer alive after the first | ≥ 70% | 99.8% | ✅ |
+  | Wanderers alive at once | ≤ 4 | 4 | ✅ |
+  | Battles per team per 10 real min | reported | 1.9 (1.1–3.2); 2.1 participants per battle | — |
+  | Help joins | ≥ 1 per team per 30 min | not measured before F2/F3 | — |
+  | Both teams with creeps and delivering in the last 10 min | every seed | 20/20 | ✅ |
+  | Creep gap at the end | median ≤ 3 | median 1.5 (0–9) | ✅ |
+  | Creeps per team at the end | 10–24 | 7/20 seeds; mean 13 (3.5–30) | ❌ |
+  | Population cap | not before min 90 | reached on 1 seed, at min 636 | ✅ |
+
+  The upgrade at real minute 16 (12–26); the first matéria at real minute 1, the first cristal at 7 (4–11); the
+  enemy core seen at real minute 47 (3–126); 27.9 deaths per team; 46% of the extortions paid.
+- **Recovery** (`--shock 0:4@30`, seeds 1–20): team 0 back to its count within 15 real minutes on **0/20** seeds; 5
+  came back, after 274–499 real minutes; 15 never did. Target ≥ 18/20.
+
+**What the harness does now** (for F2 onwards):
+
+- `world.multiplier` is in the params schema (`params/default.json` 6, still the 72-hour world until F4;
+  `params/world-72h.json` the same numbers, kept for the 3-day hypothesis; `test/params.json` 6). The sim never reads
+  it. The lobby and `dev:multi` defaulting to it are F5/F6's tasks.
+- `geo sim` and `geo sweep` take `--mult` (default `world.multiplier`; a sweep defaults to each variant's, so
+  `--set world.multiplier=6,8,12` compares the ×N candidates on one world). report.md gives each moment in world and
+  real time; `metrics.csv` has `realMinutes`; the sweep adds a real-minutes row under each moment.
+- `apps/cli/src/pace.ts`: `PaceTracker` (fed by `simulate` with the encounter tracker), `pace.json` in each run,
+  the targets table at the top of report.md and per value in the sweep (`TARGETS` holds the §7 thresholds, P13),
+  the pace columns in `sweep.csv`. `TeamPace.helpJoins` is null: F2/F3 fill it when the world can tell a help or a
+  follow join apart. The bot's posture, the difficulty, the D27 choices and the drops are F3's metrics.
+- `apps/cli/src/shock.ts`: `--shock t:n@m` on `geo sim` and `geo sweep`; `geo verify` refuses it.
+- `apps/cli/src/format.ts` holds the report formatters (a refactor, so `pace.ts` and `report.ts` do not import each
+  other). The server's soak rebuild test got an explicit 30 s timeout (it went past 5 s under parallel load).
+
+**Interpretations to validate in the playtest** (harness details the plan leaves open):
+
+1. The reachable map is every passable cell 4-connected to team 0's core; a team's explored share counts the
+   reachable cells it has seen, sampled each world minute.
+2. The crossing is the cheapest path's cost on the map as generated (no roads) from team 0's core to team 1's, for
+   an empty triangle, by the path cost's own scale (not the per-tick movement points).
+3. The first extra creep is the team's first `born` event (the starting creeps emit none).
+4. "Delivering matéria at the end" is matéria delivered in the run's last 10 real minutes.
+5. Battles per team are the battles the team had a side in, at the opening or by a join; "with a join" means some
+   creep joined after the opening.
+6. "A wanderer alive during 70% of the match after the first" counts ticks from the first birth to the end.
+7. The shock lands after the tick of its real minute, once that tick's metrics are taken; "free" is outside an
+   encounter and a battle; the highest HP is the absolute HP; the killed load becomes spoils; "back to its count" is
+   the first tick with the team's creeps (in battle or not) at the count before the shock.
+8. "Marked not replayable": a shocked run writes no `replay.json` (the client's replay would show a hash mismatch),
+   and its run.json and report.md name the shock.
+9. Over the seeds a target passes when it holds on every seed, except the creep gap (the median) and the recovery
+   (90% of the seeds).
 
 ## F2 — The world vocabulary
 
