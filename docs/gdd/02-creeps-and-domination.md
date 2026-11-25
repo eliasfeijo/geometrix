@@ -95,7 +95,8 @@
   - **A player who disconnects keeps the squad:** the embodied creep goes back to its autopilot rules, the others keep
     following it, and on reconnecting everything is as it was.
   - **The bots' strategists lead several squads**, how many and how they behave by the difficulty, configurable
-    ([07](07-autopilot.md)).
+    ([07](07-autopilot.md)). **A bot's squad shows its symbol but no glow** (owner, G's spec review, 2026-11-25): the
+    glow means a human plays that creep.
 - **The team's roster** (owner, slice G's design round, 2026-11-25): a key toggles a **fixed panel** with the list of
   the team's creeps, which stays open while the player clicks its actions (Esc closes it). Each line has actions:
   **select, dominate, center on the map**. Tab stays free for the cycle above.

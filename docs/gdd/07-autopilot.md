@@ -107,7 +107,8 @@
   [02](02-creeps-and-domination.md)):
   - **the squad's other creeps follow the embodied creep in formation**, the default formation by DNA above; an
     **individual order detaches a member**, which goes back to the formation when the order is done. While in a
-    squad, a creep does not run its autopilot rules; released, it goes back to them;
+    squad, a creep does not run its autopilot rules; released, it goes back to them. **Each member walks at its own
+    pace** (owner, G's spec review, 2026-11-25): the squad does not slow down to its slowest member;
   - **the squad's orders, a minimal set for P:** **follow in formation** (the default), **hold position**, **attack a
     target** (the whole squad engages, each DNA from its side: the square from any direction, the triangles by the
     flanks, the circle from the side of the ally with the highest HP) and **release**. Choosable formation shapes

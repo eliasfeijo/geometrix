@@ -149,12 +149,15 @@
   [02](02-creeps-and-domination.md)):
   - **the squad decides who commands a participant:** among the players active in the battle, the **squad's leader
     has priority** over its creeps. When two players of a team each embody a creep in the same battle and their
-    followers come in, each player commands their own squad;
+    followers come in, each player commands their own squad. With the leader not playing in that battle, another
+    player of the team may play one of its creeps on loan; **when the leader comes in, the loan ends at once** (owner,
+    G's spec review, 2026-11-25);
   - **the human plays the embodied creep** (WASD, Space) and **Tab** moves the embodiment to the squad's next
     participant, as the lab's Tab already moves the domination;
   - **tactical commands by the number keys**, to the squad's other participants: **1 form on me, 2 hold position, 3
     attack freely, 4 fall back** (flee by the border). The pause (slice R) gives time to think; **the battle bots use
-    the same commands**;
+    the same commands**. **Attack freely is the default** before any key (owner, G's spec review, 2026-11-25), so a
+    battle where nobody commands plays as before;
   - **the embodied creep's glow and its player's name** show in the arena too.
 
 ## Proposal
