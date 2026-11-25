@@ -23,6 +23,7 @@ import { measureNet, NET_FILES, netVerdicts, writeNet } from "./net.ts";
 import { renderReport } from "./report.ts";
 import { readRun, RUN_FILES, runId, simulate, writeRun } from "./sim.ts";
 import { parseSeeds, parseSet, runSweep, SweepError } from "./sweep.ts";
+import { parseShock, ShockError, type Shock } from "./shock.ts";
 import { verify } from "./verify.ts";
 
 const DEFAULT_PARAMS = new URL("../../../params/default.json", import.meta.url);
@@ -40,6 +41,9 @@ commands:
                                  world time (default world.durationSeconds)
            --mult <n>            time multiplier the report's real time is
                                  read at (default world.multiplier)
+           --shock <t:n@m>       the recovery scenario: team t loses n free
+                                 creeps (highest HP first) at real minute m;
+                                 the run is not replayable (no replay.json)
            --strategist <a[,b]>  per team: ${STRATEGISTS.join(" | ")}
                                  (default balanced; one name = both teams)
            --out <dir>           runs directory (default runs)
@@ -50,7 +54,8 @@ commands:
            and compares them in runs/<id>/report.md and sweep.csv
            --set <path=v1,v2,...>  e.g. creep.cost.materia=30,40,50
            --seeds <list>        e.g. 1-5 or 1,4,9 (default 1-5)
-           --days, --hours, --params, --strategist, --out, --id as in sim
+           --days, --hours, --params, --strategist, --shock, --out, --id
+                                 as in sim
            --mult <n>            as in sim (default each variant's
                                  world.multiplier, so world.multiplier=6,8,12
                                  compares the candidates on one world)
@@ -64,6 +69,7 @@ commands:
            --ticks <n>     ticks to simulate (default 50000)
            --params <file> params JSON (default params/default.json)
            --strategist <a[,b]>  as in sim (default balanced)
+           (refuses --shock: a shocked run does not replay)
   net      view deltas over a bot x bot world, as the server sends them:
            bytes and CPU per delta against the spec targets, and the client
            view rebuilt from the deltas checked in every tick; writes
@@ -167,6 +173,10 @@ function parseMultiplier(raw: string | undefined): number | null {
   return raw === undefined ? null : parseUint("mult", raw, 1);
 }
 
+function parseShockOption(raw: string | undefined): Shock | null {
+  return raw === undefined ? null : parseShock(raw, TEAMS);
+}
+
 /** Two teams in M1 (spec D6). */
 const TEAMS = 2;
 
@@ -179,6 +189,7 @@ function runSim(args: string[], out: Output): number {
       days: { type: "string" },
       hours: { type: "string" },
       mult: { type: "string" },
+      shock: { type: "string" },
       strategist: { type: "string", default: "balanced" },
       out: { type: "string", default: "runs" },
       id: { type: "string" },
@@ -190,6 +201,7 @@ function runSim(args: string[], out: Output): number {
   const params = loadParams(values.params ?? DEFAULT_PARAMS);
   const ticks = parseTicks(values, params);
   const multiplier = parseMultiplier(values.mult) ?? params.world.multiplier;
+  const shock = parseShockOption(values.shock);
   const strategists = parseStrategists(values.strategist, TEAMS);
   const maxSeconds =
     values["max-seconds"] === undefined
@@ -210,6 +222,7 @@ function runSim(args: string[], out: Output): number {
       paramsSource: paramsSource(values.params),
       ticks,
       multiplier,
+      shock,
       strategists,
     },
     out.clock,
@@ -238,6 +251,7 @@ function runSweepCommand(args: string[], out: Output): number {
       days: { type: "string" },
       hours: { type: "string" },
       mult: { type: "string" },
+      shock: { type: "string" },
       strategist: { type: "string", default: "balanced" },
       out: { type: "string", default: "runs" },
       id: { type: "string" },
@@ -270,6 +284,7 @@ function runSweepCommand(args: string[], out: Output): number {
       seeds,
       ticks,
       multiplier: parseMultiplier(values.mult),
+      shock: parseShockOption(values.shock),
       strategists,
     },
     values["keep-runs"],
@@ -298,9 +313,15 @@ function runVerify(args: string[], out: Output): number {
       ticks: { type: "string", default: "50000" },
       params: { type: "string" },
       strategist: { type: "string", default: "balanced" },
+      shock: { type: "string" },
     },
     strict: true,
   });
+  if (values.shock !== undefined) {
+    throw new UsageError(
+      "geo verify refuses --shock: a shocked run is a harness mutation, not replayable (M2 R P12)",
+    );
+  }
   const seed = parseSeed(values.seed);
   const ticks = parseUint("ticks", values.ticks, 1);
   const params = loadParams(values.params ?? DEFAULT_PARAMS);
@@ -562,6 +583,7 @@ export function run(argv: string[], out: Output = console): number {
     if (
       error instanceof UsageError ||
       error instanceof SweepError ||
+      error instanceof ShockError ||
       (error as { code?: string }).code?.startsWith("ERR_PARSE_ARGS")
     ) {
       out.error(`${(error as Error).message}\n\n${USAGE}`);

@@ -20,6 +20,7 @@ import {
 import { EncounterTracker, type EncounterTally } from "./encounters.ts";
 import { runBots, type LoggedCommand } from "./harness.ts";
 import { PaceTracker, type PaceFacts } from "./pace.ts";
+import { applyShock, shockTick, teamCreeps, type Shock } from "./shock.ts";
 import { stateHash } from "./hash.ts";
 import { renderReport } from "./report.ts";
 
@@ -38,6 +39,11 @@ export type RunMeta = {
    * per real second (M2 R plan P1). It changes nothing in the world.
    */
   multiplier: number;
+  /**
+   * The recovery scenario's shock (M2 R P12), or null. A shocked run is not
+   * replayable: it writes no replay.json.
+   */
+  shock: Shock | null;
   /** One per team. */
   strategists: StrategistId[];
   balanced: typeof BALANCED;
@@ -69,6 +75,8 @@ export type SimOptions = {
   ticks: number;
   /** ×N for real time; the params' world.multiplier by default. */
   multiplier?: number;
+  /** The recovery scenario (P12); none by default. */
+  shock?: Shock | null;
   strategists: StrategistId[];
 };
 
@@ -82,6 +90,8 @@ export function simulate(
   const samples: MetricsSample[] = [];
   const tracker = new EncounterTracker(strategists.length);
   let pace: PaceTracker | null = null;
+  const shock = options.shock ?? null;
+  const shockAt = shock === null ? null : shockTick(shock, params, multiplier);
   const started = clock();
   const { state, log } = runBots(
     seed,
@@ -98,6 +108,11 @@ export function simulate(
         tracker.mark(s);
         pace.sample(s);
       }
+      // Between this tick and the next, after the tick's metrics.
+      if (shock !== null && s.tick === shockAt) {
+        const before = teamCreeps(s, shock.team);
+        pace.shocked(s, shock, before, applyShock(s, shock).length);
+      }
     },
   );
   const wallSeconds = (clock() - started) / 1000;
@@ -111,6 +126,7 @@ export function simulate(
       ticks,
       tickSeconds: params.world.tickSeconds,
       multiplier,
+      shock,
       strategists,
       balanced: BALANCED,
       paramsSource: options.paramsSource,
@@ -171,17 +187,20 @@ export function writeRun(dir: string, result: SimResult): void {
   write(RUN_FILES.encounters, `${JSON.stringify(encounters)}\n`);
   write(RUN_FILES.pace, paceJson(result));
   write(RUN_FILES.csv, metricsCsv(samples, meta.tickSeconds, meta.multiplier));
-  write(
-    RUN_FILES.replay,
-    `${canonicalJson({
-      simVersion: meta.simVersion,
-      seed: meta.seed,
-      params,
-      ticks: meta.ticks,
-      finalHash: meta.finalHash,
-      commands: log,
-    })}\n`,
-  );
+  // A shocked run's log does not reach its state (P12).
+  if (meta.shock === null) {
+    write(
+      RUN_FILES.replay,
+      `${canonicalJson({
+        simVersion: meta.simVersion,
+        seed: meta.seed,
+        params,
+        ticks: meta.ticks,
+        finalHash: meta.finalHash,
+        commands: log,
+      })}\n`,
+    );
+  }
   write(
     RUN_FILES.report,
     renderReport({ meta, params, samples, encounters, pace }),
@@ -214,6 +233,7 @@ export function readRun(dir: string): RunData {
   ) as RunMeta & { params: Params };
   // Runs written before the multiplier existed read at ×1.
   meta.multiplier ??= params.world.multiplier ?? 1;
+  meta.shock ??= null;
   const samples = readFileSync(join(dir, RUN_FILES.samples), "utf8")
     .split("\n")
     .filter((line) => line !== "")

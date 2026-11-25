@@ -137,6 +137,14 @@ export function renderReport(run: RunData): string {
         ],
         ["Parâmetros", `\`${meta.paramsSource}\``],
         ["Versão do sim", String(meta.simVersion)],
+        ...(meta.shock === null
+          ? []
+          : [
+              [
+                "Choque (cenário de recuperação)",
+                `o time ${meta.shock.team} perde ${meta.shock.count} creeps no minuto real ${meta.shock.minute}; o run não é reproduzível (sem replay.json)`,
+              ],
+            ]),
         ["Hash final", `\`${meta.finalHash}\``],
         [
           "Tempo de simulação",

@@ -16,6 +16,7 @@ import {
   type WorldState,
 } from "@geometrix/sim";
 import { number, table } from "./format.ts";
+import { teamCreeps, type Shock } from "./shock.ts";
 
 /** The spec's §7 targets, in real minutes at the ×N unless noted. */
 export const TARGETS = {
@@ -49,6 +50,10 @@ export const TARGETS = {
   creepsAtEnd: { min: 10, max: 24 },
   /** The population cap is not reached before this minute. */
   capNotBefore: 90,
+  /** A shocked team is back to its count within these minutes… */
+  recovery: 15,
+  /** …on at least this share of the seeds, in %. */
+  recoverySeedsPercent: 90,
 } as const;
 
 /** One team's pace in a run, in world ticks. */
@@ -104,6 +109,19 @@ export type PaceFacts = {
   };
   /** Wall-clock microseconds per world tick, through the host. */
   tickMicros: number;
+  /** The recovery scenario (P12), or null in a run with no shock. */
+  recovery: Recovery | null;
+};
+
+/** A shocked team's way back to its count (P12). */
+export type Recovery = {
+  shock: Shock;
+  /** The tick it landed after, the team's creeps then, and those killed. */
+  tick: number;
+  before: number;
+  killed: number;
+  /** The first tick with the team back at `before` creeps, or null. */
+  recoveredTick: number | null;
 };
 
 /** Passable cells 4-connected to `from` (the flood the map generator checks). */
@@ -166,6 +184,7 @@ export class PaceTracker {
   private firstWanderer: number | null = null;
   private ticksWithOneAlive = 0;
   private maxAlive = 0;
+  private recovery: Recovery | null = null;
 
   constructor(state: WorldState, multiplier: number) {
     const { map, params, teams } = state;
@@ -210,9 +229,26 @@ export class PaceTracker {
           break;
       }
     }
+    const r = this.recovery;
+    if (r !== null && r.recoveredTick === null) {
+      if (teamCreeps(state, r.shock.team) >= r.before) {
+        r.recoveredTick = state.tick;
+      }
+    }
     const alive = state.wanderers.length;
     this.maxAlive = Math.max(this.maxAlive, alive);
     if (this.firstWanderer !== null && alive > 0) this.ticksWithOneAlive += 1;
+  }
+
+  /** The shock landed after this tick: `before` creeps, `killed` of them. */
+  shocked(state: WorldState, shock: Shock, before: number, killed: number) {
+    this.recovery = {
+      shock,
+      tick: state.tick,
+      before,
+      killed,
+      recoveredTick: null,
+    };
   }
 
   /** At a metrics sample: the share of the reachable map each team has seen. */
@@ -291,6 +327,7 @@ export class PaceTracker {
         maxAlive: this.maxAlive,
       },
       tickMicros: state.tick === 0 ? 0 : (wallSeconds * 1e6) / state.tick,
+      recovery: this.recovery,
     };
   }
 }
@@ -562,12 +599,51 @@ const CRITERIA: Criterion[] = [
     }),
   },
   {
+    criterion: `Recuperação: o time do choque volta à sua contagem`,
+    target: `em até ${TARGETS.recovery} min, em ${TARGETS.recoverySeedsPercent}% das seeds`,
+    value: (f) => recoveryMinutes(f),
+    run: (f) => {
+      const r = f.recovery;
+      if (r === null) return { measured: "— (sem --shock)", verdict: null };
+      const minutes = recoveryMinutes(f);
+      const what = `time ${r.shock.team} perdeu ${r.killed} de ${r.before} no min ${r.shock.minute}`;
+      return minutes === null
+        ? { measured: `${what}; não voltou`, verdict: false }
+        : {
+            measured: `${what}; voltou em ${min1(minutes)}`,
+            verdict: minutes <= TARGETS.recovery,
+          };
+    },
+    seeds: (fs) => {
+      const shocked = fs.filter((f) => f.recovery !== null);
+      if (shocked.length === 0) {
+        return { measured: "— (sem --shock)", verdict: null };
+      }
+      const back = shocked.filter((f) => {
+        const m = recoveryMinutes(f);
+        return m !== null && m <= TARGETS.recovery;
+      }).length;
+      return {
+        measured: `${back}/${shocked.length} seeds${summary(shocked.map(recoveryMinutes))}`,
+        verdict: 100 * back >= TARGETS.recoverySeedsPercent * shocked.length,
+      };
+    },
+  },
+  {
     criterion: "Custo do tick (pelo host)",
     target: "até 1,5× o baseline (tasks.md, F1)",
     value: (f) => f.tickMicros,
     run: (f) => ({ measured: `${number(f.tickMicros, 1)} µs`, verdict: null }),
   },
 ];
+
+/** Real minutes from the shock to the team back at its count, or null. */
+function recoveryMinutes(f: PaceFacts): number | null {
+  const r = f.recovery;
+  return r === null || r.recoveredTick === null
+    ? null
+    : tickMin(f, r.recoveredTick - r.tick);
+}
 
 /** `count` per `window` real minutes, over the run. */
 function perWindow(f: PaceFacts, count: number, window: number): number {

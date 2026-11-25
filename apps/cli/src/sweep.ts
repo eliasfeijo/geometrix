@@ -27,6 +27,7 @@ import {
   type PaceFacts,
   type TargetRow,
 } from "./pace.ts";
+import type { Shock } from "./shock.ts";
 import {
   metaJson,
   paceJson,
@@ -545,6 +546,8 @@ export type SweepOptions = {
    * of world.multiplier compares the ×N candidates on one world.
    */
   multiplier: number | null;
+  /** The recovery scenario on every run (P12), or null. */
+  shock: Shock | null;
   strategists: StrategistId[];
 };
 
@@ -575,6 +578,7 @@ export function sweep(
         paramsSource: `${options.paramsSource} com ${options.path}=${value}`,
         ticks: options.ticks,
         multiplier: options.multiplier ?? params.world.multiplier,
+        shock: options.shock,
         strategists: options.strategists,
       });
       const summary = summarize(result, value);
@@ -641,6 +645,14 @@ export function renderSweepReport({
       [
         ["Parâmetro", `\`${path}\` = ${values.join(", ")}`],
         ["Seeds", seeds.join(", ")],
+        ...(options.shock === null
+          ? []
+          : [
+              [
+                "Choque",
+                `o time ${options.shock.team} perde ${options.shock.count} creeps no minuto real ${options.shock.minute} (runs não reproduzíveis)`,
+              ],
+            ]),
         [
           "Duração de cada mundo",
           `${hours(ticks * tickSeconds)} de mundo; ${multipliers

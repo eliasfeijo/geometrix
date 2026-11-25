@@ -16,7 +16,7 @@
 - [x] `geo sim` and `geo sweep`: `--mult`, every time also in real minutes
 - [x] `apps/cli/src/pace.ts`: the §7 metrics (crossing, the first extra creep, exploring, the wanderers, population,
       fights, the creep gap) and the targets table with pass or fail (P13)
-- [ ] The recovery scenario: `--shock team:count@minute`, not replayable, refused by `geo verify` (P12)
+- [x] The recovery scenario: `--shock team:count@minute`, not replayable, refused by `geo verify` (P12)
 - [ ] Baseline: `geo sim` and `geo sweep` (seeds 1–20, the full match) on the 72-hour world at ×6, quoted here
 
 ## F2 — The world vocabulary

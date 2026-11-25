@@ -210,6 +210,7 @@ function facts(edit: Partial<PaceFacts> = {}): PaceFacts {
       maxAlive: 4,
     },
     tickMicros: 40,
+    recovery: null,
     ...edit,
   };
 }
@@ -226,6 +227,7 @@ describe("the targets", () => {
     ).toEqual([
       "Lutas: batalhas por time a cada 10 min reais (com entrada depois da abertura)",
       'Lutas: entradas por ajuda ou "seguir", por time a cada 30 min reais',
+      "Recuperação: o time do choque volta à sua contagem",
       "Custo do tick (pelo host)",
     ]);
   });
