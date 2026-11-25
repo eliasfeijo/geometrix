@@ -6,14 +6,14 @@
 
 ## Now
 
-**Updated:** 2026-11-25 (R's F1: the pace harness and the baseline; G's spec approved, plan draft)
+**Updated:** 2026-11-25 (R's phases ordered in waves and lanes, with a model per phase; R's F2 started)
 
 | | |
 |---|---|
 | **Milestone** | **M2 — The ambush** ([ROADMAP](../ROADMAP.md)). M0, M1 and M1.5 ✅ |
 | **Slices** | A ✅ 2026-11-17 · B ✅ 2026-11-20 · D ✅ 2026-11-25 · **R — Rebalance and pace** (F1 done 2026-11-25, F2 next), **E-min — The minimal end** (spec and plan approved 2026-11-25, F1 next) and **K — The DNA kits** (spec and plan approved 2026-11-25, F1 next) |
-| **In progress** | **R's F2** (the world vocabulary: follow, help, drop, the road builder, the hostile intent, the difficulty; `SIM_VERSION` 12) after F1's merge, branch `m2/rebalance-f2-world-vocabulary`, worktree `~/workspace/geometrix/rebalance-f2` ([tasks](../specs/m2-rebalance/tasks.md)); **G's design round done** (2026-11-25, on `docs/g-design`: squads, the embodied creep, the panel, formations; the [spec](../specs/m2-groups/spec.md) approved and the [plan](../specs/m2-groups/plan.md) drafted; GDD 02, 06, 07); **E-min's F1** (the end in the world) in a new session: the [E-min spec](../specs/m2-minimal-end/spec.md) and [plan](../specs/m2-minimal-end/plan.md) approved 2026-11-25, worktree `~/workspace/geometrix/emin-f1` on `m2/emin-f1-world`; **K's F1** (the bar and the strike) in a new session: the [K spec](../specs/m2-kits/spec.md) and [plan](../specs/m2-kits/plan.md) approved 2026-11-25, worktree `~/workspace/geometrix/kits-f1` on `m2/kits-f1-bar-strike` |
-| **Next front** | The phases of **R**, **E-min** and **K**, one session each, in parallel (R: `sim` vocabulary, strategist, params, map UI; E-min: the end rule, end screen and replay; K: `packages/battle`, gambits, lab, battle screen). R's final balance pass runs after K's merge |
+| **In progress** | **R's F2** (wave 1, lane A, Opus 5.5: the world vocabulary: follow, help, drop, the road builder, the hostile intent, the difficulty; `SIM_VERSION` 12), branch `m2/rebalance-f2-world-vocabulary`, worktree `~/workspace/geometrix/rebalance-f2` ([tasks](../specs/m2-rebalance/tasks.md)); **G's design round done** (2026-11-25, on `docs/g-design`: squads, the embodied creep, the panel, formations; the [spec](../specs/m2-groups/spec.md) approved and the [plan](../specs/m2-groups/plan.md) drafted; GDD 02, 06, 07); **E-min's F1** (the end in the world) waiting for a lane (below): the [E-min spec](../specs/m2-minimal-end/spec.md) and [plan](../specs/m2-minimal-end/plan.md) approved 2026-11-25, worktree `~/workspace/geometrix/emin-f1` on `m2/emin-f1-world`; **K's F1** (the bar and the strike) waiting for a lane (below): the [K spec](../specs/m2-kits/spec.md) and [plan](../specs/m2-kits/plan.md) approved 2026-11-25, worktree `~/workspace/geometrix/kits-f1` on `m2/kits-f1-bar-strike` |
+| **Next front** | The phases of **R**, **E-min** and **K** in **two lanes at most** ([R's waves](../specs/m2-rebalance/tasks.md#running-the-phases-waves-lanes-and-models)): lane A on Opus 5.5 for the deep phases (`sim` rules, strategist, battle mechanics), lane B on Sonnet 5.5 for server, client, balance runs and soak. R: wave 1 F2 alone; wave 2 F3 (A) ∥ F5 (B); wave 3 F4 then F6 (B), lane A free for E-min or K; wave 4 F7; F8 after K's merge. Lane B opens only with room in `/usage` (session < ~50%, week < ~70%); otherwise sequential. K is the safe partner (no file shared with R F2–F7); E-min's sim phases collide with R's (`SIM_VERSION`, hashes, strategist) |
 | **Then** | **G — Groups and formations** (after K; spec approved and [plan](../specs/m2-groups/plan.md) drafted 2026-11-25: squads built with Ctrl and the embodied creep, the panel and the selection keys, formations in the world and in battle, the side each DNA engages from, the battle bot's load experiment; lab first; **scope warning:** about R's size), then **P — The friends' playtest** (two teams: humans against humans, or co-op against the bot); after it, **E** (siege and repair) or **T** (more teams), chosen at P's checkpoint |
 | **Waiting on the owner** | (1) [ADR-0009](../adr/0009-prediction-in-the-lab.md) (`Proposed`): prediction as a lab experiment option. (2) `gambits.meleeBerthSteps` 3 (provisional, lab F7). (3) K's checkpoint K1 when F5 ends. (4) Whenever the owner wants: PLAYTEST lab group 7 (the movement options) |
 | **Blockers** | None |
@@ -21,8 +21,9 @@
 ### Next steps
 
 1. **R's F2–F8** from the [approved plan](../specs/m2-rebalance/plan.md) ([tasks](../specs/m2-rebalance/tasks.md);
-   `implement-phase` skill), F2 next (the world vocabulary), from the [approved spec](../specs/m2-rebalance/spec.md)
-   (D1–D29). **F1 is done:** the pace harness (`--mult`, real minutes, the §7 targets table, `--shock`) and the
+   `implement-phase` skill), F2 in progress (the world vocabulary), from the [approved spec](../specs/m2-rebalance/spec.md)
+   (D1–D29). **Waves and models** in the tasks' "Running the phases": two tasks moved (the server's threat pass from F5
+   to F3, `geo net` on the new world from F5 to F7) so F5 depends on F2 alone and runs next to F3. **F1 is done:** the pace harness (`--mult`, real minutes, the §7 targets table, `--shock`) and the
    baseline of the 72-hour world at ×6 (F1 record in the tasks): of the measured targets it misses the length (720
    real minutes), the crossing (3.6 min), the opening (first extra creep at real minute 212), exploring (124), the first
    wanderer (10), the population (7/20 seeds) and the recovery (0/20 seeds back within 15 minutes; 15 never). **G's design round** is done (2026-11-25): squads (built with Ctrl; a plain order to a

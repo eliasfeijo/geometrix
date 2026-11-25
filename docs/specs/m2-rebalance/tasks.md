@@ -1,7 +1,66 @@
 # M2 tasks — Rebalance and pace
 
-**Status:** F0 and F1 done (2026-11-25); F2 next. Branches `m2/rebalance-f<n>-<slug>` (skill `commit`).
+**Status:** F0 and F1 done (2026-11-25); F2 in progress (wave 1, see "Running the phases"). Branches `m2/rebalance-f<n>-<slug>` (skill `commit`).
 **Spec:** [spec.md](spec.md) · **Plan:** [plan.md](plan.md)
+
+## Running the phases: waves, lanes and models
+
+The agent's recommendation at the owner's request (2026-11-25). It changes no plan decision (P1–P15); it orders the
+sessions and moves two tasks (below) so that two phases can run side by side. The owner can change it at any wave.
+
+**Inside a phase: sequential, one session.** F2's tasks all touch `orders.ts`, `autopilot.ts`, `rules.ts`,
+`presets.ts`, `world.ts` and the fixed hashes; F3's the strategist; F5's the host, the server and the protocol. Agents
+running in parallel inside a phase would edit the same files and each re-read the whole context, so one phase costs
+more tokens with no gain. F6's tasks are the most separable (one layer each), but they share the store and the
+inspector: one session too.
+
+**Between phases** (the plan's dependencies, with the two moved tasks below):
+
+```mermaid
+flowchart LR
+  F2[F2 vocabulary] --> F3[F3 strategist + C1] --> F4[F4 balance + C2] --> F7[F7 soak + C3]
+  F2 --> F5[F5 pauses, network, server] --> F6[F6 client] --> F7
+  K[K merged] --> F8[F8 final balance + C4]
+  F7 --> F8
+```
+
+**Moved tasks**, so F5 depends on F2 alone: `WorldHost` running the threat pass every tick for hard bots goes from
+F5 to F3 (F3 writes the function and already runs it every tick in the harness; the server side is one call), and
+`geo net` on the new default world goes from F5 to F7 (the new world exists only after F4). The diff property with
+the new fields stays in F5.
+
+**Lanes.** At most two implementation sessions at once, counting E-min and K: **lane A** for the deep phases (`sim`
+rules, the strategist, determinism) on **Opus 5.5**, **lane B** for the well-specified ones (server, client, the
+balance runs, the soak) on **Sonnet 5.5**. Haiku is not used: every phase needs the whole repository context.
+
+| Wave | Lane A (Opus 5.5) | Lane B (Sonnet 5.5) | Starts when |
+|---|---|---|---|
+| 1 | **R F2** — the world vocabulary | — (nothing in R runs without F2; K F1 fits here only with room in `/usage`, see below) | now |
+| 2 | **R F3** — the strategist, then C1 | **R F5** — pauses, network, server | F2 in `main` |
+| 3 | free for E-min or K's deep phases | **R F4** — the balance pass, then C2; **R F6** — client, after F4 or in its waits | F3 in `main` (F4), F5 in `main` (F6) |
+| 4 | — | **R F7** — soak and playtest, then C3 | F4, F5, F6 in `main` |
+| 5 | — | **R F8** — the final balance pass, then C4 | K in `main`, C3 done |
+
+**Why each model.** F2 and F3 are the hardest phases of R: new orders and actions on the deterministic pipeline, an
+information-leak rule (HS-3), cycles, the load check's bounded search, the strategist's threat pass and risk. A
+mistake there costs a hash rebuild and a re-sweep. F4 is mostly CPU-bound sweeps read against a fixed targets table
+(the owner judges at C2); F5's state machine and F6's layers are spelled out by plan §6–§8; F7 and F8 rerun
+harnesses. Sonnet does those for a fraction of Opus's usage. If a Sonnet session stalls on a judgment call, the owner
+resumes the phase on Opus (the commits are per task, so nothing is lost).
+
+**`/usage` and parallel work.** A phase costs about the same tokens run alone or next to another; running two at
+once only spends them inside the same 5-hour window, and a session that hits the limit stops between task commits
+(recoverable, but the phase sits half done). The agent cannot read `/usage`, so the rule is for the owner, before
+opening lane B: **the current session below ~50% and the week below ~70%** (the Opus weekly share especially, since
+lane A needs it); otherwise run the waves sequentially, lane A's phase first. Two sessions also share the CPU:
+timing tests skew, the server tests may time out under load (`CLAUDE.local.md`), and F4's tick-cost reading must run
+on a quiet machine.
+
+**Conflicts to expect** (plan §10): E-min F1 also bumps `SIM_VERSION` and rebuilds the fixed hashes, and E-min F2
+touches `strategist.ts` and the CLI reports, so E-min's sim phases go in lane A after R F2 and not next to R F3 when
+avoidable; the second to merge rebases and takes the next version number. K F1–F5 live in `packages/battle` and the
+lab, with no file shared with R F2–F7: K is the safe partner in lane B or A. R F4 rewrites `params/default.json`,
+which R F5 also touches (`battle.hold`): a small rebase.
 
 ## F0 — Spec and plan
 
@@ -109,6 +168,7 @@
 - [ ] The defense of the core zone (D14, S-1)
 - [ ] The raid group and the escort with `follow` (D16, S-3)
 - [ ] The threat pass and the risk (D27, S-7); the harness runs it every tick like the server will
+- [ ] `WorldHost`: the threat pass every tick for hard bots (moved from F5, see "Running the phases")
 - [ ] Any number of teams in the new rules (D18, S-5)
 - [ ] The strategist's metrics in the reports: help joins, groups, defense, payments, drops, the D27 choices
 - [ ] **Checkpoint C1:** bot × bot at each difficulty and hard against easy, the 72-hour world at ×6 in real time
@@ -129,8 +189,7 @@
 - [ ] `battlePause` and `battleHold`; the follow and drop orders; the hostile intent in the delta;
       `PROTOCOL_VERSION` 8
 - [ ] The bot's difficulty on its player row (migration), in world creation and `dev:multi --bot-difficulty`
-- [ ] `WorldHost`: the threat pass every tick for hard bots
-- [ ] `geo net` on the new default world; the diff property with the new fields (U-4)
+- [ ] The diff property with the new fields (U-4); `geo net` on today's default world still within targets
 
 ## F6 — Client
 
@@ -146,6 +205,7 @@
 ## F7 — Soak and playtest
 
 - [ ] The soak on the new default world, with a restart during a hold
+- [ ] `geo net` on the new default world (moved from F5)
 - [ ] The PLAYTEST R groups (spec §8)
 - [ ] **Checkpoint C3:** the owner's sessions; the hypothesis questions; the ×N chosen
 
