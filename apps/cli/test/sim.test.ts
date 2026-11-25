@@ -136,6 +136,7 @@ describe("runs/<id>/", () => {
     const data = readRun(dir);
     expect(data.samples).toEqual(result.samples);
     expect(data.encounters).toEqual(result.encounters);
+    expect(data.pace).toEqual(result.pace);
     expect(renderReport(data)).toBe(file(RUN_FILES.report));
   });
 
@@ -143,6 +144,7 @@ describe("runs/<id>/", () => {
     const report = file(RUN_FILES.report);
     for (const heading of [
       "# Relatório de simulação — two-hours",
+      "## Metas do ritmo (spec R §7)",
       "## Resumo por time",
       "## Encontros",
       "## Linha do tempo",

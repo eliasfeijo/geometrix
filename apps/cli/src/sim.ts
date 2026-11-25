@@ -2,7 +2,7 @@
 // runs/<id>/ with the metrics (CSV + JSON; SQLite arrives with F6), the replay
 // and report.md.
 
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import {
   botsFor,
@@ -19,6 +19,7 @@ import {
 } from "@geometrix/sim";
 import { EncounterTracker, type EncounterTally } from "./encounters.ts";
 import { runBots, type LoggedCommand } from "./harness.ts";
+import { PaceTracker, type PaceFacts } from "./pace.ts";
 import { stateHash } from "./hash.ts";
 import { renderReport } from "./report.ts";
 
@@ -54,6 +55,8 @@ export type SimResult = {
   params: Params;
   samples: MetricsSample[];
   encounters: EncounterTally;
+  /** The match's pace against the M2 R spec §7 targets. */
+  pace: PaceFacts;
   log: LoggedCommand[];
   state: WorldState;
 };
@@ -75,8 +78,10 @@ export function simulate(
   clock: () => number = () => performance.now(),
 ): SimResult {
   const { seed, params, ticks, strategists } = options;
+  const multiplier = options.multiplier ?? params.world.multiplier;
   const samples: MetricsSample[] = [];
   const tracker = new EncounterTracker(strategists.length);
+  let pace: PaceTracker | null = null;
   const started = clock();
   const { state, log } = runBots(
     seed,
@@ -84,10 +89,14 @@ export function simulate(
     ticks,
     botsFor(strategists),
     (s, events, finished) => {
+      // The first call is the new world, before any tick.
+      pace ??= new PaceTracker(s, multiplier);
       tracker.record(s, events, finished);
+      pace.record(s, events);
       if (s.tick % SAMPLE_EVERY_TICKS === 0 || s.tick === ticks) {
         samples.push(sampleMetrics(s));
         tracker.mark(s);
+        pace.sample(s);
       }
     },
   );
@@ -101,7 +110,7 @@ export function simulate(
       mapSeed: state.mapSeed,
       ticks,
       tickSeconds: params.world.tickSeconds,
-      multiplier: options.multiplier ?? params.world.multiplier,
+      multiplier,
       strategists,
       balanced: BALANCED,
       paramsSource: options.paramsSource,
@@ -121,6 +130,7 @@ export function simulate(
     params,
     samples,
     encounters,
+    pace: pace!.finish(state, samples, wallSeconds),
     log,
     state,
   };
@@ -140,6 +150,7 @@ export const RUN_FILES = {
   meta: "run.json",
   samples: "samples.jsonl",
   encounters: "encounters.json",
+  pace: "pace.json",
   csv: "metrics.csv",
   replay: "replay.json",
   report: "report.md",
@@ -149,7 +160,7 @@ export const RUN_FILES = {
 export function writeRun(dir: string, result: SimResult): void {
   mkdirSync(dirname(dir), { recursive: true });
   mkdirSync(dir);
-  const { meta, params, samples, encounters, log } = result;
+  const { meta, params, samples, encounters, pace, log } = result;
   const write = (file: string, text: string) =>
     writeFileSync(join(dir, file), text);
   write(RUN_FILES.meta, metaJson(result));
@@ -158,6 +169,7 @@ export function writeRun(dir: string, result: SimResult): void {
     samples.map((s) => `${canonicalJson(s)}\n`).join(""),
   );
   write(RUN_FILES.encounters, `${JSON.stringify(encounters)}\n`);
+  write(RUN_FILES.pace, paceJson(result));
   write(RUN_FILES.csv, metricsCsv(samples, meta.tickSeconds, meta.multiplier));
   write(
     RUN_FILES.replay,
@@ -170,7 +182,15 @@ export function writeRun(dir: string, result: SimResult): void {
       commands: log,
     })}\n`,
   );
-  write(RUN_FILES.report, renderReport({ meta, params, samples, encounters }));
+  write(
+    RUN_FILES.report,
+    renderReport({ meta, params, samples, encounters, pace }),
+  );
+}
+
+/** pace.json: the run's pace facts. */
+export function paceJson({ pace }: Pick<SimResult, "pace">): string {
+  return `${JSON.stringify(pace, null, 2)}\n`;
 }
 
 /** run.json: the run's meta with its params. */
@@ -184,6 +204,8 @@ export type RunData = {
   params: Params;
   samples: MetricsSample[];
   encounters: EncounterTally;
+  /** Null for a run written before the pace targets (M2 R F1). */
+  pace: PaceFacts | null;
 };
 
 export function readRun(dir: string): RunData {
@@ -199,7 +221,11 @@ export function readRun(dir: string): RunData {
   const encounters = JSON.parse(
     readFileSync(join(dir, RUN_FILES.encounters), "utf8"),
   ) as EncounterTally;
-  return { meta, params, samples, encounters };
+  const paceFile = join(dir, RUN_FILES.pace);
+  const pace = existsSync(paceFile)
+    ? (JSON.parse(readFileSync(paceFile, "utf8")) as PaceFacts)
+    : null;
+  return { meta, params, samples, encounters, pace };
 }
 
 /** Flattens nested numbers into dotted columns: stock.materia, ... */

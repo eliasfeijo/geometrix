@@ -39,6 +39,7 @@ import {
   table,
   worldAndReal,
 } from "./format.ts";
+import { paceSection } from "./pace.ts";
 import type { RunData } from "./sim.ts";
 
 const ACTIVITY_LABELS: Record<Activity, string> = {
@@ -146,6 +147,8 @@ export function renderReport(run: RunData): string {
     ),
     "",
   );
+
+  if (run.pace !== null) out(...paceSection(run.pace));
 
   // Summary per team.
   const stat = (team: number) => last.teams[team]!;

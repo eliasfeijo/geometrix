@@ -22,7 +22,14 @@ import {
 } from "./encounters.ts";
 import { HOUR, hours, number, realTime, table } from "./format.ts";
 import {
+  seedTargets,
+  TARGETS,
+  type PaceFacts,
+  type TargetRow,
+} from "./pace.ts";
+import {
   metaJson,
+  paceJson,
   RUN_FILES,
   simulate,
   writeRun,
@@ -152,6 +159,19 @@ export type RunSummary = {
   deliveredMateriaByTeam: number[];
   encountersByTeam: number[];
   deathsByTeam: number[];
+  /**
+   * The pace (M2 R spec §7) in real minutes at the run's ×N: the crossing,
+   * each team's first extra creep and TARGETS.exploredPermille of the map
+   * seen, the first wanderer (null: never), and the share of the match after
+   * it with one alive (%).
+   */
+  crossingRealMinutes: number | null;
+  firstCreepRealMinutesByTeam: (number | null)[];
+  exploredRealMinutesByTeam: (number | null)[];
+  firstWandererRealMinutes: number | null;
+  wandererAlivePercent: number | null;
+  battlesByTeam: number[];
+  tickMicros: number;
 };
 
 const mean = (values: number[]) =>
@@ -291,6 +311,27 @@ export function summarize(result: SimResult, value: number): RunSummary {
     deliveredMateriaByTeam: delivered,
     encountersByTeam: asAggressor,
     deathsByTeam,
+    ...paceColumns(result.pace),
+  };
+}
+
+/** The pace's CSV columns of a run, in real minutes at its ×N. */
+function paceColumns(f: PaceFacts) {
+  const real = (tick: number | null) =>
+    tick === null ? null : (tick * f.tickSeconds) / f.multiplier / 60;
+  const w = f.wanderers;
+  return {
+    crossingRealMinutes:
+      f.crossingSeconds === null ? null : f.crossingSeconds / f.multiplier / 60,
+    firstCreepRealMinutesByTeam: f.teams.map((t) => real(t.firstBornTick)),
+    exploredRealMinutesByTeam: f.teams.map((t) => real(t.exploredTick)),
+    firstWandererRealMinutes: real(w.firstBornTick),
+    wandererAlivePercent:
+      w.ticksAfterFirst === 0
+        ? null
+        : (100 * w.ticksWithOneAlive) / w.ticksAfterFirst,
+    battlesByTeam: f.teams.map((t) => t.battles),
+    tickMicros: f.tickMicros,
   };
 }
 
@@ -507,7 +548,12 @@ export type SweepOptions = {
   strategists: StrategistId[];
 };
 
-export type SweepResult = { options: SweepOptions; runs: RunSummary[] };
+export type SweepResult = {
+  options: SweepOptions;
+  runs: RunSummary[];
+  /** Each run's pace, in the order of `runs`. */
+  paces: PaceFacts[];
+};
 
 /** Runs every value × seed; `onRun` sees each finished run. */
 export function sweep(
@@ -519,6 +565,7 @@ export function sweep(
     params: withParam(options.params, options.path, value),
   }));
   const runs: RunSummary[] = [];
+  const paces: PaceFacts[] = [];
   for (const { value, params } of variants) {
     for (const seed of options.seeds) {
       const result = simulate({
@@ -532,16 +579,56 @@ export function sweep(
       });
       const summary = summarize(result, value);
       runs.push(summary);
+      paces.push(result.pace);
       onRun(result, summary);
     }
   }
-  return { options, runs };
+  return { options, runs, paces };
+}
+
+const VERDICT_MARKS = { true: " ✅", false: " ❌", null: "" } as const;
+
+/**
+ * The §7 targets per value, over its seeds (M2 R P13): each criterion met on
+ * how many seeds, the values' mean and range, and the verdict.
+ */
+function paceTargets(
+  values: readonly number[],
+  path: string,
+  runs: readonly RunSummary[],
+  paces: readonly PaceFacts[],
+): string[] {
+  const perValue = values.map((value) =>
+    seedTargets(paces.filter((_, i) => runs[i]!.value === value)),
+  );
+  const first = perValue[0]!;
+  const cell = (row: TargetRow) =>
+    `${row.measured}${VERDICT_MARKS[String(row.verdict) as keyof typeof VERDICT_MARKS]}`;
+  return [
+    "## Metas do ritmo (spec R §7)",
+    "",
+    `Em minutos reais ao ×N de cada run. ✅ a meta vale em todas as seeds (a diferença de creeps: a mediana), ❌ não, sem marca: sem meta ou ainda não medida. Exploração: ${TARGETS.exploredPermille / 10}% das células alcançáveis vistas.`,
+    "",
+    table(
+      ["Critério", "Meta", ...values.map((v) => `${path}=${v}`)],
+      first.map((row, i) => [
+        row.criterion,
+        row.target,
+        ...perValue.map((rows) => cell(rows[i]!)),
+      ]),
+    ),
+    "",
+  ];
 }
 
 export const runName = (path: string, value: number, seed: number) =>
   `${path}=${value}-s${seed}`;
 
-export function renderSweepReport({ options, runs }: SweepResult): string {
+export function renderSweepReport({
+  options,
+  runs,
+  paces,
+}: SweepResult): string {
   const { path, values, seeds, ticks } = options;
   const wall = runs.reduce((sum, r) => sum + r.wallSeconds, 0);
   const tickSeconds = options.params.world.tickSeconds;
@@ -569,6 +656,7 @@ export function renderSweepReport({ options, runs }: SweepResult): string {
       ],
     ),
     "",
+    ...paceTargets(values, path, runs, paces),
     "## Comparação",
     "",
     "Média das seeds e dos dois times; entre parênteses, o mínimo e o máximo entre as seeds. " +
@@ -675,6 +763,7 @@ export function runSweep(
     } else {
       mkdirSync(runDir);
       writeFileSync(join(runDir, RUN_FILES.meta), metaJson(run));
+      writeFileSync(join(runDir, RUN_FILES.pace), paceJson(run));
     }
     progress(
       `  ${run.meta.id}: ${summary.wallSeconds.toFixed(1)} s, ${summary.finalHash.slice(0, 16)}`,

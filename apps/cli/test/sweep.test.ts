@@ -106,7 +106,8 @@ describe("geo sweep", () => {
       "report.md",
       "sweep.csv",
     ]);
-    expect(readdirSync(join(dir, "creep.cost.materia=60-s2"))).toEqual([
+    expect(readdirSync(join(dir, "creep.cost.materia=60-s2")).sort()).toEqual([
+      "pace.json",
       "run.json",
     ]);
     const meta = JSON.parse(
@@ -126,6 +127,22 @@ describe("geo sweep", () => {
       "| Métrica | creep.cost.materia=30 | creep.cost.materia=60 |",
     );
     expect(report).toContain("| Estoque de matéria no fim |");
+    // The pace targets per value over its seeds (M2 R P13).
+    expect(report).toContain("## Metas do ritmo (spec R §7)");
+    expect(report).toMatch(
+      /\| Janela da extorsão \(PA-3\) \| pelo menos 10 s reais \| 2\/2 seeds ✅ \|/,
+    );
+    for (const column of [
+      "crossingRealMinutes",
+      "firstCreepRealMinutesByTeam",
+      "exploredRealMinutesByTeam",
+      "firstWandererRealMinutes",
+      "wandererAlivePercent",
+      "battlesByTeam",
+      "tickMicros",
+    ]) {
+      expect(csv[0]!.split(",")).toContain(column);
+    }
     // Fog (fog spec §7): match start and fairness between the teams.
     for (const label of [
       "| 1ª entrega de matéria, time mais lento (min) |",
@@ -218,6 +235,7 @@ describe("geo sweep", () => {
     ).toEqual([
       "encounters.json",
       "metrics.csv",
+      "pace.json",
       "replay.json",
       "report.md",
       "run.json",
