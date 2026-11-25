@@ -8,6 +8,7 @@
 import {
   createLog,
   createBattle,
+  replayLog,
   stepLogged,
   validateCommand,
   BATTLE_VERSION,
@@ -88,6 +89,9 @@ export type FinishedBattle = {
   results: Command[];
 };
 
+/** A battle's events over the ticks it stepped (one world second). */
+export type SteppedBattle = { battleId: number; events: BattleEvent[] };
+
 export type JunctionStep = {
   /** The world tick's events. */
   events: SimEvent[];
@@ -95,6 +99,12 @@ export type JunctionStep = {
   results: CommandInput[];
   /** Battles that ended in this tick. */
   finished: FinishedBattle[];
+  /**
+   * The world-paced battles stepped before the world step, in id order,
+   * with their events (the frames of a battle screen, F4). Those that ended
+   * are in `finished` too.
+   */
+  stepped: SteppedBattle[];
 };
 
 export class JunctionError extends Error {
@@ -325,13 +335,18 @@ export function stepJunction(
   commands: readonly CommandInput[],
 ): JunctionStep {
   const finished: FinishedBattle[] = [];
+  const stepped: SteppedBattle[] = [];
   const ticks = battleTicksPerWorldTick(world, host);
   for (const instance of [...host.instances]) {
     instance.pace = paceOf(world, host, instance);
     if (instance.pace !== "world") continue;
+    const battle: SteppedBattle = { battleId: instance.battleId, events: [] };
     for (let i = 0; i < ticks && instance.state.ended === null; i++) {
-      stepInstance(world, host, instance, [], host.results, finished);
+      battle.events.push(
+        ...stepInstance(world, host, instance, [], host.results, finished),
+      );
     }
+    stepped.push(battle);
   }
   const results = host.results.map((command) => ({
     playerId: SYSTEM_PLAYER_ID,
@@ -354,7 +369,7 @@ export function stepJunction(
       instance.pending.push({ creep: event.creep.id, side: event.side });
     }
   }
-  return { events, results, finished };
+  return { events, results, finished, stepped };
 }
 
 /**
@@ -379,6 +394,74 @@ export function stepRealtime(
     finished,
   );
   return { events, finished };
+}
+
+/**
+ * The participant a world creep is in a battle now, or null (it left, or is
+ * still waiting to be placed). A creep that left and came back has a new
+ * participant: the latest is the one in the arena.
+ */
+export function participantOf(
+  instance: Instance,
+  creepId: number,
+): number | null {
+  for (let i = instance.members.length - 1; i >= 0; i--) {
+    const member = instance.members[i]!;
+    if (member.creep !== creepId) continue;
+    const here = instance.state.participants.some(
+      (p) => p.id === member.participant,
+    );
+    return here ? member.participant : null;
+  }
+  return null;
+}
+
+/**
+ * What an instance keeps besides its battle (the server's battles table,
+ * P6): with the log, it rebuilds the instance after a restart.
+ */
+export type InstanceRecord = Omit<Instance, "state" | "log" | "pace">;
+
+export function instanceRecord(instance: Instance): InstanceRecord {
+  return {
+    battleId: instance.battleId,
+    window: instance.window,
+    members: instance.members,
+    sideOf: instance.sideOf,
+    pending: instance.pending,
+    sent: instance.sent,
+  };
+}
+
+/**
+ * An instance rebuilt from its record and its log (P6, N-3): the battle
+ * replayed to the log's ticks, on the world clock until a human is back on
+ * the screen. Copies what it takes, so the instance shares nothing with them.
+ */
+export function rebuildInstance(
+  record: InstanceRecord,
+  log: BattleLog,
+): Instance {
+  const copy = JSON.parse(JSON.stringify({ record, log })) as {
+    record: InstanceRecord;
+    log: BattleLog;
+  };
+  return {
+    ...copy.record,
+    pace: "world",
+    state: replayLog(copy.log),
+    log: copy.log,
+  };
+}
+
+/** Adds rebuilt instances to the host, keeping the id order. */
+export function addInstances(
+  host: JunctionHost,
+  instances: readonly Instance[],
+): void {
+  host.instances = [...host.instances, ...instances].sort(
+    (a, b) => a.battleId - b.battleId,
+  );
 }
 
 /** Who has the battle screen open (D13): the server's call, not the world's. */
