@@ -320,7 +320,7 @@ The tick cost follows the population: 65–78 µs per tick on average with both 
 - [x] `battlePause` and `battleHold`; the follow and drop orders; the hostile intent in the delta;
       `PROTOCOL_VERSION` 8
 - [x] The bot's difficulty on its player row (migration), in world creation and `dev:multi --bot-difficulty`
-- [ ] The diff property with the new fields (U-4); `geo net` on today's default world still within targets
+- [x] The diff property with the new fields (U-4); `geo net` on today's default world still within targets
 
 ## F6 — Client
 
