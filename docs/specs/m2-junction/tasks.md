@@ -286,7 +286,7 @@ square against the circle **watched in the playtest** (GDD 06). All provisional 
 - [x] The `battles` and `battle_ticks` tables, in the tick's transaction; recovery rebuilding the instances
 - [x] Presence of the battle screen; the battle clock (50 ms); the pace switch (D13)
 - [x] Battle inputs only for the dominated participant (C-2); frames only to the open screens (N-2)
-- [ ] The diff property test with battles and locked creeps; `geo net` with a watcher (frames against 16 KB/s)
+- [x] The diff property test with battles and locked creeps; `geo net` with a watcher (frames against 16 KB/s)
 
 ## F5 — Client
 

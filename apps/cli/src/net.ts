@@ -7,13 +7,20 @@
 // send, so bytes per delta are bytes per second for a client. Since M2
 // (encontro plan section 8) the delta carries the team's events of the tick,
 // filtered as the server does (eventsFor), and that filter is timed too.
+// With the junction (F4, spec section 7) it measures a watcher too: each
+// battle of the run, replayed from its log, as the frames a battle screen
+// gets (battleFrame, as the server builds it, a delta of the battle view):
+// one per battle tick in real time, one per world second on the world clock,
+// and the battleOpen once; and the full view per frame, for comparison.
 
 import { createHash } from "node:crypto";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import {
   applyDelta,
+  diffBattleView,
   diffView,
+  emptyBattleSent,
   emptySent,
   emptyView,
   viewJson,
@@ -29,7 +36,13 @@ import {
   type TeamEvent,
   type TeamView,
 } from "@geometrix/sim";
-import { createHost } from "@geometrix/junction";
+import {
+  battleView,
+  createBattle,
+  stepBattle,
+  type BattleEvent,
+} from "@geometrix/battle";
+import { createHost, type FinishedBattle } from "@geometrix/junction";
 import {
   defaultBattleParams,
   stepWithBots,
@@ -44,6 +57,8 @@ export const NET_TARGETS = {
   bytesPerSecond: 2048,
   /** View + diff of both teams per send, median. */
   cpuMicros: 250,
+  /** A watcher's battle frames in real time (junction spec section 7). */
+  frameBytesPerSecond: 16 * 1024,
 } as const;
 
 export type NetOptions = {
@@ -92,12 +107,128 @@ export type NetResult = {
   /** The chronicle a welcome carries at the end (team 0's latest 100). */
   chronicleBytes: number;
   windows: NetWindow[];
+  /** A battle screen watching each battle of the run (junction F4). */
+  watcher: WatcherResult;
   property: {
     checks: number;
     mismatches: number;
     first: { tick: number; team: number } | null;
   };
 };
+
+export type WatcherResult = {
+  /** Battles of the run measured (ended, and still open at the end). */
+  battles: number;
+  /** Battle seconds over all of them. */
+  seconds: number;
+  /** One frame per battle tick (real time), in bytes. */
+  realFrame: Spread;
+  /** Per battle: its frames' bytes over its seconds, in real time. */
+  realPerSecond: Spread;
+  /** The same with the full view in every frame instead of its delta. */
+  fullPerSecond: Spread;
+  /** One frame per world second (the world clock), in bytes. */
+  worldFrame: Spread;
+  /** The battleOpen a screen gets once. */
+  openBytes: Spread;
+};
+
+/** The battles' logs as the host left them: ended or still open. */
+type MeasuredBattle = Pick<
+  FinishedBattle,
+  "battleId" | "log" | "members" | "sideOf"
+>;
+
+/**
+ * Replays each battle's log and sizes the frames a battle screen would get
+ * (the server's battleFrame and battleOpen). The roster a frame carries on a
+ * join is the battle's last one, with the side of a team (the same size).
+ */
+export function measureWatcher(
+  battles: readonly MeasuredBattle[],
+  ticksPerWorldTick: number,
+): WatcherResult {
+  const realFrames: number[] = [];
+  const realPerSecond: number[] = [];
+  const fullPerSecond: number[] = [];
+  const worldFrames: number[] = [];
+  const opens: number[] = [];
+  let seconds = 0;
+  for (const battle of battles) {
+    const { log } = battle;
+    const state = createBattle(log.setup, log.params);
+    const roster = {
+      members: battle.members,
+      sides: battle.sideOf.map(() => ({ kind: "team", team: 0 })),
+    };
+    opens.push(
+      Buffer.byteLength(
+        JSON.stringify({
+          type: "battleOpen",
+          battleId: battle.battleId,
+          arena: state.arena,
+          params: log.params,
+          roster,
+          view: battleView(state),
+        }),
+      ),
+    );
+    const realSent = emptyBattleSent();
+    const worldSent = emptyBattleSent();
+    diffBattleView(realSent, battleView(state));
+    diffBattleView(worldSent, battleView(state));
+    const frame = (body: object, events: BattleEvent[]) =>
+      Buffer.byteLength(
+        JSON.stringify({
+          type: "battleFrame",
+          battleId: battle.battleId,
+          ...body,
+          events,
+          ...(events.some((e) => e.type === "joined") ? { roster } : {}),
+        }),
+      );
+    let next = 0;
+    let bytes = 0;
+    let full = 0;
+    let second: BattleEvent[] = [];
+    while (state.tick < log.ticks) {
+      const entry = log.commands[next];
+      let input: unknown[] = [];
+      if (entry !== undefined && entry.tick === state.tick) {
+        input = entry.commands;
+        next += 1;
+      }
+      const events = stepBattle(state, input);
+      const view = battleView(state);
+      const real = frame({ delta: diffBattleView(realSent, view) }, events);
+      realFrames.push(real);
+      bytes += real;
+      full += frame({ view }, events);
+      second.push(...events);
+      if (state.tick % ticksPerWorldTick === 0 || state.ended !== null) {
+        worldFrames.push(
+          frame({ delta: diffBattleView(worldSent, view) }, second),
+        );
+        second = [];
+      }
+    }
+    const battleSeconds = log.ticks / log.params.tick.ticksPerSecond;
+    seconds += battleSeconds;
+    if (battleSeconds > 0) {
+      realPerSecond.push(bytes / battleSeconds);
+      fullPerSecond.push(full / battleSeconds);
+    }
+  }
+  return {
+    battles: battles.length,
+    seconds,
+    realFrame: spread(realFrames),
+    realPerSecond: spread(realPerSecond),
+    fullPerSecond: spread(fullPerSecond),
+    worldFrame: spread(worldFrames),
+    openBytes: spread(opens),
+  };
+}
 
 const sha256 = (text: string) =>
   createHash("sha256").update(text).digest("hex");
@@ -149,6 +280,7 @@ export function measureNet(
   const chronicle: TeamEvent[] = [];
   const events = { sent: 0, deltas: 0, maxPerDelta: 0 };
   const stringifyTimes = new Float64Array(ticks);
+  const battles: MeasuredBattle[] = [];
   let hashMicros = 0;
   let hashes = 0;
   const property: NetResult["property"] = {
@@ -158,7 +290,9 @@ export function measureNet(
   };
 
   for (let i = 0; i < ticks; i++) {
-    const tickEvents = stepWithBots(state, host, bots, log).events;
+    const done = stepWithBots(state, host, bots, log);
+    const tickEvents = done.events;
+    battles.push(...done.finished);
     const hashed = state.tick % hashEveryTicks === 0;
     const messages: string[] = [];
     const views: TeamView[] = [];
@@ -286,6 +420,10 @@ export function measureNet(
     welcomeBytes: Buffer.byteLength(viewJson(view(state, 0))),
     chronicleBytes: Buffer.byteLength(JSON.stringify(chronicle.slice(-100))),
     windows,
+    watcher: measureWatcher(
+      [...battles, ...host.instances].sort((a, b) => a.battleId - b.battleId),
+      host.battleParams.tick.ticksPerSecond * params.world.tickSeconds,
+    ),
     property,
   };
 }
@@ -297,6 +435,7 @@ export function netVerdicts(result: NetResult) {
     bandwidth: result.bytes.mean <= NET_TARGETS.bytesPerSecond,
     cpu: cpu <= NET_TARGETS.cpuMicros,
     property: result.property.mismatches === 0,
+    frames: result.watcher.realPerSecond.max <= NET_TARGETS.frameBytesPerSecond,
   };
 }
 
@@ -335,6 +474,14 @@ export function renderNet(result: NetResult): string {
           `≤ ${number(NET_TARGETS.cpuMicros)} µs por envio, mediana`,
           `${micros(cpuWithHash)} (${micros(result.cpuMicros.median)} + hash ${micros(result.hash.amortizedMicros)})`,
           ok(verdicts.cpu),
+        ],
+        [
+          "Frames de batalha por espectador, tempo real",
+          `≤ ${number(NET_TARGETS.frameBytesPerSecond)} B/s na pior batalha`,
+          result.watcher.battles === 0
+            ? "nenhuma batalha"
+            : `${number(result.watcher.realPerSecond.max)} B/s (média das batalhas ${number(result.watcher.realPerSecond.mean)} B/s)`,
+          ok(verdicts.frames),
         ],
         [
           "Correção do diff",
@@ -385,6 +532,51 @@ export function renderNet(result: NetResult): string {
     `- Hash da visão (\`viewJson\` + SHA-256): ${micros(result.hash.meanMicros)} por hash, ${number(result.hash.count)} hashes; ${micros(result.hash.amortizedMicros)} por envio, amortizado.`,
     `- Visão completa de um \`welcome\` no fim do mundo: ${number(result.welcomeBytes)} bytes; a crônica dele (as últimas 100 entradas do time 0): ${number(result.chronicleBytes)} bytes.`,
     `- Tempo real da execução, com a verificação do cliente: ${number(result.wallSeconds, 1)} s.`,
+    "",
+    "## Um espectador de batalha",
+    "",
+    `Cada uma das ${number(result.watcher.battles)} batalhas da corrida (${number(result.watcher.seconds)} s de batalha), refeita do seu log, como os frames que uma tela de batalha recebe, cada um o delta da visão da batalha desde o anterior: um por tick de batalha em tempo real (20 por segundo), um por segundo de mundo no relógio do mundo (a ×1, um por segundo; a ×N, N por segundo). O \`battleOpen\` vai uma vez, ao abrir a tela, com a visão inteira.`,
+    "",
+    table(
+      ["Medida", "Média", "Mediana", "p95", "Máximo"],
+      [
+        [
+          "Frame em tempo real (bytes)",
+          number(result.watcher.realFrame.mean),
+          number(result.watcher.realFrame.median),
+          number(result.watcher.realFrame.p95),
+          number(result.watcher.realFrame.max),
+        ],
+        [
+          "Tempo real, por batalha (B/s)",
+          number(result.watcher.realPerSecond.mean),
+          number(result.watcher.realPerSecond.median),
+          number(result.watcher.realPerSecond.p95),
+          number(result.watcher.realPerSecond.max),
+        ],
+        [
+          "Idem, com a visão inteira em cada frame (B/s)",
+          number(result.watcher.fullPerSecond.mean),
+          number(result.watcher.fullPerSecond.median),
+          number(result.watcher.fullPerSecond.p95),
+          number(result.watcher.fullPerSecond.max),
+        ],
+        [
+          "Frame no relógio do mundo (bytes)",
+          number(result.watcher.worldFrame.mean),
+          number(result.watcher.worldFrame.median),
+          number(result.watcher.worldFrame.p95),
+          number(result.watcher.worldFrame.max),
+        ],
+        [
+          "`battleOpen` (bytes)",
+          number(result.watcher.openBytes.mean),
+          number(result.watcher.openBytes.median),
+          number(result.watcher.openBytes.p95),
+          number(result.watcher.openBytes.max),
+        ],
+      ],
+    ),
     "",
     "## Ao longo do mundo",
     "",

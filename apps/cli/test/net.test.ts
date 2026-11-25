@@ -85,24 +85,46 @@ describe("measureNet", () => {
   });
 
   test("the criteria follow the spec targets", () => {
-    const at = (bytes: number, cpu: number, mismatches = 0): NetResult => ({
+    const at = (
+      bytes: number,
+      cpu: number,
+      mismatches = 0,
+      frames = 0,
+    ): NetResult => ({
       ...result,
       bytes: { ...result.bytes, mean: bytes },
       cpuMicros: { ...result.cpuMicros, median: cpu },
       hash: { ...result.hash, amortizedMicros: 0 },
       property: { ...result.property, mismatches },
+      watcher: {
+        ...result.watcher,
+        realPerSecond: { ...result.watcher.realPerSecond, max: frames },
+      },
     });
-    const { bytesPerSecond, cpuMicros } = NET_TARGETS;
-    expect(netVerdicts(at(bytesPerSecond, cpuMicros))).toEqual({
+    const { bytesPerSecond, cpuMicros, frameBytesPerSecond } = NET_TARGETS;
+    expect(
+      netVerdicts(at(bytesPerSecond, cpuMicros, 0, frameBytesPerSecond)),
+    ).toEqual({
       bandwidth: true,
       cpu: true,
       property: true,
+      frames: true,
     });
-    expect(netVerdicts(at(bytesPerSecond + 1, cpuMicros + 1, 1))).toEqual({
+    expect(
+      netVerdicts(
+        at(bytesPerSecond + 1, cpuMicros + 1, 1, frameBytesPerSecond + 1),
+      ),
+    ).toEqual({
       bandwidth: false,
       cpu: false,
       property: false,
+      frames: false,
     });
+  });
+
+  test("a run with no battle has no frames to measure", () => {
+    expect(result.watcher.battles).toBe(0);
+    expect(netVerdicts(result).frames).toBe(true);
   });
 
   test("net.md has the criteria, the measurements and the windows", () => {
@@ -112,6 +134,34 @@ describe("measureNet", () => {
     expect(md).toContain("1,0 h de mundo");
     expect(md).toContain("| 0–1 h |");
     expect(md).toContain(result.finalHash);
+  });
+});
+
+describe("a battle watcher (junction F4)", () => {
+  // Seed 42 of the test params: the first battles open near tick 8,540.
+  const watched = measureNet({ ...options, seed: 42, ticks: 9_000 });
+
+  test("sizes the frames of every battle of the run", () => {
+    const { watcher } = watched;
+    expect(watcher.battles).toBeGreaterThan(0);
+    expect(watcher.seconds).toBeGreaterThan(0);
+    expect(watcher.realFrame.median).toBeGreaterThan(20);
+    expect(watcher.realFrame.max).toBeGreaterThanOrEqual(
+      watcher.realFrame.median,
+    );
+    // Twenty frames a second; the deltas take far less than the full view.
+    expect(watcher.realPerSecond.mean).toBeGreaterThan(
+      10 * watcher.realFrame.median,
+    );
+    expect(watcher.realPerSecond.mean).toBeLessThan(
+      watcher.fullPerSecond.mean / 2,
+    );
+    expect(watcher.worldFrame.median).toBeGreaterThanOrEqual(
+      watcher.realFrame.median,
+    );
+    // The arena goes once, in the opening.
+    expect(watcher.openBytes.median).toBeGreaterThan(watcher.realFrame.max);
+    expect(renderNet(watched)).toContain("## Um espectador de batalha");
   });
 });
 
