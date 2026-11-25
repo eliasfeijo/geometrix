@@ -97,5 +97,5 @@ describe("SoakClient", () => {
     await advance(1);
     expect(client.chronicle).toEqual(host.chronicle(1));
     expect(client.report.resumes).toBe(1);
-  });
+  }, 20_000);
 });

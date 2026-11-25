@@ -9,10 +9,14 @@
 // junction host (junction plan P5, section 7): its battles' results enter
 // the tick's log after the players' commands, as the system player's.
 
-import type { BattleParams } from "@geometrix/battle";
+import { BATTLE_VERSION, type BattleParams } from "@geometrix/battle";
 import {
+  addInstances,
   createHost,
+  instanceRecord,
+  rebuildInstance,
   stepJunction,
+  type Instance,
   type JunctionHost,
 } from "@geometrix/junction";
 import type { RejectReason, WorldStatus } from "@geometrix/protocol";
@@ -36,8 +40,9 @@ import {
   type WorldState,
 } from "@geometrix/sim";
 import type { ServerConfig } from "./config.ts";
-import { stateHash } from "./hash.ts";
+import { battleHash, stateHash } from "./hash.ts";
 import type {
+  BattlesRecord,
   LoggedCommand,
   Snapshot,
   Store,
@@ -80,6 +85,10 @@ export class WorldHost {
   private readonly listeners: ((events: readonly SimEvent[]) => void)[] = [];
   /** Each team's latest events, oldest first, at most chronicleWelcome. */
   private readonly recent: TeamEvent[][];
+  /** Per stored battle, how many of its log's ticks are in the store. */
+  private readonly storedTicks = new Map<number, number>();
+  /** Battles that ended since the last commit, outside a world tick. */
+  private ended: Instance[] = [];
 
   private constructor(
     context: HostContext,
@@ -181,11 +190,31 @@ export class WorldHost {
       }
     });
     const junction = createHost(row.battleParams ?? serverBattleParams);
-    if (state.battles.length > 0) {
-      throw new RecoveryError(
-        `world ${row.id}: ${state.battles.length} battles open, and their instances are not stored`,
-      );
-    }
+    const storedTicks = new Map<number, number>();
+    const instances = state.battles.map((stub) => {
+      const battle = store.battle(row.id, stub.id);
+      if (battle === undefined) {
+        throw new RecoveryError(
+          `world ${row.id}: battle ${stub.id} not stored`,
+        );
+      }
+      if (battle.battleVersion !== BATTLE_VERSION) {
+        throw new RecoveryError(
+          `world ${row.id}: battle ${stub.id} from battle version ${battle.battleVersion}, this server runs ${BATTLE_VERSION}`,
+        );
+      }
+      const ticks = store.battleTicks(row.id, stub.id);
+      storedTicks.set(stub.id, ticks.length);
+      return rebuildInstance(battle.record, {
+        battleVersion: battle.battleVersion,
+        setup: battle.setup,
+        params: battle.params,
+        ticks: battle.reachedTick,
+        commands: ticks,
+        finalHash: null,
+      });
+    });
+    addInstances(junction, instances);
     const players = store.players(row.id);
     const bots = players
       .filter((p) => p.bot)
@@ -199,6 +228,7 @@ export class WorldHost {
       bots,
       row.status,
     );
+    for (const [id, count] of storedTicks) host.storedTicks.set(id, count);
     for (const team of state.teams) {
       host.recent[team.id] = store.recentChronicle(
         row.id,
@@ -290,6 +320,7 @@ export class WorldHost {
     const players = this.pending;
     this.pending = [];
     const tick = state.tick;
+    const before = [...this.junction.instances];
     const done = stepJunction(state, this.junction, players);
     const commands: LoggedCommand[] = [
       ...players,
@@ -305,6 +336,11 @@ export class WorldHost {
     const { snapshotEveryTicks, metricsEveryTicks } = this.context.config;
     const ended = state.tick >= this.durationTicks;
     const { store } = this.context;
+    const gone = [
+      ...this.ended,
+      ...before.filter((i) => !this.junction.instances.includes(i)),
+    ];
+    const battles = this.battlesRecord(tick, gone);
     store.transaction(() => {
       store.commitTick({
         worldId: this.id,
@@ -319,12 +355,65 @@ export class WorldHost {
             ? sampleMetrics(state)
             : undefined,
         events,
+        battles,
       });
       if (ended) store.setStatus(this.id, "ended");
     });
+    for (const instance of this.junction.instances) {
+      this.storedTicks.set(instance.battleId, instance.log.commands.length);
+    }
+    for (const instance of gone) this.storedTicks.delete(instance.battleId);
+    this.ended = [];
     if (ended) this.status = "ended";
     this.remember(events);
     for (const listener of this.listeners) listener(events);
+  }
+
+  /**
+   * What the tick's transaction writes about the battles (junction plan
+   * section 6): the ones opened, the battle ticks with commands run since
+   * the last commit, the tick each one reached, and the ends (`gone`, which
+   * left the host; the world applied their end on `tick`).
+   */
+  private battlesRecord(
+    tick: number,
+    gone: readonly Instance[],
+  ): BattlesRecord {
+    const record: BattlesRecord = {
+      opened: [],
+      ticks: [],
+      reached: [],
+      ended: [],
+    };
+    for (const instance of [...this.junction.instances, ...gone]) {
+      const { battleId, log } = instance;
+      const stored = this.storedTicks.get(battleId);
+      if (stored === undefined) {
+        record.opened.push({
+          battleId,
+          openedTick: tick,
+          battleVersion: log.battleVersion,
+          setup: log.setup,
+          params: log.params,
+        });
+      }
+      for (const entry of log.commands.slice(stored ?? 0)) {
+        record.ticks.push({ battleId, tick: entry });
+      }
+      record.reached.push({
+        battleId,
+        reachedTick: log.ticks,
+        record: instanceRecord(instance),
+      });
+    }
+    for (const instance of gone) {
+      record.ended.push({
+        battleId: instance.battleId,
+        endedTick: tick,
+        finalHash: battleHash(instance.state),
+      });
+    }
+    return record;
   }
 
   /** The team's latest events, oldest first: what a new stream starts from. */

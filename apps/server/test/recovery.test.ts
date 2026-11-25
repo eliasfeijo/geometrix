@@ -1,9 +1,11 @@
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { replayLog } from "@geometrix/battle";
+import { replayResults, serializeHost } from "@geometrix/junction";
 import type { Command } from "@geometrix/sim";
 import { describe, expect, test } from "vitest";
-import { stateHash } from "../src/hash.ts";
+import { battleHash, stateHash } from "../src/hash.ts";
 import { Store } from "../src/persistence.ts";
 import {
   RecoveryError,
@@ -191,4 +193,122 @@ describe("recovery after a restart", () => {
       await second.app.close();
     }
   });
+});
+
+describe("recovery in the middle of a battle (junction N-3, P6)", () => {
+  /** Seed 42 of the test params with two bots: a battle runs on 8,540–8,558. */
+  function botWorld(store: Store): WorldHost {
+    return WorldHost.create(
+      { store, config },
+      {
+        seed: 42,
+        params: testParams(),
+        battleParams: testBattleParams(),
+        multiplier: 1,
+        botTeams: [0, 1],
+        createdAt: "2026-11-14T00:00:00.000Z",
+      },
+    );
+  }
+
+  const runTo = (host: WorldHost, tick: number) => {
+    while (host.state.tick < tick) host.tick();
+  };
+
+  test("the battle is rebuilt from its tables as it was, and the world ends the same", () => {
+    const steady = new Store(":memory:");
+    const reference = botWorld(steady);
+    runTo(reference, 8_550);
+    expect(reference.junction.instances.length).toBeGreaterThan(0);
+    const hostThen = serializeHost(reference.junction);
+    runTo(reference, 9_000);
+
+    const file = dbFile();
+    let store = new Store(file);
+    const crashed = botWorld(store);
+    runTo(crashed, 8_550);
+    store.close(); // no snapshot at 8,550: the last is at 8,400
+
+    store = new Store(file);
+    const recovered = WorldHost.recover(
+      { store, config },
+      store.world(crashed.id)!,
+      testBattleParams(),
+    );
+    expect(recovered.state.tick).toBe(8_550);
+    expect(serializeHost(recovered.junction)).toBe(hostThen);
+    runTo(recovered, 9_000);
+    expect(stateHash(recovered.state)).toBe(stateHash(reference.state));
+    expect(serializeHost(recovered.junction)).toBe(
+      serializeHost(reference.junction),
+    );
+    expect(store.commandsFrom(crashed.id, 0)).toEqual(
+      steady.commandsFrom(reference.id, 0),
+    );
+    expect(store.battles(crashed.id)).toEqual(steady.battles(reference.id));
+  }, 60_000);
+
+  test("an ended battle's stored log replays to its final hash and to the results the world log applied", () => {
+    const store = new Store(":memory:");
+    const host = botWorld(store);
+    runTo(host, 9_000);
+    const battles = store.battles(host.id);
+    expect(battles.length).toBeGreaterThan(0);
+    const log = store.commandsFrom(host.id, 0);
+    for (const battle of battles.filter((b) => b.endedTick !== null)) {
+      const battleLog = {
+        battleVersion: battle.battleVersion,
+        setup: battle.setup,
+        params: battle.params,
+        ticks: battle.reachedTick,
+        commands: store.battleTicks(host.id, battle.battleId),
+        finalHash: null,
+      };
+      expect(battleHash(replayLog(battleLog))).toBe(battle.finalHash);
+      const applied = log
+        .map((c) => c.command)
+        .filter(
+          (c) =>
+            (c.type === "battleExit" || c.type === "battleEnd") &&
+            c.battleId === battle.battleId,
+        );
+      expect(battle.record.sent).toEqual(applied);
+      expect(battle.record.pending).toEqual([]);
+      expect(
+        replayResults(host.state, {
+          ...battle.record,
+          log: battleLog,
+          late: [],
+          results: battle.record.sent,
+        }),
+      ).toEqual(applied);
+      // It ended on the world tick whose step applied its end.
+      const end = log.find(
+        (c) =>
+          c.command.type === "battleEnd" &&
+          c.command.battleId === battle.battleId,
+      )!;
+      expect(battle.endedTick).toBe(end.tick);
+    }
+  }, 60_000);
+
+  test("refuses a world whose open battle is not stored", () => {
+    const store = new Store(":memory:");
+    const host = botWorld(store);
+    runTo(host, 8_545);
+    expect(host.state.battles.length).toBeGreaterThan(0);
+    store.transaction(() => {
+      // An older file: the battle tables did not exist.
+      (store as unknown as { db: { exec(sql: string): void } }).db.exec(
+        "DELETE FROM battles",
+      );
+    });
+    expect(() =>
+      WorldHost.recover(
+        { store, config },
+        store.world(host.id)!,
+        testBattleParams(),
+      ),
+    ).toThrow(RecoveryError);
+  }, 60_000);
 });

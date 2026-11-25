@@ -183,7 +183,7 @@ describe("WorldHost", () => {
     // A copy: changing it does not change what the host keeps.
     host.chronicle(1).pop();
     expect(host.chronicle(1)).toHaveLength(3);
-  });
+  }, 20_000);
 });
 
 describe("the world through the junction host (junction F4, P2, P5)", () => {

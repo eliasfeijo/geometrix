@@ -4,9 +4,15 @@
 // stored in one transaction: its commands, the tick it reached and, when due,
 // a snapshot and metric samples. The chronicle (M2 encontro plan section 8,
 // P7) is derived data (ADR-0007 rule 6): one row per event and team of its
-// audience, written with the tick, rebuilt from the log on recovery.
+// audience, written with the tick, rebuilt from the log on recovery. The
+// battles (junction plan section 6, P6): one row per battle with its setup,
+// its params and what the junction host keeps besides the battle (the
+// record), and one row per battle tick that had commands; the tick's
+// transaction writes the battles opened, the battle ticks run since the
+// previous commit, the tick each battle reached and the ends.
 
-import type { BattleParams } from "@geometrix/battle";
+import type { BattleParams, BattleSetup, LoggedTick } from "@geometrix/battle";
+import type { InstanceRecord } from "@geometrix/junction";
 import Database from "better-sqlite3";
 import {
   eventsFor,
@@ -47,6 +53,36 @@ export type PlayerRow = {
 
 export type Snapshot = { tick: number; stateJson: string; stateHash: string };
 
+/** A battle as the battles table keeps it. */
+export type BattleRow = {
+  battleId: number;
+  /** The world tick that opened it. */
+  openedTick: number;
+  /** The world tick whose step applied its end, or null while it runs. */
+  endedTick: number | null;
+  battleVersion: number;
+  setup: BattleSetup;
+  params: BattleParams;
+  /** Battle ticks stepped as of the last commit. */
+  reachedTick: number;
+  record: InstanceRecord;
+  /** sha256 of serializeBattle at the end. */
+  finalHash: string | null;
+};
+
+/** What a tick writes about the battles (ADR-0010 rule 5). */
+export type BattlesRecord = {
+  opened: Omit<
+    BattleRow,
+    "endedTick" | "reachedTick" | "record" | "finalHash"
+  >[];
+  /** The battle ticks with commands run since the previous commit. */
+  ticks: { battleId: number; tick: LoggedTick }[];
+  /** Every battle stepped or opened since then, ended ones included. */
+  reached: { battleId: number; reachedTick: number; record: InstanceRecord }[];
+  ended: { battleId: number; endedTick: number; finalHash: string }[];
+};
+
 /** What one tick writes, all or nothing. */
 export type TickRecord = {
   worldId: number;
@@ -57,6 +93,7 @@ export type TickRecord = {
   metrics?: MetricsSample;
   /** The events step returned, with their audience. */
   events?: readonly SimEvent[];
+  battles?: BattlesRecord;
 };
 
 const SCHEMA = `
@@ -109,6 +146,26 @@ CREATE TABLE IF NOT EXISTS chronicle (
   event_json TEXT    NOT NULL,
   PRIMARY KEY (world_id, team_id, tick, idx)
 );
+CREATE TABLE IF NOT EXISTS battles (
+  world_id       INTEGER NOT NULL REFERENCES worlds(id),
+  battle_id      INTEGER NOT NULL,
+  opened_tick    INTEGER NOT NULL,
+  ended_tick     INTEGER,
+  battle_version INTEGER NOT NULL,
+  setup_json     TEXT    NOT NULL,
+  params_json    TEXT    NOT NULL,
+  reached_tick   INTEGER NOT NULL DEFAULT 0,
+  record_json    TEXT    NOT NULL,
+  final_hash     TEXT,
+  PRIMARY KEY (world_id, battle_id)
+);
+CREATE TABLE IF NOT EXISTS battle_ticks (
+  world_id      INTEGER NOT NULL REFERENCES worlds(id),
+  battle_id     INTEGER NOT NULL,
+  tick          INTEGER NOT NULL,
+  commands_json TEXT    NOT NULL,
+  PRIMARY KEY (world_id, battle_id, tick)
+);
 `;
 
 type WorldRecord = {
@@ -152,6 +209,30 @@ const toPlayer = (r: PlayerRecord): PlayerRow => ({
   team: r.team_id,
   name: r.name,
   bot: r.bot === 1,
+});
+
+type BattleRecordRow = {
+  battle_id: number;
+  opened_tick: number;
+  ended_tick: number | null;
+  battle_version: number;
+  setup_json: string;
+  params_json: string;
+  reached_tick: number;
+  record_json: string;
+  final_hash: string | null;
+};
+
+const toBattle = (r: BattleRecordRow): BattleRow => ({
+  battleId: r.battle_id,
+  openedTick: r.opened_tick,
+  endedTick: r.ended_tick,
+  battleVersion: r.battle_version,
+  setup: JSON.parse(r.setup_json) as BattleSetup,
+  params: JSON.parse(r.params_json) as BattleParams,
+  reachedTick: r.reached_tick,
+  record: JSON.parse(r.record_json) as InstanceRecord,
+  finalHash: r.final_hash,
 });
 
 export class Store {
@@ -285,7 +366,82 @@ export class Store {
       if (record.snapshot) this.putSnapshot(record.worldId, record.snapshot);
       if (record.metrics) this.putMetrics(record.worldId, record.metrics);
       if (record.events) this.putChronicle(record.worldId, record.events);
+      if (record.battles) this.putBattles(record.worldId, record.battles);
     });
+  }
+
+  private putBattles(worldId: number, battles: BattlesRecord): void {
+    const open = this.db.prepare(
+      `INSERT INTO battles (world_id, battle_id, opened_tick, battle_version,
+         setup_json, params_json, record_json)
+       VALUES (?, ?, ?, ?, ?, ?, '{}')`,
+    );
+    for (const b of battles.opened) {
+      open.run(
+        worldId,
+        b.battleId,
+        b.openedTick,
+        b.battleVersion,
+        JSON.stringify(b.setup),
+        JSON.stringify(b.params),
+      );
+    }
+    const tick = this.db.prepare(
+      `INSERT INTO battle_ticks (world_id, battle_id, tick, commands_json)
+       VALUES (?, ?, ?, ?)`,
+    );
+    for (const t of battles.ticks) {
+      tick.run(
+        worldId,
+        t.battleId,
+        t.tick.tick,
+        JSON.stringify(t.tick.commands),
+      );
+    }
+    const reached = this.db.prepare(
+      `UPDATE battles SET reached_tick = ?, record_json = ?
+       WHERE world_id = ? AND battle_id = ?`,
+    );
+    for (const r of battles.reached) {
+      reached.run(r.reachedTick, JSON.stringify(r.record), worldId, r.battleId);
+    }
+    const ended = this.db.prepare(
+      `UPDATE battles SET ended_tick = ?, final_hash = ?
+       WHERE world_id = ? AND battle_id = ?`,
+    );
+    for (const e of battles.ended) {
+      ended.run(e.endedTick, e.finalHash, worldId, e.battleId);
+    }
+  }
+
+  /** A stored battle, or undefined. */
+  battle(worldId: number, battleId: number): BattleRow | undefined {
+    const row = this.db
+      .prepare("SELECT * FROM battles WHERE world_id = ? AND battle_id = ?")
+      .get(worldId, battleId) as BattleRecordRow | undefined;
+    return row && toBattle(row);
+  }
+
+  /** A world's battles, by id. */
+  battles(worldId: number): BattleRow[] {
+    const rows = this.db
+      .prepare("SELECT * FROM battles WHERE world_id = ? ORDER BY battle_id")
+      .all(worldId) as BattleRecordRow[];
+    return rows.map(toBattle);
+  }
+
+  /** A battle's ticks with commands, in tick order. */
+  battleTicks(worldId: number, battleId: number): LoggedTick[] {
+    const rows = this.db
+      .prepare(
+        `SELECT tick, commands_json FROM battle_ticks
+         WHERE world_id = ? AND battle_id = ? ORDER BY tick`,
+      )
+      .all(worldId, battleId) as { tick: number; commands_json: string }[];
+    return rows.map((r) => ({
+      tick: r.tick,
+      commands: JSON.parse(r.commands_json) as unknown[],
+    }));
   }
 
   /**
