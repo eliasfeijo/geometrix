@@ -112,7 +112,8 @@
     }
   },
   "autopilot": {
-    "maxRules": 10
+    "maxRules": 10,
+    "followCells": 2
   },
   "domination": {
     "cost": {

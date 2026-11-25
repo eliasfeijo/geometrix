@@ -75,7 +75,12 @@ describe("rules draft", () => {
     expect([...CONDITION_TYPES].sort()).toEqual(
       Object.keys(CONDITION_LABELS).sort(),
     );
-    expect([...ACTION_TYPES].sort()).toEqual(Object.keys(ACTION_LABELS).sort());
+    // follow needs an ally picked on the map: "Seguir…" (R F6), not the list.
+    expect([...ACTION_TYPES].sort()).toEqual(
+      Object.keys(ACTION_LABELS)
+        .filter((t) => t !== "follow")
+        .sort(),
+    );
     expect(
       conditionOf("resourceUnknown", {
         type: "stockBelow",

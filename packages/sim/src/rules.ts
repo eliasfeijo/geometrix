@@ -6,6 +6,7 @@
 import type { Action, Condition, Rule } from "./autopilot.ts";
 import {
   findCreep,
+  followRefusal,
   teamCreepRefusal,
   type TeamCreepRefusal,
 } from "./domination.ts";
@@ -110,6 +111,8 @@ function copyAction(a: Action, map: GameMap): Action | null {
       return isResource(a.resource)
         ? { type: a.type, resource: a.resource }
         : null;
+    case "follow":
+      return isCount(a.creepId) ? { type: a.type, creepId: a.creepId } : null;
     case "moveTo":
     case "buildRoad":
       return isInMap(map, a) ? { type: a.type, x: a.x, y: a.y } : null;
@@ -139,7 +142,16 @@ export function setRulesRefusal(
   const refusal = teamCreepRefusal(state, playerId, creepId);
   if (refusal !== null) return refusal;
   if (rules.length > state.params.autopilot.maxRules) return "tooManyRules";
-  return copyRules(rules, state.map) === null ? "invalidRule" : null;
+  const copies = copyRules(rules, state.map);
+  if (copies === null) return "invalidRule";
+  const creep = findCreep(state, creepId)!;
+  for (const rule of copies) {
+    if (rule.then.type !== "follow") continue;
+    if (followRefusal(state, creep, rule.then.creepId) !== null) {
+      return "invalidTarget";
+    }
+  }
+  return null;
 }
 
 export function setRules(

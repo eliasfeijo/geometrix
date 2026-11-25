@@ -86,6 +86,7 @@ export const ACTION_LABELS: Record<Action["type"], string> = {
   pay: "pagar (quando abordado)",
   fight: "lutar (quando abordado)",
   flee: "fugir (quando abordado)",
+  follow: "seguir",
 };
 
 /**
@@ -163,6 +164,9 @@ export function actionOf(
       const point = "x" in from ? { x: from.x, y: from.y } : cell;
       return { type, ...point };
     }
+    case "follow":
+      // Not offered by the editor's list: "Seguir…" picks the ally (R F6).
+      return { type, creepId: "creepId" in from ? from.creepId : 0 };
   }
 }
 

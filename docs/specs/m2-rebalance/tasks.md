@@ -151,7 +151,7 @@ which R F5 also touches (`battle.hold`): a small rebase.
 
 ## F2 — The world vocabulary
 
-- [ ] `follow`: the order, the action, walking within `autopilot.followCells`, joining the target's battle, the end,
+- [x] `follow`: the order, the action, walking within `autopilot.followCells`, joining the target's battle, the end,
       the cycle refused (F-1..F-5)
 - [ ] `allyInBattle` and `joinBattle` with `minHpPermille` and the load check (H-1, H-2, H-4, F-6)
 - [ ] `drop`: the order and the action, the `dropped` event, the refusals; during an extortion, a refusal (DR-1..DR-3)

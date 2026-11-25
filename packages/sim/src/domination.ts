@@ -33,7 +33,9 @@ export type OrderInput =
   /** An enemy creep the team sees now (M2 encontro spec E-1, D19). */
   | { type: "approach"; targetId: number; intent: "attack" | "extort" }
   /** A spoil the team remembers. */
-  | { type: "pickup"; spoilId: number };
+  | { type: "pickup"; spoilId: number }
+  /** A teammate to follow (R spec D8). */
+  | { type: "follow"; targetId: number };
 
 export type DominationRefusal =
   | "unknownPlayer"
@@ -50,7 +52,9 @@ export type DominationRefusal =
   /** Locked in a battle, a creep takes no world order (junction O-5). */
   | "inBattle"
   /** A fleeing creep's order is locked (plan P4). */
-  | "fleeing";
+  | "fleeing"
+  /** A follow on the creep itself or closing a cycle (R spec F-5). */
+  | "invalidTarget";
 
 /** Why a reply to an encounter is refused (command react). */
 export type ReactRefusal =
@@ -234,6 +238,8 @@ export function orderRefusal(
       )
         ? null
         : "invalidOrder";
+    case "follow":
+      return followRefusal(state, creep, order.targetId);
     case "gather":
       return memoryOf(state, player.team).deposits.some(
         (d) => d.id === order.depositId,
@@ -275,7 +281,57 @@ function toOrder(input: OrderInput): Order {
       };
     case "pickup":
       return { type: "pickup", spoilId: input.spoilId };
+    case "follow":
+      return { type: "follow", targetId: input.targetId };
   }
+}
+
+/**
+ * Why `creep` cannot follow `targetId` (R spec F-5), or null: the target
+ * must be a creep of its team (anything else is refused as unknown, so no id
+ * of another team is confirmed), not itself, and no chain of follows may
+ * lead back to it.
+ */
+export function followRefusal(
+  state: WorldState,
+  creep: Creep,
+  targetId: number,
+): "unknownCreep" | "invalidTarget" | null {
+  const target = findCreep(state, targetId);
+  if (target === undefined || target.team !== creep.team) {
+    return "unknownCreep";
+  }
+  if (target.id === creep.id || closesFollowCycle(state, creep.id, targetId)) {
+    return "invalidTarget";
+  }
+  return null;
+}
+
+/**
+ * Whether the chain of follows from `targetId` comes back to `creepId`: by
+ * each creep's follow order and every follow rule it has (a rule may match
+ * later, so all of them count).
+ */
+export function closesFollowCycle(
+  state: WorldState,
+  creepId: number,
+  targetId: number,
+): boolean {
+  const seen = new Set<number>();
+  const pending = [targetId];
+  while (pending.length > 0) {
+    const id = pending.pop()!;
+    if (id === creepId) return true;
+    if (seen.has(id)) continue;
+    seen.add(id);
+    const creep = findCreep(state, id);
+    if (creep === undefined) continue;
+    if (creep.order.type === "follow") pending.push(creep.order.targetId);
+    for (const rule of creep.rules) {
+      if (rule.then.type === "follow") pending.push(rule.then.creepId);
+    }
+  }
+  return false;
 }
 
 /**

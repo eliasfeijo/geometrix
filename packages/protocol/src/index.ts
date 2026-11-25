@@ -75,6 +75,7 @@ const action = z.discriminatedUnion("type", [
     dna: dnaList.optional(),
     minCargo: z.number().int().nonnegative(),
   }),
+  z.object({ type: z.literal("follow"), creepId: id }),
   z.object({ type: z.literal("pay") }),
   z.object({ type: z.literal("fight") }),
   z.object({ type: z.literal("flee") }),
@@ -91,6 +92,7 @@ const orderInput = z.discriminatedUnion("type", [
   cell.extend({ type: z.literal("buildRoad") }),
   z.object({ type: z.literal("approach"), targetId: id, intent }),
   z.object({ type: z.literal("pickup"), spoilId: id }),
+  z.object({ type: z.literal("follow"), targetId: id }),
 ]);
 
 /**

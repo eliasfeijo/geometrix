@@ -14,6 +14,7 @@ import {
   teamOf,
 } from "./economy.ts";
 import { opening, stockTotal } from "./approach.ts";
+import { findCreep } from "./domination.ts";
 import { isInMap, isRotatedSide, manhattan, type Cell } from "./map.ts";
 import { cellModifier } from "./movement.ts";
 import type { Order } from "./orders.ts";
@@ -93,6 +94,11 @@ export type Action =
       dna?: Dna[];
       minCargo: number;
     }
+  /**
+   * Follow the teammate `creepId` and join its battles (R spec D8);
+   * impossible once it is dead or of another team (F-4).
+   */
+  | { type: "follow"; creepId: number }
   /**
    * Reactions: decided only in an encounter (plan section 6). Since the
    * junction (D2), fight and flee choose how the creep enters the battle
@@ -414,6 +420,17 @@ function orderFor(
       return pickupFor(state, creep);
     case "approach":
       return approachFor(state, creep, action);
+    case "follow": {
+      const target = findCreep(state, action.creepId);
+      if (
+        target === undefined ||
+        target.team !== creep.team ||
+        target.id === creep.id
+      ) {
+        return null;
+      }
+      return { type: "follow", targetId: target.id };
+    }
     case "pay":
     case "fight":
     case "flee":

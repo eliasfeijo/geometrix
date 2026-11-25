@@ -167,6 +167,8 @@ export function actionText(a: Action): string {
       return "lutar";
     case "flee":
       return "fugir";
+    case "follow":
+      return `seguir o creep #${a.creepId}`;
   }
 }
 
@@ -200,6 +202,8 @@ export function orderText(order: Order, deposits: readonly Deposit[]): string {
       return `catar o despojo #${order.spoilId}`;
     case "flee":
       return "fugir para o Núcleo";
+    case "follow":
+      return `seguir o creep #${order.targetId}`;
   }
 }
 

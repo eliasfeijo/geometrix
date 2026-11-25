@@ -101,7 +101,11 @@ const schema = {
   creep: { cost, productionSeconds: positive },
   road: { cost, buildSeconds: positive },
   upgrade: { capacity: { cost, bonusPermille: nonNegative } },
-  autopilot: { maxRules: positive },
+  autopilot: {
+    maxRules: positive,
+    /** A follower halts within this Manhattan distance of its target (R D8). */
+    followCells: positive,
+  },
   domination: {
     cost,
     cooldownSeconds: nonNegative,
