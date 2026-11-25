@@ -15,7 +15,7 @@
 | **In progress** | Three spec drafts (2026-11-25), waiting for the owner: [R](../specs/m2-rebalance/spec.md), [E-min](../specs/m2-minimal-end/spec.md) and [K](../specs/m2-kits/spec.md) |
 | **Next front** | The specs of **R**, **E-min** and **K** (`spec-slice` skill), one session each; they can run in parallel (R: `sim` params, autopilot, strategist, map UI; E-min: the end rule, end screen and replay; K: `packages/battle`, gambits, lab, battle screen). R's final balance pass runs after K's merge |
 | **Then** | **P — The friends' playtest** (two teams: humans against humans, or co-op against the bot); after it, **E** (siege and repair) or **T** (more teams), chosen at P's checkpoint |
-| **Waiting on the owner** | (1) Each spec's approval; R's draft has D1–D22 to accept and two open questions (§10). (2) [ADR-0009](../adr/0009-prediction-in-the-lab.md) (`Proposed`): prediction as a lab experiment option. (3) `gambits.meleeBerthSteps` 3 (provisional, lab F7). (4) Whenever the owner wants: PLAYTEST lab group 7 (the movement options) |
+| **Waiting on the owner** | (1) Each spec's approval; R's draft, revised with the owner's review, has D1–D29 to accept and no open question; slice G (groups and formations, after K, before P) is a proposal in the [ROADMAP](../ROADMAP.md). (2) [ADR-0009](../adr/0009-prediction-in-the-lab.md) (`Proposed`): prediction as a lab experiment option. (3) `gambits.meleeBerthSteps` 3 (provisional, lab F7). (4) Whenever the owner wants: PLAYTEST lab group 7 (the movement options) |
 | **Blockers** | None |
 
 ### Next steps

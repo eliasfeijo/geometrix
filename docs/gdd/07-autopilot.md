@@ -58,6 +58,20 @@
   the bot, so it has to be a real opponent (agent, approved): it reinforces fights in sight, defends its core, replaces
   its losses, attacks in a group with "follow", and its posture stops sending every loaded creep fleeing (which also
   ends the almost free extortion against it: its triangle always pays).
+- **Helping and following with a load** (owner, slice R's spec review, 2026-11-25; slice R): a loaded creep
+  **delivers at the core first when its path there costs less than its path to the fight** (by roads, for instance);
+  otherwise it helps. An empty creep helps.
+- **"Seguir…" for a creep that is not dominated** (owner, slice R's spec review, 2026-11-25; slice R): the rules editor
+  offers it, so a human who dominates one creep brings others along.
+- **The bot's difficulty** (owner, slice R's spec review, 2026-11-25; slice R): the strategist reacts **by its
+  configured difficulty**; the default is **always the hardest**, for now, but configurable. With the world's
+  **"drop the load"** ([03](03-economy-and-logistics.md)) and the hostile sign ([06](06-battles.md)), it **reacts to
+  each encounter with a fitting strategy**, by its difficulty and the action's estimated risk.
+- **Formations in the world** (owner, slice R's spec review, 2026-11-25; slice G, with its own design round): with
+  "follow" comes the chance, "almost the duty", of formation commands, presets and rules in the style of Mount &
+  Blade, for humans and the strategist. The default formation: **squares in front, triangles in the middle and on the
+  flanks, circles behind**; and **by which side each one engages**: the square from any direction, the triangles from
+  the sides, flanking, the circle from a side with the ally of the highest HP.
 
 ## Proposal
 - Humans, macros, autopilot and bots emit the **same commands** ([ADR-0002](../adr/0002-every-action-is-a-command.md)).

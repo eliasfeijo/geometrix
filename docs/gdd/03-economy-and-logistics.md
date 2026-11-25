@@ -34,6 +34,10 @@
   could not replace them (a creep costs 3,000 matéria, and a team's first extra creep comes at about world hour 3).
   Slice R tries **only the rescale of the pace**, with no new rule: a creep then costs less of a session. The sweeps
   measure whether it is enough.
+- **Dropping the load in the world** (owner, slice R's spec review, 2026-11-25): a creep can **drop its load** on the
+  map (a world order for a dominated creep and an autopilot action), which leaves it as spoils on its cell. It opens
+  new behaviors for the bots' strategist, which reacts to each encounter by its difficulty and the estimated risk
+  ([07](07-autopilot.md)).
 
 ## Proposal
 

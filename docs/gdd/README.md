@@ -10,8 +10,8 @@ A living document. Each file separates **Decided** (the owner approved), **Propo
 | [03](03-economy-and-logistics.md) | Economy, transport and taxes | M1 (transport) · M2 (extortion, loot, spoils) |
 | [04](04-governance.md) | Governance and voting | — (parked) |
 | [05](05-tribes-and-diplomacy.md) | Neutral tribes, monsters and diplomacy | M2 (the wanderers, at the junction) |
-| [06](06-battles.md) | Real-time battles | M2 (encounter, lab, junction) |
-| [07](07-autopilot.md) | Autopilot and macros | M1 (basic) · M2 (stances, gambits; follow, helping an ally and the strategist in slice R) |
+| [06](06-battles.md) | Real-time battles | M2 (encounter, lab, junction; the pause and the hostile sign in slice R; formations in slice G) |
+| [07](07-autopilot.md) | Autopilot and macros | M1 (basic) · M2 (stances, gambits; follow, helping an ally, the strategist and its difficulty in slice R; formations in slice G) |
 | [08](08-chronicle-chat-and-console.md) | Chronicle, chat and console | M2 (chronicle) |
 
 The milestones are in [`../ROADMAP.md`](../ROADMAP.md). A new system enters the GDD with the milestone it belongs to,
