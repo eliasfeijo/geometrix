@@ -12,10 +12,10 @@
 |---|---|
 | **Milestone** | **M2 — The ambush** ([ROADMAP](../ROADMAP.md)). M0, M1 and M1.5 ✅ |
 | **Slices** | A ✅ 2026-11-17 · B ✅ 2026-11-20 · D ✅ 2026-11-25 · **R — Rebalance and pace**, **E-min — The minimal end** and **K — The DNA kits**: design round done 2026-11-25, specs to write |
-| **In progress** | **R's plan** (the [R spec](../specs/m2-rebalance/spec.md) approved 2026-11-25); **G's design round** in a parallel session; spec drafts waiting for the owner: [E-min](../specs/m2-minimal-end/spec.md) and [K](../specs/m2-kits/spec.md) |
+| **In progress** | **R's plan draft**, waiting for the owner (the [R spec](../specs/m2-rebalance/spec.md) approved 2026-11-25); **G's design round** in a parallel session; spec drafts waiting for the owner: [E-min](../specs/m2-minimal-end/spec.md) and [K](../specs/m2-kits/spec.md) |
 | **Next front** | The specs of **R**, **E-min** and **K** (`spec-slice` skill), one session each; they can run in parallel (R: `sim` params, autopilot, strategist, map UI; E-min: the end rule, end screen and replay; K: `packages/battle`, gambits, lab, battle screen). R's final balance pass runs after K's merge |
 | **Then** | **G — Groups and formations** (after K: formations in the world and in battle, the side each DNA engages from, the battle bot's load experiment; lab first), then **P — The friends' playtest** (two teams: humans against humans, or co-op against the bot); after it, **E** (siege and repair) or **T** (more teams), chosen at P's checkpoint |
-| **Waiting on the owner** | (1) The E-min and K specs' approval; R's plan, when written. (2) [ADR-0009](../adr/0009-prediction-in-the-lab.md) (`Proposed`): prediction as a lab experiment option. (3) `gambits.meleeBerthSteps` 3 (provisional, lab F7). (4) Whenever the owner wants: PLAYTEST lab group 7 (the movement options) |
+| **Waiting on the owner** | (1) The E-min and K specs' approval; [R's plan](../specs/m2-rebalance/plan.md) draft (P1–P15). (2) [ADR-0009](../adr/0009-prediction-in-the-lab.md) (`Proposed`): prediction as a lab experiment option. (3) `gambits.meleeBerthSteps` 3 (provisional, lab F7). (4) Whenever the owner wants: PLAYTEST lab group 7 (the movement options) |
 | **Blockers** | None |
 
 ### Next steps
