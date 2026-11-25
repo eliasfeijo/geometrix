@@ -172,7 +172,7 @@ flowchart TD
 | Elimination (D2) | 0 creeps; the stock compared with `creep.cost` (no new number) | the rule |
 | Main events in the summary (D10) | 5 | `sim` params |
 | The ranking of main events (D10) | first, a team leaving the match; then the first blood (D15); then battles ended, by participants (joins included), then by the load collected or left as spoils, then the earliest. Every other event is a mark in the replay, not a main event | the `sim`; the owner reviews at the checkpoint |
-| Duration of a session match (§8) | a short params file for the owner's sessions, so the end is reached in minutes instead of R's 2-hour default world | `params/` |
+| Duration of a session match (§8) | overrides over the default params for the owner's sessions (`dev:multi --set path=value`, plan P11, approved 2026-11-25, in place of a short params file), so the end is reached in minutes instead of R's 2-hour default world | the PLAYTEST group |
 
 ## 7. Harness and acceptance criteria
 

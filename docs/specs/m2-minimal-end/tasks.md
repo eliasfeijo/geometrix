@@ -1,6 +1,6 @@
 # M2 tasks — The minimal end
 
-**Status:** F0 in progress (the plan waits for the owner). Branches `m2/emin-f<n>-<slug>` (skill `commit`).
+**Status:** F0 ✅ (spec and plan approved 2026-11-25); F1 next. Branches `m2/emin-f<n>-<slug>` (skill `commit`).
 **Spec:** [spec.md](spec.md) · **Plan:** [plan.md](plan.md)
 
 ## F0 — Spec and plan
@@ -8,7 +8,7 @@
 - [x] Design round with the owner (2026-11-25, with slice R), recorded in GDD 01
 - [x] Spec approved (2026-11-25), with the owner's answers (the bot reads only the stock; the five events are the
       match's) and the first blood (D15); the gameplay in GDD 01, 07 and 08
-- [ ] **Checkpoint:** the owner approves the plan (P1–P13)
+- [x] **Checkpoint:** the owner approves the plan (P1–P13), 2026-11-25
 
 ## F1 — The end in the world
 

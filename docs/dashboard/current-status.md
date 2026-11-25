@@ -6,16 +6,16 @@
 
 ## Now
 
-**Updated:** 2026-11-25 (E-min's spec approved and its plan drafted; K's plan drafted)
+**Updated:** 2026-11-25 (E-min's plan approved; K's plan drafted)
 
 | | |
 |---|---|
 | **Milestone** | **M2 — The ambush** ([ROADMAP](../ROADMAP.md)). M0, M1 and M1.5 ✅ |
-| **Slices** | A ✅ 2026-11-17 · B ✅ 2026-11-20 · D ✅ 2026-11-25 · **R — Rebalance and pace** (spec and plan approved 2026-11-25, F1 next), **E-min — The minimal end** (spec approved 2026-11-25, plan draft) and **K — The DNA kits** (spec approved 2026-11-25, plan draft) |
-| **In progress** | **R's F1** (the pace harness) in a new session: the [R spec](../specs/m2-rebalance/spec.md) and [plan](../specs/m2-rebalance/plan.md) approved 2026-11-25, worktree `~/workspace/geometrix/rebalance-f1` on `m2/rebalance-f1-pace-harness`; **G's design round** in a parallel session; **E-min's plan draft**, waiting for the owner (the [E-min spec](../specs/m2-minimal-end/spec.md) approved 2026-11-25, with the first blood); **[K's plan](../specs/m2-kits/plan.md) draft**, waiting for the owner (the [K spec](../specs/m2-kits/spec.md) approved 2026-11-25) |
+| **Slices** | A ✅ 2026-11-17 · B ✅ 2026-11-20 · D ✅ 2026-11-25 · **R — Rebalance and pace** (spec and plan approved 2026-11-25, F1 next), **E-min — The minimal end** (spec and plan approved 2026-11-25, F1 next) and **K — The DNA kits** (spec approved 2026-11-25, plan draft) |
+| **In progress** | **R's F1** (the pace harness) in a new session: the [R spec](../specs/m2-rebalance/spec.md) and [plan](../specs/m2-rebalance/plan.md) approved 2026-11-25, worktree `~/workspace/geometrix/rebalance-f1` on `m2/rebalance-f1-pace-harness`; **G's design round** in a parallel session; **E-min's F1** (the end in the world) in a new session: the [E-min spec](../specs/m2-minimal-end/spec.md) and [plan](../specs/m2-minimal-end/plan.md) approved 2026-11-25, worktree `~/workspace/geometrix/emin-f1` on `m2/emin-f1-world`; **[K's plan](../specs/m2-kits/plan.md) draft**, waiting for the owner (the [K spec](../specs/m2-kits/spec.md) approved 2026-11-25) |
 | **Next front** | The specs of **R**, **E-min** and **K** (`spec-slice` skill), one session each; they can run in parallel (R: `sim` params, autopilot, strategist, map UI; E-min: the end rule, end screen and replay; K: `packages/battle`, gambits, lab, battle screen). R's final balance pass runs after K's merge |
 | **Then** | **G — Groups and formations** (after K: formations in the world and in battle, the side each DNA engages from, the battle bot's load experiment; lab first), then **P — The friends' playtest** (two teams: humans against humans, or co-op against the bot); after it, **E** (siege and repair) or **T** (more teams), chosen at P's checkpoint |
-| **Waiting on the owner** | (1) [E-min's plan](../specs/m2-minimal-end/plan.md) draft (P1–P13); [K's plan](../specs/m2-kits/plan.md) draft (P1–P10). (2) [ADR-0009](../adr/0009-prediction-in-the-lab.md) (`Proposed`): prediction as a lab experiment option. (3) `gambits.meleeBerthSteps` 3 (provisional, lab F7). (4) Whenever the owner wants: PLAYTEST lab group 7 (the movement options) |
+| **Waiting on the owner** | (1) [K's plan](../specs/m2-kits/plan.md) draft (P1–P10). (2) [ADR-0009](../adr/0009-prediction-in-the-lab.md) (`Proposed`): prediction as a lab experiment option. (3) `gambits.meleeBerthSteps` 3 (provisional, lab F7). (4) Whenever the owner wants: PLAYTEST lab group 7 (the movement options) |
 | **Blockers** | None |
 
 ### Next steps
@@ -33,10 +33,13 @@
    road builder as an autopilot preset with its plan on the map (replaces the 2026-11-20 bug); the strategist for
    both P modes; the selected creep's destination on the map and the current action's estimated time in the panel.
    **Scope warning:** the largest of the three.
-2. **E-min's plan** ([draft](../specs/m2-minimal-end/plan.md), P1–P13): the end as a stage of `step`, `concede`, the
-   team out, the first blood, the summary kept in the state, the replay markers by a scan pass, `dev:multi --set` for
-   short sessions; five phases (F1 world, F2 bot and harness, F3 network and server, F4 client, F5 soak and
-   playtest). It shares the strategist, the CLI reports and the version numbers with R: the second to merge rebases.
+2. **E-min's F1–F5** from the [approved plan](../specs/m2-minimal-end/plan.md) ([tasks](../specs/m2-minimal-end/tasks.md);
+   `implement-phase` skill; P1–P13 approved 2026-11-25): F1 the end in the world (`end.ts` as a stage of `step`,
+   `concede`, the team out, the first blood, the counters and highlights in the state, `endSummary`), F2 the bot and
+   the harness, F3 network and server, F4 client (the end screen, "Desistir", the replay markers by a scan pass), F5
+   soak and playtest (checkpoint C1). It shares `strategist.ts`, the CLI reports, `world-host.ts`, the top bar and the
+   `SIM_VERSION`/`PROTOCOL_VERSION` bumps with R's phases (plan §9): the second to merge rebases and takes the next
+   free numbers.
 3. **K's plan** ([draft](../specs/m2-kits/plan.md), P1–P10 for the owner; then F1, the bar and the strike) from the
    [approved spec](../specs/m2-kits/spec.md) (D1–D20, 2026-11-25): Space as every DNA's kit
    key (a tap attacks, a hold fills the DNA's bar: the square's strike and charge, the triangle's guard, the circle's

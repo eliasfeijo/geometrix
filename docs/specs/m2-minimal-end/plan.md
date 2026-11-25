@@ -1,13 +1,13 @@
 # M2 plan — The minimal end
 
-**Status:** Draft · **Date:** 2026-11-25
+**Status:** Approved (2026-11-25) · **Date:** 2026-11-25
 **Spec:** [spec.md](spec.md) · **ADRs:** [0002](../../adr/0002-every-action-is-a-command.md) (command vocabulary),
 [0003](../../adr/0003-typescript-node-pure-integer-simulation.md) (determinism),
 [0004](../../adr/0004-persistence-sqlite-command-log.md) (log and snapshots), [0006](../../adr/0006-world-sync.md)
 (view deltas), [0007](../../adr/0007-sim-events.md) (`sim` events),
 [0010](../../adr/0010-world-side-of-the-battle-contract.md) (the junction host)
 
-The decisions that need the owner's OK are marked **(P*n*)** and listed in §11.
+The decisions the owner approved with the plan (2026-11-25) are marked **(P*n*)** and listed in §11.
 
 ## 1. What the code does today and what changes
 
@@ -235,7 +235,7 @@ next to the difficulty's.
 - **Version clashes with R:** both bump the same constants and touch the same files; the merge order decides the
   numbers, and the fixed hashes are updated by the second.
 
-## 11. Decisions for the owner
+## 11. Decisions (approved 2026-11-25)
 
 | # | Proposal | Alternative |
 |---|---|---|
@@ -257,7 +257,7 @@ next to the difficulty's.
 
 | Phase | Content | Checkpoint |
 |---|---|---|
-| **F0** — Spec and plan | The spec (approved 2026-11-25, with the first blood); this plan and its P1–P13 | The owner approves the plan |
+| **F0** — Spec and plan | The spec (approved 2026-11-25, with the first blood); this plan and its P1–P13 (approved 2026-11-25) | ✅ The owner approved the plan |
 | **F1** — The end in the world | State, `concede`, leaving the match, elimination, the result and the clock, the events, the first blood, the counters, the highlights, `endSummary`, the view; `step` and `stepJunction` refusing an ended world; `SIM_VERSION`; the fixed hashes; the protocol types compile | — |
 | **F2** — The bot and the harness | The strategist's concession; `runBots` stopping at the end; the End section and the sweep's ends table; `--concede`; `geo verify` with ends; the bot × bot ends recorded in `tasks.md` | — |
 | **F3** — Network and server | Protocol (`concede`, `teamOut`, the result, the summary, `out` in the delta); `WorldHost` ending from the `sim`; the lobby's result; an ended world's restart; `geo net` still within targets; `dev:multi --set` | — |
