@@ -12,17 +12,17 @@
 |---|---|
 | **Milestone** | **M2 — The ambush** ([ROADMAP](../ROADMAP.md)). M0, M1 and M1.5 ✅ |
 | **Slices** | **A — The encounter** ([spec](../specs/m2-encounter/spec.md) · [plan](../specs/m2-encounter/plan.md) · [tasks](../specs/m2-encounter/tasks.md)) ✅ 2026-11-17 · **B — The battle lab** ([spec](../specs/m2-battle-lab/spec.md) · [plan](../specs/m2-battle-lab/plan.md) · [tasks](../specs/m2-battle-lab/tasks.md)) ✅ 2026-11-20 |
-| **In progress** | **D — The junction** ([spec](../specs/m2-junction/spec.md) · [plan](../specs/m2-junction/plan.md) · [tasks](../specs/m2-junction/tasks.md)). F1–F6 ✅ · **F7** built on branch `m2/junction-f7-soak` (not merged): the soak kills mid-battle and checks every battle log (OK: 5 kills in a battle, 218 battles agree); a server test of a crash mid real-time battle; the client attacks wanderers (a bug found); the [PLAYTEST](../PLAYTEST.md) junction groups J1–J6 |
-| **Next front** | **Checkpoint C2** with the owner: the PLAYTEST groups J1–J6 at ×6, the hypothesis questions, the order of E against P. Then F7's closing and merge |
+| **In progress** | **D — The junction** ([spec](../specs/m2-junction/spec.md) · [plan](../specs/m2-junction/plan.md) · [tasks](../specs/m2-junction/tasks.md)). F1–F6 ✅ · **F7** merged 2026-11-25 (the owner asked to merge before C2): the soak kills mid-battle and checks every battle log (OK: 5 kills in a battle, 218 battles agree); a server test of a crash mid real-time battle; the client attacks wanderers (a bug found); the [PLAYTEST](../PLAYTEST.md) junction groups J1–J6 |
+| **Next front** | **Checkpoint C2** with the owner: the PLAYTEST groups J1–J6 at ×6, the hypothesis questions, the order of E against P. The decisions go in a `docs` branch afterwards |
 | **Then** | **P — The friends' playtest**, or E first (decided at C2) |
 | **Waiting on the owner** | (1) **Checkpoint C2**: play J1–J6 ([PLAYTEST](../PLAYTEST.md)), answer Q1–Q17 and C2-1, C2-2; validate the interpretations of the F4 (1–9), F5 (1–14) and F7 (1–4) records. (2) [ADR-0009](../adr/0009-prediction-in-the-lab.md) (`Proposed`): prediction as a lab experiment option. (3) `gambits.meleeBerthSteps` 3 (provisional, lab F7). (4) Whenever the owner wants: PLAYTEST lab group 7 (the movement options); J6 step 5 covers the same in the world |
 | **Blockers** | None |
 
 ### Next steps
 
-1. **Checkpoint C2** (a human session, in the Windows checkout or the F7 worktree): the owner plays the junction groups,
-   one group per message; Claude reads the world's `battles` table afterwards and builds the tables. The decisions go
-   to the tasks (F7 record), the plan (decisions) and the GDD; then F7 closes (dashboard) and merges.
+1. **Checkpoint C2** (a human session, from `main`): the owner plays the junction groups, one group per message;
+   Claude reads the world's `battles` table afterwards and builds the tables. The decisions go to the tasks (F7
+   record), the plan (decisions) and the GDD, in a `docs` branch.
 2. **🐞 The road-builder preset does not work for the player** (owner, 2026-11-20, seen since before slice A): it asks
    for a point on the map, but nothing happens on click or mouse move (no road or cost preview); a road can only be
    built by dominating a creep, in road mode. The bots build with the same preset, so the `sim` works. **A short fix
