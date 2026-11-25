@@ -137,7 +137,8 @@ describe("rebuild", () => {
         store.recentChronicle(host.id, team, 1000),
       );
     }
-  });
+    // ~0.7 s alone, past 5 s with the whole suite on a loaded machine.
+  }, 30_000);
 });
 
 describe("checkBattles (junction spec section 7)", () => {

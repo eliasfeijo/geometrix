@@ -28,9 +28,20 @@ import {
   type Reaction,
   type TeamEncounters,
 } from "./encounters.ts";
+import {
+  HOUR,
+  hours,
+  minutes,
+  number,
+  percent,
+  realMinutes,
+  realTime,
+  table,
+  worldAndReal,
+} from "./format.ts";
+import { paceSection } from "./pace.ts";
 import type { RunData } from "./sim.ts";
 
-export const HOUR = 3600;
 const ACTIVITY_LABELS: Record<Activity, string> = {
   gathering: "coletando",
   carrying: "carregando",
@@ -68,23 +79,6 @@ const DECIDER_LABELS: Record<Decider, string> = {
 export const meanHp = (t: { hp: number; hpMax: number }) =>
   t.hpMax === 0 ? "—" : percent(t.hp, t.hpMax);
 
-export const number = (value: number, digits = 0) =>
-  value.toLocaleString("pt-BR", {
-    minimumFractionDigits: digits,
-    maximumFractionDigits: digits,
-  });
-export const percent = (part: number, whole: number) =>
-  whole === 0 ? "—" : `${number((100 * part) / whole)}%`;
-export const hours = (seconds: number) => `${number(seconds / HOUR, 1)} h`;
-export const minutes = (seconds: number) => `${number(seconds / 60)} min`;
-
-export function table(header: string[], rows: string[][]): string {
-  const line = (cells: string[]) => `| ${cells.join(" | ")} |`;
-  return [line(header), line(header.map(() => "---")), ...rows.map(line)].join(
-    "\n",
-  );
-}
-
 /** Report windows: the shortest of these giving at most 12 rows. */
 export function windowSeconds(totalSeconds: number): number {
   const options = [1, 2, 3, 6, 12, 24].map((h) => h * HOUR);
@@ -103,9 +97,12 @@ export function renderReport(run: RunData): string {
   const perTeam = (cell: (team: number) => string) => teamIds.map(cell);
   const teamHeader = ["Métrica", ...teamIds.map((t) => `Time ${t}`)];
   const mapCells = params.map.width * params.map.height;
-  /** A tick as world time, or "—" for null. */
+  const mult = meta.multiplier;
+  /** A moment in world time, with its real time at ×N. */
+  const moment = (s: number, format = hours) => worldAndReal(s, mult, format);
+  /** A tick as world and real time, or "—" for null. */
   const atTick = (tick: number | null, format = hours) =>
-    tick === null ? "—" : format(tick * meta.tickSeconds);
+    tick === null ? "—" : moment(tick * meta.tickSeconds, format);
 
   /** Seconds at which `when` first holds for the team, as hours, or "—". */
   const firstTime = (
@@ -113,7 +110,7 @@ export function renderReport(run: RunData): string {
     when: (t: MetricsSample["teams"][number]) => boolean,
   ) => {
     const hit = samples.find((s) => when(s.teams[team]!));
-    return hit === undefined ? "—" : hours(seconds(hit));
+    return hit === undefined ? "—" : moment(seconds(hit));
   };
 
   const lines: string[] = [];
@@ -128,7 +125,11 @@ export function renderReport(run: RunData): string {
         ["Seed", `${meta.seed} (mapa gerado com ${meta.mapSeed})`],
         [
           "Duração",
-          `${hours(total)} de mundo (${number(meta.ticks)} ticks de ${meta.tickSeconds} s)`,
+          `${hours(total)} de mundo (${number(meta.ticks)} ticks de ${meta.tickSeconds} s); ${realTime(total, mult)} a ×${mult}`,
+        ],
+        [
+          "Multiplicador de tempo",
+          `×${mult}: os tempos reais do relatório são o tempo de mundo ÷ ${mult}`,
         ],
         [
           "Estrategistas",
@@ -136,6 +137,14 @@ export function renderReport(run: RunData): string {
         ],
         ["Parâmetros", `\`${meta.paramsSource}\``],
         ["Versão do sim", String(meta.simVersion)],
+        ...(meta.shock === null
+          ? []
+          : [
+              [
+                "Choque (cenário de recuperação)",
+                `o time ${meta.shock.team} perde ${meta.shock.count} creeps no minuto real ${meta.shock.minute}; o run não é reproduzível (sem replay.json)`,
+              ],
+            ]),
         ["Hash final", `\`${meta.finalHash}\``],
         [
           "Tempo de simulação",
@@ -146,6 +155,8 @@ export function renderReport(run: RunData): string {
     ),
     "",
   );
+
+  if (run.pace !== null) out(...paceSection(run.pace));
 
   // Summary per team.
   const stat = (team: number) => last.teams[team]!;
@@ -295,7 +306,7 @@ export function renderReport(run: RunData): string {
   out(
     "## Linha do tempo",
     "",
-    `Janelas de ${hours(window)}. Estoque, creeps, mapa explorado, creeps com ordem de explorar e HP médio no fim da janela; vazão, tempo dos creeps, encontros abertos e mortes dentro dela.`,
+    `Janelas de ${hours(window)} (${realTime(window, mult)}). Estoque, creeps, mapa explorado, creeps com ordem de explorar e HP médio no fim da janela; vazão, tempo dos creeps, encontros abertos e mortes dentro dela.`,
     "",
   );
   for (const team of teamIds) {
@@ -314,6 +325,7 @@ export function renderReport(run: RunData): string {
         percent(b.activitySeconds[x] - a.activitySeconds[x], busy);
       rows.push([
         `${number(seconds(from) / HOUR, 1)}–${number(seconds(to) / HOUR, 1)}`,
+        `${number(realMinutes(seconds(from), mult))}–${number(realMinutes(seconds(to), mult))}`,
         String(creepTotal(b)),
         pair(b.stock.materia, b.stock.cristal),
         pair(
@@ -339,6 +351,7 @@ export function renderReport(run: RunData): string {
       table(
         [
           "Horas",
+          "Min reais",
           "Creeps",
           "Estoque m / c",
           "Vazão m / c por hora",
@@ -392,7 +405,7 @@ export function renderReport(run: RunData): string {
           number(d.amount),
           d.emptiedAtTick === null
             ? "—"
-            : hours(d.emptiedAtTick * meta.tickSeconds),
+            : moment(d.emptiedAtTick * meta.tickSeconds),
           hours(d.contestedSeconds),
         ];
       }),
@@ -411,7 +424,7 @@ export function renderReport(run: RunData): string {
     "## Fatos para a revisão",
     "",
     cristalLeft === 0
-      ? `- Todo o cristal do mapa se esgotou em ${hours(lastEmptied * meta.tickSeconds)} (${percent(lastEmptied * meta.tickSeconds, total)} da duração).`
+      ? `- Todo o cristal do mapa se esgotou em ${moment(lastEmptied * meta.tickSeconds)}, ${percent(lastEmptied * meta.tickSeconds, total)} da duração.`
       : `- Restam ${number(cristalLeft)} de cristal no mapa, em ${cristal.filter((d) => d.amount > 0).length} de ${cristal.length} depósitos.`,
     `- Depósitos de matéria que zeraram alguma vez: ${materia.filter((d) => d.emptiedAtTick !== null).length} de ${materia.length}; quantidade média no fim: ${number(materia.reduce((s, d) => s + d.amount, 0) / Math.max(1, materia.length))} (inicial ${number(params.deposits.materia.amount)}).`,
     ...teamIds.map((t) => {

@@ -20,9 +20,17 @@ import {
   type Fate,
   type Role,
 } from "./encounters.ts";
-import { HOUR, hours, number, table } from "./report.ts";
+import { HOUR, hours, number, realTime, table } from "./format.ts";
+import {
+  seedTargets,
+  TARGETS,
+  type PaceFacts,
+  type TargetRow,
+} from "./pace.ts";
+import type { Shock } from "./shock.ts";
 import {
   metaJson,
+  paceJson,
   RUN_FILES,
   simulate,
   writeRun,
@@ -83,6 +91,8 @@ export function withParam(params: Params, path: string, value: number): Params {
 export type RunSummary = {
   value: number;
   seed: number;
+  /** The ×N the run's real time is read at (M2 R plan P1). */
+  multiplier: number;
   finalHash: string;
   wallSeconds: number;
   creeps: number;
@@ -150,6 +160,19 @@ export type RunSummary = {
   deliveredMateriaByTeam: number[];
   encountersByTeam: number[];
   deathsByTeam: number[];
+  /**
+   * The pace (M2 R spec §7) in real minutes at the run's ×N: the crossing,
+   * each team's first extra creep and TARGETS.exploredPermille of the map
+   * seen, the first wanderer (null: never), and the share of the match after
+   * it with one alive (%).
+   */
+  crossingRealMinutes: number | null;
+  firstCreepRealMinutesByTeam: (number | null)[];
+  exploredRealMinutesByTeam: (number | null)[];
+  firstWandererRealMinutes: number | null;
+  wandererAlivePercent: number | null;
+  battlesByTeam: number[];
+  tickMicros: number;
 };
 
 const mean = (values: number[]) =>
@@ -223,6 +246,7 @@ export function summarize(result: SimResult, value: number): RunSummary {
   return {
     value,
     seed: meta.seed,
+    multiplier: meta.multiplier,
     finalHash: meta.finalHash,
     wallSeconds: meta.wallSeconds,
     creeps: perTeam(creepsOf),
@@ -288,6 +312,27 @@ export function summarize(result: SimResult, value: number): RunSummary {
     deliveredMateriaByTeam: delivered,
     encountersByTeam: asAggressor,
     deathsByTeam,
+    ...paceColumns(result.pace),
+  };
+}
+
+/** The pace's CSV columns of a run, in real minutes at its ×N. */
+function paceColumns(f: PaceFacts) {
+  const real = (tick: number | null) =>
+    tick === null ? null : (tick * f.tickSeconds) / f.multiplier / 60;
+  const w = f.wanderers;
+  return {
+    crossingRealMinutes:
+      f.crossingSeconds === null ? null : f.crossingSeconds / f.multiplier / 60,
+    firstCreepRealMinutesByTeam: f.teams.map((t) => real(t.firstBornTick)),
+    exploredRealMinutesByTeam: f.teams.map((t) => real(t.exploredTick)),
+    firstWandererRealMinutes: real(w.firstBornTick),
+    wandererAlivePercent:
+      w.ticksAfterFirst === 0
+        ? null
+        : (100 * w.ticksWithOneAlive) / w.ticksAfterFirst,
+    battlesByTeam: f.teams.map((t) => t.battles),
+    tickMicros: f.tickMicros,
   };
 }
 
@@ -295,10 +340,31 @@ type ScalarKey = {
   [K in keyof RunSummary]: RunSummary[K] extends number | null ? K : never;
 }[keyof RunSummary];
 
-const COLUMNS: { key: ScalarKey; label: string; digits: number }[] = [
+/**
+ * A column's time unit, for the row of its real minutes at the run's ×N
+ * beside it: the moments a run reaches something, not durations.
+ */
+type Moment = "hours" | "minutes";
+
+const COLUMNS: {
+  key: ScalarKey;
+  label: string;
+  digits: number;
+  moment?: Moment;
+}[] = [
   { key: "creeps", label: "Creeps no fim", digits: 1 },
-  { key: "capHours", label: "Teto de população atingido (h)", digits: 1 },
-  { key: "upgradeHours", label: "Upgrade comprado (h)", digits: 1 },
+  {
+    key: "capHours",
+    label: "Teto de população atingido (h)",
+    digits: 1,
+    moment: "hours",
+  },
+  {
+    key: "upgradeHours",
+    label: "Upgrade comprado (h)",
+    digits: 1,
+    moment: "hours",
+  },
   { key: "deliveredMateria", label: "Matéria entregue", digits: 0 },
   { key: "deliveredCristal", label: "Cristal entregue", digits: 0 },
   { key: "stockMateria", label: "Estoque de matéria no fim", digits: 0 },
@@ -308,16 +374,23 @@ const COLUMNS: { key: ScalarKey; label: string; digits: number }[] = [
   { key: "coreIdlePercent", label: "Núcleo ocioso (%)", digits: 0 },
   { key: "tripMinutes", label: "Tempo médio por viagem (min)", digits: 1 },
   { key: "roadCells", label: "Estradas no mapa (células)", digits: 0 },
-  { key: "cristalGoneHours", label: "Cristal esgotado (h)", digits: 1 },
+  {
+    key: "cristalGoneHours",
+    label: "Cristal esgotado (h)",
+    digits: 1,
+    moment: "hours",
+  },
   {
     key: "firstMateriaMinutes",
     label: "1ª entrega de matéria, time mais lento (min)",
     digits: 0,
+    moment: "minutes",
   },
   {
     key: "firstCristalMinutes",
     label: "1ª entrega de cristal, time mais lento (min)",
     digits: 0,
+    moment: "minutes",
   },
   {
     key: "firstMateriaGapMinutes",
@@ -329,7 +402,12 @@ const COLUMNS: { key: ScalarKey; label: string; digits: number }[] = [
     label: "Diferença entre os times na matéria entregue",
     digits: 0,
   },
-  { key: "enemyCoreSeenHours", label: "Núcleo inimigo visto (h)", digits: 1 },
+  {
+    key: "enemyCoreSeenHours",
+    label: "Núcleo inimigo visto (h)",
+    digits: 1,
+    moment: "hours",
+  },
   { key: "exploredPercent", label: "Mapa explorado no fim (%)", digits: 0 },
   {
     key: "cristalStockPercent",
@@ -463,10 +541,22 @@ export type SweepOptions = {
   values: number[];
   seeds: number[];
   ticks: number;
+  /**
+   * ×N for real time; null reads each variant's world.multiplier, so a sweep
+   * of world.multiplier compares the ×N candidates on one world.
+   */
+  multiplier: number | null;
+  /** The recovery scenario on every run (P12), or null. */
+  shock: Shock | null;
   strategists: StrategistId[];
 };
 
-export type SweepResult = { options: SweepOptions; runs: RunSummary[] };
+export type SweepResult = {
+  options: SweepOptions;
+  runs: RunSummary[];
+  /** Each run's pace, in the order of `runs`. */
+  paces: PaceFacts[];
+};
 
 /** Runs every value × seed; `onRun` sees each finished run. */
 export function sweep(
@@ -478,6 +568,7 @@ export function sweep(
     params: withParam(options.params, options.path, value),
   }));
   const runs: RunSummary[] = [];
+  const paces: PaceFacts[] = [];
   for (const { value, params } of variants) {
     for (const seed of options.seeds) {
       const result = simulate({
@@ -486,23 +577,66 @@ export function sweep(
         params,
         paramsSource: `${options.paramsSource} com ${options.path}=${value}`,
         ticks: options.ticks,
+        multiplier: options.multiplier ?? params.world.multiplier,
+        shock: options.shock,
         strategists: options.strategists,
       });
       const summary = summarize(result, value);
       runs.push(summary);
+      paces.push(result.pace);
       onRun(result, summary);
     }
   }
-  return { options, runs };
+  return { options, runs, paces };
+}
+
+const VERDICT_MARKS = { true: " ✅", false: " ❌", null: "" } as const;
+
+/**
+ * The §7 targets per value, over its seeds (M2 R P13): each criterion met on
+ * how many seeds, the values' mean and range, and the verdict.
+ */
+function paceTargets(
+  values: readonly number[],
+  path: string,
+  runs: readonly RunSummary[],
+  paces: readonly PaceFacts[],
+): string[] {
+  const perValue = values.map((value) =>
+    seedTargets(paces.filter((_, i) => runs[i]!.value === value)),
+  );
+  const first = perValue[0]!;
+  const cell = (row: TargetRow) =>
+    `${row.measured}${VERDICT_MARKS[String(row.verdict) as keyof typeof VERDICT_MARKS]}`;
+  return [
+    "## Metas do ritmo (spec R §7)",
+    "",
+    `Em minutos reais ao ×N de cada run. ✅ a meta vale em todas as seeds (a diferença de creeps: a mediana), ❌ não, sem marca: sem meta ou ainda não medida. Exploração: ${TARGETS.exploredPermille / 10}% das células alcançáveis vistas.`,
+    "",
+    table(
+      ["Critério", "Meta", ...values.map((v) => `${path}=${v}`)],
+      first.map((row, i) => [
+        row.criterion,
+        row.target,
+        ...perValue.map((rows) => cell(rows[i]!)),
+      ]),
+    ),
+    "",
+  ];
 }
 
 export const runName = (path: string, value: number, seed: number) =>
   `${path}=${value}-s${seed}`;
 
-export function renderSweepReport({ options, runs }: SweepResult): string {
+export function renderSweepReport({
+  options,
+  runs,
+  paces,
+}: SweepResult): string {
   const { path, values, seeds, ticks } = options;
   const wall = runs.reduce((sum, r) => sum + r.wallSeconds, 0);
   const tickSeconds = options.params.world.tickSeconds;
+  const multipliers = [...new Set(runs.map((r) => r.multiplier))];
   const lines = [
     `# Varredura — ${options.id}`,
     "",
@@ -511,7 +645,20 @@ export function renderSweepReport({ options, runs }: SweepResult): string {
       [
         ["Parâmetro", `\`${path}\` = ${values.join(", ")}`],
         ["Seeds", seeds.join(", ")],
-        ["Duração de cada mundo", hours(ticks * tickSeconds)],
+        ...(options.shock === null
+          ? []
+          : [
+              [
+                "Choque",
+                `o time ${options.shock.team} perde ${options.shock.count} creeps no minuto real ${options.shock.minute} (runs não reproduzíveis)`,
+              ],
+            ]),
+        [
+          "Duração de cada mundo",
+          `${hours(ticks * tickSeconds)} de mundo; ${multipliers
+            .map((m) => `${realTime(ticks * tickSeconds, m)} a ×${m}`)
+            .join(" · ")}`,
+        ],
         [
           "Estrategistas",
           options.strategists.map((s, t) => `time ${t}: ${s}`).join(" · "),
@@ -521,6 +668,7 @@ export function renderSweepReport({ options, runs }: SweepResult): string {
       ],
     ),
     "",
+    ...paceTargets(values, path, runs, paces),
     "## Comparação",
     "",
     "Média das seeds e dos dois times; entre parênteses, o mínimo e o máximo entre as seeds. " +
@@ -528,15 +676,25 @@ export function renderSweepReport({ options, runs }: SweepResult): string {
     "",
     table(
       ["Métrica", ...values.map((v) => `${path}=${v}`)],
-      COLUMNS.map(({ key, label, digits }) => [
-        label,
-        ...values.map((value) =>
-          cell(
-            runs.filter((r) => r.value === value).map((r) => r[key]),
-            digits,
+      COLUMNS.flatMap(({ key, label, digits, moment }) => {
+        const row = (name: string, read: (r: RunSummary) => number | null) => [
+          name,
+          ...values.map((value) =>
+            cell(runs.filter((r) => r.value === value).map(read), digits),
           ),
-        ),
-      ]),
+        ];
+        const rows = [row(label, (r) => r[key])];
+        if (moment !== undefined) {
+          const perMinute = moment === "hours" ? 60 : 1;
+          rows.push(
+            row("↳ em minutos reais", (r) => {
+              const v = r[key];
+              return v === null ? null : (v * perMinute) / r.multiplier;
+            }),
+          );
+        }
+        return rows;
+      }),
     ),
     "",
     "## Runs",
@@ -617,6 +775,7 @@ export function runSweep(
     } else {
       mkdirSync(runDir);
       writeFileSync(join(runDir, RUN_FILES.meta), metaJson(run));
+      writeFileSync(join(runDir, RUN_FILES.pace), paceJson(run));
     }
     progress(
       `  ${run.meta.id}: ${summary.wallSeconds.toFixed(1)} s, ${summary.finalHash.slice(0, 16)}`,

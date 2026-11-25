@@ -19,7 +19,17 @@ const dna = { capacity: positive, cellsPerMinute: positive } as const;
 const hpDna = { max: positive } as const;
 
 const schema = {
-  world: { durationSeconds: positive, tickSeconds: positive },
+  world: {
+    durationSeconds: positive,
+    tickSeconds: positive,
+    /**
+     * The time multiplier (×N) these params are tuned for (M2 R plan P1):
+     * world seconds per real second. The sim never reads it; the lobby,
+     * `dev:multi` and the harness's real time default to it. A world keeps
+     * its own ×N.
+     */
+    multiplier: positive,
+  },
   map: {
     width: positive,
     height: positive,

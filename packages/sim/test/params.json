@@ -1,7 +1,8 @@
 {
   "world": {
     "durationSeconds": 259200,
-    "tickSeconds": 1
+    "tickSeconds": 1,
+    "multiplier": 6
   },
   "map": {
     "width": 64,
