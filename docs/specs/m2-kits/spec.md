@@ -1,6 +1,6 @@
 # M2 spec — The DNA kits
 
-**Status:** Draft · **Date:** 2026-11-25 · **Milestone:** M2 — The ambush ([ROADMAP](../../ROADMAP.md)), slice K
+**Status:** Approved (2026-11-25) · **Date:** 2026-11-25 · **Milestone:** M2 — The ambush ([ROADMAP](../../ROADMAP.md)), slice K
 **Related GDD:** [02](../../gdd/02-creeps-and-domination.md) (the DNA kits), [05](../../gdd/05-tribes-and-diplomacy.md)
 (the wanderers), [06](../../gdd/06-battles.md) (the grid, the kits' details), [07](../../gdd/07-autopilot.md)
 (battle gambits) · **ADR:** [0008](../../adr/0008-battle-package.md) (battle package),
@@ -47,9 +47,9 @@ A summary; the source is GDD 02 and 06 (the R and E-min design round, and this s
 ## 3. Scope decisions this spec assumes
 
 D3–D10 are **the owner's answers** in this spec's round (2026-11-25), to the kits' details GDD 06 left open; they go
-into GDD 02 and 06. The others are **the agent's proposals, pending the owner's acceptance** with the spec; those
-marked **(gameplay)** go into the GDD once accepted, and those marked **(interpretation)** fill a detail the owner's
-answers did not cover. The numbers are in §6 and are guesses.
+into GDD 02 and 06. The others are **the agent's proposals, accepted by the owner with the spec** (2026-11-25);
+those marked **(gameplay)** are in the GDD, and those marked **(interpretation)** fill a detail the owner's answers
+did not cover. The numbers are in §6 and are guesses.
 
 | # | Decision | Default | Why |
 |---|---|---|---|
@@ -251,8 +251,8 @@ so K's targets are about the kits working and the square getting a game, not the
 
 ## 9. Prerequisites before the `plan.md`
 
-- The owner's acceptance of the agent's proposals (D1, D2, D9–D20) with the spec; D3–D8 are already the owner's
-  (2026-11-25) and are in GDD 02, 05 and 06.
+- The owner's acceptance of the agent's proposals (D1, D2, D9–D20) ✅ with the spec (2026-11-25); D3–D8 are the
+  owner's answers. The gameplay ones are in GDD 02, 05, 06 and 07.
 - **No new ADR:** the kits live inside the battle package (ADR-0008) and do not change the world's contract
   (ADR-0010, D2, D18); the version bumps follow the existing rules.
 
