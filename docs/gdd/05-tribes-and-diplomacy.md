@@ -43,6 +43,15 @@
 - **The wanderers' own DNA and kit** (owner, 2026-11-25): "os errantes poderiam ter um DNA e kit únicos, inclusive a
   forma geométrica poderia ser um círculo com moicano (ex: espinhos triangulares no topo do círculo), e deve propor um
   combate desafiador do início ao fim do jogo". The owner chose **its own design round** for it, outside slice K.
+- **The wanderers attack in groups** (owner, slice G's design round, 2026-11-25): "Wanderers devem atacar em grupo do
+  meio pro final da partida, e agir como uma squad com um bot estrategista" (the squads,
+  [02](02-creeps-and-domination.md)). Placed by the agent in the wanderers' own design round above, after P: a group's
+  size depends on their kit and stats, and slice R has just set their curve.
+- **The wanderers' stash** (owner, slice G's design round, 2026-11-25): a "secret" spot where a wanderer drops what it
+  loots. Two variants: **one stash per team** ("ex: 2 times 2 stashes"), at mirrored positions relative to the
+  matching cores, or **specific spots generated on the map**, for instance among the trees
+  ([01](01-world.md)). Same placement as the groups: it changes slice D's rule that a wanderer carries its loot until
+  it dies, and so what makes a full wanderer worth hunting.
 - **Bosses:** they live at a spot on the map, are slow and respawn slowly; buff bosses give the team that defeats them
   a temporary buff and sit on the enemy's path; a stronger river boss drops a rare item. Whoever lands the last hit
   takes the buff or item.
@@ -50,4 +59,6 @@
   per creep and per team, and a secret happy ending in which the tribes' quest saves the whole world.
 
 ## Open questions
+- **The stash's loot** (above): with one stash per team, does the loot taken from a team go to the stash near that
+  team's core, or to another? Who may raid a stash, and is it seen through the fog like spoils?
 - How a relationship with a tribe goes up or down; what an allied tribe does; whether diplomacy is a team decision.

@@ -126,7 +126,13 @@ Agent's analysis (2026-11-25):
 - **The world's end as an arc** (2026-11-15): the world ends in an apocalypse that unfolds during the match (the
   owner's candidate: the corruption of depleted cristal deposits, [03](03-economy-and-logistics.md)), with a
   chronicle and a climax; a pyrrhic victory; legends and invaders from other worlds ([02](02-creeps-and-domination.md)).
-- **Destructible trees** that block sight, to deepen the jungle beyond rocks.
+- **Destructible trees** that block sight, to deepen the jungle beyond rocks. **Climbing a tree** (owner, slice G's
+  design round, 2026-11-25): a creep may use a "climb" command and stay **hidden, for ambushes**, while its sight radius
+  grows and **sees across every tree and rock** (a view "from above"). If the tree is destroyed while a creep is
+  climbing it, the creep simply comes back to the ground on that cell. The trees could also host the wanderers' stash
+  ([05](05-tribes-and-diplomacy.md)). Placed by the agent as **a slice of its own after P**, a candidate next to E: it
+  is a new terrain (mirrored map generation, two-level sight, hiding, trees in the arena), and destroying a tree is
+  E's question of how a structure is attacked.
 - **Camps and neutral structures:** the core as the team's first camp; towers any team can camp in, giving a ranged
   attack; battle terrain taken from the surroundings ([06](06-battles.md)).
 
