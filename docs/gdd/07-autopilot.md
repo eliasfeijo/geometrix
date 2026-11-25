@@ -38,6 +38,11 @@
   with **fight**, or with no rule, with its DNA's preset. Extortion still ends in pay or refuse. World creeps fight
   with the **normal** reaction; **no battle gambits editor in the world client** in slice D (spec D10, owner with the
   spec).
+- **Battle gambits with the kits** (owner, 2026-11-25, approving the [kits spec](../specs/m2-kits/spec.md) D15, D16;
+  slice K): a kit action is possible only when its kit is on and ready; `dodge` uses the dash when ready; new actions
+  **charge** (■), **guard** (▲) and **fan** (●); `attack` stays the basic attack. Presets: frontline protects, charges
+  the nearest out of reach, attacks; marksman flees when low, dodges, fans, keeps distance, attacks the weakest;
+  skirmisher flees when low, guards, dodges, keeps away from a square, attacks; the carrier drops, dodges, flees.
 
 - **"Follow" an allied creep** (owner, checkpoint C2 and the R and E-min design round, 2026-11-25; slice R): a creep
   follows another to walk in a group, and the follower joins the fight by itself when its target attacks or is

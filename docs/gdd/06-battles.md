@@ -111,6 +111,22 @@
   with the attack's cooldown; **the dodge is a double tap** of a direction, a 2-cell dash, **untouchable**, with
   priority over the bar; **the load acts as in walking**; the wanderers get the circle's kit in slice K, and their
   own DNA and kit get their own design round ([05](05-tribes-and-diplomacy.md)).
+- **The kits spec** (owner, 2026-11-25, approving the agent's proposals in [the spec](../specs/m2-kits/spec.md)
+  D1, D9–D13; numbers provisional):
+  - **behind params:** each kit has an on/off switch per DNA; with every kit off the battle plays the grid as before;
+    the lab switches them per battle, and only what passes the lab checkpoint (K1) is on in the world;
+  - **▲ the guard:** while Space is held past a tap, the triangle does not move, turn or attack, and blocks the
+    projectiles that come at its face (the fan's too), not melee hits; the guard lasts while the bar fills and drops
+    when it is full; releasing Space fires the basic shot; a short cooldown after it drops; a blocked shot does not
+    reset the inactivity clock;
+  - **● the fan:** the circle may walk while its bar fills; releasing fires three projectiles in parallel lanes (the
+    cell in front and the two front diagonals), with a range that grows with the bar; the fan's long cooldown also
+    restarts the basic attack's; while it cools down, a hold is just the basic shot;
+  - **the countdown:** no kit acts during it; at its end a held Space starts the bar, and a dodge sent during it is
+    discarded;
+  - **the micro-stun stops movement only** (walking, the dodge, the charge); a new stun keeps the longer remaining
+    time, never the sum;
+  - **breaking the guard:** a square's strike with at least half the bar drops it; a weaker strike only hits.
 - **A sign for hostile actions** (owner, slice R's spec review, 2026-11-25; slice R): a creep that heads for another
   to attack or to extort shows a **red sign** on the map (a sword's silhouette, or similar), so the target's team sees
   the threat coming and the bots' strategist can react to it by its difficulty ([07](07-autopilot.md)).
