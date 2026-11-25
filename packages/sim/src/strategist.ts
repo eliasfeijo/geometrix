@@ -33,6 +33,18 @@ import { productionRefusal } from "./production.ts";
 import { roadTarget } from "./roads.ts";
 import { canonicalJson } from "./serialize.ts";
 import {
+  choose,
+  choosesFor,
+  dropFightRules,
+  dropFleeRules,
+  helperRule,
+  payRules,
+  responseOf,
+  RISK,
+  threatsIn,
+  type Threat,
+} from "./threat.ts";
+import {
   isOwnCreep,
   isOwnPlayer,
   ownTeam,
@@ -77,7 +89,12 @@ export const BALANCED = {
    * standRules): below this HP share they flee; at normal and hard they pay
    * a demand of at most payAtMostPermille of their load (R spec D17).
    */
-  posture: { fleeBelowPermille: 400, payAtMostPermille: 250 },
+  posture: {
+    fleeBelowPermille: 400,
+    payAtMostPermille: RISK.payAtMostPermille,
+  },
+  /** The hard bot's encounter choices (D27): see threat.ts. */
+  risk: RISK,
 } as const;
 
 /** One bot player per team; player ids are team + 1. */
@@ -118,18 +135,61 @@ export function botCommands(
       },
     }));
   }
-  if (!strategistActs(state.tick)) return [];
-  return bots.flatMap((bot) =>
-    strategistCommands(
-      bot.strategist,
-      view(state, bot.team),
-      state.map,
-      state.params,
-    ).map((command) => ({
-      playerId: bot.playerId,
-      command,
-    })),
-  );
+  const acts = strategistActs(state.tick);
+  return bots.flatMap((bot) => {
+    // The full decision once a minute; between them, the hard bot's threat
+    // pass on every tick (P9), as the server runs it.
+    const commands = acts
+      ? strategistCommands(
+          bot.strategist,
+          view(state, bot.team),
+          state.map,
+          state.params,
+        )
+      : bot.strategist === "balanced"
+        ? threatPass(state, bot.team)
+        : [];
+    return commands.map((command) => ({ playerId: bot.playerId, command }));
+  });
+}
+
+/**
+ * The threat pass of the team's bot on a tick without a full decision (R
+ * spec D27, S-7, plan P9): at hard, the D27 choice for each loaded creep an
+ * enemy in sight newly chases. It decides from the team's view; the state is
+ * read only to skip building the view on a tick when no creep or wanderer of
+ * another side is approaching one of the team's creeps, which the view would
+ * show as no threat.
+ */
+export function threatPass(state: WorldState, team: number): Command[] {
+  if (teamDifficulty(state.players, team) !== "hard") return [];
+  const own = new Set<number>();
+  for (const creep of state.creeps) if (creep.team === team) own.add(creep.id);
+  const chased = (order: { type: string; targetId?: number }) =>
+    order.type === "approach" && own.has(order.targetId!);
+  if (
+    !state.creeps.some((c) => c.team !== team && chased(c.order)) &&
+    !state.wanderers.some((w) => chased(w.order))
+  ) {
+    return [];
+  }
+  return threatCommands(view(state, team), state.map, state.params);
+}
+
+/**
+ * The hard bot's threat pass from its view (D27): the rules of each new
+ * threat's victim and helpers; nothing below hard.
+ */
+export function threatCommands(
+  seen: TeamView,
+  size: MapSize,
+  params: Params,
+): Command[] {
+  if (difficultyOf(seen) !== "hard") return [];
+  const threats = threatsIn(seen);
+  const own = ownCreeps(seen);
+  if (!threats.some((t) => isNew(t, own))) return [];
+  return respond(knowledge(seen, size, params), threats).commands;
 }
 
 /** The map's size, all a client gets of it in the welcome (fog plan section 8). */
@@ -228,7 +288,7 @@ type Role =
 
 function balanced(known: Knowledge): Command[] {
   const commands: Command[] = [];
-  const { seen, team, params } = known;
+  const { seen, team, params, level } = known;
   const stock = { ...team.stock };
 
   if (productionRefusal({ params, creeps: seen.creeps }, team) === null) {
@@ -246,8 +306,112 @@ function balanced(known: Knowledge): Command[] {
   ) {
     commands.push({ type: "buyUpgrade", upgrade: "capacity" });
   }
-  commands.push(...assignRoles(known));
+  // At hard, the threats first: their victims and helpers keep their rules
+  // while the threat lasts (D27).
+  const pass =
+    level === "hard"
+      ? respond(known, threatsIn(seen))
+      : { commands: [], locked: new Set<number>() };
+  commands.push(...assignRoles(known, pass.locked), ...pass.commands);
   return commands;
+}
+
+/** The team's own creeps in its view, by id. */
+const ownCreeps = (seen: TeamView): CreepView[] =>
+  seen.creeps.filter(
+    (c): c is CreepView => isOwnCreep(c) && c.team === seen.team,
+  );
+
+/** The ids a creep's follow order and follow rules point at. */
+function followTargets(creep: CreepView): number[] {
+  const targets = creep.rules.flatMap((r) =>
+    r.then.type === "follow" ? [r.then.creepId] : [],
+  );
+  if (creep.order.type === "follow") targets.push(creep.order.targetId);
+  return targets;
+}
+
+/**
+ * Whether the bot still has to choose for this threat (D27): a loaded free
+ * victim with no response rules and no teammate following it (a helper, a
+ * raid group's member or an escort already on its way).
+ */
+function isNew(threat: Threat, own: readonly CreepView[]): boolean {
+  const { victim } = threat;
+  if (!choosesFor(victim) || responseOf(victim.rules) !== null) return false;
+  return !own.some(
+    (c) => c.id !== victim.id && followTargets(c).includes(victim.id),
+  );
+}
+
+/**
+ * The threat pass (D27): the creeps it holds while their threat lasts (each
+ * victim, and each helper whose first rule follows one), and the rules of
+ * the choice for each new threat. A helper is a free teammate not held, that
+ * no chain of follows leads back from the victim to (F-5).
+ */
+function respond(
+  known: Knowledge,
+  threats: readonly Threat[],
+): { commands: Command[]; locked: Set<number> } {
+  const { seen, map, params, level } = known;
+  const own = ownCreeps(seen);
+  const victims = new Set(threats.map((t) => t.victim.id));
+  const locked = new Set(victims);
+  for (const creep of own) {
+    const first = creep.rules[0]?.then;
+    if (first?.type === "follow" && victims.has(first.creepId)) {
+      locked.add(creep.id);
+    }
+  }
+  const follows = new Map(own.map((c) => [c.id, followTargets(c)]));
+  const leadsTo = (from: number, to: number) => {
+    const seenIds = new Set<number>();
+    const pending = [from];
+    while (pending.length > 0) {
+      const id = pending.pop()!;
+      if (id === to) return true;
+      if (seenIds.has(id)) continue;
+      seenIds.add(id);
+      pending.push(...(follows.get(id) ?? []));
+    }
+    return false;
+  };
+  const commands: Command[] = [];
+  for (const threat of threats) {
+    if (!isNew(threat, own)) continue;
+    const { victim } = threat;
+    const candidates = own.filter(
+      (c) =>
+        !locked.has(c.id) &&
+        c.engagement === null &&
+        c.battle === null &&
+        c.dominatedBy === null &&
+        !leadsTo(victim.id, c.id),
+    );
+    const choice = choose(threat, candidates, map, params);
+    if (choice.kind !== "help") {
+      const rules =
+        choice.kind === "pay"
+          ? payRules()
+          : choice.kind === "dropFlee"
+            ? dropFleeRules()
+            : dropFightRules();
+      commands.push({ type: "setRules", creepId: victim.id, rules });
+      continue;
+    }
+    for (const helper of choice.helpers) {
+      const base = rulesFor(roleOf(helper, params), helper.dna, level);
+      commands.push({
+        type: "setRules",
+        creepId: helper.id,
+        rules: [helperRule(victim.id), ...base],
+      });
+      locked.add(helper.id);
+      follows.get(helper.id)!.push(victim.id);
+    }
+  }
+  return { commands, locked };
 }
 
 /**
@@ -361,14 +525,25 @@ export function defenseRule(params: Params): Rule {
   };
 }
 
+/** After a drop to fight (D27): pick the spoils up, on top of the role. */
+const pickupRule = (): Rule => ({
+  when: { type: "always" },
+  then: { type: "pickup" },
+});
+
 /**
  * The creep's rules without the ones the bot puts on top of a role's for a
- * while (the defense rule), so roleOf reads the role underneath.
+ * while (the defense rule, a helper's follow, the pickup after a fight), so
+ * roleOf reads the role underneath.
  */
 function withoutWrappers(rules: readonly Rule[], params: Params): Rule[] {
   const defense = canonicalJson(defenseRule(params));
+  const pickup = canonicalJson(pickupRule());
+  const wraps = (rule: Rule) =>
+    (rule.when.type === "always" && rule.then.type === "follow") ||
+    [defense, pickup].includes(canonicalJson(rule));
   let at = 0;
-  while (at < rules.length && canonicalJson(rules[at]!) === defense) at++;
+  while (at < rules.length && wraps(rules[at]!)) at++;
   return rules.slice(at);
 }
 
@@ -446,9 +621,10 @@ function rulesFor(role: Role, dna: Dna, level: Difficulty): Rule[] {
  * Moves creeps between roles to reach the balanced split. Creeps leaving a
  * role that has too many are taken lowest id first, and so are the materia
  * creeps that fill a role short of creeps: cristal, then the road builder,
- * then the raiders.
+ * then the raiders. The `locked` creeps (the threat pass's) keep their
+ * role and rules.
  */
-function assignRoles(known: Knowledge): Command[] {
+function assignRoles(known: Knowledge, locked: ReadonlySet<number>): Command[] {
   const { seen, team, map, explored, params, level } = known;
   const creeps = seen.creeps
     .filter(isOwnCreep)
@@ -492,6 +668,9 @@ function assignRoles(known: Knowledge): Command[] {
   const next = new Map(roles);
   const inRole = (kind: Role["kind"]) =>
     creeps.filter((c) => next.get(c)!.kind === kind);
+  /** The members of a role the bot may move. */
+  const movable = (kind: Role["kind"]) =>
+    inRole(kind).filter((c) => !locked.has(c.id));
   const byId = new Map(creeps.map((c) => [c.id, c]));
   const followersOf = (leader: CreepView) =>
     creeps.filter((c) => {
@@ -503,7 +682,7 @@ function assignRoles(known: Knowledge): Command[] {
    * their share of the DNA's HP, ties to the lower id.
    */
   const strongest = () =>
-    inRole("materia")
+    movable("materia")
       .filter(
         (c) =>
           c.dominatedBy === null && c.engagement === null && c.battle === null,
@@ -515,14 +694,14 @@ function assignRoles(known: Knowledge): Command[] {
       );
 
   const trim = (kind: Role["kind"], want: number) => {
-    const members = inRole(kind);
-    for (const creep of members.slice(0, Math.max(0, members.length - want))) {
+    const excess = inRole(kind).length - want;
+    for (const creep of movable(kind).slice(0, Math.max(0, excess))) {
       next.set(creep, { kind: "materia" });
     }
   };
   const fill = (role: Role, want: number) => {
     const missing = want - inRole(role.kind).length;
-    for (const creep of inRole("materia").slice(0, Math.max(0, missing))) {
+    for (const creep of movable("materia").slice(0, Math.max(0, missing))) {
       next.set(creep, role);
     }
   };
@@ -530,7 +709,7 @@ function assignRoles(known: Knowledge): Command[] {
   trim("cristal", wantCristal);
   trim("raider", wantRaiders);
   // A follower whose leader is gone or left its role gathers (D16).
-  for (const creep of inRole("follower")) {
+  for (const creep of movable("follower")) {
     const role = next.get(creep) as Extract<Role, { kind: "follower" }>;
     const leader = byId.get(role.leader);
     const kind = leader === undefined ? null : next.get(leader)!.kind;
@@ -551,7 +730,10 @@ function assignRoles(known: Knowledge): Command[] {
   /** Keeps `want` followers on `leader`: the lowest ids leave first. */
   const follow = (leader: CreepView, want: number) => {
     const members = followersOf(leader);
-    for (const creep of members.slice(0, Math.max(0, members.length - want))) {
+    const excess = members.length - want;
+    for (const creep of members
+      .filter((c) => !locked.has(c.id))
+      .slice(0, Math.max(0, excess))) {
       next.set(creep, { kind: "materia" });
     }
     const missing = want - followersOf(leader).length;
@@ -578,9 +760,22 @@ function assignRoles(known: Knowledge): Command[] {
   // A raider gets its preset; a gatherer, its role's preset behind its
   // posture (setRules), also when only the posture is missing (a newborn).
   const commands: Command[] = [];
+  const pickup = canonicalJson(pickupRule());
   for (const creep of creeps) {
+    if (locked.has(creep.id)) continue;
     const role = next.get(creep)!;
-    const base = rulesFor(role, creep.dna, level);
+    const own = rulesFor(role, creep.dna, level);
+    // After dropping to fight (D27), it picks the spoils up while the team
+    // remembers some.
+    const wrappers = creep.rules.slice(
+      0,
+      creep.rules.length - withoutWrappers(creep.rules, params).length,
+    );
+    const picking =
+      seen.spoils.length > 0 &&
+      (responseOf(creep.rules) === "dropFight" ||
+        wrappers.some((r) => canonicalJson(r) === pickup));
+    const base = picking ? [pickupRule(), ...own] : own;
     const defends = defending && creep.dominatedBy === null && inZone(creep);
     const rules = defends ? [defenseRule(params), ...base] : base;
     if (canonicalJson(creep.rules) === canonicalJson(rules)) continue;
