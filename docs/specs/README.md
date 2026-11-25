@@ -14,3 +14,4 @@ findings.
 | D — The junction | M2 | [m2-junction](m2-junction/spec.md) | Spec and plan approved (2026-11-24); F1 ✅, F2 ✅, F3 ✅, F6 next |
 | P — The friends' playtest | M2 | — | After D |
 | E — Siege and repair | M2 | — | Order decided at D's checkpoint |
+| K — The DNA kits | M2 | [m2-kits](m2-kits/spec.md) | Spec draft (2026-11-25) |
