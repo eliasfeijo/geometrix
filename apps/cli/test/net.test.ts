@@ -172,7 +172,7 @@ describe("geo net", () => {
     const args = ["net", "--seed", "3", "--hours", "1", "--out", out];
     const code = run([...args, "--id", "one"], io);
     expect(io.lines[0]).toBe(
-      "geo net --seed 3: 3600 ticks, balanced x balanced",
+      "geo net --seed 3: 3600 ticks, balanced:hard x balanced:hard",
     );
     const json = JSON.parse(
       readFileSync(join(out, "one", NET_FILES.json), "utf8"),

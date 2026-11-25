@@ -32,6 +32,7 @@ import {
   eventsFor,
   view,
   type Params,
+  type Difficulty,
   type StrategistId,
   type TeamEvent,
   type TeamView,
@@ -69,6 +70,8 @@ export type NetOptions = {
   paramsSource: string;
   ticks: number;
   strategists: StrategistId[];
+  /** One per team; hard by default (R spec D26). */
+  difficulties?: Difficulty[];
   /** The server's viewHashEveryTicks. */
   hashEveryTicks: number;
 };
@@ -256,7 +259,7 @@ export function measureNet(
   const { params, ticks, hashEveryTicks } = options;
   const started = clock();
   const state = createWorld(options.seed, params);
-  const bots = botsFor(options.strategists);
+  const bots = botsFor(options.strategists, options.difficulties);
   const log: LoggedCommand[] = [];
   const host = createHost(defaultBattleParams());
   const teams = state.teams.map((t) => t.id);

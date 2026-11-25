@@ -29,6 +29,7 @@ import {
   type TeamEncounters,
 } from "./encounters.ts";
 import {
+  botsLine,
   HOUR,
   hours,
   minutes,
@@ -131,10 +132,7 @@ export function renderReport(run: RunData): string {
           "Multiplicador de tempo",
           `×${mult}: os tempos reais do relatório são o tempo de mundo ÷ ${mult}`,
         ],
-        [
-          "Estrategistas",
-          meta.strategists.map((s, t) => `time ${t}: ${s}`).join(" · "),
-        ],
+        ["Estrategistas", botsLine(meta.strategists, meta.difficulties)],
         ["Parâmetros", `\`${meta.paramsSource}\``],
         ["Versão do sim", String(meta.simVersion)],
         ...(meta.shock === null

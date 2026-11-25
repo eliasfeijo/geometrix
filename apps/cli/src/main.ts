@@ -6,8 +6,10 @@ import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import {
+  DIFFICULTIES,
   parseParams,
   STRATEGISTS,
+  type Difficulty,
   type Params,
   type StrategistId,
 } from "@geometrix/sim";
@@ -44,8 +46,11 @@ commands:
            --shock <t:n@m>       the recovery scenario: team t loses n free
                                  creeps (highest HP first) at real minute m;
                                  the run is not replayable (no replay.json)
-           --strategist <a[,b]>  per team: ${STRATEGISTS.join(" | ")}
-                                 (default balanced; one name = both teams)
+           --strategist <a[,b]>  per team: ${STRATEGISTS.join(" | ")}, the
+                                 bot's difficulty after a colon
+                                 (${DIFFICULTIES.join(" | ")}; default hard), e.g.
+                                 balanced:hard,balanced:easy (default
+                                 balanced; one name = both teams)
            --out <dir>           runs directory (default runs)
            --id <id>             run id (default <utc time>-s<seed>)
            --max-seconds <n>     fail (exit 1) if simulating takes longer
@@ -136,19 +141,47 @@ function parseSeed(raw: string): number {
   return seed;
 }
 
-function parseStrategists(raw: string, teams: number): StrategistId[] {
+type BotOptions = {
+  strategists: StrategistId[];
+  /** Each team's bot difficulty (R spec D26): hard unless named. */
+  difficulties: Difficulty[];
+};
+
+/** `--strategist balanced:easy,balanced`: a name per team, or one for all. */
+function parseStrategists(raw: string, teams: number): BotOptions {
   const names = raw.split(",");
-  for (const name of names) {
+  const bots = names.map((entry) => {
+    const [name, difficulty = "hard", ...rest] = entry.split(":");
     if (!STRATEGISTS.includes(name as StrategistId)) {
       throw new UsageError(`unknown strategist: ${name}`);
     }
-  }
-  if (names.length === 1) return new Array(teams).fill(names[0]);
-  if (names.length !== teams) {
+    if (
+      rest.length > 0 ||
+      !DIFFICULTIES.includes(difficulty as Difficulty) ||
+      (name === "none" && entry.includes(":"))
+    ) {
+      throw new UsageError(`bad difficulty in --strategist: ${entry}`);
+    }
+    return {
+      strategist: name as StrategistId,
+      difficulty: difficulty as Difficulty,
+    };
+  });
+  if (names.length !== 1 && names.length !== teams) {
     throw new UsageError(`--strategist needs 1 or ${teams} names: ${raw}`);
   }
-  return names as StrategistId[];
+  const all = names.length === 1 ? new Array(teams).fill(bots[0]) : bots;
+  return {
+    strategists: all.map((b) => b.strategist),
+    difficulties: all.map((b) => b.difficulty),
+  };
 }
+
+/** How a run's log names its bots: "balanced:hard x balanced:easy". */
+const botsTitle = ({ strategists, difficulties }: BotOptions) =>
+  strategists
+    .map((s, t) => (s === "none" ? s : `${s}:${difficulties[t]}`))
+    .join(" x ");
 
 /** World ticks from --days / --hours, or the params' world duration. */
 function parseTicks(
@@ -202,7 +235,7 @@ function runSim(args: string[], out: Output): number {
   const ticks = parseTicks(values, params);
   const multiplier = parseMultiplier(values.mult) ?? params.world.multiplier;
   const shock = parseShockOption(values.shock);
-  const strategists = parseStrategists(values.strategist, TEAMS);
+  const bots = parseStrategists(values.strategist, TEAMS);
   const maxSeconds =
     values["max-seconds"] === undefined
       ? null
@@ -212,7 +245,7 @@ function runSim(args: string[], out: Output): number {
   if (existsSync(dir)) throw new UsageError(`run already exists: ${dir}`);
 
   out.log(
-    `geo sim --seed ${seed}: ${ticks} ticks at ×${multiplier}, ${strategists.join(" x ")}`,
+    `geo sim --seed ${seed}: ${ticks} ticks at ×${multiplier}, ${botsTitle(bots)}`,
   );
   const result = simulate(
     {
@@ -223,7 +256,7 @@ function runSim(args: string[], out: Output): number {
       ticks,
       multiplier,
       shock,
-      strategists,
+      ...bots,
     },
     out.clock,
   );
@@ -264,7 +297,7 @@ function runSweepCommand(args: string[], out: Output): number {
   const seeds = parseSeeds(values.seeds);
   const params = loadParams(values.params ?? DEFAULT_PARAMS);
   const ticks = parseTicks(values, params);
-  const strategists = parseStrategists(values.strategist, TEAMS);
+  const bots = parseStrategists(values.strategist, TEAMS);
   const id =
     values.id ?? `${runId(seeds[0]!).replace(/-s\d+$/, "")}-sweep-${path}`;
   const dir = join(values.out, id);
@@ -285,7 +318,7 @@ function runSweepCommand(args: string[], out: Output): number {
       ticks,
       multiplier: parseMultiplier(values.mult),
       shock: parseShockOption(values.shock),
-      strategists,
+      ...bots,
     },
     values["keep-runs"],
     (line) => out.log(line),
@@ -325,9 +358,15 @@ function runVerify(args: string[], out: Output): number {
   const seed = parseSeed(values.seed);
   const ticks = parseUint("ticks", values.ticks, 1);
   const params = loadParams(values.params ?? DEFAULT_PARAMS);
-  const strategists = parseStrategists(values.strategist, TEAMS);
+  const bots = parseStrategists(values.strategist, TEAMS);
 
-  const result = verify(seed, ticks, params, strategists);
+  const result = verify(
+    seed,
+    ticks,
+    params,
+    bots.strategists,
+    bots.difficulties,
+  );
   out.log(`geo verify --seed ${seed} --ticks ${ticks}`);
   for (const run of result.runs) {
     out.log(`  ${run.hash}  ${run.name}`);
@@ -362,13 +401,13 @@ function runNet(args: string[], out: Output): number {
   const seed = parseSeed(values.seed);
   const params = loadParams(values.params ?? DEFAULT_PARAMS);
   const ticks = parseTicks(values, params);
-  const strategists = parseStrategists(values.strategist, TEAMS);
+  const bots = parseStrategists(values.strategist, TEAMS);
   const hashEveryTicks = parseUint("hash-every", values["hash-every"], 1);
   const id = values.id ?? `${runId(seed)}-net`;
   const dir = join(values.out, id);
   if (existsSync(dir)) throw new UsageError(`run already exists: ${dir}`);
 
-  out.log(`geo net --seed ${seed}: ${ticks} ticks, ${strategists.join(" x ")}`);
+  out.log(`geo net --seed ${seed}: ${ticks} ticks, ${botsTitle(bots)}`);
   const result = measureNet(
     {
       id,
@@ -376,7 +415,7 @@ function runNet(args: string[], out: Output): number {
       params,
       paramsSource: paramsSource(values.params),
       ticks,
-      strategists,
+      ...bots,
       hashEveryTicks,
     },
     out.clock,

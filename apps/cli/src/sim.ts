@@ -12,6 +12,7 @@ import {
   SIM_VERSION,
   type MetricsSample,
   type Cell,
+  type Difficulty,
   type Params,
   type Resource,
   type StrategistId,
@@ -46,6 +47,8 @@ export type RunMeta = {
   shock: Shock | null;
   /** One per team. */
   strategists: StrategistId[];
+  /** One per team (R spec D26); absent in runs from before R F3 (hard). */
+  difficulties?: Difficulty[];
   balanced: typeof BALANCED;
   paramsSource: string;
   finalHash: string;
@@ -78,6 +81,8 @@ export type SimOptions = {
   /** The recovery scenario (P12); none by default. */
   shock?: Shock | null;
   strategists: StrategistId[];
+  /** One per team; hard by default (R spec D26). */
+  difficulties?: Difficulty[];
 };
 
 /** Runs the world, sampling at tick 0, every minute and at the end. */
@@ -86,6 +91,9 @@ export function simulate(
   clock: () => number = () => performance.now(),
 ): SimResult {
   const { seed, params, ticks, strategists } = options;
+  const difficulties = strategists.map(
+    (_, team) => options.difficulties?.[team] ?? "hard",
+  );
   const multiplier = options.multiplier ?? params.world.multiplier;
   const samples: MetricsSample[] = [];
   const tracker = new EncounterTracker(strategists.length);
@@ -97,7 +105,7 @@ export function simulate(
     seed,
     params,
     ticks,
-    botsFor(strategists),
+    botsFor(strategists, difficulties),
     (s, events, finished) => {
       // The first call is the new world, before any tick.
       pace ??= new PaceTracker(s, multiplier);
@@ -128,6 +136,7 @@ export function simulate(
       multiplier,
       shock,
       strategists,
+      difficulties,
       balanced: BALANCED,
       paramsSource: options.paramsSource,
       finalHash: stateHash(state),

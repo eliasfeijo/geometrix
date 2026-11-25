@@ -12,6 +12,7 @@
 import { isReaction, type Rule } from "./autopilot.ts";
 import { canAfford } from "./economy.ts";
 import type { Command, CommandInput } from "./commands.ts";
+import type { Difficulty, Player } from "./domination.ts";
 import { nearestUnseen } from "./known.ts";
 import { isRotatedSide, Terrain, type GameMap } from "./map.ts";
 import { DNAS, type Dna, type Params } from "./params.ts";
@@ -24,7 +25,14 @@ import {
 import { productionRefusal } from "./production.ts";
 import { roadTarget } from "./roads.ts";
 import { canonicalJson } from "./serialize.ts";
-import { isOwnCreep, ownTeam, view, type TeamView } from "./view.ts";
+import {
+  isOwnCreep,
+  isOwnPlayer,
+  ownTeam,
+  view,
+  type ForeignPlayer,
+  type TeamView,
+} from "./view.ts";
 import type { Creep, Team, WorldState } from "./world.ts";
 
 export const STRATEGISTS = ["balanced", "none"] as const;
@@ -60,13 +68,20 @@ export type Bot = {
   playerId: number;
   team: number;
   strategist: StrategistId;
+  /** Its join's difficulty (R spec D26, plan P8). */
+  difficulty: Difficulty;
 };
 
-export function botsFor(strategists: readonly StrategistId[]): Bot[] {
+/** The bots of a harness world: one per team, hard unless given (D26). */
+export function botsFor(
+  strategists: readonly StrategistId[],
+  difficulties: readonly Difficulty[] = [],
+): Bot[] {
   return strategists.map((strategist, team) => ({
     playerId: team + 1,
     team,
     strategist,
+    difficulty: difficulties[team] ?? "hard",
   }));
 }
 
@@ -78,7 +93,12 @@ export function botCommands(
   if (state.tick === 0) {
     return bots.map((bot) => ({
       playerId: bot.playerId,
-      command: { type: "join", team: bot.team, bot: true },
+      command: {
+        type: "join",
+        team: bot.team,
+        bot: true,
+        difficulty: bot.difficulty,
+      },
     }));
   }
   if (!strategistActs(state.tick)) return [];
@@ -99,8 +119,9 @@ export function botCommands(
 export type MapSize = Pick<GameMap, "width" | "height">;
 
 /**
- * The commands of the team's bot, from its view. Only the size of `size` is
- * read: it may be the world's map.
+ * The commands of the team's bot, from its view, at the difficulty of the
+ * team's bot (D26, S-6). Only the size of `size` is read: it may be the
+ * world's map.
  */
 export function strategistCommands(
   id: StrategistId,
@@ -116,6 +137,26 @@ export function strategistCommands(
   }
 }
 
+/**
+ * The difficulty a team's bot plays at: its first bot player's by id, as
+ * the junction's battle reaction reads it (P8); hard with none (D26).
+ */
+export function teamDifficulty(
+  players: readonly (Player | ForeignPlayer)[],
+  team: number,
+): Difficulty {
+  let first: Player | null = null;
+  for (const player of players) {
+    if (!isOwnPlayer(player) || player.team !== team || !player.bot) continue;
+    if (first === null || player.id < first.id) first = player;
+  }
+  return first?.difficulty ?? "hard";
+}
+
+/** The difficulty of the view's team, from its own players. */
+const difficultyOf = (seen: TeamView): Difficulty =>
+  teamDifficulty(seen.players, seen.team);
+
 /** All a strategist decides from: the team's view and the map it knows. */
 type Knowledge = {
   seen: TeamView;
@@ -124,6 +165,8 @@ type Knowledge = {
   /** 1 for each cell the team has seen. */
   explored: number[];
   params: Params;
+  /** The difficulty the team's bot plays at (D26). */
+  level: Difficulty;
 };
 
 /**
@@ -146,6 +189,7 @@ function knowledge(
     map: { width, height, terrain, road },
     explored: seen.known.map((t) => (t === -1 ? 0 : 1)),
     params,
+    level: difficultyOf(seen),
   };
 }
 

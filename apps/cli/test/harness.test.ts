@@ -45,8 +45,24 @@ const teamCreeps = (world: WorldState, team: number) =>
 describe("bots", () => {
   test("join their teams at tick 0, then act on tick 1 and every minute", () => {
     expect(botCommands(createWorld(42, params), bots)).toEqual([
-      { playerId: 1, command: { type: "join", team: 0, bot: true } },
-      { playerId: 2, command: { type: "join", team: 1, bot: true } },
+      {
+        playerId: 1,
+        command: { type: "join", team: 0, bot: true, difficulty: "hard" },
+      },
+      {
+        playerId: 2,
+        command: { type: "join", team: 1, bot: true, difficulty: "hard" },
+      },
+    ]);
+    // Each bot joins at its difficulty (R spec D26).
+    expect(
+      botCommands(
+        createWorld(42, params),
+        botsFor(["balanced", "balanced"], ["easy", "normal"]),
+      ).map((c) => c.command),
+    ).toEqual([
+      { type: "join", team: 0, bot: true, difficulty: "easy" },
+      { type: "join", team: 1, bot: true, difficulty: "normal" },
     ]);
     expect(BALANCED.everyTicks).toBe(60);
     expect([0, 1, 2, 60, 61, 121].map(strategistActs)).toEqual([

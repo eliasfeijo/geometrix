@@ -196,7 +196,7 @@ more battles, from help and the bot's hard reaction, not overhead. F3/F7 should 
 
 ## F3 — The strategist
 
-- [ ] The difficulty levels in `strategistCommands` (D26, S-6); the harness's strategist option with a difficulty
+- [x] The difficulty levels in `strategistCommands` (D26, S-6); the harness's strategist option with a difficulty
 - [ ] The posture per level (D17); production before the upgrade pinned by a test (D15, S-2)
 - [ ] The defense of the core zone (D14, S-1)
 - [ ] The raid group and the escort with `follow` (D16, S-3)

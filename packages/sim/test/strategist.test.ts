@@ -13,7 +13,11 @@ import { mirrorCell, Terrain } from "../src/map.ts";
 import { canonicalJson, serialize } from "../src/serialize.ts";
 import { step } from "../src/step.ts";
 import { roadTarget } from "../src/roads.ts";
-import { postureRules, strategistCommands } from "../src/strategist.ts";
+import {
+  postureRules,
+  strategistCommands,
+  teamDifficulty,
+} from "../src/strategist.ts";
 import { view } from "../src/view.ts";
 import { createWorld, type WorldState } from "../src/world.ts";
 import { loadTestParams, revealWorld, textWorld } from "./helpers.ts";
@@ -357,5 +361,29 @@ describe("balanced", () => {
     expect(
       builders(strategistCommands("balanced", seen, world.map, world.params)),
     ).toBe(0);
+  });
+});
+
+describe("difficulty (R spec D26, S-6)", () => {
+  test("plays at its team's first bot player's difficulty, hard by default", () => {
+    const world = createWorld(42, params);
+    step(world, [
+      { playerId: 5, command: { type: "join", team: 0, bot: false } },
+      {
+        playerId: 7,
+        command: { type: "join", team: 0, bot: true, difficulty: "normal" },
+      },
+      {
+        playerId: 3,
+        command: { type: "join", team: 0, bot: true, difficulty: "easy" },
+      },
+      { playerId: 2, command: { type: "join", team: 1, bot: true } },
+    ]);
+    // Player 3 is team 0's first bot by id; the human does not count.
+    expect(teamDifficulty(view(world, 0).players, 0)).toBe("easy");
+    expect(teamDifficulty(view(world, 1).players, 1)).toBe("hard");
+    // Another team's view has no difficulty of team 0 (P8): hard, unknown.
+    expect(teamDifficulty(view(world, 1).players, 0)).toBe("hard");
+    expect(teamDifficulty([], 0)).toBe("hard");
   });
 });
