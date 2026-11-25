@@ -15,7 +15,12 @@ import type { Command, CommandInput } from "./commands.ts";
 import { nearestUnseen } from "./known.ts";
 import { isRotatedSide, Terrain, type GameMap } from "./map.ts";
 import { DNAS, type Dna, type Params } from "./params.ts";
-import { collectorRules, raiderRules, roadBuilderRules } from "./presets.ts";
+import {
+  collectorRules,
+  raiderRules,
+  roadBuilderRules,
+  withHelp,
+} from "./presets.ts";
 import { productionRefusal } from "./production.ts";
 import { roadTarget } from "./roads.ts";
 import { canonicalJson } from "./serialize.ts";
@@ -236,8 +241,11 @@ let presetJson: {
   builder: string;
 } | null = null;
 
+/** The rules but the reactions and the help rule, which every role has. */
 const actionsOf = (rules: readonly Rule[]) =>
-  rules.filter((rule) => !isReaction(rule.then));
+  rules.filter(
+    (rule) => !isReaction(rule.then) && rule.then.type !== "joinBattle",
+  );
 
 /**
  * The role a creep's rules match, leaving out the reaction rules; anything
@@ -245,9 +253,9 @@ const actionsOf = (rules: readonly Rule[]) =>
  */
 function roleOf(creep: Pick<Creep, "rules">): Role {
   presetJson ??= {
-    cristal: canonicalJson(collectorRules("cristal")),
+    cristal: canonicalJson(actionsOf(collectorRules("cristal"))),
     raider: canonicalJson(actionsOf(raiderRules())),
-    builder: canonicalJson(roadBuilderRules()),
+    builder: canonicalJson(actionsOf(roadBuilderRules())),
   };
   const actions = actionsOf(creep.rules);
   const rules = canonicalJson(actions);
@@ -257,17 +265,26 @@ function roleOf(creep: Pick<Creep, "rules">): Role {
   return { kind: "materia" };
 }
 
-/** The rules the bot gives a creep of `dna` in `role`. */
+/**
+ * The rules the bot gives a creep of `dna` in `role`, each with the DNA's
+ * help rule after the reactions (R spec D11, D14).
+ */
 function rulesFor(role: Role, dna: Dna): Rule[] {
   switch (role.kind) {
     case "raider":
-      return raiderRules();
+      return withHelp(raiderRules(), dna);
     case "materia":
-      return [...postureRules(dna), ...collectorRules("materia")];
+      return withHelp(
+        [...postureRules(dna), ...collectorRules("materia")],
+        dna,
+      );
     case "cristal":
-      return [...postureRules(dna), ...collectorRules("cristal")];
+      return withHelp(
+        [...postureRules(dna), ...collectorRules("cristal")],
+        dna,
+      );
     case "builder":
-      return [...postureRules(dna), ...roadBuilderRules()];
+      return withHelp([...postureRules(dna), ...roadBuilderRules()], dna);
   }
 }
 

@@ -1,8 +1,11 @@
 import { describe, expect, test } from "vitest";
+import { isReaction } from "../src/autopilot.ts";
 import {
   collectorRules,
+  helpRule,
   presetRules,
   roadBuilderRules,
+  withHelp,
 } from "../src/presets.ts";
 import { startProduction } from "../src/production.ts";
 import { step } from "../src/step.ts";
@@ -13,7 +16,7 @@ const params = loadTestParams();
 
 describe("preset rules", () => {
   test("collectors deliver when full, gather, explore while they know no deposit, then bring the leftover home", () => {
-    expect(presetRules("cristalCollector")).toEqual([
+    expect(presetRules("cristalCollector", "square").slice(1)).toEqual([
       { when: { type: "cargoFull" }, then: { type: "deliver" } },
       {
         when: { type: "always" },
@@ -25,18 +28,20 @@ describe("preset rules", () => {
       },
       { when: { type: "always" }, then: { type: "deliver" } },
     ]);
-    expect(presetRules("materiaCollector")).toEqual(collectorRules("materia"));
+    expect(presetRules("materiaCollector", "square")).toEqual(
+      withHelp(collectorRules("materia"), "square"),
+    );
   });
 
   test("the scout explores, then goes back to the core", () => {
-    expect(presetRules("scout")).toEqual([
+    expect(presetRules("scout", "circle").slice(1)).toEqual([
       { when: { type: "always" }, then: { type: "explore" } },
       { when: { type: "always" }, then: { type: "deliver" } },
     ]);
   });
 
   test("the road builder builds toward the target it resolves, before gathering materia", () => {
-    expect(presetRules("roadBuilder")).toEqual([
+    expect(presetRules("roadBuilder", "triangle").slice(1)).toEqual([
       { when: { type: "cargoFull" }, then: { type: "deliver" } },
       { when: { type: "always" }, then: { type: "buildRoad" } },
       {
@@ -44,6 +49,55 @@ describe("preset rules", () => {
         then: { type: "gather", resource: "materia" },
       },
       { when: { type: "always" }, then: { type: "deliver" } },
+    ]);
+  });
+
+  test("every preset starts with the DNA's help rule (R spec D10, D11)", () => {
+    expect(helpRule("square")).toEqual({
+      when: { type: "allyInBattle", radius: 6 },
+      then: { type: "joinBattle", minHpPermille: 400 },
+    });
+    expect(helpRule("triangle")).toEqual({
+      when: { type: "allyInBattle", radius: 6 },
+      then: { type: "joinBattle", minHpPermille: 500 },
+    });
+    expect(helpRule("circle")).toEqual({
+      when: { type: "allyInBattle", radius: 8 },
+      then: { type: "joinBattle", minHpPermille: 500 },
+    });
+    for (const preset of [
+      "materiaCollector",
+      "cristalCollector",
+      "roadBuilder",
+      "scout",
+      "raider",
+    ] as const) {
+      const rules = presetRules(preset, "circle");
+      const at = rules.findIndex((r) => r.then.type === "joinBattle");
+      expect(rules[at]).toEqual(helpRule("circle"));
+      // After the reactions only: the raider's flee and fight.
+      expect(rules.slice(0, at).every((r) => isReaction(r.then))).toBe(true);
+      expect(rules.filter((r) => r.then.type === "joinBattle")).toHaveLength(1);
+    }
+  });
+
+  test("the help rule goes after the reaction rules, before everything else (H-3)", () => {
+    const rules = withHelp(
+      [
+        { when: { type: "always" }, then: { type: "pay" } },
+        { when: { type: "always" }, then: { type: "flee" } },
+        ...collectorRules("materia"),
+      ],
+      "triangle",
+    );
+    expect(rules.map((r) => r.then.type)).toEqual([
+      "pay",
+      "flee",
+      "joinBattle",
+      "deliver",
+      "gather",
+      "explore",
+      "deliver",
     ]);
   });
 
@@ -60,7 +114,7 @@ describe("creeps are born materia collectors", () => {
   test("the initial population", () => {
     const world = createWorld(42, params);
     for (const creep of world.creeps) {
-      expect(creep.rules).toEqual(collectorRules("materia"));
+      expect(creep.rules).toEqual(presetRules("materiaCollector", creep.dna));
     }
   });
 
@@ -69,7 +123,9 @@ describe("creeps are born materia collectors", () => {
     world.teams[0]!.stock = { materia: 40, cristal: 10 };
     startProduction(world, 0, "circle", false);
     run(world, 600);
-    expect(world.creeps.at(-1)!.rules).toEqual(collectorRules("materia"));
+    expect(world.creeps.at(-1)!.rules).toEqual(
+      withHelp(collectorRules("materia"), "circle"),
+    );
   });
 
   test("on a generated map both teams fill their materia stock", () => {

@@ -50,7 +50,7 @@ describe("serialize / restore", () => {
     // on purpose, update it, and bump SIM_VERSION once worlds are persisted
     // (see SIM_VERSION).
     expect(sha256(serialize(world))).toMatchInlineSnapshot(
-      `"2e95b277d53302419a32f68c731243cd85a09c5ad50d7ac9a694a67ef3d914d6"`,
+      `"1386c9e5c62afbaa1aa77bb1c7065f1065d711c090f47717c5c669c19ac25611"`,
     );
   });
 

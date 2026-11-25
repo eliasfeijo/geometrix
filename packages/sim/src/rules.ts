@@ -197,5 +197,6 @@ export function applyPreset(
   creepId: number,
   preset: PresetId,
 ): void {
-  findCreep(state, creepId)!.rules = presetRules(preset);
+  const creep = findCreep(state, creepId)!;
+  creep.rules = presetRules(preset, creep.dna);
 }

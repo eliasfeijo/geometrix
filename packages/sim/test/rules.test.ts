@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import type { Rule } from "../src/autopilot.ts";
 import { join } from "../src/domination.ts";
-import { collectorRules, roadBuilderRules } from "../src/presets.ts";
+import { collectorRules, roadBuilderRules, withHelp } from "../src/presets.ts";
 import {
   applyPreset,
   applyPresetRefusal,
@@ -215,7 +215,7 @@ describe("applyPreset", () => {
       applyPresetRefusal(w, 2, creep.id, "cristalCollector", null),
     ).toBeNull();
     applyPreset(w, creep.id, "cristalCollector");
-    expect(creep.rules).toEqual(collectorRules("cristal"));
+    expect(creep.rules).toEqual(withHelp(collectorRules("cristal"), creep.dna));
   });
 
   test("the road builder takes no target (R spec D12)", () => {
@@ -223,7 +223,7 @@ describe("applyPreset", () => {
     const creep = ownCreep(w);
     expect(applyPresetRefusal(w, 1, creep.id, "roadBuilder", null)).toBeNull();
     applyPreset(w, creep.id, "roadBuilder");
-    expect(creep.rules).toEqual(roadBuilderRules());
+    expect(creep.rules).toEqual(withHelp(roadBuilderRules(), creep.dna));
     expect(
       applyPresetRefusal(w, 1, creep.id, "roadBuilder", { x: 4, y: 0 }),
     ).toBe("invalidTarget");
@@ -236,7 +236,7 @@ describe("applyPreset", () => {
       applyPresetRefusal(w, 1, creep.id, "materiaCollector", { x: 4, y: 0 }),
     ).toBeNull();
     applyPreset(w, creep.id, "materiaCollector");
-    expect(creep.rules).toEqual(collectorRules("materia"));
+    expect(creep.rules).toEqual(withHelp(collectorRules("materia"), creep.dna));
   });
 
   test("refuses an unknown preset and another team's creep", () => {

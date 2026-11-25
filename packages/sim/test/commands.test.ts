@@ -163,7 +163,7 @@ describe("step, stage 1", () => {
     step(w, [
       as(1, { type: "applyPreset", creepId: creep.id, preset: "roadBuilder" }),
     ]);
-    expect(creep.rules[1]!.then).toEqual({ type: "buildRoad" });
+    expect(creep.rules[2]!.then).toEqual({ type: "buildRoad" });
   });
 });
 

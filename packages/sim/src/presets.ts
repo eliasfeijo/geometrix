@@ -1,8 +1,9 @@
 // Ready-made autopilot rules (spec P-3; F4 details decided 2026-11-13).
-// Creeps are born with the materia collector.
+// Creeps are born with the materia collector. The functions per preset give
+// its rules without the help rule; presetRules adds the DNA's (R spec D11).
 
-import type { Rule } from "./autopilot.ts";
-import type { Resource } from "./params.ts";
+import { isReaction, type Rule } from "./autopilot.ts";
+import type { Dna, Resource } from "./params.ts";
 
 export const PRESETS = [
   "materiaCollector",
@@ -92,8 +93,43 @@ export function raiderRules(): Rule[] {
   ];
 }
 
-/** The preset's rules. */
-export function presetRules(preset: PresetId): Rule[] {
+/**
+ * Helping an ally, per DNA (R spec D10): the radius of allyInBattle and the
+ * HP floor of joinBattle, in thousandths. Provisional; like the raider's
+ * numbers, they belong to the preset, not the params.
+ */
+export const HELP: Record<Dna, { radius: number; minHpPermille: number }> = {
+  square: { radius: 6, minHpPermille: 400 },
+  triangle: { radius: 6, minHpPermille: 500 },
+  circle: { radius: 8, minHpPermille: 500 },
+};
+
+/** The DNA's help rule: join a teammate's battle in sight nearby (D10). */
+export function helpRule(dna: Dna): Rule {
+  const { radius, minHpPermille } = HELP[dna];
+  return {
+    when: { type: "allyInBattle", radius },
+    then: { type: "joinBattle", minHpPermille },
+  };
+}
+
+/**
+ * `rules` with the DNA's help rule after their leading reaction rules and
+ * before everything else (R spec D11, H-3): every preset has it, the
+ * strategist's rules too.
+ */
+export function withHelp(rules: readonly Rule[], dna: Dna): Rule[] {
+  let at = 0;
+  while (at < rules.length && isReaction(rules[at]!.then)) at++;
+  return [...rules.slice(0, at), helpRule(dna), ...rules.slice(at)];
+}
+
+/** The preset's rules for a creep of `dna`, the help rule included. */
+export function presetRules(preset: PresetId, dna: Dna): Rule[] {
+  return withHelp(baseRules(preset), dna);
+}
+
+function baseRules(preset: PresetId): Rule[] {
   switch (preset) {
     case "materiaCollector":
       return collectorRules("materia");

@@ -4,7 +4,10 @@ import type { Command } from "../src/commands.ts";
 import {
   collectorRules,
   raiderRules,
+  helpRule,
+  presetRules,
   roadBuilderRules,
+  withHelp,
 } from "../src/presets.ts";
 import { mirrorCell, Terrain } from "../src/map.ts";
 import { canonicalJson, serialize } from "../src/serialize.ts";
@@ -29,7 +32,10 @@ function joined(): WorldState {
   ]);
   revealWorld(world);
   for (const creep of world.creeps) {
-    creep.rules = [...postureRules(creep.dna), ...collectorRules("materia")];
+    creep.rules = withHelp(
+      [...postureRules(creep.dna), ...collectorRules("materia")],
+      creep.dna,
+    );
   }
   return world;
 }
@@ -75,7 +81,11 @@ const assignments = (
       return [{ creepId: c.creepId, role: c.preset }];
     }
     if (c.type !== "setRules") return [];
-    const actions = canonicalJson(c.rules.filter((r) => !isReaction(r.then)));
+    const actions = canonicalJson(
+      c.rules.filter(
+        (r) => !isReaction(r.then) && r.then.type !== "joinBattle",
+      ),
+    );
     const role =
       actions === canonicalJson(collectorRules("materia"))
         ? "materiaCollector"
@@ -121,7 +131,9 @@ describe("balanced", () => {
     const world = withDark();
     const raiders = () =>
       teamCreeps(world, 0).filter(
-        (c) => canonicalJson(c.rules) === canonicalJson(raiderRules()),
+        (c) =>
+          canonicalJson(c.rules) ===
+          canonicalJson(withHelp(raiderRules(), c.dna)),
       );
     const settle = () => {
       for (const input of botInputs(world)) {
@@ -154,7 +166,7 @@ describe("balanced", () => {
   test("sends the raiders back to gathering once there is nothing to explore (F3 checkpoint, C1)", () => {
     const world = withDark();
     const raider = teamCreeps(world, 0)[3]!;
-    raider.rules = raiderRules();
+    raider.rules = withHelp(raiderRules(), raider.dna);
     expect(presetsOf(decide(world, 0))).not.toContainEqual([
       raider.id,
       "materiaCollector",
@@ -172,7 +184,7 @@ describe("balanced", () => {
     const creeps = teamCreeps(world, 0);
     // A newborn: the materia preset without the posture.
     const newborn = creeps.at(-1)!;
-    newborn.rules = collectorRules("materia");
+    newborn.rules = presetRules("materiaCollector", newborn.dna);
     const commands = decide(world, 0);
     const rulesOf = (id: number) =>
       commands.find(
@@ -181,6 +193,7 @@ describe("balanced", () => {
       )?.rules;
     expect(rulesOf(newborn.id)).toEqual([
       ...postureRules(newborn.dna),
+      helpRule(newborn.dna),
       ...collectorRules("materia"),
     ]);
     for (const creep of creeps.slice(0, 3)) {
@@ -240,8 +253,8 @@ describe("balanced", () => {
   test("moves cristal collectors back to materia once the map has no cristal", () => {
     const world = joined();
     const [a, b] = teamCreeps(world, 0);
-    a!.rules = collectorRules("cristal");
-    b!.rules = collectorRules("cristal");
+    a!.rules = withHelp(collectorRules("cristal"), a!.dna);
+    b!.rules = withHelp(collectorRules("cristal"), b!.dna);
     for (const d of world.deposits) if (d.kind === "cristal") d.amount = 0;
     revealWorld(world);
     // Freed first, a is then the lowest-id materia creep: it fills the
@@ -285,7 +298,10 @@ describe("balanced", () => {
     // The builder is the plain preset: the strategist leaves it be, and its
     // autopilot resolves the new target (R spec D12).
     const builder = teamCreeps(world, 0)[2]!;
-    builder.rules = [...postureRules(builder.dna), ...roadBuilderRules()];
+    builder.rules = withHelp(
+      [...postureRules(builder.dna), ...roadBuilderRules()],
+      builder.dna,
+    );
     expect(assignments(decide(world, 0)).map((a) => a.creepId)).not.toContain(
       builder.id,
     );
