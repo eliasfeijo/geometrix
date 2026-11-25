@@ -30,6 +30,7 @@ export function select(
     state.deposits,
     store.cores.value,
     store.view.value?.scale ?? 1,
+    state.battles,
   );
   if (pick?.kind === "stack") {
     store.stack.value = { ids: pick.ids, at: px };
@@ -75,6 +76,7 @@ export function cursorAt(
     state.deposits,
     store.cores.value,
     store.view.value?.scale ?? 1,
+    state.battles,
   );
   const core = state.teams[team]?.core;
   const dominated = orders && store.myCreep.value !== null;

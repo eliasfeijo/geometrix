@@ -27,6 +27,7 @@ import {
   teamName,
 } from "../format.ts";
 import { COLORS } from "../map/colors.ts";
+import { BattleInspector } from "./battle-inspector.tsx";
 import { CorePanel } from "./core-panel.tsx";
 import { DnaIcon } from "./dna-icon.tsx";
 import { RulesEditor } from "./rules-editor.tsx";
@@ -50,6 +51,7 @@ export function Inspector() {
       {selection.kind === "creep" && <CreepInspector id={selection.id} />}
       {selection.kind === "deposit" && <DepositInspector id={selection.id} />}
       {selection.kind === "core" && <CorePanel team={selection.team} />}
+      {selection.kind === "battle" && <BattleInspector id={selection.id} />}
     </aside>
   );
 }

@@ -3,14 +3,23 @@
 // that hits several markers with none clearly lists all their creeps (fog
 // F6, E3).
 
-import type { Cell, Deposit, OrderInput, Spoil } from "@geometrix/sim";
+import type {
+  BattleStubView,
+  Cell,
+  Deposit,
+  OrderInput,
+  Spoil,
+} from "@geometrix/sim";
+import { battleSign } from "./combat-marks.ts";
 import { markerAt, markersAt, type Marker } from "./layout.ts";
 import { cellAt, type Point } from "./view.ts";
 
 export type Selection =
   | { kind: "creep"; id: number }
   | { kind: "deposit"; id: number }
-  | { kind: "core"; team: number };
+  | { kind: "core"; team: number }
+  /** A battle, by its sign on the map (junction D16). */
+  | { kind: "battle"; id: number };
 
 /** What a click hits: a selection, or a stack whose creeps to list. */
 export type Pick = Selection | { kind: "stack"; ids: number[] };
@@ -26,7 +35,14 @@ export function pickAt(
   cores: readonly (Cell | null)[],
   /** Pixels per cell. */
   viewScale: number,
+  /** The battles in the view: their signs come first (they sit on top). */
+  battles: readonly BattleStubView[] = [],
 ): Pick | null {
+  const sign = battles.find((b) => {
+    const { x, y, r } = battleSign(b, viewScale);
+    return Math.hypot(point.x - x, point.y - y) <= r;
+  });
+  if (sign !== undefined) return { kind: "battle", id: sign.id };
   const marker = markerAt(point, markers, viewScale);
   if (marker?.kind === "creep") return { kind: "creep", id: marker.id };
   if (marker?.kind === "stack") return { kind: "stack", ids: marker.ids };
