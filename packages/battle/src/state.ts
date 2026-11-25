@@ -10,7 +10,7 @@ import type { RngState } from "./rng.ts";
  * Bumped when the same log starts giving another result (plan section 11).
  * Snapshots and logs of another version are refused.
  */
-export const BATTLE_VERSION = 5;
+export const BATTLE_VERSION = 6;
 
 export type Carry = { materia: number; cristal: number };
 

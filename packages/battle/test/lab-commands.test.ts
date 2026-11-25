@@ -30,7 +30,7 @@ const byId = (state: BattleState, id: number) =>
   state.participants.find((p) => p.id === id)!;
 
 describe("control (spec D12)", () => {
-  test("hands a participant to the human, releasing the one dominated before", () => {
+  test("hands a participant to the human; several may be human at once", () => {
     const state = battleOn(FIELD, [["square", "circle"], ["circle"]]);
     const first = stepBattle(state, [
       { type: "control", id: 1, controller: "human" },
@@ -52,21 +52,20 @@ describe("control (spec D12)", () => {
       second.map(
         (e) => e.type === "controlChanged" && [e.participant.id, e.controller],
       ),
-    ).toEqual([
-      [1, "gambits"],
-      [3, "human"],
-    ]);
+    ).toEqual([[3, "human"]]);
+    // Two players in one world battle each keep theirs (junction D12).
     expect(state.participants.map((p) => p.controller)).toEqual([
-      "gambits",
+      "human",
       "gambits",
       "human",
     ]);
+    stepBattle(state, [{ type: "control", id: 1, controller: "gambits" }]);
     // The released one stops, and the gambits decided on this very tick (an
     // empty list: stand still); the next decision is a reaction time away.
     expect(byId(state, 1).intent).toMatchObject({ move: null, attack: false });
     const next = byId(state, 1).ai.nextDecisionTick;
-    expect(next).toBeGreaterThanOrEqual(1 + 3);
-    expect(next).toBeLessThanOrEqual(1 + 7);
+    expect(next).toBeGreaterThanOrEqual(2 + 3);
+    expect(next).toBeLessThanOrEqual(2 + 7);
   });
 
   test("giving it back to the gambits; the same controller is a no-op", () => {

@@ -240,14 +240,9 @@ export function applyCommand(
       return;
     case "control":
       if (participant.controller === command.controller) return;
-      // One domination at a time (spec D12): taking one releases the other.
-      if (command.controller === "human") {
-        for (const other of state.participants) {
-          if (other.controller === "human") {
-            setController(state, log, other, "gambits");
-          }
-        }
-      }
+      // Each participant on its own: several humans may play one battle
+      // (junction D12, one creep per player). The lab's one domination at a
+      // time (lab spec D12) is its page's: it releases the one before.
       setController(state, log, participant, command.controller);
       return;
     case "setGambits":

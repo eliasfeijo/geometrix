@@ -495,6 +495,11 @@ export function Lab() {
     // Taking the creep already taken changes nothing, not even the record.
     if (!isSwitch(dominated, id)) return;
     switched();
+    // One domination at a time (lab spec D12): the one before goes back to
+    // its gambits; the battle lets several humans play (junction D12).
+    if (dominated !== null) {
+      send({ type: "control", id: dominated, controller: "gambits" });
+    }
     send({ type: "control", id, controller: "human" });
     setDominated(id);
     predictor.current.reset();
