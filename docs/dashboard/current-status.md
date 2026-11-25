@@ -6,16 +6,16 @@
 
 ## Now
 
-**Updated:** 2026-11-24 (end of F3)
+**Updated:** 2026-11-25 (F6 at checkpoint C1b)
 
 | | |
 |---|---|
 | **Milestone** | **M2 — The ambush** ([ROADMAP](../ROADMAP.md)). M0, M1 and M1.5 ✅ |
 | **Slices** | **A — The encounter** ([spec](../specs/m2-encounter/spec.md) · [plan](../specs/m2-encounter/plan.md) · [tasks](../specs/m2-encounter/tasks.md)) ✅ 2026-11-17 · **B — The battle lab** ([spec](../specs/m2-battle-lab/spec.md) · [plan](../specs/m2-battle-lab/plan.md) · [tasks](../specs/m2-battle-lab/tasks.md)) ✅ 2026-11-20 |
-| **In progress** | **D — The junction** ([spec](../specs/m2-junction/spec.md) · [plan](../specs/m2-junction/plan.md) · [tasks](../specs/m2-junction/tasks.md)), spec and plan ✅ 2026-11-24. **F1** ✅ (the baseline, the battle contract, the `junction` package) · **F2** ✅ (the world side: stub, lock, joins, the result commands; `SIM_VERSION` 10) · **F3** ✅ (the junction host, every harness caller through it, `geo verify` with the two logs, the battle metrics; checkpoint C1 decided) |
-| **Next front** | **F6 — The wanderers, moved before F4/F5** (C1-1; branch `m2/junction-f6-wanderers`): first the **junction matrix** (C1-2) and the **spawn zones' distance as a param** (C1-3), then the wanderers; **checkpoint C1b** (the matrix, the zones' value, the bot × bot report with wanderers against C1, whether the bots need changing) |
+| **In progress** | **D — The junction** ([spec](../specs/m2-junction/spec.md) · [plan](../specs/m2-junction/plan.md) · [tasks](../specs/m2-junction/tasks.md)), spec and plan ✅ 2026-11-24. **F1** ✅ (the baseline, the battle contract, the `junction` package) · **F2** ✅ (the world side: stub, lock, joins, the result commands; `SIM_VERSION` 10) · **F3** ✅ (the junction host, every harness caller through it, `geo verify` with the two logs, the battle metrics; checkpoint C1 decided) · **F6** implemented on `m2/junction-f6-wanderers`, not merged: the junction matrix, the zones' distance as a param (750‰, provisional), the wanderers (`SIM_VERSION` 11, `PROTOCOL_VERSION` 6); **at checkpoint C1b** |
+| **Next front** | **The owner's answers to C1b** (below), then F6's closing (record them, the dashboard, the merge) and **F4** |
 | **Then** | F4 (network and server), F5 (client), F7 (soak and playtest); then **P — The friends' playtest**; E's order vs. P decided at D's checkpoint C2 |
-| **Waiting on the owner** | (1) [ADR-0009](../adr/0009-prediction-in-the-lab.md) (`Proposed`): prediction as a lab experiment option. (2) `gambits.meleeBerthSteps` 3 (provisional, lab F7). (3) Whenever the owner wants: [PLAYTEST](../PLAYTEST.md) lab group 7 (the four movement options at 0 and 150 ms), which feeds the prediction decision |
+| **Waiting on the owner** | **Checkpoint C1b** (numbers in the [tasks](../specs/m2-junction/tasks.md) F6 record): **C1b-1** the zones' distance at 750‰ (fleeing: an empty victim dies 13%, a full one 37%; fights unchanged)? **C1b-2** the wanderers' pressure: at cap 4 a team loses 2.6 of 6 creeps in 6 h (C1: 0.6) and in 3 days seed 42 ends with 15 / 10 creeps (C1: 30 / 30); the cap sets it (1: 1.8, 2: 2.2), the damage does not. **C1b-3** (C1-4) the bots: no battles between teams left in 3 days (0 encounters), 37 spoils piles nobody picks up; change the strategist now, or keep it until the playtest? **C1b-4** a circle beats a square in every junction battle (the matrix: 100%, any wanderer damage): act now, or watch it in the playtest? · (1) [ADR-0009](../adr/0009-prediction-in-the-lab.md) (`Proposed`): prediction as a lab experiment option. (2) `gambits.meleeBerthSteps` 3 (provisional, lab F7). (3) Whenever the owner wants: [PLAYTEST](../PLAYTEST.md) lab group 7 (the four movement options at 0 and 150 ms), which feeds the prediction decision |
 | **Blockers** | None |
 
 ### Next steps
