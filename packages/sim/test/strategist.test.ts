@@ -13,8 +13,10 @@ import { mirrorCell, Terrain } from "../src/map.ts";
 import { canonicalJson, serialize } from "../src/serialize.ts";
 import { step } from "../src/step.ts";
 import { roadTarget } from "../src/roads.ts";
+import type { Difficulty } from "../src/domination.ts";
 import {
   postureRules,
+  standRules,
   strategistCommands,
   teamDifficulty,
 } from "../src/strategist.ts";
@@ -25,19 +27,22 @@ import { loadTestParams, revealWorld, textWorld } from "./helpers.ts";
 const params = loadTestParams();
 
 /**
- * The seed-42 world after one bot per team joined at tick 0, all revealed,
- * its materia collectors already with the bot's posture.
+ * The seed-42 world after one bot per team joined at tick 0 at `difficulty`
+ * (easy: slice D's strategist, R spec D26), all revealed, its materia
+ * collectors already with the bot's posture.
  */
-function joined(): WorldState {
+function joined(difficulty: Difficulty = "easy"): WorldState {
   const world = createWorld(42, params);
   step(world, [
-    { playerId: 1, command: { type: "join", team: 0, bot: true } },
-    { playerId: 2, command: { type: "join", team: 1, bot: true } },
+    { playerId: 1, command: { type: "join", team: 0, bot: true, difficulty } },
+    { playerId: 2, command: { type: "join", team: 1, bot: true, difficulty } },
   ]);
   revealWorld(world);
   for (const creep of world.creeps) {
+    const posture =
+      difficulty === "easy" ? postureRules(creep.dna) : standRules();
     creep.rules = withHelp(
-      [...postureRules(creep.dna), ...collectorRules("materia")],
+      [...posture, ...collectorRules("materia")],
       creep.dna,
     );
   }
@@ -48,8 +53,8 @@ function joined(): WorldState {
  * The world of joined() with one passable cell left never seen by each team,
  * mirrored: there is something to explore, so the bot keeps raiders.
  */
-function withDark(): WorldState {
-  const world = joined();
+function withDark(difficulty: Difficulty = "easy"): WorldState {
+  const world = joined(difficulty);
   const size = world.map.width * world.map.height;
   const cell = world.map.terrain.findIndex((t) => t === Terrain.jungle);
   world.memory[0]!.explored[cell] = 0;
@@ -108,7 +113,7 @@ const presetsOf = (commands: Command[]) =>
 const builders = (commands: Command[]) =>
   assignments(commands).filter((a) => a.role === "roadBuilder").length;
 
-describe("balanced", () => {
+describe("balanced at easy: slice D's strategist (R spec D26)", () => {
   test("splits 6 creeps into 2 cristal, 1 road builder, 1 raider and 2 materia, lowest ids first", () => {
     const world = withDark();
     const [a, b, c, d] = teamCreeps(world, 0);
@@ -362,6 +367,73 @@ describe("balanced", () => {
       builders(strategistCommands("balanced", seen, world.map, world.params)),
     ).toBe(0);
   });
+});
+
+/** The setRules a command list gives the creep, if any. */
+const rulesGiven = (commands: Command[], id: number) =>
+  commands.find(
+    (c): c is Extract<Command, { type: "setRules" }> =>
+      c.type === "setRules" && c.creepId === id,
+  )?.rules;
+
+describe("the posture at normal and hard (R spec D17, S-4)", () => {
+  test.each(["normal", "hard"] as const)(
+    "every DNA's gatherer pays a demand of at most 250‰, flees below 400‰ HP and fights otherwise (%s)",
+    (difficulty) => {
+      const world = withDark(difficulty);
+      const creeps = teamCreeps(world, 0);
+      for (const creep of creeps) {
+        creep.rules = presetRules("materiaCollector", creep.dna);
+      }
+      const commands = decide(world, 0);
+      expect(standRules()).toEqual([
+        {
+          when: { type: "demandAtMost", permille: 250 },
+          then: { type: "pay" },
+        },
+        { when: { type: "hpBelow", permille: 400 }, then: { type: "flee" } },
+        { when: { type: "always" }, then: { type: "fight" } },
+      ]);
+      const gatherers = creeps.filter((c) => rulesGiven(commands, c.id));
+      expect(new Set(gatherers.map((c) => c.dna))).toEqual(
+        new Set(["square", "triangle", "circle"]),
+      );
+      for (const creep of gatherers) {
+        const rules = rulesGiven(commands, creep.id)!;
+        expect(rules.slice(0, 3)).toEqual(standRules());
+        expect(rules[3]).toEqual(helpRule(creep.dna));
+      }
+    },
+  );
+
+  test("easy keeps slice D's posture: the triangle pays, the circle flees", () => {
+    const world = withDark("easy");
+    const triangle = teamCreeps(world, 0).find((c) => c.dna === "triangle")!;
+    triangle.rules = presetRules("materiaCollector", "triangle");
+    expect(rulesGiven(decide(world, 0), triangle.id)!.slice(0, 2)).toEqual(
+      postureRules("triangle"),
+    );
+  });
+});
+
+describe("production before the upgrade (R spec D15, S-2)", () => {
+  test.each(["easy", "normal", "hard"] as const)(
+    "with stock for one only, it produces and leaves the upgrade (%s)",
+    (difficulty) => {
+      const world = joined(difficulty);
+      const team = world.teams[0]!;
+      const { creep, upgrade } = world.params;
+      // Enough for the creep or for the upgrade, not both.
+      team.stock = {
+        materia: creep.cost.materia,
+        cristal: Math.max(creep.cost.cristal, upgrade.capacity.cost.cristal),
+      };
+      const types = decide(world, 0).map((c) => c.type);
+      expect(types).toContain("produce");
+      expect(types).not.toContain("buyUpgrade");
+      expect(types.indexOf("produce")).toBe(0);
+    },
+  );
 });
 
 describe("difficulty (R spec D26, S-6)", () => {

@@ -122,8 +122,10 @@ test.each([1, 42, 649])(
     // (12 and 14 on seeds 1 and 42 since the road builder resolves its own
     // target, R F2: the roads come in another order, the fights move),
     // 20-152 locked creeps sent (24 and 28 since then), 5-12 deaths and 1-8 spoils (as the two teams
-    // saw them) in these seeds. A bot's extortion is answered in the tick it
-    // opens, so no delta carries it.
+    // saw them) in these seeds. Since the bot's R F3 posture (D17), seed 42
+    // drops no spoil in 6 h (16 battles, 63 locked, 10 deaths): its floor
+    // waits for the threat pass's drops. A bot's extortion is answered in the
+    // tick it opens, so no delta carries it.
     expect(state.creeps.length).toBeGreaterThan(12);
     expect(upserts).toBeGreaterThan(ticks);
     expect(explored).toBeGreaterThan(300);
@@ -136,7 +138,7 @@ test.each([1, 42, 649])(
     expect(closed).toBeGreaterThanOrEqual(10);
     expect(locked).toBeGreaterThanOrEqual(20);
     expect(deaths).toBeGreaterThanOrEqual(5);
-    expect(spoils).toBeGreaterThanOrEqual(1);
+    expect(spoils).toBeGreaterThanOrEqual(seed === 42 ? 0 : 1);
   },
   120_000,
 );

@@ -57,10 +57,11 @@ export const BALANCED = {
    */
   raiderShare: { numerator: 1, denominator: 6 },
   /**
-   * The gatherers' posture when approached, by DNA (F3 checkpoint, C2; see
-   * postureRules): below this HP share the square flees.
+   * The gatherers' posture when approached (see postureRules and
+   * standRules): below this HP share they flee; at normal and hard they pay
+   * a demand of at most payAtMostPermille of their load (R spec D17).
    */
-  posture: { fleeBelowPermille: 400 },
+  posture: { fleeBelowPermille: 400, payAtMostPermille: 250 },
 } as const;
 
 /** One bot player per team; player ids are team + 1. */
@@ -241,10 +242,10 @@ function scarcestDna(seen: TeamView, team: Team): Dna {
 }
 
 /**
- * The reaction rules the bot puts before a gatherer's rules (F3 checkpoint,
- * C2), as the junction reads them (D2): a flee rule refuses an extortion and
- * enters the battle as a carrier; fight, the DNA's preset. The square
- * refuses and fights, entering as a carrier below
+ * The reaction rules the easy bot puts before a gatherer's rules (encontro
+ * F3 checkpoint, C2; R spec D26), as the junction reads them (D2): a flee
+ * rule refuses an extortion and enters the battle as a carrier; fight, the
+ * DNA's preset. The square refuses and fights, entering as a carrier below
  * BALANCED.posture.fleeBelowPermille of its HP; the triangle pays any
  * extortion and enters an attack as a carrier; the circle refuses every
  * extortion and always enters as a carrier. Human players' gatherers keep the
@@ -273,6 +274,32 @@ export function postureRules(dna: Dna): Rule[] {
       return [{ when: always, then: { type: "flee" } }];
   }
 }
+
+/**
+ * The reaction rules the normal and hard bots put before a gatherer's rules,
+ * every DNA alike (R spec D17, S-4): pay a demand of at most
+ * BALANCED.posture.payAtMostPermille of the load, flee as a carrier below
+ * fleeBelowPermille of the HP, refuse and fight with the DNA's preset
+ * otherwise. The triangle stops always paying, the circle always fleeing.
+ */
+export function standRules(): Rule[] {
+  const { payAtMostPermille, fleeBelowPermille } = BALANCED.posture;
+  return [
+    {
+      when: { type: "demandAtMost", permille: payAtMostPermille },
+      then: { type: "pay" },
+    },
+    {
+      when: { type: "hpBelow", permille: fleeBelowPermille },
+      then: { type: "flee" },
+    },
+    { when: { type: "always" }, then: { type: "fight" } },
+  ];
+}
+
+/** A gatherer's posture at the bot's difficulty (D17, D26). */
+const posture = (dna: Dna, level: Difficulty): Rule[] =>
+  level === "easy" ? postureRules(dna) : standRules();
 
 /**
  * The rules of the presets without a target, without their reaction rules,
@@ -310,25 +337,25 @@ function roleOf(creep: Pick<Creep, "rules">): Role {
 }
 
 /**
- * The rules the bot gives a creep of `dna` in `role`, each with the DNA's
- * help rule after the reactions (R spec D11, D14).
+ * The rules the bot gives a creep of `dna` in `role` at its difficulty, each
+ * with the DNA's help rule after the reactions (R spec D11, D14, D17).
  */
-function rulesFor(role: Role, dna: Dna): Rule[] {
+function rulesFor(role: Role, dna: Dna, level: Difficulty): Rule[] {
   switch (role.kind) {
     case "raider":
       return withHelp(raiderRules(), dna);
     case "materia":
       return withHelp(
-        [...postureRules(dna), ...collectorRules("materia")],
+        [...posture(dna, level), ...collectorRules("materia")],
         dna,
       );
     case "cristal":
       return withHelp(
-        [...postureRules(dna), ...collectorRules("cristal")],
+        [...posture(dna, level), ...collectorRules("cristal")],
         dna,
       );
     case "builder":
-      return withHelp([...postureRules(dna), ...roadBuilderRules()], dna);
+      return withHelp([...posture(dna, level), ...roadBuilderRules()], dna);
   }
 }
 
@@ -339,7 +366,7 @@ function rulesFor(role: Role, dna: Dna): Rule[] {
  * then the raiders.
  */
 function assignRoles(known: Knowledge): Command[] {
-  const { seen, team, map, explored, params } = known;
+  const { seen, team, map, explored, params, level } = known;
   const creeps = seen.creeps
     .filter(isOwnCreep)
     .filter((c) => c.team === team.id);
@@ -398,7 +425,7 @@ function assignRoles(known: Knowledge): Command[] {
   const commands: Command[] = [];
   for (const creep of creeps) {
     const role = next.get(creep)!;
-    const rules = rulesFor(role, creep.dna);
+    const rules = rulesFor(role, creep.dna, level);
     if (canonicalJson(creep.rules) === canonicalJson(rules)) continue;
     commands.push(
       role.kind === "raider"
