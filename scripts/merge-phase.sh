@@ -3,11 +3,12 @@
 # (the integration checkout, CLAUDE.local.md; the `commit` skill's rules).
 #
 # A session isolated in a worktree cannot run git in that checkout: it
-# writes the merge message to a file and ends with one line for the owner,
-# run from any checkout of the repository (the `!` prefix runs it in the
-# session):
+# writes the merge message to a file and ends with one line for the owner
+# to paste into their own terminal, from any checkout of the repository
+# (not with the session's `!` prefix: that runs through the worktree guard,
+# which refuses git in another checkout, and the merge fails silently):
 #
-#   ! scripts/merge-phase.sh <branch> <message-file> [--no-check] [--cleanup]
+#   scripts/merge-phase.sh <branch> <message-file> [--no-check] [--cleanup]
 #
 # Steps, each timed: checks (main checked out and clean, the branch exists
 # and has commits main lacks), `git merge --no-ff -F <message-file>`,
