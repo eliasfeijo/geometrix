@@ -3,7 +3,11 @@ import { describe, expect, test } from "vitest";
 import { battleSign, BATTLE_SIGN_PX } from "../src/map/combat-marks.ts";
 import type { Marker } from "../src/map/layout.ts";
 import { pickAt } from "../src/map/pick.ts";
-import { battleAge, participantName } from "../src/panels/battle-inspector.tsx";
+import {
+  battleAge,
+  participantName,
+  watchAction,
+} from "../src/panels/battle-inspector.tsx";
 import { testWorld, viewOf } from "./helpers.ts";
 
 const stub = (id: number, x: number, y: number): BattleStubView => ({
@@ -54,5 +58,16 @@ describe("the battle on the map (junction D16)", () => {
     expect(participantName(state, creep.id)).toContain(creep.name);
     expect(participantName(state, 99_999)).toBe("#99999");
     expect(battleAge(stub(1, 0, 0), 16, 10)).toBe(60);
+  });
+});
+
+describe("watching a battle (junction D11, N-2)", () => {
+  test("a team with a side watches; the dominated creep's battle is a return", () => {
+    const battle = stub(7, 10, 20);
+    expect(watchAction(battle, 0, null)).toBe("watch");
+    expect(watchAction(battle, 0, 3)).toBe("watch");
+    expect(watchAction(battle, 0, 7)).toBe("return");
+    // Another team's battle is not this team's to watch (spectators: P).
+    expect(watchAction(battle, 1, null)).toBeNull();
   });
 });

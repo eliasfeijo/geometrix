@@ -18,6 +18,37 @@ export function participantName(state: TeamView, id: number): string {
     : `${fighter.name} (${DNA_NAMES[fighter.dna]})`;
 }
 
+/**
+ * What the inspector offers about a battle's screen (junction D11, N-2):
+ * back to it when the dominated creep is in it, watching it when the
+ * team has a side in it, nothing otherwise (other teams watch with P).
+ */
+export function watchAction(
+  battle: Pick<BattleStubView, "id" | "sides">,
+  team: number,
+  dominatedBattle: number | null,
+): "return" | "watch" | null {
+  if (dominatedBattle === battle.id) return "return";
+  return battle.sides.some((s) => sideTeam(s) === team) ? "watch" : null;
+}
+
+/** The button that opens a battle's screen, when the viewer may. */
+export function WatchButton({ battle }: { battle: BattleStubView }) {
+  const { store, viewer, battles } = useGame();
+  if (battles === undefined) return null;
+  const action = watchAction(
+    battle,
+    viewer.team,
+    store.myCreep.value?.battle ?? null,
+  );
+  if (action === null) return null;
+  return (
+    <button class="primary" onClick={() => battles.open(battle.id)}>
+      {action === "return" ? "Voltar à batalha" : "Assistir"}
+    </button>
+  );
+}
+
 /** World seconds since the battle opened. */
 export function battleAge(
   battle: BattleStubView,
@@ -42,7 +73,7 @@ export function BattleInspector({ id }: { id: number }) {
     <div class="inspector">
       <h2 class="title">
         <span>
-          Batalha
+          {"Batalha "}
           <span class="subtitle muted">
             ({battle.x}, {battle.y}) · há {duration(age)} de mundo
           </span>
@@ -62,6 +93,9 @@ export function BattleInspector({ id }: { id: number }) {
           );
         })}
       </dl>
+      <div class="actions">
+        <WatchButton battle={battle} />
+      </div>
     </div>
   );
 }

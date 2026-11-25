@@ -1285,3 +1285,7 @@ button.danger {
   z-index: 3;
   max-width: calc(100% - 32px);
 }
+
+.engaged-action {
+  margin-left: 8px;
+}
