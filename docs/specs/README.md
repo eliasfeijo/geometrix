@@ -11,6 +11,10 @@ findings.
 | The fog | M1.5 | [m1.5-fog](m1.5-fog/spec.md) | ✅ Done (2026-11-14) |
 | A — The encounter | M2 | [m2-encounter](m2-encounter/spec.md) | ✅ Done (2026-11-17) |
 | B — The battle lab | M2 | [m2-battle-lab](m2-battle-lab/spec.md) | ✅ Done (2026-11-20) |
-| D — The junction | M2 | [m2-junction](m2-junction/spec.md) | Spec and plan approved (2026-11-24); F1 ✅, F2 ✅, F3 ✅, F6 next |
-| P — The friends' playtest | M2 | — | After D |
-| E — Siege and repair | M2 | — | Order decided at D's checkpoint |
+| D — The junction | M2 | [m2-junction](m2-junction/spec.md) | ✅ Done (2026-11-25) |
+| R — Rebalance and pace | M2 | [m2-rebalance](m2-rebalance/spec.md) | Spec draft (2026-11-25), waiting for the owner's approval |
+| E-min — The minimal end | M2 | — | Spec next |
+| K — The DNA kits | M2 | — | Spec next |
+| P — The friends' playtest | M2 | — | After R, E-min and K |
+| E — Siege and repair | M2 | — | After P |
+| T — More teams | M2 | — | After P, competing with E |
