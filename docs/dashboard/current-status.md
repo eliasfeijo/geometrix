@@ -6,16 +6,16 @@
 
 ## Now
 
-**Updated:** 2026-11-25 (K's spec approved)
+**Updated:** 2026-11-25 (K's spec approved, its plan drafted)
 
 | | |
 |---|---|
 | **Milestone** | **M2 — The ambush** ([ROADMAP](../ROADMAP.md)). M0, M1 and M1.5 ✅ |
-| **Slices** | A ✅ 2026-11-17 · B ✅ 2026-11-20 · D ✅ 2026-11-25 · **R — Rebalance and pace** (spec approved, plan draft), **E-min — The minimal end** (spec draft) and **K — The DNA kits** (spec approved 2026-11-25, plan next) |
-| **In progress** | **R's plan draft**, waiting for the owner (the [R spec](../specs/m2-rebalance/spec.md) approved 2026-11-25); **G's design round** in a parallel session; the [E-min spec](../specs/m2-minimal-end/spec.md) draft waiting for the owner; **K's plan** (the [K spec](../specs/m2-kits/spec.md) approved 2026-11-25) |
+| **Slices** | A ✅ 2026-11-17 · B ✅ 2026-11-20 · D ✅ 2026-11-25 · **R — Rebalance and pace** (spec approved, plan draft), **E-min — The minimal end** (spec draft) and **K — The DNA kits** (spec approved 2026-11-25, plan draft) |
+| **In progress** | **R's plan draft**, waiting for the owner (the [R spec](../specs/m2-rebalance/spec.md) approved 2026-11-25); **G's design round** in a parallel session; the [E-min spec](../specs/m2-minimal-end/spec.md) draft waiting for the owner; **[K's plan](../specs/m2-kits/plan.md) draft**, waiting for the owner (the [K spec](../specs/m2-kits/spec.md) approved 2026-11-25) |
 | **Next front** | The specs of **R**, **E-min** and **K** (`spec-slice` skill), one session each; they can run in parallel (R: `sim` params, autopilot, strategist, map UI; E-min: the end rule, end screen and replay; K: `packages/battle`, gambits, lab, battle screen). R's final balance pass runs after K's merge |
 | **Then** | **G — Groups and formations** (after K: formations in the world and in battle, the side each DNA engages from, the battle bot's load experiment; lab first), then **P — The friends' playtest** (two teams: humans against humans, or co-op against the bot); after it, **E** (siege and repair) or **T** (more teams), chosen at P's checkpoint |
-| **Waiting on the owner** | (1) The E-min spec's approval; [R's plan](../specs/m2-rebalance/plan.md) draft (P1–P15); K's plan, once drafted. (2) [ADR-0009](../adr/0009-prediction-in-the-lab.md) (`Proposed`): prediction as a lab experiment option. (3) `gambits.meleeBerthSteps` 3 (provisional, lab F7). (4) Whenever the owner wants: PLAYTEST lab group 7 (the movement options) |
+| **Waiting on the owner** | (1) The E-min spec's approval; [R's plan](../specs/m2-rebalance/plan.md) draft (P1–P15); [K's plan](../specs/m2-kits/plan.md) draft (P1–P10). (2) [ADR-0009](../adr/0009-prediction-in-the-lab.md) (`Proposed`): prediction as a lab experiment option. (3) `gambits.meleeBerthSteps` 3 (provisional, lab F7). (4) Whenever the owner wants: PLAYTEST lab group 7 (the movement options) |
 | **Blockers** | None |
 
 ### Next steps
@@ -34,7 +34,8 @@
    **Scope warning:** the largest of the three.
 2. **The E-min spec** ([GDD 01](../gdd/01-world.md), "The minimal end before the siege"): elimination in fact,
    concession, the bot conceding, the draw at the clock, the frozen world, the end screen, replay markers, N teams.
-3. **K's plan** from the [approved spec](../specs/m2-kits/spec.md) (D1–D20, 2026-11-25): Space as every DNA's kit
+3. **K's plan** ([draft](../specs/m2-kits/plan.md), P1–P10 for the owner; then F1, the bar and the strike) from the
+   [approved spec](../specs/m2-kits/spec.md) (D1–D20, 2026-11-25): Space as every DNA's kit
    key (a tap attacks, a hold fills the DNA's bar: the square's strike and charge, the triangle's guard, the circle's
    fan's range), the double-tap dodge, kits behind on/off params, the gambits and presets, the lab first (K1) and the
    world after (K2). The wanderers' own DNA and kit wait for their own design round (GDD 05). **Scope warning:**
