@@ -2,9 +2,9 @@
 // a dominating player's open screen puts its battle on the real pace, the
 // battle clock steps it, the inputs go only to the dominated participant,
 // and the frames only to the open screens. On seed 42 of the test params,
-// with a bot on each team, battle 157 opens in the step of tick 8,539 between
-// the team 0 triangle 18 and the team 1 square 108; every test recovers the
-// world from a snapshot just before it.
+// with a bot on each team, the first battle between the teams (found by
+// firstTeamBattle: tick, id and a participant of each team); every test
+// recovers the world from a snapshot just before it opens.
 
 import { copyFileSync, mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -22,16 +22,22 @@ import { battleHash, stateHash } from "../src/hash.ts";
 import { Store } from "../src/persistence.ts";
 import { rebuild } from "../src/soak.ts";
 import { WorldHost } from "../src/world-host.ts";
-import { FakeTimers, testBattleParams, testParams } from "./helpers.ts";
+import {
+  FakeTimers,
+  firstTeamBattle,
+  testBattleParams,
+  testParams,
+} from "./helpers.ts";
 
 const config = {
   snapshotEveryTicks: 300,
   metricsEveryTicks: 60,
   chronicleWelcome: 100,
 };
-const BATTLE = 157;
-const ARROW = 18; // team 0's triangle in it
-const BLOCK = 108; // team 1's square
+const first = firstTeamBattle();
+const BATTLE = first.battle;
+const ARROW = first.team0; // team 0's creep in it
+const BLOCK = first.team1; // team 1's
 
 let saved = "";
 let ana = 0;
@@ -67,12 +73,12 @@ beforeAll(() => {
   });
   host.submit(ana, { type: "join", team: 0, bot: false });
   host.submit(bia, { type: "join", team: 1, bot: false });
-  while (host.state.tick < 8_539) host.tick();
+  while (host.state.tick < first.openedTick) host.tick();
   host.snapshot();
   store.close();
 }, 60_000);
 
-/** The world after tick 8,539, with battle 157 just opened. */
+/** The world one tick on, with the battle just opened. */
 function opened() {
   const file = join(mkdtempSync(join(tmpdir(), "geo-screen-")), "geo.db");
   copyFileSync(saved, file);
@@ -90,7 +96,7 @@ function opened() {
   return { file, store, host, frames, instance };
 }
 
-/** Ana dominates the triangle, through the command path. */
+/** Ana dominates team 0's creep in it, through the command path. */
 function dominateArrow(host: WorldHost) {
   expect(host.submit(ana, { type: "dominate", creepId: ARROW })).toBeNull();
   host.tick();

@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import type { Rule } from "../src/autopilot.ts";
 import { join } from "../src/domination.ts";
-import { collectorRules, roadBuilderRules } from "../src/presets.ts";
+import { collectorRules, roadBuilderRules, withHelp } from "../src/presets.ts";
 import {
   applyPreset,
   applyPresetRefusal,
@@ -214,27 +214,29 @@ describe("applyPreset", () => {
     expect(
       applyPresetRefusal(w, 2, creep.id, "cristalCollector", null),
     ).toBeNull();
-    applyPreset(w, creep.id, "cristalCollector", null);
-    expect(creep.rules).toEqual(collectorRules("cristal"));
+    applyPreset(w, creep.id, "cristalCollector");
+    expect(creep.rules).toEqual(withHelp(collectorRules("cristal"), creep.dna));
   });
 
-  test("the road builder takes its target; other presets ignore it", () => {
+  test("the road builder takes no target (R spec D12)", () => {
     const w = world();
     const creep = ownCreep(w);
-    applyPreset(w, creep.id, "roadBuilder", { x: 4, y: 0 });
-    expect(creep.rules).toEqual(roadBuilderRules({ x: 4, y: 0 }));
-    applyPreset(w, creep.id, "materiaCollector", { x: 4, y: 0 });
-    expect(creep.rules).toEqual(collectorRules("materia"));
+    expect(applyPresetRefusal(w, 1, creep.id, "roadBuilder", null)).toBeNull();
+    applyPreset(w, creep.id, "roadBuilder");
+    expect(creep.rules).toEqual(withHelp(roadBuilderRules(), creep.dna));
+    expect(
+      applyPresetRefusal(w, 1, creep.id, "roadBuilder", { x: 4, y: 0 }),
+    ).toBe("invalidTarget");
   });
 
-  test.each([
-    ["no target", null],
-    ["a target outside the map", { x: 10, y: 0 }],
-  ])("refuses a road builder with %s", (_, target) => {
+  test("other presets ignore a target", () => {
     const w = world();
+    const creep = ownCreep(w);
     expect(
-      applyPresetRefusal(w, 1, ownCreep(w).id, "roadBuilder", target),
-    ).toBe("invalidTarget");
+      applyPresetRefusal(w, 1, creep.id, "materiaCollector", { x: 4, y: 0 }),
+    ).toBeNull();
+    applyPreset(w, creep.id, "materiaCollector");
+    expect(creep.rules).toEqual(withHelp(collectorRules("materia"), creep.dna));
   });
 
   test("refuses an unknown preset and another team's creep", () => {
@@ -251,7 +253,7 @@ describe("applyPreset", () => {
   test("a new preset takes effect on the next tick", () => {
     const w = world();
     const creep = ownCreep(w);
-    applyPreset(w, creep.id, "materiaCollector", null);
+    applyPreset(w, creep.id, "materiaCollector");
     step(w, []);
     expect(creep.order).toEqual({
       type: "gather",

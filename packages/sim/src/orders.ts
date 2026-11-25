@@ -15,8 +15,8 @@ import {
   unload,
 } from "./economy.ts";
 import { knownRoadContext, memoryOf } from "./known.ts";
-import type { Cell } from "./map.ts";
-import { CELL_COST, movePointsPerTick } from "./movement.ts";
+import { manhattan, type Cell } from "./map.ts";
+import { CELL_COST, isLoaded, movePointsPerTick } from "./movement.ts";
 import { pathTo } from "./pathfinding.ts";
 import {
   canBuildRoad,
@@ -24,9 +24,16 @@ import {
   findRoadJob,
   nextSegment,
 } from "./roads.ts";
-import { battleToJoin, findFighter } from "./battle.ts";
+import {
+  battleToJoin,
+  deliversFirst,
+  findBattle,
+  findFighter,
+  inWindow,
+} from "./battle.ts";
+import { findCreep } from "./domination.ts";
 import { creepRef, emit, type EventLog } from "./events.ts";
-import { findSpoil, takeSpoil } from "./spoils.ts";
+import { dropCargo, findSpoil, takeSpoil } from "./spoils.ts";
 import { recordDelivery } from "./stats.ts";
 import type { Creep, Deposit, Fighter, WorldState } from "./world.ts";
 
@@ -45,6 +52,13 @@ export type Order =
   | { type: "approach"; targetId: number; intent: "attack" | "extort" }
   /** Pick up a spoil the team knows (spec D11, S-1). */
   | { type: "pickup"; spoilId: number }
+  /**
+   * Walk within `autopilot.followCells` of a teammate; when it is in a
+   * battle, go and join it on its side (R spec D8, F-1..F-4).
+   */
+  | { type: "follow"; targetId: number }
+  /** Drop the whole load as spoils here, then stop (R spec D24, DR-1). */
+  | { type: "drop" }
   /**
    * Run to the team's core with the flee bonus until `untilTick` or there
    * (spec D10, plan P4). The autopilot does not change it, nor can a player.
@@ -108,6 +122,13 @@ export function resolveOrders(state: WorldState, log: EventLog): void {
       case "pickup":
         pickup(state, log, creep, order.spoilId);
         break;
+      case "follow":
+        follow(state, creep, order.targetId);
+        break;
+      case "drop":
+        dropCargo(state, log, creep);
+        halt(creep);
+        break;
     }
   }
 }
@@ -130,6 +151,42 @@ function approach(state: WorldState, creep: Creep, targetId: number): void {
     return;
   }
   if (battleToJoin(state, creep) !== undefined) {
+    creep.movePoints = 0;
+    creep.path = null;
+    return;
+  }
+  if (walk(state, creep, target) === "unreachable") halt(creep);
+}
+
+/**
+ * Keeps within `autopilot.followCells` (Manhattan) of the target, by the
+ * cached path to its cell (R spec D8, F-1). While the target is in a battle
+ * it walks to the battle's cell and waits inside the bubble, where the joins
+ * take it on its target's side (F-2, F-3); loaded, it delivers first when
+ * the core is the cheaper path (H-4, F-6). Ends when the target is dead or
+ * of another team (F-4).
+ */
+function follow(state: WorldState, creep: Creep, targetId: number): void {
+  const target = findCreep(state, targetId);
+  if (target === undefined || target.team !== creep.team) {
+    halt(creep);
+    return;
+  }
+  if (target.battle !== null) {
+    const battle = findBattle(state, target.battle)!;
+    if (inWindow(battle.window, creep)) {
+      creep.movePoints = 0;
+      creep.path = null;
+      return;
+    }
+    if (isLoaded(creep) && deliversFirst(state, creep, battle)) {
+      unloadAtCore(state, creep);
+      return;
+    }
+    if (walk(state, creep, battle) === "unreachable") halt(creep);
+    return;
+  }
+  if (manhattan(creep, target) <= state.params.autopilot.followCells) {
     creep.movePoints = 0;
     creep.path = null;
     return;
@@ -273,15 +330,25 @@ const exhausted = (state: WorldState, deposit: Deposit) =>
  * (spec R-3). Stops there, or at once if the core cannot be reached.
  */
 function deliver(state: WorldState, creep: Creep): void {
+  if (unloadAtCore(state, creep) !== "moving") halt(creep);
+}
+
+/**
+ * Walks to the team's core and unloads there; the order is left to the
+ * caller. "moving" while on the way.
+ */
+function unloadAtCore(
+  state: WorldState,
+  creep: Creep,
+): "moving" | "unloaded" | "unreachable" {
   const team = teamOf(state, creep);
   if (!isAt(creep, team.core) && walk(state, creep, team.core) === "moving") {
-    return;
+    return "moving";
   }
-  if (isAt(creep, team.core)) {
-    recordDelivery(state, creep);
-    unload(creep, team);
-  }
-  halt(creep);
+  if (!isAt(creep, team.core)) return "unreachable";
+  recordDelivery(state, creep);
+  unload(creep, team);
+  return "unloaded";
 }
 
 /**

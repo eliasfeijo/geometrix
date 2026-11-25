@@ -70,6 +70,7 @@ export const REJECT_TEXTS: Record<RejectReason | "disconnected", string> = {
   alreadyJoined: "Você já está neste mundo.",
   unknownTeam: "Esse time não existe.",
   teamFull: "Esse time já tem o máximo de humanos.",
+  humanDifficulty: "Só um bot tem dificuldade.",
   unknownPlayer: "Sua entrada no mundo ainda não foi processada.",
   unknownCreep: "Seu time não tem esse creep.",
   alreadyDominating: "Você já domina esse creep.",
@@ -103,6 +104,7 @@ export const REJECT_TEXTS: Record<RejectReason | "disconnected", string> = {
   worldEnded: "O mundo terminou: só leitura.",
   notYourBattle: "Seu time não está nessa batalha.",
   notYourParticipant: "Você não comanda esse participante.",
+  emptyCargo: "Esse creep não carrega nada.",
   disconnected: "Sem conexão com o servidor.",
 };
 
@@ -132,6 +134,8 @@ export function conditionText(c: Condition): string {
       return `HP abaixo de ${c.permille / 10}%`;
     case "demandAtMost":
       return `exigência até ${c.permille / 10}% da carga`;
+    case "allyInBattle":
+      return `aliado em batalha a até ${c.radius} células`;
   }
 }
 
@@ -150,7 +154,9 @@ export function actionText(a: Action): string {
     case "deliver":
       return "entregar no Núcleo";
     case "buildRoad":
-      return `construir estrada até (${a.x}, ${a.y})`;
+      return a.x === undefined || a.y === undefined
+        ? "construir estrada até a jazida mais perto sem estrada"
+        : `construir estrada até (${a.x}, ${a.y})`;
     case "moveTo":
       return `ir até (${a.x}, ${a.y})`;
     case "stop":
@@ -167,6 +173,12 @@ export function actionText(a: Action): string {
       return "lutar";
     case "flee":
       return "fugir";
+    case "follow":
+      return `seguir o creep #${a.creepId}`;
+    case "drop":
+      return "largar a carga";
+    case "joinBattle":
+      return `entrar na batalha do aliado (HP ≥ ${a.minHpPermille / 10}%)`;
   }
 }
 
@@ -200,6 +212,10 @@ export function orderText(order: Order, deposits: readonly Deposit[]): string {
       return `catar o despojo #${order.spoilId}`;
     case "flee":
       return "fugir para o Núcleo";
+    case "follow":
+      return `seguir o creep #${order.targetId}`;
+    case "drop":
+      return "largar a carga";
   }
 }
 

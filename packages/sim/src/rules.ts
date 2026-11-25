@@ -6,6 +6,7 @@
 import type { Action, Condition, Rule } from "./autopilot.ts";
 import {
   findCreep,
+  followRefusal,
   teamCreepRefusal,
   type TeamCreepRefusal,
 } from "./domination.ts";
@@ -85,6 +86,8 @@ function copyCondition(c: Condition): Condition | null {
       return isPermille(c.permille)
         ? { type: c.type, permille: c.permille }
         : null;
+    case "allyInBattle":
+      return isCount(c.radius) ? { type: c.type, radius: c.radius } : null;
     default:
       return null;
   }
@@ -99,6 +102,7 @@ function copyAction(a: Action, map: GameMap): Action | null {
     case "pay":
     case "fight":
     case "flee":
+    case "drop":
       return { type: a.type };
     case "approach": {
       const filter = copyFilter(a);
@@ -110,9 +114,22 @@ function copyAction(a: Action, map: GameMap): Action | null {
       return isResource(a.resource)
         ? { type: a.type, resource: a.resource }
         : null;
+    case "follow":
+      return isCount(a.creepId) ? { type: a.type, creepId: a.creepId } : null;
+    case "joinBattle":
+      return isPermille(a.minHpPermille)
+        ? { type: a.type, minHpPermille: a.minHpPermille }
+        : null;
     case "moveTo":
-    case "buildRoad":
       return isInMap(map, a) ? { type: a.type, x: a.x, y: a.y } : null;
+    case "buildRoad":
+      // No cell: the autopilot resolves the target (R spec D12).
+      if (a.x === undefined && a.y === undefined) return { type: a.type };
+      return a.x !== undefined &&
+        a.y !== undefined &&
+        isInMap(map, { x: a.x, y: a.y })
+        ? { type: a.type, x: a.x, y: a.y }
+        : null;
     default:
       return null;
   }
@@ -139,7 +156,16 @@ export function setRulesRefusal(
   const refusal = teamCreepRefusal(state, playerId, creepId);
   if (refusal !== null) return refusal;
   if (rules.length > state.params.autopilot.maxRules) return "tooManyRules";
-  return copyRules(rules, state.map) === null ? "invalidRule" : null;
+  const copies = copyRules(rules, state.map);
+  if (copies === null) return "invalidRule";
+  const creep = findCreep(state, creepId)!;
+  for (const rule of copies) {
+    if (rule.then.type !== "follow") continue;
+    if (followRefusal(state, creep, rule.then.creepId) !== null) {
+      return "invalidTarget";
+    }
+  }
+  return null;
 }
 
 export function setRules(
@@ -160,21 +186,17 @@ export function applyPresetRefusal(
   const refusal = teamCreepRefusal(state, playerId, creepId);
   if (refusal !== null) return refusal;
   if (!PRESETS.includes(preset)) return "invalidPreset";
-  if (preset === "roadBuilder") {
-    if (target === null || !isInMap(state.map, target)) return "invalidTarget";
-  }
+  // The road builder decides where to build (R spec D12): no target.
+  if (preset === "roadBuilder" && target !== null) return "invalidTarget";
   return null;
 }
 
-/** Replaces the creep's rules with the preset's; only roadBuilder uses target. */
+/** Replaces the creep's rules with the preset's. */
 export function applyPreset(
   state: WorldState,
   creepId: number,
   preset: PresetId,
-  target: Cell | null,
 ): void {
-  findCreep(state, creepId)!.rules = presetRules(
-    preset,
-    preset === "roadBuilder" ? target : null,
-  );
+  const creep = findCreep(state, creepId)!;
+  creep.rules = presetRules(preset, creep.dna);
 }

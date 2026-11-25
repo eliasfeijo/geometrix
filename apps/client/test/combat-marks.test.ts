@@ -59,7 +59,7 @@ describe("links between creeps (spec C-3)", () => {
     // Out of sight: no line to a creep the team does not see.
     expect(linksOf(viewOf(world, 0), world.params)).toEqual([]);
     const seen = viewOf(world, 0);
-    seen.creeps.push({ ...prey, cargo: { ...prey.cargo } });
+    seen.creeps.push({ ...prey, cargo: { ...prey.cargo }, hostile: null });
     expect(linksOf(seen, world.params)).toEqual([
       { kind: "chase", from: hunter.id, to: prey.id, intent: "extort" },
     ]);

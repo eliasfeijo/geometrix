@@ -8,6 +8,7 @@
 
 import type { Player } from "./domination.ts";
 import type { Cell } from "./map.ts";
+import type { Order } from "./orders.ts";
 import type {
   Battle,
   Creep,
@@ -17,8 +18,16 @@ import type {
   Spoil,
   Team,
   Wanderer,
+  WandererOrder,
   WorldState,
 } from "./world.ts";
+
+/** A creep's or a wanderer's hostile intent (R spec D25, HS-1). */
+export type HostileView = {
+  intent: "attack" | "extort";
+  /** The target's id when the team sees it (HS-3), else null. */
+  target: number | null;
+};
 
 /**
  * A creep as its team sees it: no cached path, move points, trip stats or
@@ -27,7 +36,7 @@ import type {
 export type CreepView = Omit<
   Creep,
   "path" | "movePoints" | "trip" | "extortBlocks"
->;
+> & { hostile: HostileView | null };
 
 /**
  * Another team's creep in sight (spec D7, M2 encontro D18): no order, rules
@@ -46,7 +55,7 @@ export type ForeignCreepView = Pick<
   | "x"
   | "y"
   | "cargo"
->;
+> & { hostile: HostileView | null };
 
 /**
  * An extortion with one of the team's creeps (M2 encontro plan section 8):
@@ -79,13 +88,14 @@ export type BattleStubView = Omit<Battle, "participants"> & {
 export type WandererView = Pick<
   Wanderer,
   "id" | "dna" | "name" | "hp" | "battle" | "x" | "y" | "cargo"
->;
+> & { hostile: HostileView | null };
 
 /** Another team: its id and, once seen, where its core is (spec D7). */
 export type ForeignTeam = { id: number; core: Cell | null };
 
 /** Another team's player (spec D8): who plays, not when they dominated. */
-export type ForeignPlayer = Omit<Player, "lastDominateTick">;
+/** Another team's player: not its cooldown, nor its bot's difficulty (P8). */
+export type ForeignPlayer = Omit<Player, "lastDominateTick" | "difficulty">;
 
 export type TeamView = {
   tick: number;
@@ -169,9 +179,18 @@ export function view(state: WorldState, team: number): TeamView {
   const inSight = (cell: Cell) => visible[cell.y * width + cell.x] === 1;
 
   const creeps: (CreepView | ForeignCreepView)[] = [];
+  // The ids the team sees: its own creeps and the others in sight.
+  const seenIds = new Set<number>();
   for (const creep of state.creeps) {
-    if (creep.team === team) creeps.push(creepView(creep));
-    else if (inSight(creep)) creeps.push(foreignCreepView(creep));
+    if (creep.team === team || inSight(creep)) seenIds.add(creep.id);
+  }
+  for (const wanderer of state.wanderers) {
+    if (inSight(wanderer)) seenIds.add(wanderer.id);
+  }
+  const sees = (id: number) => seenIds.has(id);
+  for (const creep of state.creeps) {
+    if (creep.team === team) creeps.push(creepView(creep, sees));
+    else if (inSight(creep)) creeps.push(foreignCreepView(creep, sees));
   }
 
   const encounters: (EncounterView | ForeignEncounterView)[] = [];
@@ -194,7 +213,9 @@ export function view(state: WorldState, team: number): TeamView {
     if (own || inSight(battle)) battles.push(stubView(battle));
   }
 
-  const wanderers = state.wanderers.filter(inSight).map(wandererView);
+  const wanderers = state.wanderers
+    .filter(inSight)
+    .map((wanderer) => wandererView(wanderer, sees));
 
   const roadJobs: RoadJob[] = [];
   for (const job of state.roadJobs) {
@@ -252,21 +273,26 @@ export function fullView(state: WorldState): TeamView {
     tick: state.tick,
     team: -1,
     teams: state.teams.map((t) => ({ ...t })),
-    creeps: state.creeps.map(creepView),
+    creeps: state.creeps.map((creep) => creepView(creep, seesAll)),
     deposits: state.deposits.map((d) => ({ ...d })),
     roads,
     roadJobs: state.roadJobs.map((j) => ({ ...j })),
     players: state.players.map((p) => ({ ...p })),
     encounters: state.encounters.map((e) => ({ ...e })),
     battles: state.battles.map(stubView),
-    wanderers: state.wanderers.map(wandererView),
+    wanderers: state.wanderers.map((wanderer) =>
+      wandererView(wanderer, seesAll),
+    ),
     spoils: state.spoils.map((s) => ({ ...s, cargo: { ...s.cargo } })),
     known: [...map.terrain],
     visible: map.terrain.map((_, i) => i),
   };
 }
 
-function creepView(creep: Creep): CreepView {
+/** The full view sees every id. */
+const seesAll = (): boolean => true;
+
+function creepView(creep: Creep, sees: (id: number) => boolean): CreepView {
   return {
     id: creep.id,
     team: creep.team,
@@ -283,10 +309,14 @@ function creepView(creep: Creep): CreepView {
     rules: creep.rules,
     dominatedBy: creep.dominatedBy,
     activity: creep.activity,
+    hostile: hostileOf(creep.order, sees),
   };
 }
 
-function foreignCreepView(creep: Creep): ForeignCreepView {
+function foreignCreepView(
+  creep: Creep,
+  sees: (id: number) => boolean,
+): ForeignCreepView {
   return {
     id: creep.id,
     team: creep.team,
@@ -298,7 +328,22 @@ function foreignCreepView(creep: Creep): ForeignCreepView {
     x: creep.x,
     y: creep.y,
     cargo: creep.cargo,
+    hostile: hostileOf(creep.order, sees),
   };
+}
+
+/**
+ * The creep's or wanderer's hostile intent (D25): its attack or extortion
+ * approach while it chases. A wanderer's approach is an attack. The target's
+ * id only when the team sees it, so a hidden one never leaks (HS-3).
+ */
+function hostileOf(
+  order: Order | WandererOrder,
+  sees: (id: number) => boolean,
+): HostileView | null {
+  if (order.type !== "approach") return null;
+  const intent = "intent" in order ? order.intent : "attack";
+  return { intent, target: sees(order.targetId) ? order.targetId : null };
 }
 
 /**
@@ -326,7 +371,10 @@ function foreignEncounterView(encounter: Encounter): ForeignEncounterView {
   };
 }
 
-function wandererView(wanderer: Wanderer): WandererView {
+function wandererView(
+  wanderer: Wanderer,
+  sees: (id: number) => boolean,
+): WandererView {
   return {
     id: wanderer.id,
     dna: wanderer.dna,
@@ -336,6 +384,7 @@ function wandererView(wanderer: Wanderer): WandererView {
     x: wanderer.x,
     y: wanderer.y,
     cargo: wanderer.cargo,
+    hostile: hostileOf(wanderer.order, sees),
   };
 }
 

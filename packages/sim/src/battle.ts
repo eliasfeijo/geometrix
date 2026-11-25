@@ -9,7 +9,9 @@ import { capacity, cargoTotal, teamOf } from "./economy.ts";
 import { findCreep } from "./domination.ts";
 import { creepRef, emit, type CreepRef, type EventLog } from "./events.ts";
 import { kill } from "./hp.ts";
+import { knownMap } from "./known.ts";
 import { isInMap, type Cell } from "./map.ts";
+import { nearestTargets } from "./pathfinding.ts";
 import { cellModifier } from "./movement.ts";
 import { halt } from "./orders.ts";
 import { dropSpoil, transfer } from "./spoils.ts";
@@ -19,6 +21,7 @@ import {
   type Battle,
   type BattleSide,
   type BattleWindow,
+  type Creep,
   type Fighter,
   type Stance,
   type Stock,
@@ -227,13 +230,15 @@ function sideFor(state: WorldState, battle: Battle, wanted: BattleSide) {
 /**
  * The battle a fighter approaching `target` to attack would join, when it is
  * inside its bubble (J-1, W-2), or undefined. A wanderer only ever attacks.
+ * A creep following a teammate joins the teammate's battle the same way, on
+ * its side (R spec D8, F-2, F-3).
  */
 export function battleToJoin(
   state: WorldState,
   fighter: Fighter,
 ): Battle | undefined {
   const { order } = fighter;
-  if (order.type !== "approach") return undefined;
+  if (order.type !== "approach" && order.type !== "follow") return undefined;
   if (!isWanderer(fighter) && fighter.order.type === "approach") {
     if (fighter.order.intent !== "attack") return undefined;
   }
@@ -241,6 +246,39 @@ export function battleToJoin(
   if (target === undefined || target.battle === null) return undefined;
   const battle = findBattle(state, target.battle)!;
   return inWindow(battle.window, fighter) ? battle : undefined;
+}
+
+/**
+ * Whether a loaded creep on its way to a battle at `cell` delivers first
+ * (R spec D10, H-4): its path to its core costs less than its path to the
+ * battle, on the team's known map (roads count; the load slows both alike).
+ * The core's search is bounded by the battle's cost, so it stays small.
+ */
+export function deliversFirst(
+  state: WorldState,
+  creep: Creep,
+  cell: Cell,
+): boolean {
+  const map = knownMap(state, creep.team);
+  const index = (c: Cell) => c.y * map.width + c.x;
+  const toBattle = nearestTargets(
+    map,
+    creep,
+    new Set([index(cell)]),
+    state.params,
+    Number.MAX_SAFE_INTEGER,
+  );
+  if (toBattle === null || toBattle.cost === 0) return false;
+  const { core } = teamOf(state, creep);
+  return (
+    nearestTargets(
+      map,
+      creep,
+      new Set([index(core)]),
+      state.params,
+      toBattle.cost - 1,
+    ) !== null
+  );
 }
 
 /**

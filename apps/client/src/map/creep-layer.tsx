@@ -335,8 +335,10 @@ export function orderTarget(creep: CreepView, state: TeamView): Cell | null {
     case "flee":
       return state.teams[creep.team]?.core ?? null;
     case "approach":
+    case "follow":
       return state.creeps.find((c) => c.id === order.targetId) ?? null;
     case "pickup":
+    case "drop":
       return null;
   }
 }

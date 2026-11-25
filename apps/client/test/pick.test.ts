@@ -137,8 +137,8 @@ describe("texts and targets", () => {
       "não conhece depósito de matéria → explorar",
       "sempre → entregar no Núcleo",
     ]);
-    expect(roadBuilderRules({ x: 4, y: 7 }).map(ruleText)).toContain(
-      "sempre → construir estrada até (4, 7)",
+    expect(roadBuilderRules().map(ruleText)).toContain(
+      "sempre → construir estrada até a jazida mais perto sem estrada",
     );
   });
 

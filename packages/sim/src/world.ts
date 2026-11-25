@@ -4,7 +4,7 @@
 import type { Rule } from "./autopilot.ts";
 import type { Player } from "./domination.ts";
 import type { UpgradeId } from "./economy.ts";
-import { collectorRules } from "./presets.ts";
+import { presetRules } from "./presets.ts";
 import { generateMap, type Cell, type GameMap } from "./map.ts";
 import { DNAS, type Dna, type Params, type Resource } from "./params.ts";
 import type { Order } from "./orders.ts";
@@ -32,7 +32,7 @@ import { nameAt } from "./names.ts";
  * the junction host's result commands end it; no dialogue flee (M2 junction
  * F2). 11: the wanderers, a side that is not a team (M2 junction F6).
  */
-export const SIM_VERSION = 11;
+export const SIM_VERSION = 12;
 
 export type Stock = Record<Resource, number>;
 
@@ -326,7 +326,8 @@ export function createWorld(seed: number, params: Params): WorldState {
 
 /**
  * A creep standing stopped and empty on its team's core, with full HP and the
- * materia collector rules (F4 decision, spec section 5). `birth` is its rank
+ * materia collector preset of its DNA (F4 decision, spec section 5; the
+ * help rule since R D11). `birth` is its rank
  * in the world's births, which names it.
  */
 export function newCreep(
@@ -351,7 +352,7 @@ export function newCreep(
     order: { type: "stop" },
     movePoints: 0,
     path: null,
-    rules: collectorRules("materia"),
+    rules: presetRules("materiaCollector", dna),
     dominatedBy: null,
     activity: "idle",
     trip: null,

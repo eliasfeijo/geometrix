@@ -27,6 +27,7 @@ import {
   reactRefusal,
   release,
   releaseRefusal,
+  type Difficulty,
   type DominationRefusal,
   type ReactRefusal,
   type JoinRefusal,
@@ -58,13 +59,13 @@ import type { Reply, WorldState } from "./world.ts";
 
 export type Command =
   /** System command the server emits when a player joins (not a client input). */
-  | { type: "join"; team: number; bot: boolean }
+  | { type: "join"; team: number; bot: boolean; difficulty?: Difficulty }
   | { type: "dominate"; creepId: number }
   /** Also emitted by the server on disconnect or domination timeout (D-4). */
   | { type: "release" }
   | { type: "order"; creepId: number; order: OrderInput }
   | { type: "setRules"; creepId: number; rules: Rule[] }
-  /** `target` is required by the roadBuilder preset and ignored by the others. */
+  /** `target` is refused for the roadBuilder preset (R D12) and ignored by the others. */
   | { type: "applyPreset"; creepId: number; preset: PresetId; target?: Cell }
   | { type: "produce"; dna: Dna; repeat: boolean }
   | { type: "stopRepeat" }
@@ -117,7 +118,13 @@ export function validate(
 ): Refusal | null {
   switch (command.type) {
     case "join":
-      return joinRefusal(state, playerId, command.team, command.bot);
+      return joinRefusal(
+        state,
+        playerId,
+        command.team,
+        command.bot,
+        command.difficulty,
+      );
     case "dominate":
       return dominateRefusal(state, playerId, command.creepId);
     case "release":
@@ -184,7 +191,7 @@ export function applyCommand(
   if (refusal !== null) return refusal;
   switch (command.type) {
     case "join":
-      join(state, playerId, command.team, command.bot);
+      join(state, playerId, command.team, command.bot, command.difficulty);
       break;
     case "dominate":
       dominate(state, playerId, command.creepId);
@@ -193,7 +200,12 @@ export function applyCommand(
       release(state, playerId);
       break;
     case "order":
-      giveOrder(state, command.creepId, command.order);
+      giveOrder(
+        state,
+        command.creepId,
+        command.order,
+        log ?? createEventLog(state.tick),
+      );
       break;
     case "react":
       react(state, command.creepId, command.choice);
@@ -208,12 +220,7 @@ export function applyCommand(
       setRules(state, command.creepId, command.rules);
       break;
     case "applyPreset":
-      applyPreset(
-        state,
-        command.creepId,
-        command.preset,
-        command.target ?? null,
-      );
+      applyPreset(state, command.creepId, command.preset);
       break;
     case "produce":
     case "stopRepeat":

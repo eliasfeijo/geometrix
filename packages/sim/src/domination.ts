@@ -5,7 +5,9 @@
 // are releases emitted by the server (plan section 4), so the sim keeps no
 // clock for them.
 
-import { canAfford, debit } from "./economy.ts";
+import { canAfford, cargoTotal, debit } from "./economy.ts";
+import type { EventLog } from "./events.ts";
+import { dropCargo } from "./spoils.ts";
 import { memoryOf } from "./known.ts";
 import { isInMap, manhattan, type Cell } from "./map.ts";
 import type { Order } from "./orders.ts";
@@ -13,11 +15,17 @@ import { buildRoadOrder } from "./roads.ts";
 import type { Creep, Reply, WorldState } from "./world.ts";
 
 /** Player ids come from the server; players are kept ordered by id. */
+/** A bot's difficulty (R spec D26, plan P8); its battle reaction too. */
+export const DIFFICULTIES = ["easy", "normal", "hard"] as const;
+export type Difficulty = (typeof DIFFICULTIES)[number];
+
 export type Player = {
   id: number;
   team: number;
   /** A harness or server bot (spec section 5, F6 details): not a human. */
   bot: boolean;
+  /** A bot's difficulty (hard unless its join says); null for a human (P8). */
+  difficulty: Difficulty | null;
   /** Tick of the last accepted dominate, for the cooldown; null before any. */
   lastDominateTick: number | null;
 };
@@ -33,7 +41,14 @@ export type OrderInput =
   /** An enemy creep the team sees now (M2 encontro spec E-1, D19). */
   | { type: "approach"; targetId: number; intent: "attack" | "extort" }
   /** A spoil the team remembers. */
-  | { type: "pickup"; spoilId: number };
+  | { type: "pickup"; spoilId: number }
+  /** A teammate to follow (R spec D8). */
+  | { type: "follow"; targetId: number }
+  /**
+   * Drop the whole load as spoils (R spec D24); the victim of an extortion
+   * may, and it refuses the extortion (DR-3).
+   */
+  | { type: "drop" };
 
 export type DominationRefusal =
   | "unknownPlayer"
@@ -50,7 +65,11 @@ export type DominationRefusal =
   /** Locked in a battle, a creep takes no world order (junction O-5). */
   | "inBattle"
   /** A fleeing creep's order is locked (plan P4). */
-  | "fleeing";
+  | "fleeing"
+  /** A follow on the creep itself or closing a cycle (R spec F-5). */
+  | "invalidTarget"
+  /** A drop with nothing to drop (R spec DR-2). */
+  | "emptyCargo";
 
 /** Why a reply to an encounter is refused (command react). */
 export type ReactRefusal =
@@ -72,7 +91,8 @@ export function dominatedCreep(
   return state.creeps.find((c) => c.dominatedBy === playerId);
 }
 
-export type JoinRefusal = "alreadyJoined" | "unknownTeam" | "teamFull";
+export type JoinRefusal =
+  "alreadyJoined" | "unknownTeam" | "teamFull" | "humanDifficulty";
 
 /**
  * Why the player cannot join `team`, or null. A team takes at most
@@ -83,8 +103,11 @@ export function joinRefusal(
   playerId: number,
   team: number,
   bot: boolean,
+  difficulty?: Difficulty,
 ): JoinRefusal | null {
   if (findPlayer(state, playerId) !== undefined) return "alreadyJoined";
+  // Only a bot has a difficulty (P8).
+  if (!bot && difficulty !== undefined) return "humanDifficulty";
   if (state.teams[team] === undefined) return "unknownTeam";
   const humans = state.players.filter((p) => p.team === team && !p.bot);
   if (!bot && humans.length >= state.params.teams.maxHumans) return "teamFull";
@@ -96,8 +119,15 @@ export function join(
   playerId: number,
   team: number,
   bot: boolean,
+  difficulty?: Difficulty,
 ): void {
-  const player: Player = { id: playerId, team, bot, lastDominateTick: null };
+  const player: Player = {
+    id: playerId,
+    team,
+    bot,
+    difficulty: bot ? (difficulty ?? "hard") : null,
+    lastDominateTick: null,
+  };
   const at = state.players.findIndex((p) => p.id > playerId);
   state.players.splice(at < 0 ? state.players.length : at, 0, player);
 }
@@ -198,10 +228,18 @@ export function orderRefusal(
   const player = findPlayer(state, playerId)!;
   const creep = findCreep(state, creepId)!;
   if (creep.dominatedBy !== playerId) return "notDominating";
-  if (creep.engagement !== null) return "engaged";
   if (creep.battle !== null) return "inBattle";
+  // In an encounter only the victim of an extortion may drop (DR-3).
+  if (
+    creep.engagement !== null &&
+    (order.type !== "drop" || extortionOf(state, creep) === undefined)
+  ) {
+    return "engaged";
+  }
   if (creep.order.type === "flee") return "fleeing";
   switch (order.type) {
+    case "drop":
+      return cargoTotal(creep) === 0 ? "emptyCargo" : null;
     case "stop":
     case "deliver":
       return null;
@@ -234,6 +272,8 @@ export function orderRefusal(
       )
         ? null
         : "invalidOrder";
+    case "follow":
+      return followRefusal(state, creep, order.targetId);
     case "gather":
       return memoryOf(state, player.team).deposits.some(
         (d) => d.id === order.depositId,
@@ -247,12 +287,33 @@ export function orderRefusal(
   }
 }
 
+/** The extortion whose victim `creep` is, if any. */
+function extortionOf(state: WorldState, creep: Creep) {
+  return state.encounters.find(
+    (e) => e.id === creep.engagement && e.victim === creep.id,
+  );
+}
+
+/**
+ * Sets the creep's order. A drop by the victim of an extortion happens at
+ * once (stage 1) and refuses the extortion: the encounters stage opens the
+ * battle with the victim empty (R spec DR-3, plan P5).
+ */
 export function giveOrder(
   state: WorldState,
   creepId: number,
   order: OrderInput,
+  log: EventLog,
 ): void {
-  findCreep(state, creepId)!.order = toOrder(order);
+  const creep = findCreep(state, creepId)!;
+  const extortion =
+    order.type === "drop" ? extortionOf(state, creep) : undefined;
+  if (extortion !== undefined) {
+    dropCargo(state, log, creep);
+    extortion.reply = "refuse";
+    return;
+  }
+  creep.order = toOrder(order);
 }
 
 function toOrder(input: OrderInput): Order {
@@ -275,7 +336,59 @@ function toOrder(input: OrderInput): Order {
       };
     case "pickup":
       return { type: "pickup", spoilId: input.spoilId };
+    case "follow":
+      return { type: "follow", targetId: input.targetId };
+    case "drop":
+      return { type: "drop" };
   }
+}
+
+/**
+ * Why `creep` cannot follow `targetId` (R spec F-5), or null: the target
+ * must be a creep of its team (anything else is refused as unknown, so no id
+ * of another team is confirmed), not itself, and no chain of follows may
+ * lead back to it.
+ */
+export function followRefusal(
+  state: WorldState,
+  creep: Creep,
+  targetId: number,
+): "unknownCreep" | "invalidTarget" | null {
+  const target = findCreep(state, targetId);
+  if (target === undefined || target.team !== creep.team) {
+    return "unknownCreep";
+  }
+  if (target.id === creep.id || closesFollowCycle(state, creep.id, targetId)) {
+    return "invalidTarget";
+  }
+  return null;
+}
+
+/**
+ * Whether the chain of follows from `targetId` comes back to `creepId`: by
+ * each creep's follow order and every follow rule it has (a rule may match
+ * later, so all of them count).
+ */
+export function closesFollowCycle(
+  state: WorldState,
+  creepId: number,
+  targetId: number,
+): boolean {
+  const seen = new Set<number>();
+  const pending = [targetId];
+  while (pending.length > 0) {
+    const id = pending.pop()!;
+    if (id === creepId) return true;
+    if (seen.has(id)) continue;
+    seen.add(id);
+    const creep = findCreep(state, id);
+    if (creep === undefined) continue;
+    if (creep.order.type === "follow") pending.push(creep.order.targetId);
+    for (const rule of creep.rules) {
+      if (rule.then.type === "follow") pending.push(rule.then.creepId);
+    }
+  }
+  return false;
 }
 
 /**

@@ -58,12 +58,20 @@ const condition = z.discriminatedUnion("type", [
   }),
   z.object({ type: z.literal("hpBelow"), permille: permille }),
   z.object({ type: z.literal("demandAtMost"), permille: permille }),
+  z.object({
+    type: z.literal("allyInBattle"),
+    radius: z.number().int().nonnegative(),
+  }),
 ]);
 
 const action = z.discriminatedUnion("type", [
   z.object({ type: z.literal("gather"), resource }),
   z.object({ type: z.literal("deliver") }),
-  cell.extend({ type: z.literal("buildRoad") }),
+  z.object({
+    type: z.literal("buildRoad"),
+    x: coord.optional(),
+    y: coord.optional(),
+  }),
   cell.extend({ type: z.literal("moveTo") }),
   z.object({ type: z.literal("stop") }),
   z.object({ type: z.literal("explore") }),
@@ -75,6 +83,9 @@ const action = z.discriminatedUnion("type", [
     dna: dnaList.optional(),
     minCargo: z.number().int().nonnegative(),
   }),
+  z.object({ type: z.literal("follow"), creepId: id }),
+  z.object({ type: z.literal("joinBattle"), minHpPermille: permille }),
+  z.object({ type: z.literal("drop") }),
   z.object({ type: z.literal("pay") }),
   z.object({ type: z.literal("fight") }),
   z.object({ type: z.literal("flee") }),
@@ -91,6 +102,8 @@ const orderInput = z.discriminatedUnion("type", [
   cell.extend({ type: z.literal("buildRoad") }),
   z.object({ type: z.literal("approach"), targetId: id, intent }),
   z.object({ type: z.literal("pickup"), spoilId: id }),
+  z.object({ type: z.literal("follow"), targetId: id }),
+  z.object({ type: z.literal("drop") }),
 ]);
 
 /**
@@ -438,7 +451,12 @@ const loggedCommand = z.object({
   playerId: count,
   command: z.union([
     clientCommand,
-    z.object({ type: z.literal("join"), team: count, bot: z.boolean() }),
+    z.object({
+      type: z.literal("join"),
+      team: count,
+      bot: z.boolean(),
+      difficulty: z.enum(["easy", "normal", "hard"]).optional(),
+    }),
     z.object({
       type: z.literal("battleExit"),
       battleId: id,

@@ -3,6 +3,7 @@
 // Piles on the same cell add up, keeping the first pile's id. They never
 // expire in this slice.
 
+import { creepRef, emit, type EventLog } from "./events.ts";
 import type { Cell } from "./map.ts";
 import type { Creep, Spoil, Stock, WorldState } from "./world.ts";
 
@@ -27,6 +28,29 @@ export function dropSpoil(state: WorldState, cell: Cell, cargo: Stock): number {
   };
   state.spoils.push(spoil);
   return spoil.id;
+}
+
+/**
+ * The creep drops its whole load as spoils on its cell (R spec D24, DR-1)
+ * and the `dropped` event says so. Nothing happens with an empty load.
+ */
+export function dropCargo(
+  state: WorldState,
+  log: EventLog,
+  creep: Creep,
+): void {
+  const { cargo } = creep;
+  if (cargo.materia + cargo.cristal === 0) return;
+  const spoil = dropSpoil(state, creep, cargo);
+  emit(log, {
+    type: "dropped",
+    creep: creepRef(creep),
+    spoil,
+    cargo: { materia: cargo.materia, cristal: cargo.cristal },
+    x: creep.x,
+    y: creep.y,
+  });
+  creep.cargo = { materia: 0, cristal: 0 };
 }
 
 /** Moves `amount` from one stock to another. */

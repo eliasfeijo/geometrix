@@ -140,14 +140,10 @@ export function RulesEditor({ creep }: { creep: CreepView }) {
         </button>
         <button
           disabled={!canAct}
-          onClick={() =>
-            pickCell(
-              "Clique no mapa no ponto até onde construir a estrada.",
-              (cell) => preset("roadBuilder", cell),
-            )
-          }
+          title="Constrói estrada até a jazida conhecida mais perto do Núcleo que ainda não tem estrada"
+          onClick={() => preset("roadBuilder")}
         >
-          Construtor de estrada…
+          Construtor de estrada
         </button>
         <button
           disabled={!canAct}
@@ -366,6 +362,14 @@ function ConditionField(props: {
           onChange={(radius) => onChange({ ...value, radius })}
         />
       )}
+      {value.type === "allyInBattle" && (
+        <CountInput
+          title="raio R, em células"
+          value={value.radius}
+          disabled={disabled}
+          onChange={(radius) => onChange({ ...value, radius })}
+        />
+      )}
       {value.type === "stockBelow" && (
         <CountInput
           title="quantidade N"
@@ -512,6 +516,14 @@ function ActionField(props: {
           onChange={(resource) => onChange({ ...value, resource })}
         />
       )}
+      {value.type === "joinBattle" && (
+        <PercentInput
+          title="HP mínimo, % do máximo"
+          permille={value.minHpPermille}
+          disabled={disabled}
+          onChange={(minHpPermille) => onChange({ ...value, minHpPermille })}
+        />
+      )}
       {value.type === "approach" && (
         <>
           <select
@@ -537,19 +549,20 @@ function ActionField(props: {
           />
         </>
       )}
-      {(value.type === "moveTo" || value.type === "buildRoad") && (
+      {(value.type === "moveTo" ||
+        (value.type === "buildRoad" && value.x !== undefined)) && (
         <>
           <CountInput
             title="x"
             max={(map?.width ?? 1) - 1}
-            value={value.x}
+            value={value.x ?? 0}
             disabled={disabled}
             onChange={(x) => onChange({ ...value, x })}
           />
           <CountInput
             title="y"
             max={(map?.height ?? 1) - 1}
-            value={value.y}
+            value={value.y ?? 0}
             disabled={disabled}
             onChange={(y) => onChange({ ...value, y })}
           />
