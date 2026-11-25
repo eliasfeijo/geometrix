@@ -17,10 +17,11 @@ milestone** and what comes **right after it**; ideas with no milestone stay in t
 | **A — The encounter** ([spec](specs/m2-encounter/spec.md)) | Names, creep HP, death; approach, attack, extort; pay, refuse, flee; spoils, loot, safe-conduct; the fight by a throwaway roll; autopilot stances; `sim` events and the chronicle | ✅ 2026-11-17 |
 | **B — The battle lab** ([spec](specs/m2-battle-lab/spec.md)) | The deterministic battle package, the first combat rule (the grid), the gambits AI, base stats per DNA and simulated latency, on a local page with no world | ✅ 2026-11-20 |
 | **D — The junction** ([spec](specs/m2-junction/spec.md)) | The encounter opens the battle instance instead of the roll; two or more sides and joining mid-fight; a human plays the battle from the world client; auto-resolve with no human; the result returns to the world; the **wanderers**, the first neutral faction. Its own ADR for the world side of the contract | ✅ 2026-11-25 |
-| **R — Rebalance and pace** | A 2-hour match: a shorter world at a moderate ×N with faster DNAs, by a balance pass of sweeps ([GDD 01](gdd/01-world.md)); the wanderers early and regular ([GDD 05](gdd/05-tribes-and-diplomacy.md)); only the pace rescale against the snowball ([GDD 03](gdd/03-economy-and-logistics.md)); the opening countdown for humans ([GDD 06](gdd/06-battles.md)); "follow", helping an ally in battle, the road builder as an autopilot preset with its plan on the map, and the strategist for both playtest modes ([GDD 07](gdd/07-autopilot.md)); in the client, the selected creep's destination on the map and the current action's estimated time in the panel. **Out:** combat stats (slice K), the role of cristal, a sink, the deposit tie-break, the empty-deposit memory, the corridor AI. Its final balance pass runs after K's merge | **Next**, before P (C2; design round 2026-11-25) |
+| **R — Rebalance and pace** | A 2-hour match: a shorter world at a moderate ×N with faster DNAs, by a balance pass of sweeps ([GDD 01](gdd/01-world.md)); the wanderers early and regular ([GDD 05](gdd/05-tribes-and-diplomacy.md)); only the pace rescale against the snowball ([GDD 03](gdd/03-economy-and-logistics.md)); the opening countdown for humans ([GDD 06](gdd/06-battles.md)); "follow", helping an ally in battle, the road builder as an autopilot preset with its plan on the map, and the strategist for both playtest modes ([GDD 07](gdd/07-autopilot.md)); in the client, the selected creep's destination on the map and the current action's estimated time in the panel. Added at the spec's review (owner, 2026-11-25): the click that lists every actor under it, the red sign of a hostile action, the bot's difficulty (the hardest by default) and its reaction to each encounter by estimated risk, dropping the load in the world, and pausing a battle with P. **Out:** combat stats (slice K), the role of cristal, a sink, the deposit tie-break, the empty-deposit memory, the corridor AI. Its final balance pass runs after K's merge | **Next**, before P (C2; design round 2026-11-25) |
 | **E-min — The minimal end** | Before the siege: defeat by elimination in fact, a team's concession, the bot conceding with no chance, a draw at the clock; the world ends when one team remains and freezes read-only; the end screen with the chronicle summary; replay markers; written for N teams ([GDD 01](gdd/01-world.md)) | **Next**, in parallel with R (design round 2026-11-25) |
 | **K — The DNA kits** | A dodge for every DNA; the square's charged strike and charge; the triangle's frontal guard; the circle's fan ([GDD 02](gdd/02-creeps-and-domination.md), [GDD 06](gdd/06-battles.md)). In the lab first, behind params; the gambits use them; the battle screen shows charge and cooldowns | **Next**, in parallel with R and E-min, before P (2026-11-25) |
-| **P — The friends' playtest** | Prepare the ground for a multiplayer playtest with more than one human: the local server reached through a free tunnel, friends joining from their machines, several humans in the same world and the same battle; two teams, humans against humans or in co-op against the bot | After R, E-min and K |
+| **G — Groups and formations** | Formation commands, presets and rules in the style of Mount & Blade, in the world (the default formation by DNA and the side each DNA engages from, which revises where a joiner is born in the arena) and in battle (tactical formations for humans and the battle bots); the battle bot's load experiment (drop or hold it when help is coming, world → battle). Lab first; needs its own design round ([GDD 06](gdd/06-battles.md), [GDD 07](gdd/07-autopilot.md)) | **Proposal** (agent, 2026-11-25): after K, before P |
+| **P — The friends' playtest** | Prepare the ground for a multiplayer playtest with more than one human: the local server reached through a free tunnel, friends joining from their machines, several humans in the same world and the same battle; two teams, humans against humans or in co-op against the bot | After R, E-min, K (and G, if the proposal holds) |
 | **E — Siege and repair** | HP of the core, finished roads and road jobs; how a building is attacked; paid repair; victory by the core. Needs its own design round | After P (C2) |
 | **T — More teams** | Worlds of up to 4 teams, with a map that adapts and the wanderers adjusted ([GDD 01](gdd/01-world.md), proposal with the agent's analysis). Needs its own design round | After P, a candidate competing with E; the order at P's checkpoint (2026-11-25) |
 
@@ -32,9 +33,11 @@ flowchart LR
     D --> M["E-min · the minimal end"]
     D --> K["K · the DNA kits"]
     K -. "final balance pass" .-> R
+    R --> G["G · groups and formations (proposal)"]
+    K --> G
     R --> P["P · the friends' playtest"]
     M --> P
-    K --> P
+    G --> P
     P --> E["E · siege and repair"]
     P --> T["T · more teams"]
 ```
@@ -61,6 +64,13 @@ flowchart LR
   kits become slice K before P (**scope warning:** it revises GDD 02's "only base stats in M2" and grows M2 by the
   battle package, the gambits, the lab and the battle screen; the lab first contains the risk); more teams become
   slice T after P, since 4 humans already fit in two teams.
+- **R's spec review** (owner, 2026-11-25): the owner added items to R (the actors' list on a click, the hostile sign,
+  the bot's difficulty and its reaction to encounters, dropping the load, pausing a battle) and asked for formations
+  in the world and in battle. **Scope warning:** R was already the largest slice of M2 and grows again. The agent
+  placed the formations and the battle bot's load experiment in a new slice **G** after K, not in R: the world
+  formation's entry side changes where a joiner is born in the arena (junction D6), and the battle formation is built
+  on the kits (the triangle's guard shields whoever is behind it), so both belong after K and in the lab first. G
+  before P delays the playtest; the alternative is G after P, with P playing "follow" without formations.
 - **Slice C** (chat, console and macros) left M2 (2026-11-20); it waits for a milestone.
 
 ### What P should contain (agent's proposal, to approve in P's spec)

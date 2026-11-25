@@ -111,6 +111,14 @@
   with the attack's cooldown; **the dodge is a double tap** of a direction, a 2-cell dash, **untouchable**, with
   priority over the bar; **the load acts as in walking**; the wanderers get the circle's kit in slice K, and their
   own DNA and kit get their own design round ([05](05-tribes-and-diplomacy.md)).
+- **A sign for hostile actions** (owner, slice R's spec review, 2026-11-25; slice R): a creep that heads for another
+  to attack or to extort shows a **red sign** on the map (a sword's silhouette, or similar), so the target's team sees
+  the threat coming and the bots' strategist can react to it by its difficulty ([07](07-autopilot.md)).
+- **Pausing a battle** (owner, slice R's spec review, 2026-11-25; slice R): a human in a battle can **pause it with
+  P**, after a **3-second countdown**; **any human** resumes it with P, after another 3-second countdown.
+- **Tactical formations in battle** (owner, slice R's spec review, 2026-11-25; slice G, with its own design round):
+  formation commands, presets and rules in the arena, in the style of Mount & Blade, for humans and for the battle
+  bots (the gambits). The pause above lets a human give them.
 
 ## Proposal
 See [ADR-0001](../adr/0001-world-and-battle-as-separate-simulations.md). The world side of the contract is
@@ -119,6 +127,9 @@ a junction host; the world log keeps only the results.
 - **Short battles** (agent): 1 to 2 minutes; each human controls only the creep they dominate.
 - **Dialogue only at the opening** (agent): whoever joins mid-fight skips the conversation; the chronicle records the
   entry ([08](08-chronicle-chat-and-console.md)).
+- **The battle bot and the load** (owner, slice R's spec review, 2026-11-25; "a proposal only, to experiment"; slice
+  G, in the lab): attacked while loaded, a battle bot drops the load to fight or to flee more nimbly, or holds it if an
+  ally is coming to protect it. It may need the world to tell the battle who is coming (world → battle).
 
 ```mermaid
 sequenceDiagram
