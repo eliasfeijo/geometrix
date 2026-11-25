@@ -20,7 +20,7 @@ import {
   type Fate,
   type Role,
 } from "./encounters.ts";
-import { HOUR, hours, number, realTime, table } from "./report.ts";
+import { HOUR, hours, number, realTime, table } from "./format.ts";
 import {
   metaJson,
   RUN_FILES,

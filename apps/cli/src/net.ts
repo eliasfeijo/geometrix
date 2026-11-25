@@ -49,7 +49,8 @@ import {
   type LoggedCommand,
 } from "./harness.ts";
 import { stateHash } from "./hash.ts";
-import { HOUR, number, table, windowSeconds } from "./report.ts";
+import { HOUR, number, table } from "./format.ts";
+import { windowSeconds } from "./report.ts";
 
 /** Spec section 7 targets (provisional guesses). */
 export const NET_TARGETS = {
