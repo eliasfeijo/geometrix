@@ -62,6 +62,10 @@
 - **More than two teams gets its own slice** (owner, 2026-11-25): **T**, a candidate right after P that competes with
   E for its turn (the order is chosen at P's checkpoint), with its own design round. The first P plays two teams.
   The owner's idea and the agent's analysis are in the proposal below.
+- **Slice R's pace details** (agent, approved with the [R spec](../specs/m2-rebalance/spec.md), 2026-11-25): the
+  **default params become the 2-hour world** and the 72-hour world stays as a params file for the 3-day hypothesis;
+  the lobby and `dev:multi` default to the chosen ×N; a window meant for a human's reaction (the extortion answer)
+  keeps **at least 10 real seconds** at that ×N; the targets of the balance pass are written in real minutes (spec §7).
 
 ## Proposal
 

@@ -119,6 +119,16 @@
 - **Tactical formations in battle** (owner, slice R's spec review, 2026-11-25; slice G, with its own design round):
   formation commands, presets and rules in the arena, in the style of Mount & Blade, for humans and for the battle
   bots (the gambits). The pause above lets a human give them.
+- **Slice R's battle details** (agent, approved with the [R spec](../specs/m2-rebalance/spec.md) D6, D7, D25, D28, 2026-11-25):
+  - **the opening pause** holds the battle on both clocks while the world keeps its pace; only an opening pauses, not
+    a join; with no human connected it never pauses; **"Entrar"** dominates the team's participant of lowest id that
+    no other player dominates, or opens the screen to watch;
+  - **the hostile sign:** a sword for an attack, a purse for an extortion, both red, over a creep or wanderer that is
+    chasing its target; every team that sees the aggressor sees the sign, and the target's team a red line to its
+    creep. Another team's creep in sight now shows its hostile intent (fog spec D7 revised);
+  - **the humans' pause:** only a human who controls a participant pauses or resumes; watchers cannot; P during a
+    countdown does nothing; no limit on pauses in R; a paused battle with no human in control on its screen resumes
+    after 3 s on the world clock. Both pauses are one state of the junction host, outside the battle.
 
 ## Proposal
 See [ADR-0001](../adr/0001-world-and-battle-as-separate-simulations.md). The world side of the contract is

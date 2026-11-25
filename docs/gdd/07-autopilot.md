@@ -72,6 +72,27 @@
   Blade, for humans and the strategist. The default formation: **squares in front, triangles in the middle and on the
   flanks, circles behind**; and **by which side each one engages**: the square from any direction, the triangles from
   the sides, flanking, the circle from a side with the ally of the highest HP.
+- **Slice R's autopilot and strategist details** (agent, approved with the [R spec](../specs/m2-rebalance/spec.md) D8–D18,
+  D26, D27, 2026-11-25):
+  - **follow** is a world order (the dominated creep) and an autopilot action (with the ally's id): the follower stays
+    within 2 cells by the target's path, does not gather, deliver or pick up while following, joins a battle its
+    target is in or opens on its target's side; it cannot follow itself, another team or a wanderer, and a cycle is
+    refused. The rules editor's "Seguir…" puts the rule on top of the creep's rules, after its reaction rules;
+  - **helping an ally:** the condition `allyInBattle` (a battle with an ally within the radius, in sight) and the action
+    `joinBattle` (approach the nearest enemy participant); the posture per DNA is a radius and an HP floor (■ 6 cells
+    and 400‰, ▲ 6 and 500‰, ● 8 and 500‰, provisional); in every preset after the reaction rules;
+  - **the road builder:** its `buildRoad` has no cell and resolves to the strategist's `roadTarget` each time; the
+    action with a cell stays for the editor and the dominated creep;
+  - **the strategist:** defends its core zone (an attack rule on its creeps there while an enemy is inside); produces
+    before the upgrade when below its population peak; a raid group of a raider and 2 followers from 8 creeps, an
+    escort on a cristal collector from 10; its posture pays a demand of at most 250‰ of the load, flees below 400‰
+    HP and fights otherwise; every rule reads any number of teams;
+  - **the difficulty**, per bot, chosen at the world's creation, **hard** by default: hard adds the encounter reactions
+    and the battle reaction `hard`; normal keeps the posture, defense and groups, with `normal`; easy plays slice D's
+    posture with no defense or groups, with `easy`. R tunes hard only;
+  - **the encounter reactions** (hard): on the next world tick, from the estimated risk (the enemies near against the
+    allies that can arrive, by DNA and HP): help coming → keep the load and fight; a stronger enemy → pay a small
+    demand, or drop and flee; even or stronger → drop, fight and pick the load up afterwards.
 
 ## Proposal
 - Humans, macros, autopilot and bots emit the **same commands** ([ADR-0002](../adr/0002-every-action-is-a-command.md)).
