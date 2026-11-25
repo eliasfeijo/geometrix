@@ -372,7 +372,7 @@ describe("the battle screen over the socket (junction plan section 7)", () => {
     return { ...t, host, ana, bia };
   }
 
-  test("an open screen gets the ack, the opening and the battle now, then a frame per battle tick", async () => {
+  test("an open screen gets the ack and the opening with the battle now, then a frame per battle tick", async () => {
     const { host, base, ana, bia, timers } = await battleSetup();
     const a = await connect(base, ana.token);
     const b = await connect(base, bia.token);
@@ -384,15 +384,14 @@ describe("the battle screen over the socket (junction plan section 7)", () => {
     expect(open.battleId).toBe(157);
     expect(open.arena.width).toBeGreaterThan(0);
     expect(open.roster.members.map((m) => m.creep)).toContain(18);
-    const now = await a.next("battleFrame");
     const me = open.roster.members.find((m) => m.creep === 18)!.participant;
     // The next world tick puts it in real time; the clock steps it.
     host.tick();
-    const tick = now.view.tick;
+    const tick = open.view.tick;
     const from = a.messages.length;
     timers.advance(50);
     const frame = await a.next("battleFrame", from);
-    expect(frame.view.tick).toBe(tick + 1);
+    expect(frame.delta.tick).toBe(tick + 1);
     const sent = a.messages.length;
     a.send({
       type: "battleInput",

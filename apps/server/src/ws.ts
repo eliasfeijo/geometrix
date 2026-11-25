@@ -152,8 +152,8 @@ export function attachWebSocket(server: Server, context: WsContext) {
 }
 
 /**
- * Opens or closes the socket's battle screen: an open one gets the ack, the
- * battle's opening and the battle as it is now, then the frames.
+ * Opens or closes the socket's battle screen: an open one gets the ack and
+ * the battle's opening, with its view now, then the frames.
  */
 function screen(
   socket: WebSocket,
@@ -167,16 +167,13 @@ function screen(
     send(socket, { type: "ack", ref, tick: host.state.tick });
     return;
   }
-  const reason = host.openScreen(socket, player, battleId);
-  if (reason !== null) {
-    send(socket, { type: "reject", ref, reason });
+  const open = host.openScreen(socket, player, battleId);
+  if (typeof open === "string") {
+    send(socket, { type: "reject", ref, reason: open });
     return;
   }
   send(socket, { type: "ack", ref, tick: host.state.tick });
-  const open = host.battleOpen(battleId);
-  const frame = host.currentFrame(battleId);
-  if (open !== null) send(socket, open);
-  if (frame !== null) send(socket, frame);
+  send(socket, open);
 }
 
 function welcome(

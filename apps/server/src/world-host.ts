@@ -26,13 +26,16 @@ import {
   type Instance,
   type JunctionHost,
 } from "@geometrix/junction";
-import type {
-  BattleFrameMessage,
-  BattleInputCommand,
-  BattleOpenMessage,
-  BattleRoster,
-  RejectReason,
-  WorldStatus,
+import {
+  diffBattleView,
+  emptyBattleSent,
+  type BattleFrameMessage,
+  type BattleInputCommand,
+  type BattleOpenMessage,
+  type BattleRoster,
+  type BattleSent,
+  type RejectReason,
+  type WorldStatus,
 } from "@geometrix/protocol";
 import {
   createWorld,
@@ -111,6 +114,11 @@ export class WorldHost {
    * and a dominating player's screen sets the pace (D13).
    */
   private readonly screens = new Map<object, Screen>();
+  /**
+   * Per watched battle, the view its screens last received: the frames are
+   * its deltas (P9, F4).
+   */
+  private readonly battleSent = new Map<number, BattleSent>();
   /** Battle inputs for the next real-time battle tick, by battle (C-2). */
   private inputs = new Map<number, BattleInputCommand[]>();
   private readonly frameListeners: ((frame: BattleFrameMessage) => void)[] = [];
@@ -434,17 +442,17 @@ export class WorldHost {
 
   /**
    * Opens `viewer`'s battle screen (N-2): a player of a team with a side in
-   * the battle. Replaces the screen it had.
+   * the battle. Replaces the screen it had. Returns what the screen gets
+   * once (P9), or why it cannot open.
    */
   openScreen(
     viewer: object,
     player: { id: number; team: number },
     battleId: number,
-  ): RejectReason | null {
+  ): BattleOpenMessage | RejectReason {
     const stub = this.state.battles.find((b) => b.id === battleId);
-    if (stub === undefined || this.instance(battleId) === undefined) {
-      return "unknownBattle";
-    }
+    const instance = this.instance(battleId);
+    if (stub === undefined || instance === undefined) return "unknownBattle";
     const side = stub.sides.some(
       (s) => s.kind === "team" && s.team === player.team,
     );
@@ -455,7 +463,7 @@ export class WorldHost {
       battleId,
     });
     this.syncScreens();
-    return null;
+    return this.opening(instance);
   }
 
   /** Back to the map, or the viewer left. */
@@ -523,31 +531,27 @@ export class WorldHost {
     };
   }
 
-  /** What a screen gets once when it opens (P9), or null. */
-  battleOpen(battleId: number): BattleOpenMessage | null {
-    const instance = this.instance(battleId);
-    const roster = instance && this.roster(instance);
-    if (instance === undefined || roster === null || roster === undefined) {
-      return null;
+  /**
+   * What a screen gets once when it opens (P9), with the view now, which the
+   * battle's next frame is a delta of. Brings the battle's base up to now: a
+   * no-op while another screen shows it (each step sent it a frame).
+   */
+  private opening(instance: Instance): BattleOpenMessage {
+    const { battleId } = instance;
+    let sent = this.battleSent.get(battleId);
+    if (sent === undefined) {
+      sent = emptyBattleSent();
+      this.battleSent.set(battleId, sent);
     }
+    const view = battleView(instance.state);
+    diffBattleView(sent, view);
     return {
       type: "battleOpen",
       battleId,
       arena: instance.state.arena,
       params: instance.state.params,
-      roster,
-    };
-  }
-
-  /** The battle as it is now, for a screen that just opened. */
-  currentFrame(battleId: number): BattleFrameMessage | null {
-    const instance = this.instance(battleId);
-    if (instance === undefined) return null;
-    return {
-      type: "battleFrame",
-      battleId,
-      view: battleView(instance.state),
-      events: [],
+      roster: this.roster(instance)!,
+      view,
     };
   }
 
@@ -560,18 +564,22 @@ export class WorldHost {
     const watched = [...this.screens.values()].some(
       (s) => s.battleId === battleId,
     );
-    if (watched) {
+    const sent = this.battleSent.get(battleId);
+    if (watched && sent !== undefined) {
       const roster = events.some((e) => e.type === "joined")
         ? this.roster(instance)
         : null;
       const frame: BattleFrameMessage = {
         type: "battleFrame",
         battleId,
-        view: battleView(instance.state),
+        delta: diffBattleView(sent, battleView(instance.state)),
         events,
         ...(roster === null ? {} : { roster }),
       };
       for (const listener of this.frameListeners) listener(frame);
+    }
+    if (!watched || instance.state.ended !== null) {
+      this.battleSent.delete(battleId);
     }
     if (instance.state.ended !== null) {
       for (const [viewer, screen] of this.screens) {

@@ -9,8 +9,12 @@
 import { copyFileSync, mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { replayLog } from "@geometrix/battle";
-import type { BattleFrameMessage } from "@geometrix/protocol";
+import { battleView, replayLog, type BattleView } from "@geometrix/battle";
+import {
+  applyBattleDelta,
+  type BattleFrameMessage,
+  type BattleViewDelta,
+} from "@geometrix/protocol";
 import { beforeAll, describe, expect, test } from "vitest";
 import { BattleClock } from "../src/battle-clock.ts";
 import { battleHash } from "../src/hash.ts";
@@ -101,7 +105,9 @@ describe("the pace (D13, T-1, T-2)", () => {
     const { host, frames, instance } = opened();
     dominateArrow(host);
     const viewer = {};
-    expect(host.openScreen(viewer, { id: ana, team: 0 }, BATTLE)).toBeNull();
+    expect(host.openScreen(viewer, { id: ana, team: 0 }, BATTLE)).toMatchObject(
+      { type: "battleOpen", battleId: BATTLE },
+    );
     expect(host.screenOf(viewer)).toBe(BATTLE);
     const tick = instance.state.tick;
     host.tick();
@@ -130,13 +136,13 @@ describe("the pace (D13, T-1, T-2)", () => {
   test("a watcher who dominates nobody in it gets the frames, and the battle stays on the world clock", () => {
     const { host, frames, instance } = opened();
     const viewer = {};
-    expect(host.openScreen(viewer, { id: bia, team: 1 }, BATTLE)).toBeNull();
+    host.openScreen(viewer, { id: bia, team: 1 }, BATTLE);
     host.tick();
     host.tick();
     expect(instance.pace).toBe("world");
     expect(instance.state.tick).toBe(40);
     // One frame per world tick, with the view after its 20 battle ticks.
-    expect(frames.map((f) => [f.battleId, f.view.tick])).toEqual([
+    expect(frames.map((f) => [f.battleId, f.delta.tick])).toEqual([
       [BATTLE, 20],
       [BATTLE, 40],
     ]);
@@ -176,9 +182,10 @@ describe("the screens (N-2)", () => {
     );
   });
 
-  test("the opening carries the arena, the params and the roster", () => {
+  test("the opening carries the arena, the params, the roster and the view now", () => {
     const { host, instance } = opened();
-    const open = host.battleOpen(BATTLE)!;
+    const open = host.openScreen({}, { id: ana, team: 0 }, BATTLE);
+    if (typeof open === "string") throw new Error(open);
     expect(open.arena).toEqual(instance.state.arena);
     expect(open.params).toEqual(instance.state.params);
     expect(open.roster.members.map((m) => m.creep).sort()).toEqual(
@@ -189,8 +196,37 @@ describe("the screens (N-2)", () => {
         (side) => host.state.battles.find((b) => b.id === BATTLE)!.sides[side],
       ),
     );
-    expect(host.currentFrame(BATTLE)!.view.tick).toBe(0);
+    expect(open.view).toEqual(battleView(instance.state));
   });
+
+  test("the frames' deltas rebuild the battle view, for a screen opened at the start and one opened later", () => {
+    const { host, instance } = opened();
+    const first = host.openScreen({}, { id: ana, team: 0 }, BATTLE);
+    if (typeof first === "string") throw new Error(first);
+    const screens: { view: BattleView }[] = [{ view: first.view }];
+    let checked = 0;
+    host.onBattleFrame((frame) => {
+      const delta = JSON.parse(JSON.stringify(frame.delta)) as BattleViewDelta;
+      for (const screen of screens) {
+        screen.view = applyBattleDelta(screen.view, delta);
+        expect(JSON.stringify(screen.view)).toBe(
+          JSON.stringify(battleView(instance.state)),
+        );
+        checked++;
+      }
+    });
+    for (let i = 0; i < 600 && instance.state.ended === null; i++) {
+      if (i === 3) {
+        const later = host.openScreen({}, { id: bia, team: 1 }, BATTLE);
+        if (typeof later === "string") throw new Error(later);
+        expect(later.view).toEqual(screens[0]!.view);
+        screens.push({ view: later.view });
+      }
+      host.tick();
+    }
+    expect(instance.state.ended).not.toBeNull();
+    expect(checked).toBeGreaterThan(4);
+  }, 30_000);
 
   test("no frame is made for a battle nobody shows", () => {
     const { host, frames } = opened();
@@ -247,7 +283,7 @@ describe("a battle played by a human to its end (spec section 7: two logs agree)
       if (i % 20 === 19) host.tick();
     }
     expect(instance.state.ended).not.toBeNull();
-    expect(frames.at(-1)!.view.ended).not.toBeNull();
+    expect(frames.at(-1)!.delta.ended).not.toBeNull();
     expect(frames.at(-1)!.events.map((e) => e.type)).toContain("ended");
     expect(host.screenOf(viewer)).toBeNull();
     host.tick();

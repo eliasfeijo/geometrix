@@ -13,6 +13,7 @@ import type {
   BattleParams,
   BattleView,
 } from "@geometrix/battle";
+import type { BattleViewDelta } from "./battle-delta.ts";
 import { parseParams, ParamsError, SIM_VERSION } from "@geometrix/sim";
 import type {
   BattleSide,
@@ -330,8 +331,8 @@ export type BattleRoster = { members: BattleMember[]; sides: BattleSide[] };
 
 /**
  * Server -> client: a battle screen opened (junction plan section 7, P9),
- * once per opening: what never changes in the battle (the arena, its params)
- * and the roster. The frames that follow carry the view without the arena.
+ * once per opening: what never changes in the battle (the arena, its params),
+ * the roster and the battle view now, which the frames' deltas build on.
  */
 export type BattleOpenMessage = {
   type: "battleOpen";
@@ -339,18 +340,20 @@ export type BattleOpenMessage = {
   arena: Arena;
   params: BattleParams;
   roster: BattleRoster;
+  view: BattleView;
 };
 
 /**
  * Server -> client: the battle after one battle tick in real time, or after
- * a world tick's battle second on the world clock, with the events of the
- * ticks it covers. `roster` only when someone joined. A frame whose view has
+ * a world tick's battle second on the world clock: the changes of its view
+ * since the previous frame (applyBattleDelta), with the events of the ticks
+ * it covers. `roster` only when someone joined. A frame whose view gets
  * `ended` is the battle's last: the screen closes on the server.
  */
 export type BattleFrameMessage = {
   type: "battleFrame";
   battleId: number;
-  view: BattleView;
+  delta: BattleViewDelta;
   events: BattleEvent[];
   roster?: BattleRoster;
 };
