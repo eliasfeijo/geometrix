@@ -28,7 +28,7 @@ import {
   memoryOf,
 } from "./known.ts";
 import { costWithin, nearestTargets } from "./pathfinding.ts";
-import { canBuildRoad, nextSegment } from "./roads.ts";
+import { canBuildRoad, nextSegment, roadTarget } from "./roads.ts";
 import {
   maxHp,
   type Battle,
@@ -77,7 +77,11 @@ export type Action =
    */
   | { type: "gather"; resource: Resource }
   | { type: "deliver" }
-  | ({ type: "buildRoad" } & Cell)
+  /**
+   * Build road toward the cell; with none, toward the known deposit nearest
+   * the core with no road (roadTarget, R spec D12), resolved every time.
+   */
+  | { type: "buildRoad"; x?: number; y?: number }
   | ({ type: "moveTo" } & Cell)
   | { type: "stop" }
   /**
@@ -514,8 +518,13 @@ function orderFor(
       if (cellModifier(map, index, state.params) === 0) return null;
       return { type: "moveTo", x: action.x, y: action.y };
     }
-    case "buildRoad":
-      return buildRoadFor(state, creep, action);
+    case "buildRoad": {
+      if (action.x !== undefined && action.y !== undefined) {
+        return buildRoadFor(state, creep, { x: action.x, y: action.y });
+      }
+      const target = autoRoadTarget(state, creep);
+      return target === null ? null : buildRoadFor(state, creep, target);
+    }
     case "explore":
       return exploreFor(state, creep);
     case "pickup":
@@ -613,6 +622,28 @@ function exploreFor(state: WorldState, creep: Creep): Order | null {
   }
   const target = exploreTarget(state, creep);
   return target === null ? null : { type: "explore", ...target };
+}
+
+/**
+ * The road builder's target on what its team knows (R spec D12, RB-1): the
+ * order's current target is kept while it is still the nearest candidate and
+ * its segment can still take a road, so a builder at work costs no path
+ * search per tick.
+ */
+function autoRoadTarget(state: WorldState, creep: Creep): Cell | null {
+  const context = knownRoadContext(state, creep.team);
+  const { order } = creep;
+  const keep =
+    order.type === "buildRoad" &&
+    order.segment >= 0 &&
+    canBuildRoad(context, order.segment)
+      ? { x: order.x, y: order.y }
+      : null;
+  return roadTarget(
+    { ...context, deposits: known(state, creep).deposits },
+    teamOf(state, creep),
+    keep,
+  );
 }
 
 /**

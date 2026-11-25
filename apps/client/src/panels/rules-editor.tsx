@@ -140,14 +140,10 @@ export function RulesEditor({ creep }: { creep: CreepView }) {
         </button>
         <button
           disabled={!canAct}
-          onClick={() =>
-            pickCell(
-              "Clique no mapa no ponto até onde construir a estrada.",
-              (cell) => preset("roadBuilder", cell),
-            )
-          }
+          title="Constrói estrada até a jazida conhecida mais perto do Núcleo que ainda não tem estrada"
+          onClick={() => preset("roadBuilder")}
         >
-          Construtor de estrada…
+          Construtor de estrada
         </button>
         <button
           disabled={!canAct}
@@ -553,19 +549,20 @@ function ActionField(props: {
           />
         </>
       )}
-      {(value.type === "moveTo" || value.type === "buildRoad") && (
+      {(value.type === "moveTo" ||
+        (value.type === "buildRoad" && value.x !== undefined)) && (
         <>
           <CountInput
             title="x"
             max={(map?.width ?? 1) - 1}
-            value={value.x}
+            value={value.x ?? 0}
             disabled={disabled}
             onChange={(x) => onChange({ ...value, x })}
           />
           <CountInput
             title="y"
             max={(map?.height ?? 1) - 1}
-            value={value.y}
+            value={value.y ?? 0}
             disabled={disabled}
             onChange={(y) => onChange({ ...value, y })}
           />

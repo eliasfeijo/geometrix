@@ -148,13 +148,9 @@ describe("step, stage 1", () => {
     expect(creep.order).toMatchObject({ type: "gather" });
   });
 
-  test("the road builder preset needs its target", () => {
+  test("the road builder preset takes no target (R spec D12)", () => {
     const w = world();
     const creep = ownCreep(w);
-    step(w, [
-      as(1, { type: "applyPreset", creepId: creep.id, preset: "roadBuilder" }),
-    ]);
-    expect(creep.rules).toEqual([]);
     step(w, [
       as(1, {
         type: "applyPreset",
@@ -163,7 +159,11 @@ describe("step, stage 1", () => {
         target: { x: 4, y: 0 },
       }),
     ]);
-    expect(creep.rules[1]!.then).toEqual({ type: "buildRoad", x: 4, y: 0 });
+    expect(creep.rules).toEqual([]);
+    step(w, [
+      as(1, { type: "applyPreset", creepId: creep.id, preset: "roadBuilder" }),
+    ]);
+    expect(creep.rules[1]!.then).toEqual({ type: "buildRoad" });
   });
 });
 

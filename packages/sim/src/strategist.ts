@@ -13,20 +13,14 @@ import { isReaction, type Rule } from "./autopilot.ts";
 import { canAfford } from "./economy.ts";
 import type { Command, CommandInput } from "./commands.ts";
 import { nearestUnseen } from "./known.ts";
-import {
-  isRotatedSide,
-  manhattan,
-  Terrain,
-  type Cell,
-  type GameMap,
-} from "./map.ts";
+import { isRotatedSide, Terrain, type GameMap } from "./map.ts";
 import { DNAS, type Dna, type Params } from "./params.ts";
 import { collectorRules, raiderRules, roadBuilderRules } from "./presets.ts";
 import { productionRefusal } from "./production.ts";
-import { nextSegment, type RoadContext } from "./roads.ts";
+import { roadTarget } from "./roads.ts";
 import { canonicalJson } from "./serialize.ts";
 import { isOwnCreep, ownTeam, view, type TeamView } from "./view.ts";
-import type { Creep, Deposit, Team, WorldState } from "./world.ts";
+import type { Creep, Team, WorldState } from "./world.ts";
 
 export const STRATEGISTS = ["balanced", "none"] as const;
 export type StrategistId = (typeof STRATEGISTS)[number];
@@ -161,7 +155,7 @@ export function strategistActs(tick: number): boolean {
 type Role =
   | { kind: "materia" }
   | { kind: "cristal" }
-  | { kind: "builder"; target: Cell }
+  | { kind: "builder" }
   | { kind: "raider" };
 
 function balanced(known: Knowledge): Command[] {
@@ -236,7 +230,11 @@ export function postureRules(dna: Dna): Rule[] {
  * as canonical JSON: built once, since roleOf compares every creep with them
  * every minute.
  */
-let presetJson: { cristal: string; raider: string } | null = null;
+let presetJson: {
+  cristal: string;
+  raider: string;
+  builder: string;
+} | null = null;
 
 const actionsOf = (rules: readonly Rule[]) =>
   rules.filter((rule) => !isReaction(rule.then));
@@ -249,18 +247,13 @@ function roleOf(creep: Pick<Creep, "rules">): Role {
   presetJson ??= {
     cristal: canonicalJson(collectorRules("cristal")),
     raider: canonicalJson(actionsOf(raiderRules())),
+    builder: canonicalJson(roadBuilderRules()),
   };
   const actions = actionsOf(creep.rules);
   const rules = canonicalJson(actions);
   if (rules === presetJson.cristal) return { kind: "cristal" };
   if (rules === presetJson.raider) return { kind: "raider" };
-  const build = actions[1]?.then;
-  if (
-    build?.type === "buildRoad" &&
-    rules === canonicalJson(roadBuilderRules(build))
-  ) {
-    return { kind: "builder", target: { x: build.x, y: build.y } };
-  }
+  if (rules === presetJson.builder) return { kind: "builder" };
   return { kind: "materia" };
 }
 
@@ -274,39 +267,8 @@ function rulesFor(role: Role, dna: Dna): Rule[] {
     case "cristal":
       return [...postureRules(dna), ...collectorRules("cristal")];
     case "builder":
-      return [...postureRules(dna), ...roadBuilderRules(role.target)];
+      return [...postureRules(dna), ...roadBuilderRules()];
   }
-}
-
-/**
- * The road target: the non-empty deposit nearest to the core (Manhattan, ties
- * to the first cell in the team's frame, as explore: the deposit ids are not
- * mirrored between the teams) without a road on its cell and with a segment
- * that can be built toward it. null when there is none.
- */
-export function roadTarget(
-  state: RoadContext & { deposits: readonly Deposit[] },
-  team: Pick<Team, "id" | "core">,
-): Cell | null {
-  const { map } = state;
-  const { width, height } = map;
-  const frameIndex = (c: Cell) =>
-    isRotatedSide(team.id)
-      ? (height - 1 - c.y) * width + (width - 1 - c.x)
-      : c.y * width + c.x;
-  const candidates = state.deposits
-    .filter((d) => d.amount > 0 && map.road[d.y * map.width + d.x] === 0)
-    .sort(
-      (a, b) =>
-        manhattan(team.core, a) - manhattan(team.core, b) ||
-        frameIndex(a) - frameIndex(b),
-    );
-  for (const deposit of candidates) {
-    if (nextSegment(state, team, deposit) !== null) {
-      return { x: deposit.x, y: deposit.y };
-    }
-  }
-  return null;
 }
 
 /**
@@ -367,11 +329,7 @@ function assignRoles(known: Knowledge): Command[] {
   trim("cristal", wantCristal);
   trim("raider", wantRaiders);
   fill({ kind: "cristal" }, wantCristal);
-  if (target !== null) {
-    for (const creep of inRole("builder"))
-      next.set(creep, { kind: "builder", target });
-    fill({ kind: "builder", target }, wantBuilders);
-  }
+  fill({ kind: "builder" }, wantBuilders);
   fill({ kind: "raider" }, wantRaiders);
 
   // A raider gets its preset; a gatherer, its role's preset behind its

@@ -67,7 +67,11 @@ const condition = z.discriminatedUnion("type", [
 const action = z.discriminatedUnion("type", [
   z.object({ type: z.literal("gather"), resource }),
   z.object({ type: z.literal("deliver") }),
-  cell.extend({ type: z.literal("buildRoad") }),
+  z.object({
+    type: z.literal("buildRoad"),
+    x: coord.optional(),
+    y: coord.optional(),
+  }),
   cell.extend({ type: z.literal("moveTo") }),
   z.object({ type: z.literal("stop") }),
   z.object({ type: z.literal("explore") }),

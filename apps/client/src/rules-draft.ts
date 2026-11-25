@@ -173,7 +173,10 @@ export function actionOf(
       };
     case "buildRoad":
     case "moveTo": {
-      const point = "x" in from ? { x: from.x, y: from.y } : cell;
+      const point =
+        "x" in from && from.x !== undefined && from.y !== undefined
+          ? { x: from.x, y: from.y }
+          : cell;
       return { type, ...point };
     }
     case "joinBattle":

@@ -64,7 +64,7 @@ export type Command =
   | { type: "release" }
   | { type: "order"; creepId: number; order: OrderInput }
   | { type: "setRules"; creepId: number; rules: Rule[] }
-  /** `target` is required by the roadBuilder preset and ignored by the others. */
+  /** `target` is refused for the roadBuilder preset (R D12) and ignored by the others. */
   | { type: "applyPreset"; creepId: number; preset: PresetId; target?: Cell }
   | { type: "produce"; dna: Dna; repeat: boolean }
   | { type: "stopRepeat" }
@@ -213,12 +213,7 @@ export function applyCommand(
       setRules(state, command.creepId, command.rules);
       break;
     case "applyPreset":
-      applyPreset(
-        state,
-        command.creepId,
-        command.preset,
-        command.target ?? null,
-      );
+      applyPreset(state, command.creepId, command.preset);
       break;
     case "produce":
     case "stopRepeat":

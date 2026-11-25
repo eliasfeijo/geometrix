@@ -121,8 +121,15 @@ function copyAction(a: Action, map: GameMap): Action | null {
         ? { type: a.type, minHpPermille: a.minHpPermille }
         : null;
     case "moveTo":
-    case "buildRoad":
       return isInMap(map, a) ? { type: a.type, x: a.x, y: a.y } : null;
+    case "buildRoad":
+      // No cell: the autopilot resolves the target (R spec D12).
+      if (a.x === undefined && a.y === undefined) return { type: a.type };
+      return a.x !== undefined &&
+        a.y !== undefined &&
+        isInMap(map, { x: a.x, y: a.y })
+        ? { type: a.type, x: a.x, y: a.y }
+        : null;
     default:
       return null;
   }
@@ -179,21 +186,16 @@ export function applyPresetRefusal(
   const refusal = teamCreepRefusal(state, playerId, creepId);
   if (refusal !== null) return refusal;
   if (!PRESETS.includes(preset)) return "invalidPreset";
-  if (preset === "roadBuilder") {
-    if (target === null || !isInMap(state.map, target)) return "invalidTarget";
-  }
+  // The road builder decides where to build (R spec D12): no target.
+  if (preset === "roadBuilder" && target !== null) return "invalidTarget";
   return null;
 }
 
-/** Replaces the creep's rules with the preset's; only roadBuilder uses target. */
+/** Replaces the creep's rules with the preset's. */
 export function applyPreset(
   state: WorldState,
   creepId: number,
   preset: PresetId,
-  target: Cell | null,
 ): void {
-  findCreep(state, creepId)!.rules = presetRules(
-    preset,
-    preset === "roadBuilder" ? target : null,
-  );
+  findCreep(state, creepId)!.rules = presetRules(preset);
 }

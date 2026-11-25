@@ -175,16 +175,23 @@ describe("players", () => {
         creepId: creep.id,
         preset: "cristalCollector",
       }),
+      // Refused: the road builder takes no target (R spec D12).
+      as(1, {
+        type: "applyPreset",
+        creepId: creep.id,
+        preset: "roadBuilder",
+        target: { x: 1, y: 0 },
+      }),
       // Refused: not this player's creep.
       as(2, { type: "dominate", creepId: creep.id }),
     ]);
     run(world, 9);
     const [a, b] = world.stats.teams;
-    expect(a!.commands).toMatchObject({ join: 1, dominate: 1, applyPreset: 1 });
+    expect(a!.commands).toMatchObject({ join: 1, dominate: 1, applyPreset: 2 });
     expect(a!.presets).toEqual({
       materiaCollector: 0,
       cristalCollector: 1,
-      roadBuilder: 0,
+      roadBuilder: 1,
       scout: 0,
       raider: 0,
     });

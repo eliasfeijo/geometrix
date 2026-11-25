@@ -2,7 +2,6 @@
 // Creeps are born with the materia collector.
 
 import type { Rule } from "./autopilot.ts";
-import type { Cell } from "./map.ts";
 import type { Resource } from "./params.ts";
 
 export const PRESETS = [
@@ -57,16 +56,15 @@ export function scoutRules(): Rule[] {
 }
 
 /**
- * Builds road toward `target`; while it cannot (no materia in stock, or the
- * road is done) it gathers materia, which pays for the next segments.
+ * Builds road toward the target the autopilot resolves each time (the known
+ * deposit nearest the core with no road, R spec D12, RB-1); while it cannot
+ * (no target, or no materia for the next segment) it gathers materia, which
+ * pays for the next segments (RB-2).
  */
-export function roadBuilderRules(target: Cell): Rule[] {
+export function roadBuilderRules(): Rule[] {
   return [
     deliverWhenFull(),
-    {
-      when: { type: "always" },
-      then: { type: "buildRoad", x: target.x, y: target.y },
-    },
+    { when: { type: "always" }, then: { type: "buildRoad" } },
     gather("materia"),
     deliverLeftover(),
   ];
@@ -94,16 +92,15 @@ export function raiderRules(): Rule[] {
   ];
 }
 
-/** The preset's rules; roadBuilder needs its target. */
-export function presetRules(preset: PresetId, target: Cell | null): Rule[] {
+/** The preset's rules. */
+export function presetRules(preset: PresetId): Rule[] {
   switch (preset) {
     case "materiaCollector":
       return collectorRules("materia");
     case "cristalCollector":
       return collectorRules("cristal");
     case "roadBuilder":
-      if (target === null) throw new Error("roadBuilder needs a target");
-      return roadBuilderRules(target);
+      return roadBuilderRules();
     case "scout":
       return scoutRules();
     case "raider":

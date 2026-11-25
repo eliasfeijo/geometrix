@@ -5,6 +5,7 @@ import {
   roadBuilderRules,
 } from "../src/presets.ts";
 import { startProduction } from "../src/production.ts";
+import { step } from "../src/step.ts";
 import { createWorld } from "../src/world.ts";
 import { creepOf, loadTestParams, run, textWorld } from "./helpers.ts";
 
@@ -12,7 +13,7 @@ const params = loadTestParams();
 
 describe("preset rules", () => {
   test("collectors deliver when full, gather, explore while they know no deposit, then bring the leftover home", () => {
-    expect(presetRules("cristalCollector", null)).toEqual([
+    expect(presetRules("cristalCollector")).toEqual([
       { when: { type: "cargoFull" }, then: { type: "deliver" } },
       {
         when: { type: "always" },
@@ -24,32 +25,26 @@ describe("preset rules", () => {
       },
       { when: { type: "always" }, then: { type: "deliver" } },
     ]);
-    expect(presetRules("materiaCollector", null)).toEqual(
-      collectorRules("materia"),
-    );
+    expect(presetRules("materiaCollector")).toEqual(collectorRules("materia"));
   });
 
   test("the scout explores, then goes back to the core", () => {
-    expect(presetRules("scout", null)).toEqual([
+    expect(presetRules("scout")).toEqual([
       { when: { type: "always" }, then: { type: "explore" } },
       { when: { type: "always" }, then: { type: "deliver" } },
     ]);
   });
 
-  test("the road builder builds toward its target before gathering materia", () => {
-    expect(presetRules("roadBuilder", { x: 4, y: 9 })).toEqual([
+  test("the road builder builds toward the target it resolves, before gathering materia", () => {
+    expect(presetRules("roadBuilder")).toEqual([
       { when: { type: "cargoFull" }, then: { type: "deliver" } },
-      { when: { type: "always" }, then: { type: "buildRoad", x: 4, y: 9 } },
+      { when: { type: "always" }, then: { type: "buildRoad" } },
       {
         when: { type: "always" },
         then: { type: "gather", resource: "materia" },
       },
       { when: { type: "always" }, then: { type: "deliver" } },
     ]);
-  });
-
-  test("the road builder needs a target", () => {
-    expect(() => presetRules("roadBuilder", null)).toThrow();
   });
 
   test("every call builds fresh rule objects", () => {
@@ -103,11 +98,23 @@ describe("presets at work", () => {
   });
 
   test("a road builder pays for its road by gathering materia", () => {
-    const world = textWorld(["Am.......B"]);
+    // The only deposit, 5 cells away, is its target (R spec D12).
+    const world = textWorld(["A....m...B"]);
     const creep = creepOf(world, 0, "circle");
-    creep.rules = roadBuilderRules({ x: 5, y: 0 });
+    creep.rules = roadBuilderRules();
     run(world, 3000);
     expect(world.map.road.slice(0, 7)).toEqual([0, 1, 1, 1, 1, 1, 0]);
     expect(world.teams[0]!.stock.materia).toBeGreaterThan(0);
+  });
+
+  test("a road builder re-resolves its target: once the nearest deposit has a road, the next (RB-1)", () => {
+    const world = textWorld(["A..m...m......B"]);
+    const creep = creepOf(world, 0, "circle");
+    creep.rules = roadBuilderRules();
+    world.teams[0]!.stock.materia = 10_000;
+    step(world, []);
+    expect(creep.order).toMatchObject({ type: "buildRoad", x: 3, y: 0 });
+    run(world, 6000);
+    expect(world.map.road.slice(0, 9)).toEqual([0, 1, 1, 1, 1, 1, 1, 1, 0]);
   });
 });

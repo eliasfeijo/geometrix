@@ -153,7 +153,9 @@ export function actionText(a: Action): string {
     case "deliver":
       return "entregar no Núcleo";
     case "buildRoad":
-      return `construir estrada até (${a.x}, ${a.y})`;
+      return a.x === undefined || a.y === undefined
+        ? "construir estrada até a jazida mais perto sem estrada"
+        : `construir estrada até (${a.x}, ${a.y})`;
     case "moveTo":
       return `ir até (${a.x}, ${a.y})`;
     case "stop":
