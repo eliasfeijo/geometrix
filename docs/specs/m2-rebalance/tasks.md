@@ -1,6 +1,6 @@
 # M2 tasks — Rebalance and pace
 
-**Status:** F0 and F1 done (2026-11-25); F2 in progress (wave 1, see "Running the phases"). Branches `m2/rebalance-f<n>-<slug>` (skill `commit`).
+**Status:** F0, F1 and F2 done (2026-11-25); next wave 2, F3 and F5 (see "Running the phases"). Branches `m2/rebalance-f<n>-<slug>` (skill `commit`).
 **Spec:** [spec.md](spec.md) · **Plan:** [plan.md](plan.md)
 
 ## Running the phases: waves, lanes and models
@@ -160,6 +160,39 @@ which R F5 also touches (`battle.hold`): a small rebase.
 - [x] The hostile intent in the three creep views; nothing leaks (HS-1, HS-3)
 - [x] The difficulty in `join` and `Player`; the junction's setup reaction from it (P8)
 - [x] `SIM_VERSION` 12, the fixed hashes; the protocol and the client compile against the new types
+
+### F2 record (2026-11-25)
+
+Closed with `npm run check` green (2962 tests, ~115–130 s). In the code:
+
+- `sim`: the `follow` and `drop` orders (`domination.ts` refusals `invalidTarget`, `emptyCargo`; a follow cycle is
+  refused over orders and rules), `allyInBattle`/`joinBattle`/`follow`/`drop`/`buildRoad` with no cell in the
+  autopilot, `deliversFirst` in `battle.ts`, `dropCargo` and the `dropped` event, `roadTarget` in `roads.ts`, the help
+  rule per DNA (`presets.ts` `HELP`, `helpRule`, `withHelp`, `presetRules(preset, dna)`), `hostile` on the creep and
+  wanderer views (`view.ts`), `Player.difficulty` and the `humanDifficulty` refusal, `SIM_VERSION` 12. The new
+  `autopilot.followCells` and `autopilot.maxRules` params.
+- `junction`: `teamReaction` in `setup.ts` (the team's first bot's difficulty, normal with none).
+- `protocol`: the zod schemas for the new words and `join.difficulty`; `hostile` is a value field of the delta.
+- Tests: `placeWorld` and `runUntil` in the sim's helpers; the server's `firstTeamBattle` (the fixtures found the
+  battle by search instead of pinning tick 8,539); the delta property's battle floors lowered to 10/10/20 with the
+  measured values; the cli's encounter floors over both fixture worlds.
+
+**Measured.** A 3-day seed-42 `geo sim`: ~13.5 s at `cf74189` (before the road builder change), ~21 s with
+`buildRoad` with no cell resolving its target every tick, ~18 s after `c0a4519` (skip it when the team can neither
+pay nor resume a segment; same hashes). The profile's remaining growth is the junction's battles (`stepsFrom` ×2):
+more battles, from help and the bot's hard reaction, not overhead. F3/F7 should watch the tick cost.
+
+**Interpretations to validate in the playtest:**
+
+1. H-4: a loaded helper that reaches its core sooner than the battle delivers first (`joinBattle` gives `deliver`),
+   rather than joining with the load; `follow` toward a battle does the same (`deliversFirst`).
+2. A follower whose target is in a battle walks to the battle's cell, waiting inside the window, and joins from
+   there.
+3. The help numbers per DNA (■ 6 cells / 400‰, ▲ 6 / 500‰, ● 8 / 500‰) live in `presets.ts` like the raider's,
+   not in the params; the help rule goes after the leading reaction rules of every preset and bot role.
+4. The hostile view's target is shown when the viewing team sees it (its own creep or one in sight), else null.
+5. A bot joins at `hard` unless its `join` says otherwise, so today's bot worlds fight at hard (the 6 h bot world's
+   hash moved).
 
 ## F3 — The strategist
 
