@@ -12,7 +12,7 @@ import {
   Predictor,
   StepGlides,
   stepTicks,
-} from "../src/lab/motion.ts";
+} from "../src/battle/motion.ts";
 
 const params = parseBattleParams(JSON.parse(paramsJson));
 

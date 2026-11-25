@@ -24,11 +24,11 @@ import {
   idleSecondsLeft,
   idleWarning,
   sideColor,
-} from "./arena-view.tsx";
+} from "../battle/arena-view.tsx";
 import { LAB_ARENAS, LAB_KITS, LAB_PARAMS } from "./assets.ts";
 import { LabConnection, type WorkerLike } from "./connection.ts";
 import { isSwitch, keepsDomination } from "./domination.ts";
-import { effectsOf, liveEffects, type Effect } from "./effects.ts";
+import { effectsOf, liveEffects, type Effect } from "../battle/effects.ts";
 import {
   defaultDraft,
   idOfPlace,
@@ -39,14 +39,20 @@ import {
   youOf,
   type MemberDraft,
 } from "./draft.ts";
-import { eventLines, EventsList } from "./events-list.tsx";
+import { eventLines, EventsList } from "../battle/events-list.tsx";
 import { GambitsEditor } from "./gambits-editor.tsx";
-import { KeyboardInput } from "./input.ts";
-import { DNA_GLYPHS, REACTION_LABELS, sideLetter } from "./labels.ts";
+import { KeyboardInput } from "../battle/input.ts";
+import { DNA_GLYPHS, sideLetter } from "../battle/labels.ts";
+import { REACTION_LABELS } from "./labels.ts";
 import { LatencyPanel } from "./latency-panel.tsx";
-import { Predictor, StepGlides, stepTicks, type MotionMode } from "./motion.ts";
+import {
+  Predictor,
+  StepGlides,
+  stepTicks,
+  type MotionMode,
+} from "../battle/motion.ts";
 import type { Ended, Speed } from "./protocol.ts";
-import { ResultTable } from "./result-table.tsx";
+import { ResultTable } from "../battle/result-table.tsx";
 import { RTT_CHOICES } from "./channel.ts";
 import { GradePanel } from "./grade-panel.tsx";
 import { SessionPanel } from "./session-panel.tsx";
@@ -489,6 +495,11 @@ export function Lab() {
     // Taking the creep already taken changes nothing, not even the record.
     if (!isSwitch(dominated, id)) return;
     switched();
+    // One domination at a time (lab spec D12): the one before goes back to
+    // its gambits; the battle lets several humans play (junction D12).
+    if (dominated !== null) {
+      send({ type: "control", id: dominated, controller: "gambits" });
+    }
     send({ type: "control", id, controller: "human" });
     setDominated(id);
     predictor.current.reset();

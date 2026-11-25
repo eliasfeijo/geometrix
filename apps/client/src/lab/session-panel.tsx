@@ -4,7 +4,7 @@
 // the AI, the export and a clear. Grade × RTT stays hidden while a blind
 // session is on, so the owner grades the game and not the table.
 
-import { sideLetter } from "./labels.ts";
+import { sideLetter } from "../battle/labels.ts";
 import {
   gradesByRtt,
   latencyVerdict,

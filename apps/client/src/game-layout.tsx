@@ -5,6 +5,7 @@
 import { effect, useComputed } from "@preact/signals";
 import type { ComponentChildren } from "preact";
 import { useEffect } from "preact/hooks";
+import { BattleReturn, BattleScreen } from "./battle-screen.tsx";
 import { GameContext, type Game } from "./context.ts";
 import {
   cursorAt,
@@ -50,6 +51,8 @@ export function GameLayout({ game, header, orders }: Props) {
   );
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      // The battle screen has the keyboard while it is shown.
+      if (store.shownBattle.value !== null) return;
       if (handleKey(store, game.viewer.team, e)) e.preventDefault();
     };
     window.addEventListener("keydown", onKey);
@@ -97,6 +100,10 @@ export function GameLayout({ game, header, orders }: Props) {
           <StackList />
           {orders && <ApproachMenu />}
           {orders && <ReactionPanel />}
+          {orders && <BattleReturn />}
+          {store.shownBattle.value !== null && game.battles !== undefined && (
+            <BattleScreen key={store.shownBattle.value} />
+          )}
         </div>
         <Notices />
       </div>

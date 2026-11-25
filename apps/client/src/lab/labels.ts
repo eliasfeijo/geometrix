@@ -6,7 +6,6 @@ import type {
   Action,
   Condition,
   Dna,
-  Outcome,
   PresetId,
   Reaction,
   Target,
@@ -16,12 +15,6 @@ export const DNA_LABELS: Record<Dna, string> = {
   square: "quadrado",
   triangle: "triângulo",
   circle: "círculo",
-};
-
-export const DNA_GLYPHS: Record<Dna, string> = {
-  square: "■",
-  triangle: "▲",
-  circle: "●",
 };
 
 export const PRESET_LABELS: Record<PresetId, string> = {
@@ -36,16 +29,6 @@ export const REACTION_LABELS: Record<Reaction, string> = {
   normal: "normal",
   hard: "difícil",
 };
-
-export const OUTCOME_LABELS: Record<Outcome | "won", string> = {
-  won: "venceu",
-  died: "morreu",
-  escapedEdge: "fugiu pela borda",
-  escapedIdle: "fugiu por inatividade",
-};
-
-/** Side 0 is A, side 1 is B, and so on. */
-export const sideLetter = (side: number): string => "ABCD"[side] ?? "?";
 
 /** The lab's names, handed out in setup order and then to reinforcements. */
 export const LAB_NAMES = [

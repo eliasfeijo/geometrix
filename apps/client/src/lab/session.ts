@@ -12,9 +12,9 @@
 
 import type { BattleSetup, Outcome } from "@geometrix/battle";
 import type { KeyValueStore } from "../session.ts";
-import { DNA_GLYPHS } from "./labels.ts";
+import { DNA_GLYPHS } from "../battle/labels.ts";
 import type { LatencySummary } from "./latency.ts";
-import type { MotionMode } from "./motion.ts";
+import type { MotionMode } from "../battle/motion.ts";
 
 /** Battles per RTT in a blind session (spec section 8: at least 5). */
 export const BLIND_PER_RTT = 5;

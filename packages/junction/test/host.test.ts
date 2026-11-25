@@ -249,6 +249,30 @@ describe("joins (junction J-1, J-3)", () => {
 });
 
 describe("taking over (junction C-1, D12, D13, T-2)", () => {
+  test("two players on the screen each keep their participant (D12)", () => {
+    const { w, hunter, prey, host } = duel();
+    join(w, 5, 0, false);
+    join(w, 6, 1, false);
+    stepJunction(w, host, []);
+    dominate(w, 5, hunter.id);
+    dominate(w, 6, prey.id);
+    setScreen(host, hunter.id, true);
+    setScreen(host, prey.id, true);
+    stepJunction(w, host, []);
+    const instance = host.instances[0]!;
+    const changes = [];
+    for (let i = 0; i < 10 && instance.state.ended === null; i++) {
+      const { events } = stepRealtime(w, host, instance.battleId, []);
+      changes.push(...events.filter((e) => e.type === "controlChanged"));
+    }
+    // Each one handed over once, then left alone (no flapping).
+    expect(changes.map((e) => e.controller)).toEqual(["human", "human"]);
+    expect(instance.state.participants.map((p) => p.controller)).toEqual([
+      "human",
+      "human",
+    ]);
+  });
+
   test("a dominated participant with the screen open plays in real time; released, the world clock again", () => {
     const { w, hunter, host } = duel();
     join(w, 5, 0, false);

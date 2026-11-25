@@ -10,6 +10,7 @@ import {
   type Dna,
   type ForeignCreepView,
   type Params,
+  type TeamView,
 } from "@geometrix/sim";
 import { useGame } from "../context.ts";
 import { toggleRoadMode } from "../interaction.ts";
@@ -27,6 +28,7 @@ import {
   teamName,
 } from "../format.ts";
 import { COLORS } from "../map/colors.ts";
+import { BattleInspector, WatchButton } from "./battle-inspector.tsx";
 import { CorePanel } from "./core-panel.tsx";
 import { DnaIcon } from "./dna-icon.tsx";
 import { RulesEditor } from "./rules-editor.tsx";
@@ -50,6 +52,7 @@ export function Inspector() {
       {selection.kind === "creep" && <CreepInspector id={selection.id} />}
       {selection.kind === "deposit" && <DepositInspector id={selection.id} />}
       {selection.kind === "core" && <CorePanel team={selection.team} />}
+      {selection.kind === "battle" && <BattleInspector id={selection.id} />}
     </aside>
   );
 }
@@ -107,7 +110,10 @@ function CreepInspector({ id }: { id: number }) {
         {engagement !== null && (
           <>
             <dt>Encontro</dt>
-            <dd class="engaged">{engagement}</dd>
+            <dd class="engaged">
+              {engagement}
+              <BattleOf state={state} id={creep.battle} />
+            </dd>
           </>
         )}
         <dt>Salvo-conduto</dt>
@@ -243,7 +249,10 @@ function ForeignCreepInspector({ creep }: { creep: ForeignCreepView }) {
         {engagement !== null && (
           <>
             <dt>Encontro</dt>
-            <dd class="engaged">{engagement}</dd>
+            <dd class="engaged">
+              {engagement}
+              <BattleOf state={state} id={creep.battle} />
+            </dd>
           </>
         )}
         <dt>Carga</dt>
@@ -419,5 +428,16 @@ function DepositIcon({ deposit }: { deposit: Deposit }) {
         <polygon points="0.5,0.06 0.94,0.5 0.5,0.94 0.06,0.5" fill={color} />
       )}
     </svg>
+  );
+}
+
+/** The watch button of the battle a creep is in (junction D11). */
+function BattleOf({ state, id }: { state: TeamView; id: number | null }) {
+  const battle = state.battles.find((b) => b.id === id);
+  if (battle === undefined) return null;
+  return (
+    <span class="engaged-action">
+      <WatchButton battle={battle} />
+    </span>
   );
 }

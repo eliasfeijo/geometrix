@@ -11,7 +11,7 @@ import {
 import { describe, expect, test } from "vitest";
 import paramsJson from "../../../packages/battle/test/params.json?raw";
 import { LAB_ARENAS, LAB_KITS, LAB_PARAMS } from "../src/lab/assets.ts";
-import { countdownSeconds } from "../src/lab/arena-view.tsx";
+import { countdownSeconds } from "../src/battle/arena-view.tsx";
 import {
   defaultDraft,
   idOfPlace,
@@ -21,7 +21,7 @@ import {
   setupOf,
   youOf,
 } from "../src/lab/draft.ts";
-import { eventLines, eventText } from "../src/lab/events-list.tsx";
+import { eventLines, eventText } from "../src/battle/events-list.tsx";
 import { actionOf, conditionOf, moved } from "../src/lab/gambits-editor.tsx";
 import { conditionText, labName } from "../src/lab/labels.ts";
 

@@ -20,6 +20,7 @@ import { creepStatus, viewCapacity, type Creep } from "../creep-status.ts";
 import type { GameStore } from "../store.ts";
 import { COLORS, teamColor, teamTextColor } from "./colors.ts";
 import { DnaShape } from "./creep-shape.tsx";
+import { BattleBubbles, BattleSigns, InBattleMark } from "./battle-layer.tsx";
 import { EncounterLayer } from "./encounter-layer.tsx";
 import { creepPositions, glideProgress } from "./interpolate.ts";
 import { nameFontSize } from "./labels.ts";
@@ -148,8 +149,10 @@ export function CreepLayer() {
       waiting={creepStatus(creep, state.deposits) === "waiting"}
     />
   );
+  const battle = selection?.kind === "battle" ? selection.id : null;
   return (
     <g class="creep-layer">
+      <BattleBubbles battles={state.battles} />
       <EncounterLayer
         state={state}
         params={info.params}
@@ -182,6 +185,11 @@ export function CreepLayer() {
           ) : null,
         )}
       </g>
+      <BattleSigns
+        battles={state.battles}
+        viewScale={viewScale}
+        selected={battle}
+      />
       {hoveredMarker !== undefined && <HoverRing center={hoveredMarker} />}
       {selectedMarker !== undefined && (
         <SelectionRing center={selectedMarker} />
@@ -189,16 +197,17 @@ export function CreepLayer() {
       {store.ping.value !== null && (
         <Ping key={store.ping.value.id} cell={store.ping.value.cell} />
       )}
-      {selection !== null && selection.kind !== "creep" && (
-        <CellSelection
-          cell={
-            selection.kind === "core"
-              ? (state.teams[selection.team]?.core ?? undefined)
-              : state.deposits.find((d) => d.id === selection.id)
-          }
-          size={selection.kind === "core" ? 2.6 : 1.1}
-        />
-      )}
+      {selection !== null &&
+        (selection.kind === "core" || selection.kind === "deposit") && (
+          <CellSelection
+            cell={
+              selection.kind === "core"
+                ? (state.teams[selection.team]?.core ?? undefined)
+                : state.deposits.find((d) => d.id === selection.id)
+            }
+            size={selection.kind === "core" ? 2.6 : 1.1}
+          />
+        )}
     </g>
   );
 }
@@ -448,6 +457,9 @@ function CreepMark({ creep, center, team, params, mine, waiting }: MarkProps) {
       />
       {waiting && (
         <Hourglass x={cx + ring * 0.75} y={cy - ring * 0.75} size={scale} />
+      )}
+      {creep.battle !== null && (
+        <InBattleMark x={cx - ring * 0.75} y={cy - ring * 0.75} size={scale} />
       )}
       <HpBar creep={creep} center={center} params={params} />
     </g>

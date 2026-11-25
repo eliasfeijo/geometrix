@@ -228,41 +228,7 @@
 
 /* What the header, the controls and the gaps take of the window's height. */
 .lab {
-  --lab-chrome: 138px;
-}
-
-.lab-arena {
-  display: block;
-  width: 100%;
-  height: auto;
-  max-height: calc(100vh - var(--lab-chrome));
-}
-
-.lab-creep {
-  cursor: pointer;
-}
-
-.lab-name {
-  font-family: var(--font-game);
-  font-size: 0.6px;
-  paint-order: stroke;
-  stroke: #0d0f12;
-  stroke-width: 0.14px;
-}
-
-.lab-effect {
-  pointer-events: none;
-}
-
-/* The damage of a blow, rising over whoever took it (spec L-8). */
-.lab-damage {
-  font-family: var(--font-game);
-  font-size: 0.85px;
-  font-weight: 700;
-  fill: #ffd166;
-  paint-order: stroke;
-  stroke: #0d0f12;
-  stroke-width: 0.18px;
+  --battle-chrome: 138px;
 }
 
 .lab-empty {
@@ -363,103 +329,16 @@
   margin-left: auto;
 }
 
-.lab-number input {
-  width: 3.8em;
-}
-
-.lab-events {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  max-height: 260px;
-  overflow-y: auto;
-  display: grid;
-  gap: 2px;
-  font-size: 0.86rem;
-}
-
-.lab-time {
-  display: inline-block;
-  min-width: 4.2em;
-  color: var(--muted);
-  font-variant-numeric: tabular-nums;
-}
-
 .lab-table-wrap {
   overflow-x: auto;
 }
 
-.lab-result table {
-  border-collapse: collapse;
-  width: 100%;
-  font-size: 0.9rem;
-}
-
-.lab-result th,
-.lab-result td {
-  padding: 4px 8px;
-  border-bottom: 1px solid var(--line);
-  text-align: left;
-  white-space: nowrap;
-}
-
-.lab-result th {
-  color: var(--muted);
-  font-weight: 500;
-}
-
-.lab-hash {
-  font-family: ui-monospace, monospace;
-  margin-top: 6px;
+.lab-number input {
+  width: 3.8em;
 }
 
 .lab-check input {
   margin: 0;
-}
-
-/* The start countdown (spec D21): its seconds over the arena. */
-.lab-countdown {
-  font-family: var(--font-game);
-  font-weight: 700;
-  fill: #f2f4f7;
-  fill-opacity: 0.85;
-  paint-order: stroke;
-  stroke: #0d0f12;
-  stroke-width: 0.3px;
-  pointer-events: none;
-}
-
-/* The battle's idle clock close to running out (spec D9). */
-.lab-idle {
-  font-family: var(--font-game);
-  font-size: 1.2px;
-  font-weight: 700;
-  paint-order: stroke;
-  stroke: #0d0f12;
-  stroke-width: 0.15px;
-  pointer-events: none;
-}
-
-/* Who fell or fled, over its last cell (C13). */
-.lab-notice {
-  font-family: var(--font-game);
-  font-size: 0.75px;
-  font-weight: 700;
-  paint-order: stroke;
-  stroke: #0d0f12;
-  stroke-width: 0.14px;
-  pointer-events: none;
-}
-
-/* The outcome over the arena once the battle ends. */
-.lab-banner {
-  font-family: var(--font-game);
-  font-size: 1.4px;
-  font-weight: 700;
-  paint-order: stroke;
-  stroke: #0d0f12;
-  stroke-width: 0.2px;
-  pointer-events: none;
 }
 
 /* The blind mode's grade (spec D17). */

@@ -53,7 +53,7 @@ function skirmish(seed: number, rows: string[]): BattleSetup {
 /**
  * Plays a skirmish the way the lab will, through stepLogged, up to
  * `maxTicks` or the end: the human dominates one participant at a time,
- * switching every 3 s, and sends the commands of `plan` for all of them
+ * switching every 3 s (releasing the one before, as the lab's page does), and sends the commands of `plan` for all of them
  * (those for the participants it does not hold are refused, live and in the
  * replay). A join on tick 30 brings a reinforcement to side 1.
  */
@@ -68,6 +68,14 @@ function record(
   for (let tick = 0; tick < maxTicks; tick += 60) {
     const id = ((tick / 60) % 4) + 1;
     commands[tick]!.unshift({ type: "control", id, controller: "human" });
+    if (tick > 0) {
+      const before = (((tick - 60) / 60) % 4) + 1;
+      commands[tick]!.unshift({
+        type: "control",
+        id: before,
+        controller: "gambits",
+      });
+    }
   }
   commands[30]!.push({ type: "join", side: 1, participant: member("circle") });
   for (let tick = 0; tick < maxTicks && state.ended === null; tick++) {

@@ -6,6 +6,7 @@ import {
   isOwnCreep,
   isOwnEncounter,
   maxHp,
+  type Cell,
   type Params,
   type Spoil,
   type TeamView,
@@ -101,4 +102,20 @@ export function windowSeconds(
 ): number | null {
   if (deadlineTick === null) return null;
   return Math.max(0, deadlineTick - tick) * params.world.tickSeconds;
+}
+
+/** Screen pixels of a battle sign's radius (junction D16). */
+export const BATTLE_SIGN_PX = 9;
+
+/**
+ * Where a battle's sign stands (junction D16): over the battle's cell, above
+ * the creep ring there, about BATTLE_SIGN_PX on screen at any zoom, never
+ * smaller than a third of a cell.
+ */
+export function battleSign(
+  battle: Cell,
+  viewScale: number,
+): { x: number; y: number; r: number } {
+  const r = Math.max(BATTLE_SIGN_PX / viewScale, 0.35);
+  return { x: battle.x + 0.5, y: battle.y + 0.05 - r, r };
 }

@@ -1,6 +1,6 @@
 # M2 junction tasks — Slice D
 
-**Status:** F3 done (2026-11-24); F6 done (2026-11-25); F4 next. Branches `m2/junction-f<n>-<slug>` (skill `commit`).
+**Status:** F3 done (2026-11-24); F6, F4 and F5 done (2026-11-25); F7 next. Branches `m2/junction-f<n>-<slug>` (skill `commit`).
 **Spec:** [spec.md](spec.md) · **Plan:** [plan.md](plan.md)
 
 ## F0 — Spec, ADR and plan
@@ -333,13 +333,64 @@ their rows); a real-time battle tick with its frame 22–33 µs, against the 50 
 
 ## F5 — Client
 
-- [ ] The arena view, input, motion and effects moved to `apps/client/src/battle/`; the lab unchanged on top of it
-- [ ] The battle screen: opens by itself (N-1), back to the map, return; countdown, signs, end table
-- [ ] Watching from the battle sign (teams with a participant)
-- [ ] The map: the bubble, the battle sign, participants "in battle"; the inspector
-- [ ] The reaction panel with pay and refuse only; the mid-fight flee button removed
-- [ ] The chronicle sentences for the new events
-- [ ] The movement drawing selector in the `?net=1` panel (D19)
+- [x] The arena view, input, motion and effects moved to `apps/client/src/battle/`; the lab unchanged on top of it
+- [x] The battle screen: opens by itself (N-1), back to the map, return; countdown, signs, end table
+- [x] Watching from the battle sign (teams with a participant)
+- [x] The map: the bubble, the battle sign, participants "in battle"; the inspector
+- [x] The reaction panel with pay and refuse only; the mid-fight flee button removed (done with F2's
+      vocabulary change, `88ddc6f`; tested in `encounter-actions.test.ts`)
+- [x] The chronicle sentences for the new events
+- [x] The movement drawing selector in the `?net=1` panel (D19)
+
+### F5 record
+
+**What it does.** The world client shows a battle in place of the map (`battle-screen.tsx`, over the map so it keeps
+its pan and zoom): the lab's arena, keyboard, motion options, signs, result table and events list, now shared in
+`apps/client/src/battle/` (the lab on top of them, unchanged but for its CSS class names), with each side in its
+team's color (`SideStyle`). `battle-session.ts` builds the screen from `battleOpen` and the `battleFrame` deltas and
+decides when it opens by itself; `battle-control.ts` asks the server for the screen (`battleScreen`), sends the
+keyboard's `battleInput`, goes back to the map and asks again after a reconnect. On the map, `map/battle-layer.tsx`
+draws the bubble, a sign over the battle's cell split in its sides' colors (clicking it selects the battle) and a
+crossed-blades mark on each creep locked in one; the inspector of a battle, or of a creep in one, offers watching it
+(or going back to it). The chronicle has a voiced bank for the battle's events. The `?net=1` panel chooses the
+movement drawing (D19) and shows the battle inputs' round trip. The reaction panel was already pay or refuse (F2).
+
+**A bug found and fixed.** With two players dominating creeps in one battle, the control flapped every tick: the
+battle kept the lab's "one domination at a time" (lab spec D12), so taking one participant released the other human,
+and the host gave it back on the next tick. The battle now changes only the participant named; the lab's page
+releases the one before itself. `BATTLE_VERSION` 6 (the lab fixture migrated; its one control command does not
+change); a junction test plays two humans on the screen.
+
+**Measured.** 268 client tests (250 before), 2,881 in all. Smoke runs in headless Chromium against `dev:multi` at
+×36 (scratchpad drivers, not versioned): a wanderer's ambush on a dominated square opened the screen by itself in real
+time, with the countdown, the signs, the end table and Esc back to the map; a teammate watched a real-time battle from
+the sign; two humans fought each other with the predict option, each keeping control. A battle on the world clock at
+×36 lasts about a real second (D4), too short to open and watch.
+
+**Interpretations to validate** (implementation details the plan left open):
+
+1. The arena colors each side by its team (Azul, Laranja, the wanderers' sand); the spawn zones of the sides a
+   battle does not use are gray. The tags and the end say the team ("Azul vence", "os andarilhos vencem").
+2. The screen opens by itself once per (dominated creep, battle): back to the map, it stays closed while that creep
+   stays in that battle; a new battle, or dominating a creep in one, opens it again, even over a battle being watched.
+3. Back to the map is a button or Esc; the lab's Tab, 0, R and P do nothing in the world. While the dominated creep is
+   in a battle with the screen closed, a banner over the map brings it back.
+4. The screen keeps the chronicle beside the arena, with the roster (HP, who plays each: "você", "jogador", "IA") and
+   the battle's events; the map's panels (core, inspector, orders) are under it.
+5. The roster offers "dominar" for the team's other participants and "soltar" for one's own: the world's `dominate`
+   and `release`, with their cost and cooldown (D12).
+6. The end table stays until the player goes back to the map; the arena shrinks to make room for it.
+7. The bar says "tempo real" while any participant is under a human's control, else "relógio do mundo".
+8. What is held is sent again when the participant comes under human control, since the server drops inputs while
+   the battle is still on the world clock (F4 interpretation 2).
+9. The glide is always one battle tick (50 ms); on the world clock the creeps jump a battle second per frame.
+10. The predict option leads by the battle inputs' acknowledged round trip, smoothed (a fifth of each new one).
+11. The battle sign stands over the battle's cell at about 9 px on screen (at least a third of a cell) and is picked
+    before the creep under it; the inspector names the participants the team sees, the others by id.
+12. Watching is offered to a team with a side in the stub, from the battle's inspector and from a locked creep's.
+13. The battle events list says "um jogador domina X" when someone else takes a participant.
+14. A reconnect asks for the screen again unless its battle already ended; an ended screen stays when the server no
+    longer knows the battle.
 
 ## F7 — Soak and playtest
 

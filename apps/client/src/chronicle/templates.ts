@@ -4,7 +4,7 @@
 // event itself, so every client and the replay read the same sentence (K-3).
 //
 // The voices (initial bank by the agent; the owner reviews the tone at the
-// F6 checkpoint):
+// F6 checkpoint, and the battle's lines at junction checkpoint C2):
 // - square (tank, melee, slow, heavy): few words, grave, physical;
 // - triangle (balanced, mid range): practical, a trader doing the math;
 // - circle (glass cannon, fast, fragile): cheeky, quick, nervous.
@@ -103,33 +103,110 @@ export const TEMPLATES = {
     "{to} fica com {amount} de {from}, sem briga.",
   ],
   /**
-   * The battle (junction K-3). Plain sentences for now: the voiced bank comes
-   * with the battle screen (junction F5).
+   * A battle opens (junction K-3, D15): after the aggressor's declaration
+   * (attack) or the victim's refusal (refused); {first} the aggressor,
+   * {second} the victim. The narrator speaks: the creeps just did.
    */
-  battleOpened: ["Começa uma batalha: {first} contra {second}."],
+  battleOpened: {
+    attack: [
+      "Começa uma batalha: {first} contra {second}.",
+      "{first} e {second} se atracam. Ninguém mais passa por ali.",
+      "A batalha começa: {second} tem três segundos para escolher entre lutar e correr.",
+    ],
+    refused: [
+      "Recusa dada, a batalha começa: {first} contra {second}.",
+      "{first} não aceita o não. Começa a batalha com {second}.",
+      "Sem acordo: {first} parte para cima de {second}.",
+    ],
+  },
   /** A wanderer, {first}, fell on {second} (junction D14: no dialogue). */
   battleOpenedByWanderer: [
     "{first}, um andarilho, cai sobre {second} sem aviso.",
     "Da mata sai {first}, um andarilho, direto em {second}.",
+    "{second} ouve um galho estalar. É {first}, um andarilho.",
   ],
   /** A wanderer, {creep}, appeared in the band along the river. */
   wandererBorn: [
     "Um andarilho, {creep}, surge na mata do rio.",
     "{creep}, um andarilho, ronda a beira do rio.",
+    "Na beira do rio, alguém novo: {creep}, um andarilho.",
   ],
-  /** {creep} entered a battle already open. */
-  battleJoined: ["{creep} entra na batalha."],
-  /** {creep} back in the world alive: by the border, or with no winner. */
+  /** {creep} entered a battle already open, in its voice (D6). */
+  battleJoined: {
+    square: [
+      '{creep} entra na batalha: "Cheguei."',
+      "{creep} abre caminho até a briga.",
+      "{creep} entra na batalha sem dizer nada.",
+    ],
+    triangle: [
+      '{creep} entra na batalha: "A conta mudou."',
+      "{creep} chega para equilibrar a balança.",
+      '{creep} entra na batalha: "Reforço, como combinado."',
+    ],
+    circle: [
+      '{creep} entra na batalha correndo: "Esperaram por mim?"',
+      "{creep} pula no meio da briga.",
+      '{creep}: "Ninguém começa sem mim!"',
+    ],
+  },
+  /** A wanderer, {creep}, joined a battle (W-2): no voice, the narrator's. */
+  battleJoinedByWanderer: [
+    "{creep}, um andarilho, entra na batalha.",
+    "Atraído pelo barulho, {creep}, um andarilho, se junta à briga.",
+  ],
+  /**
+   * {creep} back in the world alive: by the border in its voice (a wanderer
+   * in the narrator's), or with no winner (D7, X-4).
+   */
   battleLeft: {
-    edge: ["{creep} escapa da batalha pela borda."],
-    idle: ["{creep} volta da batalha sem vencedor."],
+    edge: {
+      square: [
+        "{creep} recua pela borda, pesado.",
+        '{creep} sai da batalha: "Outro dia."',
+        "{creep} dá as costas e deixa a briga pela borda.",
+      ],
+      triangle: [
+        '{creep} escapa pela borda: "Recuar também é estratégia."',
+        '{creep} sai da batalha: "Prejuízo menor assim."',
+        "{creep} calcula a saída e escapa pela borda.",
+      ],
+      circle: [
+        '{creep} escapa pela borda: "Tchau!"',
+        "{creep} some pela borda antes que alguém perceba.",
+        '{creep}: "Fui!" E foi, pela borda.',
+      ],
+    },
+    edgeWanderer: [
+      "{creep}, o andarilho, foge de volta para a mata.",
+      "{creep}, o andarilho, escapa da batalha.",
+    ],
+    idle: [
+      "{creep} volta da batalha sem vencedor.",
+      "{creep} sai da briga: ninguém acertou ninguém.",
+      "Cansado de esperar, {creep} deixa a batalha.",
+    ],
   },
   /** The end; {team} is the winner's team. */
   battleEnded: {
-    won: ["A batalha termina com a vitória do time {team}."],
-    wanderers: ["A batalha termina com a vitória dos andarilhos."],
-    idle: ["A batalha termina sem vencedor."],
-    empty: ["A batalha termina sem ninguém de pé."],
+    won: [
+      "A batalha termina com a vitória do time {team}.",
+      "O time {team} fica com o campo.",
+      "Fim da batalha: o time {team} vence.",
+    ],
+    wanderers: [
+      "A batalha termina com a vitória dos andarilhos.",
+      "Os andarilhos ficam com o campo, e com o que sobrou nele.",
+      "Fim da batalha: os andarilhos vencem.",
+    ],
+    idle: [
+      "A batalha termina sem vencedor.",
+      "A batalha se desfaz: ninguém venceu.",
+      "Sem golpes, a batalha acaba sem vencedor.",
+    ],
+    empty: [
+      "A batalha termina sem ninguém de pé.",
+      "Não sobrou ninguém para contar a batalha.",
+    ],
   },
   died: {
     /** By {by}, in the battle. */
@@ -169,11 +246,16 @@ export const TEMPLATES = {
   mutual: readonly string[];
   reaction: Record<"pay" | "refuse", Voiced>;
   paid: readonly string[];
-  battleOpened: readonly string[];
+  battleOpened: Record<"attack" | "refused", readonly string[]>;
   battleOpenedByWanderer: readonly string[];
   wandererBorn: readonly string[];
-  battleJoined: readonly string[];
-  battleLeft: Record<"edge" | "idle", readonly string[]>;
+  battleJoined: Voiced;
+  battleJoinedByWanderer: readonly string[];
+  battleLeft: {
+    edge: Voiced;
+    edgeWanderer: readonly string[];
+    idle: readonly string[];
+  };
   battleEnded: Record<
     "won" | "wanderers" | "idle" | "empty",
     readonly string[]

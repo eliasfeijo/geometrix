@@ -51,18 +51,28 @@ function bodies(dna: Dna): EventBody[] {
       ...at,
     })),
     { type: "paid", encounter: 9, from: b, to: a, amount: stock(0, 3), ...at },
-    {
+    ...(["attack", "refused"] as const).map((cause): EventBody => ({
       type: "battleOpened",
       battle: 20,
       encounter: 9,
-      cause: "attack",
+      cause,
       sides: [
         { team: a.team, creeps: [a] },
         { team: b.team, creeps: [b] },
       ],
       ...at,
-    },
+    })),
     { type: "battleJoined", battle: 20, creep: a, side: 0, ...at },
+    { type: "battleJoined", battle: 20, creep: wanderer, side: 2, ...at },
+    {
+      type: "battleLeft",
+      battle: 20,
+      creep: wanderer,
+      reason: "edge",
+      hp: 10,
+      cargo: stock(0, 0),
+      ...at,
+    },
     ...(["edge", "idle"] as const).map((reason): EventBody => ({
       type: "battleLeft",
       battle: 20,
@@ -145,6 +155,32 @@ describe("narrate (spec K-3, D17)", () => {
     expect(texts.join("\n")).toContain("vitória do time Laranja");
     expect(texts.join("\n")).toContain("vitória dos andarilhos");
     expect(texts.join("\n")).toMatch(/Nome3, um andarilho, cai sobre Nome2/);
+  });
+
+  it("joins and escapes in the creep's voice, a wanderer's in the narrator's", () => {
+    const say = (body: EventBody, tick: number) =>
+      plainText(narrate({ ...body, tick, index: 0 }));
+    const lines = (dna: Dna, type: string, team: number | null) => {
+      const body = bodies(dna).find(
+        (b) =>
+          b.type === type &&
+          (b.type !== "battleLeft" || b.reason === "edge") &&
+          "creep" in b &&
+          b.creep.team === team,
+      )!;
+      return new Set([0, 1, 2, 3, 4, 5].map((t) => say(body, t)));
+    };
+    for (const type of ["battleJoined", "battleLeft"]) {
+      const square = lines("square", type, 1);
+      const circle = lines("circle", type, 1);
+      expect(
+        [...square].some((l) => circle.has(l)),
+        type,
+      ).toBe(false);
+      for (const line of lines("square", type, null)) {
+        expect(line).toContain("andarilho");
+      }
+    }
   });
 
   it("picks the variant by (tick × 7919 + index) mod n", () => {
