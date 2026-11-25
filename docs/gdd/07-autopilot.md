@@ -103,8 +103,16 @@
   and a core stock below one creep's cost; only the stock counts, not what its last creep carries), at every
   difficulty, and only in a team with no human player: where humans play, they decide
   ([01](01-world.md)).
-
-## Proposal
+- **The squad in the world** (owner, slice G's design round, 2026-11-25; slice G; the squads in
+  [02](02-creeps-and-domination.md)):
+  - **the squad's other creeps follow the embodied creep in formation**, the default formation by DNA above; an
+    **individual order detaches a member**, which goes back to the formation when the order is done. While in a
+    squad, a creep does not run its autopilot rules; released, it goes back to them;
+  - **the squad's orders, a minimal set for P:** **follow in formation** (the default), **hold position**, **attack a
+    target** (the whole squad engages, each DNA from its side: the square from any direction, the triangles by the
+    flanks, the circle from the side of the ally with the highest HP) and **release**. Choosable formation shapes
+    (line, column, wedge) come later;
+  - **the bots' strategists lead several squads**, their number and behavior by the difficulty, configurable.
 - Humans, macros, autopilot and bots emit the **same commands** ([ADR-0002](../adr/0002-every-action-is-a-command.md)).
   A script never has more power than a human.
 - **Phase 1, declarative:** an ordered list of `condition → action` rules, in the style of Final Fantasy XII's
@@ -112,6 +120,9 @@
 - **Phase 2, script:** JS in a server sandbox (QuickJS/WASM or isolated-vm), with CPU and memory limits. References:
   Screeps, Gladiabots.
 - The same interface serves the **test bots**: whole matches run headless, for balancing.
+- **The bot's groups become squads** (agent, slice G's design round, 2026-11-25; to approve in G's spec): slice R's
+  raid group (a raider and 2 followers) and escort become the strategist's squads, with a bot leader in place of the
+  embodied creep; G builds on R's `follow`, it does not replace it.
 
 ## Open questions
 - Where does the autopilot live: per creep, per group of creeps, or per player?

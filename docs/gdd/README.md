@@ -6,7 +6,7 @@ A living document. Each file separates **Decided** (the owner approved), **Propo
 | # | System | Milestone |
 |---|---|---|
 | [01](01-world.md) | Persistent world and map | M1 · M1.5 (fog of war) · M2 (the junction; the pace in slice R; the minimal end in slice E-min; building HP in slice E; more teams in slice T) |
-| [02](02-creeps-and-domination.md) | Creeps, domination and progression | M1 (domination) · M2 (base stats, HP; the DNA kits in slice K) |
+| [02](02-creeps-and-domination.md) | Creeps, domination and progression | M1 (domination) · M2 (base stats, HP; the DNA kits in slice K; squads, the embodied creep and the roster in slice G) |
 | [03](03-economy-and-logistics.md) | Economy, transport and taxes | M1 (transport) · M2 (extortion, loot, spoils) |
 | [04](04-governance.md) | Governance and voting | — (parked) |
 | [05](05-tribes-and-diplomacy.md) | Neutral tribes, monsters and diplomacy | M2 (the wanderers, at the junction) |
