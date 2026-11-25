@@ -32,7 +32,7 @@ import { nameAt } from "./names.ts";
  * the junction host's result commands end it; no dialogue flee (M2 junction
  * F2). 11: the wanderers, a side that is not a team (M2 junction F6).
  */
-export const SIM_VERSION = 11;
+export const SIM_VERSION = 12;
 
 export type Stock = Record<Resource, number>;
 

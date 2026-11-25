@@ -159,7 +159,7 @@ which R F5 also touches (`battle.hold`): a small rebase.
 - [x] `presetRules(preset, dna)` with the help rule in every preset (H-3)
 - [x] The hostile intent in the three creep views; nothing leaks (HS-1, HS-3)
 - [x] The difficulty in `join` and `Player`; the junction's setup reaction from it (P8)
-- [ ] `SIM_VERSION` 12, the fixed hashes; the protocol and the client compile against the new types
+- [x] `SIM_VERSION` 12, the fixed hashes; the protocol and the client compile against the new types
 
 ## F3 — The strategist
 
