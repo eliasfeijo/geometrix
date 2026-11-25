@@ -291,6 +291,30 @@ describe("the threat pass", () => {
   });
 });
 
+describe("any number of teams (R spec D18, S-5)", () => {
+  test("attackers of two other teams add up against the victim", () => {
+    const { world, creeps } = scene([
+      [0, "square", 12, 3],
+      [1, "circle", 15, 3],
+      [1, "circle", 12, 0],
+    ]);
+    const [victim, first, second] = creeps as [Creep, Creep, Creep];
+    load(victim);
+    // A third team's creep: no core, no memory, only an enemy in sight.
+    second.team = 2;
+    first.hp = 36_000; // 192,000
+    second.hp = 36_000; // 192,000; alone each is weaker than 310,000
+    chase(first, victim);
+    expect(rulesOf(pass(world), victim.id)).toEqual(dropFightRules());
+    chase(second, victim);
+    expect(threatsIn(view(world, 0))[0]!.attackers.map((a) => a.id)).toEqual([
+      first.id,
+      second.id,
+    ]);
+    expect(rulesOf(pass(world), victim.id)).toEqual(dropFleeRules());
+  });
+});
+
 describe("the full decision at hard", () => {
   const decide = (world: WorldState) =>
     strategistCommands("balanced", view(world, 0), world.map, world.params);

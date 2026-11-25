@@ -483,6 +483,17 @@ describe("the core zone's defense (R spec D14, S-1)", () => {
     expect(rules?.[0]).not.toEqual(defenseRule(world.params));
   });
 
+  test("a third team's creep in the zone is an enemy too (D18, S-5)", () => {
+    const { world, creeps } = line("hard", [
+      [0, "square", 2, 0],
+      [1, "circle", 6, 0],
+    ]);
+    creeps[1]!.team = 2;
+    expect(rulesGiven(decide(world, 0), creeps[0]!.id)?.[0]).toEqual(
+      defenseRule(world.params),
+    );
+  });
+
   test("a wanderer in the zone is an enemy too", () => {
     const { world, creeps } = line("hard", [[0, "square", 2, 0]]);
     addWanderer(world, 7, 0);
