@@ -98,6 +98,11 @@
   - **the encounter reactions** (hard): on the next world tick, from the estimated risk (the enemies near against the
     allies that can arrive, by DNA and HP): help coming → keep the load and fight; a stronger enemy → pay a small
     demand, or drop and flee; even or stronger → drop, fight and pick the load up afterwards.
+- **The bot concedes** (owner, R and E-min design round, 2026-11-25; details approved with the
+  [E-min spec](../specs/m2-minimal-end/spec.md)): when it has no chance (at most 1 creep alive, nothing in production
+  and a core stock below one creep's cost; only the stock counts, not what its last creep carries), at every
+  difficulty, and only in a team with no human player: where humans play, they decide
+  ([01](01-world.md)).
 
 ## Proposal
 - Humans, macros, autopilot and bots emit the **same commands** ([ADR-0002](../adr/0002-every-action-is-a-command.md)).

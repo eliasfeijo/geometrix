@@ -52,6 +52,17 @@
     battles (start and end), deaths, births, wanderers and the end;
   - **written for N teams** (agent, approved): the humans of an eliminated team become spectators; slices R and
     E-min add no new two-team assumption.
+  - **The details** (agent, approved with the [E-min spec](../specs/m2-minimal-end/spec.md), 2026-11-25): elimination
+    is checked at the end of each tick, after production (a creep born on the tick saves the team); concessions apply
+    in the log's order, and the one that leaves a single team ends the world; when the last teams leave on the same
+    tick, it is a draw among them; at the world's end open battles stop where they are, with no result; the end is
+    public (every team learns that a team left the match, and how); the end screen also shows when each team left and
+    offers the frozen map and the replay; the five main events are the match's (owner), ranked by a team leaving, the
+    first blood, then the largest battles. **Until slice T**, a team out of a world that goes on keeps its view as a
+    spectator, its players can no longer command, and its remaining creeps keep their rules with no player.
+  - **First blood** (owner, at the E-min spec's approval, 2026-11-25): the first death of a team's creep in the match,
+    by anyone, gets its own chronicle sentence and is always among the end's five main events
+    ([08](08-chronicle-chat-and-console.md)).
 - **The pace of the friends' playtest** (owner, R and E-min design round, 2026-11-25; slice R): a match lasts **about
   2 real hours**, from the start to the clock. It gets there with a **shorter world at a moderate ×N** (around ×6 to
   ×12), not with a higher ×N on the 72-hour world: the duration, costs, production, regeneration and the wanderers
