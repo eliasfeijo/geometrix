@@ -315,7 +315,7 @@ The tick cost follows the population: 65–78 µs per tick on average with both 
 
 ## F5 — The pauses, network and server
 
-- [ ] The held pace in the host (`holds`, `paceOf`), skipped by the battle clock (P11)
+- [x] The held pace in the host (`holds`, `paceOf`), skipped by the battle clock (P11)
 - [ ] `holds.ts`: the opening hold, pausing, paused, resuming, released by absence (OC-1..OC-6, BP-1..BP-4)
 - [ ] `battlePause` and `battleHold`; the follow and drop orders; the hostile intent in the delta;
       `PROTOCOL_VERSION` 8
