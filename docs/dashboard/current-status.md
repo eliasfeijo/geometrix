@@ -6,24 +6,26 @@
 
 ## Now
 
-**Updated:** 2026-11-25 (G's design round)
+**Updated:** 2026-11-25 (R's F1: the pace harness and the baseline)
 
 | | |
 |---|---|
 | **Milestone** | **M2 — The ambush** ([ROADMAP](../ROADMAP.md)). M0, M1 and M1.5 ✅ |
-| **Slices** | A ✅ 2026-11-17 · B ✅ 2026-11-20 · D ✅ 2026-11-25 · **R — Rebalance and pace** (spec and plan approved 2026-11-25, F1 next), **E-min — The minimal end** (spec and plan approved 2026-11-25, F1 next) and **K — The DNA kits** (spec and plan approved 2026-11-25, F1 next) |
-| **In progress** | **R's F1** (the pace harness) in a new session: the [R spec](../specs/m2-rebalance/spec.md) and [plan](../specs/m2-rebalance/plan.md) approved 2026-11-25, worktree `~/workspace/geometrix/rebalance-f1` on `m2/rebalance-f1-pace-harness`; **G's design round done** (2026-11-25, on `docs/g-design`: squads, the embodied creep, the roster, formations; GDD 02, 06, 07); **E-min's F1** (the end in the world) in a new session: the [E-min spec](../specs/m2-minimal-end/spec.md) and [plan](../specs/m2-minimal-end/plan.md) approved 2026-11-25, worktree `~/workspace/geometrix/emin-f1` on `m2/emin-f1-world`; **K's F1** (the bar and the strike) in a new session: the [K spec](../specs/m2-kits/spec.md) and [plan](../specs/m2-kits/plan.md) approved 2026-11-25, worktree `~/workspace/geometrix/kits-f1` on `m2/kits-f1-bar-strike` |
-| **Next front** | The specs of **R**, **E-min** and **K** (`spec-slice` skill), one session each; they can run in parallel (R: `sim` params, autopilot, strategist, map UI; E-min: the end rule, end screen and replay; K: `packages/battle`, gambits, lab, battle screen). R's final balance pass runs after K's merge |
+| **Slices** | A ✅ 2026-11-17 · B ✅ 2026-11-20 · D ✅ 2026-11-25 · **R — Rebalance and pace** (F1 done 2026-11-25, F2 next), **E-min — The minimal end** (spec and plan approved 2026-11-25, F1 next) and **K — The DNA kits** (spec and plan approved 2026-11-25, F1 next) |
+| **In progress** | **R's F2** (the world vocabulary: follow, help, drop, the road builder, the hostile intent, the difficulty; `SIM_VERSION` 12) after F1's merge, branch `m2/rebalance-f2-world-vocabulary`, worktree `~/workspace/geometrix/rebalance-f2` ([tasks](../specs/m2-rebalance/tasks.md)); **G's design round done** (2026-11-25, on `docs/g-design`: squads, the embodied creep, the roster, formations; GDD 02, 06, 07); **E-min's F1** (the end in the world) in a new session: the [E-min spec](../specs/m2-minimal-end/spec.md) and [plan](../specs/m2-minimal-end/plan.md) approved 2026-11-25, worktree `~/workspace/geometrix/emin-f1` on `m2/emin-f1-world`; **K's F1** (the bar and the strike) in a new session: the [K spec](../specs/m2-kits/spec.md) and [plan](../specs/m2-kits/plan.md) approved 2026-11-25, worktree `~/workspace/geometrix/kits-f1` on `m2/kits-f1-bar-strike` |
+| **Next front** | The phases of **R**, **E-min** and **K**, one session each, in parallel (R: `sim` vocabulary, strategist, params, map UI; E-min: the end rule, end screen and replay; K: `packages/battle`, gambits, lab, battle screen). R's final balance pass runs after K's merge |
 | **Then** | **G — Groups and formations** (after K; design round done 2026-11-25, spec next: squads and the embodied creep, the team's roster and the Tab cycle, formations in the world and in battle, the side each DNA engages from, the battle bot's load experiment; lab first; **scope warning:** about R's size), then **P — The friends' playtest** (two teams: humans against humans, or co-op against the bot); after it, **E** (siege and repair) or **T** (more teams), chosen at P's checkpoint |
 | **Waiting on the owner** | (1) [ADR-0009](../adr/0009-prediction-in-the-lab.md) (`Proposed`): prediction as a lab experiment option. (2) `gambits.meleeBerthSteps` 3 (provisional, lab F7). (3) K's checkpoint K1 when F5 ends. (4) Whenever the owner wants: PLAYTEST lab group 7 (the movement options) |
 | **Blockers** | None |
 
 ### Next steps
 
-1. **R's F1–F8** from the [approved plan](../specs/m2-rebalance/plan.md) ([tasks](../specs/m2-rebalance/tasks.md);
-   `implement-phase` skill), from the [approved spec](../specs/m2-rebalance/spec.md) (D1–D29, 2026-11-25, with the owner's review:
-   the actors' list on a click, the hostile sign, the bot's difficulty and its encounter reactions, dropping the load,
-   pausing a battle with P). **G's design round** is done (2026-11-25): squads (an order puts a free creep in the
+1. **R's F2–F8** from the [approved plan](../specs/m2-rebalance/plan.md) ([tasks](../specs/m2-rebalance/tasks.md);
+   `implement-phase` skill), F2 next (the world vocabulary), from the [approved spec](../specs/m2-rebalance/spec.md)
+   (D1–D29). **F1 is done:** the pace harness (`--mult`, real minutes, the §7 targets table, `--shock`) and the
+   baseline of the 72-hour world at ×6 (F1 record in the tasks): of the measured targets it misses the length (720
+   real minutes), the crossing (3.6 min), the opening (first extra creep at real minute 212), exploring (124), the first
+   wanderer (10), the population (7/20 seeds) and the recovery (0/20 seeds back within 15 minutes; 15 never). **G's design round** is done (2026-11-25): squads (an order puts a free creep in the
    player's squad), dominating picks the embodied creep (glow and name for all), the roster panel, Tab, the minimal
    squad orders and the battle's keys 1–4, in [GDD 02](../gdd/02-creeps-and-domination.md),
    [GDD 06](../gdd/06-battles.md) and [GDD 07](../gdd/07-autopilot.md); G's spec is next (`spec-slice`). The spec's starting point, from the round, in the GDD (01, 03, 05, 06, 07):
@@ -52,12 +54,20 @@
    battle AI is predictable in the corridors (GDD 06, parked); a wanderer cannot be selected with a left click (no
    inspector for it); the soak's server process grows from about 150 MB to 210–256 MB within a run (RSS, not
    investigated).
-5. **To validate in P:** the interpretations of the junction F4 (1–9), F5 (1–14) and F7 (1–4) records, and J6 (two
-   humans in one battle, a teammate watching, a third creep joining).
+5. **To validate in P:** the interpretations of the junction F4 (1–9), F5 (1–14) and F7 (1–4) records, J6 (two
+   humans in one battle, a teammate watching, a third creep joining), and R's F1 record (1–9, the harness's readings
+   of the §7 targets).
 6. **Design rounds when the owner wants:** the role of cristal (GDD 03), E (siege and repair) and T (more teams, GDD
    01's proposal with the agent's analysis).
 
 ### What the next front needs to know about the code
+
+- **The pace harness** (R F1, `apps/cli`): `world.multiplier` in the params (6; the sim never reads it;
+  `params/world-72h.json` keeps the 72-hour world); `geo sim`/`geo sweep --mult`, real minutes in the reports;
+  `pace.ts` (`PaceTracker`, `pace.json`, the §7 `TARGETS` and the targets table per run and per sweep value;
+  `TeamPace.helpJoins` is null until F2/F3 tell a help or follow join apart); `shock.ts` (`--shock t:n@m`, no
+  `replay.json`, refused by `geo verify`); `format.ts` (the report formatters). The tick-cost baseline is ~50 µs per
+  world tick (seed 42, the 72-hour world).
 
 - **Packages:** `packages/battle` (pure combat, ADR-0008, `BATTLE_VERSION` 6: a participant's `control` changes only
   that participant, so several humans play one battle; the lab's page releases its previous one itself),
