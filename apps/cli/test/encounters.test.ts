@@ -66,28 +66,60 @@ function violentWorld(seed: number, hours: number): EncounterTally {
 
 const sum = (values: number[]) => values.reduce((a, b) => a + b, 0);
 const total = (s: Stock) => s.materia + s.cristal;
+type TeamTally = EncounterTally["teams"][number];
+
+/** `pick` summed over a run's teams. */
+const teamSum = (tally: EncounterTally, pick: (t: TeamTally) => number) =>
+  sum(tally.teams.map(pick));
+/** `pick` summed over every run's teams. */
+const allTeamSum = (
+  tallies: EncounterTally[],
+  pick: (t: TeamTally) => number,
+) => sum(tallies.map((tally) => teamSum(tally, pick)));
+/** A stock over a run's teams. */
+const teamStock = (tally: EncounterTally, pick: (t: TeamTally) => Stock) =>
+  teamSum(tally, (t) => total(pick(t)));
+/** A stock over every run's teams. */
+const allTeamStock = (
+  tallies: EncounterTally[],
+  pick: (t: TeamTally) => Stock,
+) => allTeamSum(tallies, (t) => total(pick(t)));
+/** A stock of the runs themselves, like the spoils left on the map. */
+const runStock = (
+  tallies: EncounterTally[],
+  pick: (tally: EncounterTally) => Stock,
+) => sum(tallies.map((tally) => total(pick(tally))));
 
 describe("EncounterTracker", () => {
   const runs = [42, 1].map((seed) => violentWorld(seed, 2));
 
   test("the worlds have every kind of outcome", () => {
-    const all = (pick: (t: EncounterTally["teams"][number]) => number) =>
-      sum(runs.flatMap((tally) => tally.teams.map(pick)));
-    expect(all((t) => t.outcomesAsVictim.paid)).toBeGreaterThan(0);
-    expect(all((t) => t.outcomesAsVictim.battle)).toBeGreaterThan(0);
-    expect(all((t) => t.battles.won)).toBeGreaterThan(0);
-    expect(all((t) => t.battles.lost)).toBeGreaterThan(0);
+    expect(allTeamSum(runs, (t) => t.outcomesAsVictim.paid)).toBeGreaterThan(0);
+    expect(allTeamSum(runs, (t) => t.outcomesAsVictim.battle)).toBeGreaterThan(
+      0,
+    );
+    expect(allTeamSum(runs, (t) => t.battles.won)).toBeGreaterThan(0);
+    expect(allTeamSum(runs, (t) => t.battles.lost)).toBeGreaterThan(0);
+    // The floors of extortion paid and spoils dropped are over both worlds:
+    // with the DNA's help rule (R spec D11) seed 42's hand-made world goes
+    // quiet after its first fights (measured 2026-11-25: 5 battles, 1 death
+    // with no cargo, 0 paid and 0 dropped in 2 h, 12 h and the 72 h of the
+    // world); seed 1 carries them (100 paid, 20 materia dropped in 2 h).
+    expect(allTeamStock(runs, (t) => t.extortionPaid)).toBeGreaterThan(0);
+    expect(runStock(runs, (tally) => tally.spoils.dropped)).toBeGreaterThan(0);
   });
 
   test.each([0, 1])("seed %#: the counts add up", (run) => {
     const tally = runs[run]!;
     const { teams } = tally;
     // Every encounter has one aggressor, one victim and one outcome.
-    const asAggressor = sum(
-      teams.map((t) => t.asAggressor.attack + t.asAggressor.extort),
+    const asAggressor = teamSum(
+      tally,
+      (t) => t.asAggressor.attack + t.asAggressor.extort,
     );
-    const asVictim = sum(
-      teams.map((t) => t.asVictim.attack + t.asVictim.extort),
+    const asVictim = teamSum(
+      tally,
+      (t) => t.asVictim.attack + t.asVictim.extort,
     );
     expect(asAggressor).toBe(asVictim);
     for (const t of teams) {
@@ -104,19 +136,19 @@ describe("EncounterTracker", () => {
     }
     // Every battle came from one encounter, and two teams were in each.
     expect(tally.battlesOpened).toBe(
-      sum(teams.map((t) => t.outcomesAsVictim.battle)),
+      teamSum(tally, (t) => t.outcomesAsVictim.battle),
     );
     expect(
-      sum(teams.map((t) => sum(BATTLE_RESULTS.map((r) => t.battles[r])))),
+      teamSum(tally, (t) => sum(BATTLE_RESULTS.map((r) => t.battles[r]))),
     ).toBe(2 * tally.battlesOpened);
     // Every death here has a killer.
-    expect(sum(teams.map((t) => t.kills))).toBe(
-      sum(teams.map((t) => sum(DNAS.map((d) => t.deaths[d])))),
+    expect(teamSum(tally, (t) => t.kills)).toBe(
+      teamSum(tally, (t) => sum(DNAS.map((d) => t.deaths[d]))),
     );
     // Deaths in the timeline end where the totals do.
     const last = tally.timeline.at(-1)!;
     expect(sum(last.teams.map((t) => t.deaths))).toBeLessThanOrEqual(
-      sum(teams.map((t) => sum(DNAS.map((d) => t.deaths[d])))),
+      teamSum(tally, (t) => sum(DNAS.map((d) => t.deaths[d]))),
     );
   });
 
@@ -134,7 +166,7 @@ describe("EncounterTracker", () => {
       Math.floor(stats.battleSeconds.max),
     );
     expect(stats.participants).toBeGreaterThanOrEqual(2 * tally.battlesOpened);
-    expect(stats.joins).toBe(sum(tally.teams.map((t) => t.joins)));
+    expect(stats.joins).toBe(teamSum(tally, (t) => t.joins));
     // Each participant comes out once.
     let fates = 0;
     for (const role of ROLES) {
@@ -145,9 +177,7 @@ describe("EncounterTracker", () => {
       }
     }
     expect(fates).toBe(stats.participants);
-    const deaths = sum(
-      tally.teams.map((t) => sum(DNAS.map((d) => t.deaths[d]))),
-    );
+    const deaths = teamSum(tally, (t) => sum(DNAS.map((d) => t.deaths[d])));
     let died = 0;
     for (const role of ROLES) {
       for (const dna of DNAS) {
@@ -158,14 +188,14 @@ describe("EncounterTracker", () => {
   });
 
   test.each([0, 1])("seed %#: what changes hands is conserved", (run) => {
-    const { teams, spoils } = runs[run]!;
-    const all = (pick: (t: (typeof teams)[number]) => Stock) =>
-      sum(teams.map((t) => total(pick(t))));
-    expect(all((t) => t.extortionPaid)).toBe(all((t) => t.extortionReceived));
-    expect(total(spoils.dropped)).toBeGreaterThan(0);
+    const tally = runs[run]!;
+    const { spoils } = tally;
+    expect(teamStock(tally, (t) => t.extortionPaid)).toBe(
+      teamStock(tally, (t) => t.extortionReceived),
+    );
     // Spoils: what was dropped, less what was picked up, is on the map.
     for (const kind of ["materia", "cristal"] as const) {
-      const picked = sum(teams.map((t) => t.pickedUp[kind]));
+      const picked = teamSum(tally, (t) => t.pickedUp[kind]);
       expect(spoils.dropped[kind] - picked).toBe(spoils.leftCargo[kind]);
     }
   });

@@ -156,7 +156,7 @@ which R F5 also touches (`battle.hold`): a small rebase.
 - [x] `allyInBattle` and `joinBattle` with `minHpPermille` and the load check (H-1, H-2, H-4, F-6)
 - [x] `drop`: the order and the action, the `dropped` event, the refusals; during an extortion, a refusal (DR-1..DR-3)
 - [x] `buildRoad` with no cell; `roadTarget` into `roads.ts`; the road-builder preset with no target (RB-1, RB-2)
-- [ ] `presetRules(preset, dna)` with the help rule in every preset (H-3)
+- [x] `presetRules(preset, dna)` with the help rule in every preset (H-3)
 - [ ] The hostile intent in the three creep views; nothing leaks (HS-1, HS-3)
 - [ ] The difficulty in `join` and `Player`; the junction's setup reaction from it (P8)
 - [ ] `SIM_VERSION` 12, the fixed hashes; the protocol and the client compile against the new types
