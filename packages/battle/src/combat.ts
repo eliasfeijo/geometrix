@@ -67,6 +67,7 @@ export function attack(
     if (participant.cooldownTicks > 0) continue;
     if (!intent.attack && !intent.attackLatch) continue;
     const kit = state.params.dna[participant.dna];
+    const damage = participant.damage ?? kit.damage;
     intent.attackLatch = false;
     participant.cooldownTicks = msToTicks(state.params, kit.cooldownMs);
     const dir = participant.facing;
@@ -83,7 +84,7 @@ export function attack(
         hits.push({
           by: participant.id,
           target: target.id,
-          damage: kit.damage,
+          damage,
         });
         break;
       }
@@ -108,7 +109,7 @@ export function attack(
       points: 0,
       // The cell it is born on is the first of its range.
       cellsLeft: kit.range - 1,
-      damage: kit.damage,
+      damage,
     });
   }
 }

@@ -215,6 +215,11 @@ describe("invalid setups (spec S-2)", () => {
       "non-negative integer",
     ],
     [
+      "a damage of its own of 0",
+      setupOf(tiny, [[member("square", { damage: 0 })], [member("circle")]]),
+      "damage must be a positive integer",
+    ],
+    [
       "unknown DNA",
       setupOf(tiny, [[member("hexagon" as "square")], [member("square")]]),
       "unknown DNA hexagon",

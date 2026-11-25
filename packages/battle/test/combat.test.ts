@@ -27,6 +27,23 @@ function shooter(
   return state;
 }
 
+describe("a damage of its own (the junction's wanderers, D14)", () => {
+  test("a participant with its own damage deals it, melee and by projectile", () => {
+    const state = humans(battleOn(FIELD, [["square"], ["square"]]));
+    put(state, 1, 3, 3, "right");
+    put(state, 2, 4, 3, "left");
+    byId(state, 1).damage = 7;
+    run(state, 1, [fire(1)]);
+    expect(byId(state, 2).hp).toBe(300 - 7);
+    const ranged = shooter();
+    put(ranged, 2, 4, 3, "left");
+    byId(ranged, 1).damage = 12;
+    const events = run(ranged, 40, [fire(1)]);
+    expect(hits(events).length).toBeGreaterThan(0);
+    expect(hits(events).every((e) => e.damage === 12)).toBe(true);
+  });
+});
+
 describe("cooldown (spec A-1)", () => {
   test("holding attack strikes once per cooldown", () => {
     const state = humans(battleOn(FIELD, [["square"], ["square"]]));

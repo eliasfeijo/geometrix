@@ -34,6 +34,11 @@ export type ParticipantSetup = {
   carry: Carry;
   capacity: number;
   /**
+   * A damage of its own instead of its DNA's (the junction's wanderers,
+   * D14); absent, the DNA's.
+   */
+  damage?: number;
+  /**
    * The participant's gambits, copied field by field (spec D14). The setup
    * carries the list itself, so a log replays the same whatever the presets
    * become; the presets are only what the lab and the CLI start from (G-3).
@@ -78,7 +83,8 @@ export function participantIssue(
   params: BattleParams,
 ): string | null {
   if (!isRecord(input)) return "expected an object";
-  const { name, dna, hp, maxHp, carry, capacity, gambits, reaction } = input;
+  const { name, dna, hp, maxHp, carry, capacity, damage, gambits, reaction } =
+    input;
   if (typeof name !== "string" || name.length === 0) {
     return "name must be a non-empty string";
   }
@@ -101,6 +107,12 @@ export function participantIssue(
   }
   if (carryTotal(carry as Carry) > (capacity as number)) {
     return `${name}: carry above the capacity of ${capacity}`;
+  }
+  if (
+    damage !== undefined &&
+    (!Number.isSafeInteger(damage) || (damage as number) < 1)
+  ) {
+    return `${name}: damage must be a positive integer`;
   }
   const list = copyGambits(gambits, params.gambits.maxRules);
   if (typeof list === "string") return `${name}: ${list}`;
@@ -222,6 +234,7 @@ export function placeParticipant(
     maxHp: setup.maxHp,
     carry: { materia: setup.carry.materia, cristal: setup.carry.cristal },
     capacity: setup.capacity,
+    ...(setup.damage === undefined ? {} : { damage: setup.damage }),
     controller: "gambits",
     gambits: copyGambits(
       setup.gambits,
