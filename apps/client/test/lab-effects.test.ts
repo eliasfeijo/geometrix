@@ -8,7 +8,7 @@ import {
 import { describe, expect, test } from "vitest";
 import paramsJson from "../../../packages/battle/test/params.json?raw";
 import { LAB_ARENAS, LAB_KITS } from "../src/lab/assets.ts";
-import { idleWarning } from "../src/lab/arena-view.tsx";
+import { idleWarning } from "../src/battle/arena-view.tsx";
 import {
   defaultDraft,
   member,
@@ -20,7 +20,7 @@ import {
   effectProgress,
   effectsOf,
   liveEffects,
-} from "../src/lab/effects.ts";
+} from "../src/battle/effects.ts";
 
 const params = parseBattleParams(JSON.parse(paramsJson));
 

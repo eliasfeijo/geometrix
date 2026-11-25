@@ -6,7 +6,11 @@
 
 import { RTT_CHOICES } from "./channel.ts";
 import type { LatencySummary } from "./latency.ts";
-import { MOTION_LABELS, MOTION_MODES, type MotionMode } from "./motion.ts";
+import {
+  MOTION_LABELS,
+  MOTION_MODES,
+  type MotionMode,
+} from "../battle/motion.ts";
 
 type Props = {
   rttMs: number;

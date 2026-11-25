@@ -1,0 +1,158 @@
+/* The battle screen's shared look (junction plan P10), for the lab and the
+   world client: the arena's SVG text and marks, the events list, the result
+   table and the panel they sit in. --battle-chrome is what the page around
+   the arena takes of the window's height. */
+
+:root {
+  --battle-chrome: 138px;
+}
+
+.battle-panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 10px 12px;
+  min-width: 0;
+}
+
+.battle-panel h2 {
+  font-family: var(--font-game);
+  font-size: 1rem;
+  margin: 0 0 8px;
+}
+
+.battle-hint {
+  color: var(--muted);
+  font-size: 0.86rem;
+  margin: 0;
+}
+
+.battle-num {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.battle-arena {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: calc(100vh - var(--battle-chrome));
+}
+
+.battle-creep {
+  cursor: pointer;
+}
+
+.battle-name {
+  font-family: var(--font-game);
+  font-size: 0.6px;
+  paint-order: stroke;
+  stroke: #0d0f12;
+  stroke-width: 0.14px;
+}
+
+.battle-effect {
+  pointer-events: none;
+}
+
+/* The damage of a blow, rising over whoever took it (spec L-8). */
+.battle-damage {
+  font-family: var(--font-game);
+  font-size: 0.85px;
+  font-weight: 700;
+  fill: #ffd166;
+  paint-order: stroke;
+  stroke: #0d0f12;
+  stroke-width: 0.18px;
+}
+
+.battle-events {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 260px;
+  overflow-y: auto;
+  display: grid;
+  gap: 2px;
+  font-size: 0.86rem;
+}
+
+.battle-time {
+  display: inline-block;
+  min-width: 4.2em;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.battle-table-wrap {
+  overflow-x: auto;
+}
+
+.battle-result table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.9rem;
+}
+
+.battle-result th,
+.battle-result td {
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.battle-result th {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.battle-hash {
+  font-family: ui-monospace, monospace;
+  margin-top: 6px;
+}
+
+/* The start countdown (spec D21): its seconds over the arena. */
+.battle-countdown {
+  font-family: var(--font-game);
+  font-weight: 700;
+  fill: #f2f4f7;
+  fill-opacity: 0.85;
+  paint-order: stroke;
+  stroke: #0d0f12;
+  stroke-width: 0.3px;
+  pointer-events: none;
+}
+
+/* The battle's idle clock close to running out (spec D9). */
+.battle-idle {
+  font-family: var(--font-game);
+  font-size: 1.2px;
+  font-weight: 700;
+  paint-order: stroke;
+  stroke: #0d0f12;
+  stroke-width: 0.15px;
+  pointer-events: none;
+}
+
+/* Who fell or fled, over its last cell (C13). */
+.battle-notice {
+  font-family: var(--font-game);
+  font-size: 0.75px;
+  font-weight: 700;
+  paint-order: stroke;
+  stroke: #0d0f12;
+  stroke-width: 0.14px;
+  pointer-events: none;
+}
+
+/* The outcome over the arena once the battle ends. */
+.battle-banner {
+  font-family: var(--font-game);
+  font-size: 1.4px;
+  font-weight: 700;
+  paint-order: stroke;
+  stroke: #0d0f12;
+  stroke-width: 0.2px;
+  pointer-events: none;
+}

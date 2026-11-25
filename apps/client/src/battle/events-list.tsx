@@ -2,13 +2,16 @@
 // chronicle, only who did what and when, newest first.
 
 import type { BattleEvent, ParticipantRef } from "@geometrix/battle";
-import { DNA_GLYPHS, sideLetter } from "./labels.ts";
-
-const who = (p: ParticipantRef) =>
-  `${p.name} (${sideLetter(p.side)} ${DNA_GLYPHS[p.dna]})`;
+import { LAB_SIDES, type SideStyle } from "./arena-view.tsx";
+import { DNA_GLYPHS } from "./labels.ts";
 
 /** One event as a line of text, or null for the ones the list leaves out. */
-export function eventText(event: BattleEvent): string | null {
+export function eventText(
+  event: BattleEvent,
+  sides: SideStyle = LAB_SIDES,
+): string | null {
+  const who = (p: ParticipantRef) =>
+    `${p.name} (${sides.tag(p.side)} ${DNA_GLYPHS[p.dna]})`;
   switch (event.type) {
     case "attacked":
     case "missed":
@@ -36,7 +39,7 @@ export function eventText(event: BattleEvent): string | null {
     case "ended":
       return event.winnerSide === null
         ? "fim: ninguém vence"
-        : `fim: o lado ${sideLetter(event.winnerSide)} vence`;
+        : `fim: ${sides.name(event.winnerSide)} vence`;
   }
 }
 
@@ -46,10 +49,11 @@ export type EventLine = { key: string; seconds: number; text: string };
 export function eventLines(
   events: readonly BattleEvent[],
   ticksPerSecond: number,
+  sides: SideStyle = LAB_SIDES,
 ): EventLine[] {
   const lines: EventLine[] = [];
   for (const event of events) {
-    const text = eventText(event);
+    const text = eventText(event, sides);
     if (text === null) continue;
     lines.push({
       key: `${event.tick}.${event.index}`,
@@ -62,15 +66,15 @@ export function eventLines(
 
 export function EventsList({ lines }: { lines: EventLine[] }) {
   return (
-    <section class="lab-panel">
+    <section class="battle-panel">
       <h2>Eventos</h2>
       {lines.length === 0 ? (
-        <p class="lab-hint">Nada ainda.</p>
+        <p class="battle-hint">Nada ainda.</p>
       ) : (
-        <ol class="lab-events">
+        <ol class="battle-events">
           {lines.map((line) => (
             <li key={line.key}>
-              <span class="lab-time">{line.seconds.toFixed(1)} s</span>
+              <span class="battle-time">{line.seconds.toFixed(1)} s</span>
               {line.text}
             </li>
           ))}

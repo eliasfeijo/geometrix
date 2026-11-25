@@ -1,15 +1,17 @@
-// The keyboard of the lab (spec D13, L-2; plan section 13, P4): keys become
-// the battle's commands for the dominated participant. Arrows or WASD hold
-// the intent to walk (the last one pressed wins; on a rock or a creep the
-// creep only turns); Shift + a direction only turns; Space held attacks, and
-// its tap also arms the latch, so a quick tap still fires; Q drops the bag,
-// E picks up, and while held they ride on the intent as its `bag`, which is
-// what counts at the end of the countdown (spec S-4: a Q pressed and let go
-// during it is discarded); Tab moves the domination to the next participant and 0
-// releases it; R restarts the battle and P or Esc pauses it (F5). Keys are
-// read by position (`code`), so WASD works on any layout; with Ctrl, Alt or
-// Meta they belong to the browser (Ctrl + R still reloads). A new intent goes out only when it changes: with latency, one
-// message on press and one on release, never one per cell.
+// The keyboard of a battle screen, the lab's and the world client's (lab spec
+// D13, L-2; lab plan section 13, P4; junction plan P10): keys become the
+// battle's commands for the dominated participant. Arrows or WASD hold the
+// intent to walk (the last one pressed wins; on a rock or a creep the creep
+// only turns); Shift + a direction only turns; Space held attacks, and its tap
+// also arms the latch, so a quick tap still fires; Q drops the bag, E picks up,
+// and while held they ride on the intent as its `bag`, which is what counts at
+// the end of the countdown (spec S-4: a Q pressed and let go during it is
+// discarded); Tab moves the domination to the next participant and 0 releases
+// it; R restarts the battle and P or Esc pauses it (F5). Keys are read by
+// position (`code`), so WASD works on any layout; with Ctrl, Alt or Meta they
+// belong to the browser (Ctrl + R still reloads). A new intent goes out only
+// when it changes: with latency, one message on press and one on release, never
+// one per cell.
 
 import type { Bag, BattleCommand, Dir } from "@geometrix/battle";
 

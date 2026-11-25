@@ -1,6 +1,6 @@
 import type { BattleView } from "@geometrix/battle";
 import { describe, expect, test } from "vitest";
-import { glideProgress, positions } from "../src/lab/interpolate.ts";
+import { glideProgress, positions } from "../src/battle/interpolate.ts";
 
 describe("the interpolation (plan P8)", () => {
   const view = (cells: number[], shots: number[] = []): BattleView => ({

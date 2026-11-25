@@ -1,14 +1,15 @@
-// The arena on the lab's page (spec L-8, plan P8, P9, C6): SVG in cells, with
-// the shapes of the world's map, as wide as the page allows. Rock, the exit
-// ring and the spawn zones are drawn once; on top, the piles, the
-// projectiles and the creeps, each with where it faces, its HP, its load and
-// the escape count on the ring; then the signals of the attack (effects.ts):
-// who attacks pulses, whoever is hit flashes with the damage rising over it,
-// and a shot that vanishes leaves a spark. The battle's idle clock shows over
-// the arena when it is close to running out. Positions glide by the page's
-// motion option (motion.ts): over one tick (interpolate.ts), over a whole
-// step, not at all, or with the dominated creep predicted. During the start
-// countdown (spec D21) its seconds stand over the arena.
+// The arena of a battle screen, the lab's and the world client's (lab spec L-8,
+// lab plan P8, P9, C6; junction plan P10): SVG in cells, with the shapes of the
+// world's map, as wide as the page allows. Rock, the exit ring and the spawn
+// zones are drawn once; on top, the piles, the projectiles and the creeps, each
+// with where it faces, its HP, its load and the escape count on the ring; then
+// the signals of the attack (effects.ts): who attacks pulses, whoever is hit
+// flashes with the damage rising over it, and a shot that vanishes leaves a
+// spark. The battle's idle clock shows over the arena when it is close to
+// running out. Positions glide by the page's motion option (motion.ts): over
+// one tick (interpolate.ts), over a whole step, not at all, or with the
+// dominated creep predicted. During the start countdown (spec D21) its seconds
+// stand over the arena.
 
 import type { Arena, BattleParams, BattleView, Dir } from "@geometrix/battle";
 import { useEffect, useMemo, useState } from "preact/hooks";
@@ -23,11 +24,30 @@ import {
   type Predictor,
   type StepGlides,
 } from "./motion.ts";
+import "./battle.css";
 import { sideLetter } from "./labels.ts";
 
 /** Side colors: the world's two teams, then two more for 3 and 4 sides. */
 export const SIDE_COLORS = ["#4ea8ff", "#ff8c42", "#c8e05a", "#e57bd9"];
 export const sideColor = (side: number) => SIDE_COLORS[side] ?? COLORS.outline;
+
+/**
+ * How a page colors and names a battle's sides: the lab by side (A, B…),
+ * the world client by the team on each side (junction plan P10).
+ */
+export type SideStyle = {
+  color(side: number): string;
+  /** The winner in the end banner ("o lado A", "Azul"). */
+  name(side: number): string;
+  /** The side's tag after a participant's name ("A", "Azul"). */
+  tag(side: number): string;
+};
+
+export const LAB_SIDES: SideStyle = {
+  color: sideColor,
+  name: (side) => `o lado ${sideLetter(side)}`,
+  tag: sideLetter,
+};
 
 const STEP: Record<Dir, [number, number]> = {
   up: [0, -1],
@@ -83,9 +103,17 @@ type Props = {
   dominated: number | null;
   selected: number | null;
   onSelect(id: number): void;
+  /** The sides' colors and names; the lab's by default. */
+  sides?: SideStyle;
 };
 
-function StaticArena({ arena }: { arena: Arena }) {
+function StaticArena({
+  arena,
+  color,
+}: {
+  arena: Arena;
+  color: SideStyle["color"];
+}) {
   const { width, height } = arena;
   const zones = new Map<number, number>();
   arena.entries.forEach((entry, side) => {
@@ -115,7 +143,7 @@ function StaticArena({ arena }: { arena: Arena }) {
           y={y + 0.08}
           width={0.84}
           height={0.84}
-          fill={sideColor(zones.get(cell)!)}
+          fill={color(zones.get(cell)!)}
           fill-opacity={0.12}
         />,
       );
@@ -201,7 +229,7 @@ function Notice(props: {
   const y = props.cy > props.height - 2 ? props.cy - 1.2 : props.cy + 1.25;
   return (
     <text
-      class="lab-notice"
+      class="battle-notice"
       x={x}
       y={y}
       text-anchor={anchor}
@@ -221,6 +249,7 @@ function EffectMark({
   slot,
   width,
   height,
+  sideColor,
 }: {
   effect: Effect;
   now: number;
@@ -230,6 +259,7 @@ function EffectMark({
   slot: number;
   width: number;
   height: number;
+  sideColor: SideStyle["color"];
 }) {
   const p = effectProgress(effect, now);
   const cx = at.x + 0.5;
@@ -254,7 +284,7 @@ function EffectMark({
       );
     });
     return (
-      <g class="lab-effect" data-kind={effect.kind}>
+      <g class="battle-effect" data-kind={effect.kind}>
         <g opacity={1 - p}>
           <DnaShape
             dna={effect.dna}
@@ -290,7 +320,7 @@ function EffectMark({
         ? `${effect.name} fugiu (inatividade)`
         : `${effect.name} fugiu`;
     return (
-      <g class="lab-effect" data-kind={effect.kind}>
+      <g class="battle-effect" data-kind={effect.kind}>
         <g opacity={1 - p}>
           <DnaShape
             dna={effect.dna}
@@ -334,7 +364,7 @@ function EffectMark({
     const fx = cx + dx * (effect.melee ? 1 : 0.6);
     const fy = cy + dy * (effect.melee ? 1 : 0.6);
     return (
-      <g class="lab-effect" data-kind={effect.kind} opacity={1 - p}>
+      <g class="battle-effect" data-kind={effect.kind} opacity={1 - p}>
         <circle
           cx={cx}
           cy={cy}
@@ -367,7 +397,7 @@ function EffectMark({
     const rise = cy - 1.15 + sy - 0.8 * p;
     const fade = p < 0.6 ? 1 : 1 - (p - 0.6) / 0.4;
     return (
-      <g class="lab-effect" data-kind={effect.kind}>
+      <g class="battle-effect" data-kind={effect.kind}>
         {flash > 0 && (
           <circle
             cx={cx}
@@ -378,7 +408,7 @@ function EffectMark({
           />
         )}
         <text
-          class="lab-damage"
+          class="battle-damage"
           x={cx + sx}
           y={rise}
           text-anchor="middle"
@@ -395,7 +425,7 @@ function EffectMark({
   const sy = cy + dy * 0.5;
   const arm = 0.28 + 0.12 * p;
   return (
-    <g class="lab-effect" data-kind={effect.kind} opacity={1 - p}>
+    <g class="battle-effect" data-kind={effect.kind} opacity={1 - p}>
       <circle
         cx={sx}
         cy={sy}
@@ -414,6 +444,8 @@ function EffectMark({
 
 export function ArenaView(props: Props) {
   const { arena, params, previous, current, arrivedAt, glideMs } = props;
+  const sides = props.sides ?? LAB_SIDES;
+  const sideColor = sides.color;
   const [now, setNow] = useState(() => performance.now());
   const { motion, stepGlides, predictor, dominated } = props;
   const t = glideProgress(arrivedAt, now, glideMs, motion !== "instant");
@@ -431,7 +463,10 @@ export function ArenaView(props: Props) {
   }, [animating, now, arrivedAt]);
   useEffect(() => setNow(performance.now()), [arrivedAt, props.effects]);
 
-  const staticLayer = useMemo(() => <StaticArena arena={arena} />, [arena]);
+  const staticLayer = useMemo(
+    () => <StaticArena arena={arena} color={sideColor} />,
+    [arena, sideColor],
+  );
   const drawn = positions(arena.width, previous, current, t);
   if (motion === "step") {
     for (const p of current.participants) {
@@ -473,10 +508,10 @@ export function ArenaView(props: Props) {
 
   return (
     <svg
-      class="lab-arena"
+      class="battle-arena"
       // Fits the window's height too: no wider than that height allows.
       style={{
-        maxWidth: `calc((100vh - var(--lab-chrome)) * ${arena.width / arena.height})`,
+        maxWidth: `calc((100vh - var(--battle-chrome)) * ${arena.width / arena.height})`,
       }}
       viewBox={`0 0 ${arena.width} ${arena.height}`}
       role="img"
@@ -543,7 +578,7 @@ export function ArenaView(props: Props) {
         return (
           <g
             key={`p${p.id}`}
-            class="lab-creep"
+            class="battle-creep"
             onClick={() => props.onSelect(p.id)}
           >
             {p.id === props.selected && (
@@ -622,7 +657,7 @@ export function ArenaView(props: Props) {
               />
             )}
             <text
-              class="lab-name"
+              class="battle-name"
               x={cx}
               y={cy + 1.2}
               text-anchor="middle"
@@ -651,12 +686,13 @@ export function ArenaView(props: Props) {
             slot={slot}
             width={arena.width}
             height={arena.height}
+            sideColor={sideColor}
           />
         );
       })}
       {idleWarning(current, params) && (
         <text
-          class="lab-idle"
+          class="battle-idle"
           x={arena.width / 2}
           y={1.8}
           text-anchor="middle"
@@ -667,7 +703,7 @@ export function ArenaView(props: Props) {
       )}
       {current.countdownTicks > 0 && (
         <text
-          class="lab-countdown"
+          class="battle-countdown"
           x={arena.width / 2}
           y={arena.height / 2}
           text-anchor="middle"
@@ -680,7 +716,7 @@ export function ArenaView(props: Props) {
       {current.ended !== null && (
         // The outcome stays over the arena: the result table is below it.
         <text
-          class="lab-banner"
+          class="battle-banner"
           x={arena.width / 2}
           y={2}
           text-anchor="middle"
@@ -692,7 +728,7 @@ export function ArenaView(props: Props) {
         >
           {current.ended.winnerSide === null
             ? "fim: ninguém vence"
-            : `fim: o lado ${sideLetter(current.ended.winnerSide)} vence`}
+            : `fim: ${sides.name(current.ended.winnerSide)} vence`}
         </text>
       )}
     </svg>

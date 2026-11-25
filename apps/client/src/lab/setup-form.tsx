@@ -13,7 +13,7 @@ import {
   type Reaction,
 } from "@geometrix/battle";
 import { ARENA_NAMES, LAB_KITS, type ArenaName } from "./assets.ts";
-import { sideColor } from "./arena-view.tsx";
+import { sideColor } from "../battle/arena-view.tsx";
 import {
   HP_CHOICES,
   member,
@@ -22,13 +22,12 @@ import {
   type MemberDraft,
   type SetupDraft,
 } from "./draft.ts";
+import { DNA_GLYPHS, sideLetter } from "../battle/labels.ts";
 import {
-  DNA_GLYPHS,
   DNA_LABELS,
   labName,
   PRESET_LABELS,
   REACTION_LABELS,
-  sideLetter,
 } from "./labels.ts";
 
 type MemberProps = {

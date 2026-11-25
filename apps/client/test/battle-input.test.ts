@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { KeyboardInput, type KeyLike } from "../src/lab/input.ts";
+import { KeyboardInput, type KeyLike } from "../src/battle/input.ts";
 
 const key = (code: string, extra: Partial<KeyLike> = {}): KeyLike => ({
   code,
