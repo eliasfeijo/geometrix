@@ -218,7 +218,7 @@ next to the difficulty's.
 
 ## 9. Running next to the other slices
 
-- **R** (plan draft 2026-11-25) also bumps `SIM_VERSION` and `PROTOCOL_VERSION`, and touches `strategist.ts`, the CLI's
+- **R** (plan approved 2026-11-25) also bumps `SIM_VERSION` and `PROTOCOL_VERSION`, and touches `strategist.ts`, the CLI's
   `report.ts`/`sim.ts`/`sweep.ts`, `params/default.json`, `world-host.ts`, `dev-multi.ts` and the client's top bar.
   Whoever merges second rebases, takes the next free version numbers and moves its hunks next to the other's. R's
   recovery scenario (`--shock`) can eliminate a team: with E-min in, a shocked run may end early, and R's report says
