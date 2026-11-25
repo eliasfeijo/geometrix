@@ -33,7 +33,7 @@ import {
 } from "./battle.ts";
 import { findCreep } from "./domination.ts";
 import { creepRef, emit, type EventLog } from "./events.ts";
-import { findSpoil, takeSpoil } from "./spoils.ts";
+import { dropCargo, findSpoil, takeSpoil } from "./spoils.ts";
 import { recordDelivery } from "./stats.ts";
 import type { Creep, Deposit, Fighter, WorldState } from "./world.ts";
 
@@ -57,6 +57,8 @@ export type Order =
    * battle, go and join it on its side (R spec D8, F-1..F-4).
    */
   | { type: "follow"; targetId: number }
+  /** Drop the whole load as spoils here, then stop (R spec D24, DR-1). */
+  | { type: "drop" }
   /**
    * Run to the team's core with the flee bonus until `untilTick` or there
    * (spec D10, plan P4). The autopilot does not change it, nor can a player.
@@ -122,6 +124,10 @@ export function resolveOrders(state: WorldState, log: EventLog): void {
         break;
       case "follow":
         follow(state, creep, order.targetId);
+        break;
+      case "drop":
+        dropCargo(state, log, creep);
+        halt(creep);
         break;
     }
   }

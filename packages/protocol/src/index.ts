@@ -81,6 +81,7 @@ const action = z.discriminatedUnion("type", [
   }),
   z.object({ type: z.literal("follow"), creepId: id }),
   z.object({ type: z.literal("joinBattle"), minHpPermille: permille }),
+  z.object({ type: z.literal("drop") }),
   z.object({ type: z.literal("pay") }),
   z.object({ type: z.literal("fight") }),
   z.object({ type: z.literal("flee") }),
@@ -98,6 +99,7 @@ const orderInput = z.discriminatedUnion("type", [
   z.object({ type: z.literal("approach"), targetId: id, intent }),
   z.object({ type: z.literal("pickup"), spoilId: id }),
   z.object({ type: z.literal("follow"), targetId: id }),
+  z.object({ type: z.literal("drop") }),
 ]);
 
 /**

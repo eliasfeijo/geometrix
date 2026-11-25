@@ -35,6 +35,7 @@ export const ACTION_TYPES = [
   "pickup",
   "approach",
   "joinBattle",
+  "drop",
   "stop",
   "pay",
   "fight",
@@ -91,6 +92,7 @@ export const ACTION_LABELS: Record<Action["type"], string> = {
   flee: "fugir (quando abordado)",
   follow: "seguir",
   joinBattle: "entrar na batalha do aliado",
+  drop: "largar a carga",
 };
 
 /**
@@ -155,6 +157,7 @@ export function actionOf(
     case "stop":
     case "explore":
     case "pickup":
+    case "drop":
     case "pay":
     case "fight":
     case "flee":

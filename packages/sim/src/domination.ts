@@ -5,7 +5,9 @@
 // are releases emitted by the server (plan section 4), so the sim keeps no
 // clock for them.
 
-import { canAfford, debit } from "./economy.ts";
+import { canAfford, cargoTotal, debit } from "./economy.ts";
+import type { EventLog } from "./events.ts";
+import { dropCargo } from "./spoils.ts";
 import { memoryOf } from "./known.ts";
 import { isInMap, manhattan, type Cell } from "./map.ts";
 import type { Order } from "./orders.ts";
@@ -35,7 +37,12 @@ export type OrderInput =
   /** A spoil the team remembers. */
   | { type: "pickup"; spoilId: number }
   /** A teammate to follow (R spec D8). */
-  | { type: "follow"; targetId: number };
+  | { type: "follow"; targetId: number }
+  /**
+   * Drop the whole load as spoils (R spec D24); the victim of an extortion
+   * may, and it refuses the extortion (DR-3).
+   */
+  | { type: "drop" };
 
 export type DominationRefusal =
   | "unknownPlayer"
@@ -54,7 +61,9 @@ export type DominationRefusal =
   /** A fleeing creep's order is locked (plan P4). */
   | "fleeing"
   /** A follow on the creep itself or closing a cycle (R spec F-5). */
-  | "invalidTarget";
+  | "invalidTarget"
+  /** A drop with nothing to drop (R spec DR-2). */
+  | "emptyCargo";
 
 /** Why a reply to an encounter is refused (command react). */
 export type ReactRefusal =
@@ -202,10 +211,18 @@ export function orderRefusal(
   const player = findPlayer(state, playerId)!;
   const creep = findCreep(state, creepId)!;
   if (creep.dominatedBy !== playerId) return "notDominating";
-  if (creep.engagement !== null) return "engaged";
   if (creep.battle !== null) return "inBattle";
+  // In an encounter only the victim of an extortion may drop (DR-3).
+  if (
+    creep.engagement !== null &&
+    (order.type !== "drop" || extortionOf(state, creep) === undefined)
+  ) {
+    return "engaged";
+  }
   if (creep.order.type === "flee") return "fleeing";
   switch (order.type) {
+    case "drop":
+      return cargoTotal(creep) === 0 ? "emptyCargo" : null;
     case "stop":
     case "deliver":
       return null;
@@ -253,12 +270,33 @@ export function orderRefusal(
   }
 }
 
+/** The extortion whose victim `creep` is, if any. */
+function extortionOf(state: WorldState, creep: Creep) {
+  return state.encounters.find(
+    (e) => e.id === creep.engagement && e.victim === creep.id,
+  );
+}
+
+/**
+ * Sets the creep's order. A drop by the victim of an extortion happens at
+ * once (stage 1) and refuses the extortion: the encounters stage opens the
+ * battle with the victim empty (R spec DR-3, plan P5).
+ */
 export function giveOrder(
   state: WorldState,
   creepId: number,
   order: OrderInput,
+  log: EventLog,
 ): void {
-  findCreep(state, creepId)!.order = toOrder(order);
+  const creep = findCreep(state, creepId)!;
+  const extortion =
+    order.type === "drop" ? extortionOf(state, creep) : undefined;
+  if (extortion !== undefined) {
+    dropCargo(state, log, creep);
+    extortion.reply = "refuse";
+    return;
+  }
+  creep.order = toOrder(order);
 }
 
 function toOrder(input: OrderInput): Order {
@@ -283,6 +321,8 @@ function toOrder(input: OrderInput): Order {
       return { type: "pickup", spoilId: input.spoilId };
     case "follow":
       return { type: "follow", targetId: input.targetId };
+    case "drop":
+      return { type: "drop" };
   }
 }
 

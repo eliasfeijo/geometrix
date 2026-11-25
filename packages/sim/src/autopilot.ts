@@ -113,6 +113,8 @@ export type Action =
    * its core is the cheaper path (H-4).
    */
   | { type: "joinBattle"; minHpPermille: number }
+  /** Drop the whole load as spoils here (R spec D24); impossible empty. */
+  | { type: "drop" }
   /**
    * Reactions: decided only in an encounter (plan section 6). Since the
    * junction (D2), fight and flee choose how the creep enters the battle
@@ -533,6 +535,8 @@ function orderFor(
     }
     case "joinBattle":
       return joinBattleFor(state, creep, action);
+    case "drop":
+      return cargoTotal(creep) === 0 ? null : { type: "drop" };
     case "pay":
     case "fight":
     case "flee":

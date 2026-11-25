@@ -223,6 +223,8 @@ export const TEMPLATES = {
     "{creep} encontra {taken} no chão e leva.",
     "{creep} recolhe do chão {taken} que alguém largou.",
   ],
+  /** {creep} dropped {cargo} as spoils on its cell (R spec D24). */
+  dropped: ["{creep} larga {cargo} no chão."],
   /** {creep} was born; its first words. */
   born: {
     square: [
@@ -262,5 +264,6 @@ export const TEMPLATES = {
   >;
   died: Record<"killed" | "alone", readonly string[]>;
   pickedUp: readonly string[];
+  dropped: readonly string[];
   born: Voiced;
 };

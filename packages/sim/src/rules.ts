@@ -102,6 +102,7 @@ function copyAction(a: Action, map: GameMap): Action | null {
     case "pay":
     case "fight":
     case "flee":
+    case "drop":
       return { type: a.type };
     case "approach": {
       const filter = copyFilter(a);

@@ -103,6 +103,7 @@ export const REJECT_TEXTS: Record<RejectReason | "disconnected", string> = {
   worldEnded: "O mundo terminou: só leitura.",
   notYourBattle: "Seu time não está nessa batalha.",
   notYourParticipant: "Você não comanda esse participante.",
+  emptyCargo: "Esse creep não carrega nada.",
   disconnected: "Sem conexão com o servidor.",
 };
 
@@ -171,6 +172,8 @@ export function actionText(a: Action): string {
       return "fugir";
     case "follow":
       return `seguir o creep #${a.creepId}`;
+    case "drop":
+      return "largar a carga";
     case "joinBattle":
       return `entrar na batalha do aliado (HP ≥ ${a.minHpPermille / 10}%)`;
   }
@@ -208,6 +211,8 @@ export function orderText(order: Order, deposits: readonly Deposit[]): string {
       return "fugir para o Núcleo";
     case "follow":
       return `seguir o creep #${order.targetId}`;
+    case "drop":
+      return "largar a carga";
   }
 }
 

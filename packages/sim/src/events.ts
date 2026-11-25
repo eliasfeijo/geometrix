@@ -98,6 +98,8 @@ export type EventBody = (
   /** A death; `battle` is the battle it happened in (junction X-1). */
   | { type: "died"; creep: CreepRef; by: CreepRef | null; battle: number }
   | { type: "pickedUp"; creep: CreepRef; spoil: number; taken: Stock }
+  /** A creep dropped its whole load as spoils on its cell (R spec D24). */
+  | { type: "dropped"; creep: CreepRef; spoil: number; cargo: Stock }
 ) &
   Cell;
 
@@ -175,6 +177,7 @@ function participants(event: EventBody): CreepRef[] {
     case "born":
     case "reaction":
     case "pickedUp":
+    case "dropped":
     case "battleJoined":
     case "battleLeft":
       return [event.creep];

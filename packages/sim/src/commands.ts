@@ -193,7 +193,12 @@ export function applyCommand(
       release(state, playerId);
       break;
     case "order":
-      giveOrder(state, command.creepId, command.order);
+      giveOrder(
+        state,
+        command.creepId,
+        command.order,
+        log ?? createEventLog(state.tick),
+      );
       break;
     case "react":
       react(state, command.creepId, command.choice);

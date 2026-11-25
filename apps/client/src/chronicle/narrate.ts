@@ -114,6 +114,12 @@ function template(event: TeamEvent): {
         creeps: { creep: event.creep },
         values: { taken: stockText(event.taken) },
       };
+    case "dropped":
+      return {
+        text: pick(event, TEMPLATES.dropped),
+        creeps: { creep: event.creep },
+        values: { cargo: stockText(event.cargo) },
+      };
     case "born":
       return {
         text: pick(event, TEMPLATES.born[event.creep.dna]),

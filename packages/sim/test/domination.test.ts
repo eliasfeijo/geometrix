@@ -1,3 +1,4 @@
+import { createEventLog } from "../src/events.ts";
 import { describe, expect, test } from "vitest";
 import {
   dominate,
@@ -80,7 +81,7 @@ describe("dominate", () => {
       "notDominating",
     );
     expect(orderRefusal(w, 1, creep.id, { type: "deliver" })).toBeNull();
-    giveOrder(w, creep.id, { type: "deliver" });
+    giveOrder(w, creep.id, { type: "deliver" }, createEventLog(w.tick));
     run(w, 100);
     // Back on the core with the order done: it waits instead of gathering.
     expect(creep).toMatchObject({ x: 0, order: { type: "stop" } });
@@ -216,7 +217,12 @@ describe("orders from the dominating player", () => {
     const w = world();
     const creep = teamCreep(w, 0);
     dominate(w, 1, creep.id);
-    giveOrder(w, creep.id, { type: "buildRoad", x: 3, y: 0 });
+    giveOrder(
+      w,
+      creep.id,
+      { type: "buildRoad", x: 3, y: 0 },
+      createEventLog(w.tick),
+    );
     expect(creep.order).toEqual({ type: "buildRoad", x: 3, y: 0, segment: -1 });
   });
 });
