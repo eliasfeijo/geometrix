@@ -1,6 +1,6 @@
 # M2 spec — Groups and formations
 
-**Status:** Draft · **Date:** 2026-11-25 · **Milestone:** M2 — The ambush ([ROADMAP](../../ROADMAP.md)), slice G
+**Status:** Approved (2026-11-25) · **Date:** 2026-11-25 · **Milestone:** M2 — The ambush ([ROADMAP](../../ROADMAP.md)), slice G
 **Related GDD:** [02](../../gdd/02-creeps-and-domination.md) (squads, the embodied creep, the panel),
 [06](../../gdd/06-battles.md) (squads in battle, the load experiment), [07](../../gdd/07-autopilot.md) (the squad in
 the world, formations, the bots' squads) · **ADR:** [0002](../../adr/0002-every-action-is-a-command.md) (every action
@@ -248,7 +248,7 @@ The targets are guesses; when one fails, the owner decides at the checkpoint.
 
 ## 9. Prerequisites before the `plan.md`
 
-- The owner's acceptance of the agent's proposals (D1–D28 where marked); D8's pace, D16 with no loan, D17's default,
+- The owner's acceptance of the agent's proposals (D1–D28 where marked) ✅ with the spec (2026-11-25); D8's pace, D16 with no loan, D17's default,
   D19's glow, D26's cap and D28 are the owner's answers at the review (2026-11-25).
 - **R and K merged, or their plans as the base:** G builds on R's `follow`, groups, difficulty, pause and "Entrar",
   and on K's kits and carrier preset. The plan is written against both approved plans and rebased on their merges.
