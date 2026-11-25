@@ -37,6 +37,7 @@ import {
   type Encounter,
   type WorldState,
   type Fighter,
+  type Team,
 } from "./world.ts";
 
 export type Condition =
@@ -522,6 +523,9 @@ function orderFor(
       if (action.x !== undefined && action.y !== undefined) {
         return buildRoadFor(state, creep, { x: action.x, y: action.y });
       }
+      // Nothing to pay for or resume: buildRoadFor would refuse any target,
+      // so skip resolving one (a path search per candidate, every tick).
+      if (!canWorkOnRoads(state, teamOf(state, creep))) return null;
       const target = autoRoadTarget(state, creep);
       return target === null ? null : buildRoadFor(state, creep, target);
     }
@@ -647,6 +651,18 @@ function autoRoadTarget(state: WorldState, creep: Creep): Cell | null {
 }
 
 /**
+ * Whether the team can pay for a new segment or has one to resume (a job
+ * it knows of, or its own): without either, no buildRoad order can be made.
+ */
+function canWorkOnRoads(state: WorldState, team: Team): boolean {
+  return (
+    canAfford(team.stock, state.params.road.cost) ||
+    memoryOf(state, team.id).roadJobs.length > 0 ||
+    state.roadJobs.some((j) => j.team === team.id)
+  );
+}
+
+/**
  * A buildRoad order toward `target` with its next segment chosen, or null when
  * no segment can be built now: the target cannot take a road (or has one), the
  * path is blocked, or the team cannot pay for a new segment. A segment already
@@ -676,10 +692,7 @@ function buildRoadFor(
     segment = order.segment;
   } else {
     // Skip the path search when nothing could pay for or resume a segment.
-    const jobs =
-      memoryOf(state, team.id).roadJobs.length > 0 ||
-      state.roadJobs.some((j) => j.team === team.id);
-    if (!affordable && !jobs) return null;
+    if (!canWorkOnRoads(state, team)) return null;
     segment = nextSegment(known, team, target) ?? -1;
     if (segment < 0) return null;
   }
