@@ -1,9 +1,13 @@
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import {
   createWorld,
   sampleMetrics,
   SIM_VERSION,
   type SimEvent,
 } from "@geometrix/sim";
+import Database from "better-sqlite3";
 import { describe, expect, test } from "vitest";
 import { Store } from "../src/persistence.ts";
 import { testBattleParams, testParams } from "./helpers.ts";
@@ -65,12 +69,45 @@ describe("Store", () => {
       team: 0,
       name: "Ana",
       bot: false,
+      difficulty: null,
     });
     expect(store.playerByTokenHash("nope")).toBeUndefined();
     expect(store.players(id).map((p) => [p.id, p.bot])).toEqual([
       [bot, true],
       [human, false],
     ]);
+  });
+
+  test("a players table without difficulty gets the column (R plan section 7)", () => {
+    const file = join(mkdtempSync(join(tmpdir(), "geo-db-")), "geo.db");
+    const old = new Database(file);
+    old.exec(`CREATE TABLE players (
+      id INTEGER PRIMARY KEY, world_id INTEGER NOT NULL, team_id INTEGER NOT NULL,
+      name TEXT NOT NULL, token_hash TEXT UNIQUE, bot INTEGER NOT NULL DEFAULT 0
+    )`);
+    old.exec(
+      "INSERT INTO players (world_id, team_id, name, bot) VALUES (1, 1, 'bot', 1)",
+    );
+    old.close();
+    const store = new Store(file);
+    const id = store.createWorld({
+      seed: 1,
+      params,
+      battleParams,
+      simVersion: SIM_VERSION,
+      multiplier: 6,
+      createdAt: "2026-11-14T00:00:00.000Z",
+    });
+    store.addPlayer({
+      worldId: id,
+      team: 0,
+      name: "bot",
+      tokenHash: null,
+      bot: true,
+      difficulty: "easy",
+    });
+    expect(store.players(id).map((p) => p.difficulty)).toEqual([null, "easy"]);
+    store.close();
   });
 
   test("commits a tick: commands, tick, snapshot and metrics together", () => {

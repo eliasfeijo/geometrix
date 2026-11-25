@@ -40,6 +40,7 @@ function setup() {
     team: 0,
     name: "Ana",
     bot: false,
+    difficulty: null,
   };
   host.submit(id, { type: "join", team: 0, bot: false });
   host.tick();

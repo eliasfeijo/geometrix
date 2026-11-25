@@ -244,18 +244,33 @@ export function parseClientMessage(raw: string): ClientMessage | null {
   return result.success ? result.data : null;
 }
 
+const difficulty = z.enum(["easy", "normal", "hard"]);
+
 /** POST /api/worlds. Without a seed the server picks one (it is stored). */
-export const createWorldRequest = z.object({
-  seed: z
-    .number()
-    .int()
-    .nonnegative()
-    .max(2 ** 32 - 1)
-    .optional(),
-  multiplier: z.number().int().positive().max(10_000).optional(),
-  /** Teams that get a balanced bot (spec section 5, F6 details). */
-  botTeams: z.array(z.number().int().nonnegative()).max(8).optional(),
-});
+export const createWorldRequest = z
+  .object({
+    seed: z
+      .number()
+      .int()
+      .nonnegative()
+      .max(2 ** 32 - 1)
+      .optional(),
+    multiplier: z.number().int().positive().max(10_000).optional(),
+    /** Teams that get a balanced bot (spec section 5, F6 details). */
+    botTeams: z.array(z.number().int().nonnegative()).max(8).optional(),
+    /**
+     * A bot team's difficulty, by team id (R spec D26); a team left out plays
+     * hard.
+     */
+    botDifficulty: z.record(z.string().regex(/^\d+$/), difficulty).optional(),
+  })
+  .refine(
+    ({ botTeams, botDifficulty }) =>
+      Object.keys(botDifficulty ?? {}).every((team) =>
+        (botTeams ?? []).includes(Number(team)),
+      ),
+    { message: "botDifficulty: only for teams in botTeams" },
+  );
 
 export type CreateWorldRequest = z.infer<typeof createWorldRequest>;
 
@@ -495,7 +510,7 @@ const loggedCommand = z.object({
       type: z.literal("join"),
       team: count,
       bot: z.boolean(),
-      difficulty: z.enum(["easy", "normal", "hard"]).optional(),
+      difficulty: difficulty.optional(),
     }),
     z.object({
       type: z.literal("battleExit"),

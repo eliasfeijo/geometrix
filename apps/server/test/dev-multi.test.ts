@@ -9,15 +9,16 @@ import {
 } from "../src/dev-multi.ts";
 
 describe("parseDevMultiArgs", () => {
-  test("defaults: 2 clients, ×36, server-picked seed, build and open", () => {
+  test("defaults: 2 clients, the params' ×N, server-picked seed, build and open", () => {
     expect(parseDevMultiArgs([])).toEqual({
       clients: 2,
       seed: undefined,
-      multiplier: 36,
+      multiplier: undefined,
       build: true,
       open: true,
       net: false,
       bot: false,
+      botDifficulty: undefined,
     });
   });
 
@@ -34,6 +35,8 @@ describe("parseDevMultiArgs", () => {
         "--no-open",
         "--net",
         "--bot",
+        "--bot-difficulty",
+        "easy",
       ]),
     ).toEqual({
       clients: 4,
@@ -43,6 +46,7 @@ describe("parseDevMultiArgs", () => {
       open: false,
       net: true,
       bot: true,
+      botDifficulty: "easy",
     });
   });
 
@@ -52,6 +56,8 @@ describe("parseDevMultiArgs", () => {
     [["--mult", "10001"]],
     [["--seed", "-1"]],
     [["--teams", "3"]],
+    [["--bot", "--bot-difficulty", "insane"]],
+    [["--bot-difficulty", "easy"]],
   ])("refuses %j", (args) => {
     expect(() => parseDevMultiArgs(args)).toThrow(DevMultiError);
   });

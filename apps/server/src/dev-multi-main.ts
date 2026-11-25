@@ -5,6 +5,7 @@
 import { spawn, spawnSync, type ChildProcess } from "node:child_process";
 import { readFileSync } from "node:fs";
 import type { JoinResponse } from "@geometrix/protocol";
+import { parseParams } from "@geometrix/sim";
 import { loadConfig } from "./config.ts";
 import {
   DEV_MULTI_USAGE,
@@ -32,7 +33,14 @@ try {
   process.exit(2);
 }
 
-const port = loadConfig(process.env).port;
+const config = loadConfig(process.env);
+const port = config.port;
+// The same params file the server below reads, relative to the same root.
+const multiplier =
+  options.multiplier ??
+  parseParams(
+    JSON.parse(readFileSync(new URL(config.paramsFile, ROOT), "utf8")),
+  ).world.multiplier;
 const base = `http://localhost:${port}`;
 
 if (await answers(`${base}/api/worlds`)) {
@@ -62,11 +70,16 @@ try {
   await waitForServer(server);
   const { id: worldId } = await post<{ id: number }>("/api/worlds", {
     ...(options.seed === undefined ? {} : { seed: options.seed }),
-    multiplier: options.multiplier,
+    multiplier,
     ...(options.bot ? { botTeams: [1] } : {}),
+    ...(options.botDifficulty === undefined
+      ? {}
+      : { botDifficulty: { 1: options.botDifficulty } }),
   });
   console.log(
-    `\nworld #${worldId} (×${options.multiplier}${options.bot ? ", bot on Orange" : ""})`,
+    `\nworld #${worldId} (×${multiplier}${
+      options.bot ? `, ${options.botDifficulty ?? "hard"} bot on Orange` : ""
+    })`,
   );
   const wsl = process.platform === "linux" && isWsl(readText("/proc/version"));
   for (let i = 1; i <= options.clients; i++) {

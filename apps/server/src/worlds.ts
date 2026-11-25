@@ -60,6 +60,7 @@ export class Worlds {
         battleParams: this.battleParams,
         multiplier: request.multiplier ?? 1,
         botTeams: request.botTeams ?? [],
+        botDifficulty: request.botDifficulty,
         createdAt,
       },
     );

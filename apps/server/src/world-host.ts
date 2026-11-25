@@ -53,6 +53,7 @@ import {
   validate,
   view,
   type Command,
+  type Difficulty,
   eventsFor,
   type Params,
   type SimEvent,
@@ -85,6 +86,8 @@ export type NewWorld = {
   multiplier: number;
   /** Teams that get a balanced bot (spec section 5, F6 details). */
   botTeams: readonly number[];
+  /** A bot team's difficulty, by team id (R spec D26); hard if left out. */
+  botDifficulty?: Readonly<Record<number, Difficulty>>;
   createdAt: string;
 };
 
@@ -159,16 +162,18 @@ export class WorldHost {
         multiplier: world.multiplier,
         createdAt: world.createdAt,
       });
-      const bots = world.botTeams.map((team) => ({
-        team,
-        playerId: store.addPlayer({
+      const bots = world.botTeams.map((team) => {
+        const difficulty = world.botDifficulty?.[team] ?? "hard";
+        const playerId = store.addPlayer({
           worldId: id,
           team,
           name: "bot",
           tokenHash: null,
           bot: true,
-        }),
-      }));
+          difficulty,
+        });
+        return { team, playerId, difficulty };
+      });
       store.putSnapshot(id, snapshotOf(state));
       const host = new WorldHost(
         context,
@@ -179,8 +184,8 @@ export class WorldHost {
         bots,
         "running",
       );
-      for (const bot of bots) {
-        host.submit(bot.playerId, { type: "join", team: bot.team, bot: true });
+      for (const { playerId, team, difficulty } of bots) {
+        host.submit(playerId, { type: "join", team, bot: true, difficulty });
       }
       return host;
     });
@@ -276,7 +281,12 @@ export class WorldHost {
     if (host.status === "running") {
       for (const p of players) {
         if (findPlayer(state, p.id) !== undefined) continue;
-        host.submit(p.id, { type: "join", team: p.team, bot: p.bot });
+        host.submit(p.id, {
+          type: "join",
+          team: p.team,
+          bot: p.bot,
+          ...(p.difficulty === null ? {} : { difficulty: p.difficulty }),
+        });
       }
     }
     return host;

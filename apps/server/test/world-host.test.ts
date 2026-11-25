@@ -51,6 +51,65 @@ function human(host: WorldHost, store: Store, team: number, token: string) {
   return id;
 }
 
+describe("the bot's difficulty (R spec D26)", () => {
+  test("goes with its join and its player row; hard when left out", () => {
+    const context: HostContext = {
+      store: new Store(":memory:"),
+      config: {
+        snapshotEveryTicks: 300,
+        metricsEveryTicks: 60,
+        chronicleWelcome: 100,
+      },
+    };
+    const host = WorldHost.create(context, {
+      seed: 42,
+      params,
+      battleParams: testBattleParams(),
+      multiplier: 1,
+      botTeams: [0, 1],
+      botDifficulty: { 1: "easy" },
+      createdAt: "2026-11-14T00:00:00.000Z",
+    });
+    expect(context.store.players(host.id).map((p) => p.difficulty)).toEqual([
+      "hard",
+      "easy",
+    ]);
+    host.tick();
+    expect(host.state.players.map((p) => p.difficulty)).toEqual([
+      "hard",
+      "easy",
+    ]);
+  });
+
+  test("a bot whose join was still queued at a stop joins with it again", () => {
+    const store = new Store(":memory:");
+    const config = {
+      snapshotEveryTicks: 300,
+      metricsEveryTicks: 60,
+      chronicleWelcome: 100,
+    };
+    WorldHost.create(
+      { store, config },
+      {
+        seed: 42,
+        params,
+        battleParams: testBattleParams(),
+        multiplier: 1,
+        botTeams: [1],
+        botDifficulty: { 1: "normal" },
+        createdAt: "2026-11-14T00:00:00.000Z",
+      },
+    );
+    const back = WorldHost.recover(
+      { store, config },
+      store.world(1)!,
+      testBattleParams(),
+    );
+    back.tick();
+    expect(back.state.players.map((p) => p.difficulty)).toEqual(["normal"]);
+  });
+});
+
 describe("WorldHost", () => {
   test("stores the new world with a snapshot of tick 0", () => {
     const { host, store } = setup();
