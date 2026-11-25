@@ -12,7 +12,15 @@ import {
   WorldHost,
   type HostContext,
 } from "../src/world-host.ts";
-import { testApp, testBattleParams, testParams } from "./helpers.ts";
+import {
+  firstTeamBattle,
+  testApp,
+  testBattleParams,
+  testParams,
+} from "./helpers.ts";
+
+/** The first battle between the teams of seed 42 (see helpers). */
+const first = firstTeamBattle();
 
 const config = {
   snapshotEveryTicks: 300,
@@ -196,7 +204,7 @@ describe("recovery after a restart", () => {
 });
 
 describe("recovery in the middle of a battle (junction N-3, P6)", () => {
-  /** Seed 42 of the test params with two bots: a battle runs on 8,540–8,558. */
+  /** Seed 42 of the test params with two bots: firstTeamBattle opens the first battle. */
   function botWorld(store: Store): WorldHost {
     return WorldHost.create(
       { store, config },
@@ -218,16 +226,16 @@ describe("recovery in the middle of a battle (junction N-3, P6)", () => {
   test("the battle is rebuilt from its tables as it was, and the world ends the same", () => {
     const steady = new Store(":memory:");
     const reference = botWorld(steady);
-    runTo(reference, 8_550);
+    runTo(reference, first.openedTick + 11);
     expect(reference.junction.instances.length).toBeGreaterThan(0);
     const hostThen = serializeHost(reference.junction);
-    runTo(reference, 9_000);
+    runTo(reference, first.openedTick + 461);
 
     const file = dbFile();
     let store = new Store(file);
     const crashed = botWorld(store);
-    runTo(crashed, 8_550);
-    store.close(); // no snapshot at 8,550: the last is at 8,400
+    runTo(crashed, first.openedTick + 11);
+    store.close(); // no snapshot there: recovery replays from the last one
 
     store = new Store(file);
     const recovered = WorldHost.recover(
@@ -235,9 +243,9 @@ describe("recovery in the middle of a battle (junction N-3, P6)", () => {
       store.world(crashed.id)!,
       testBattleParams(),
     );
-    expect(recovered.state.tick).toBe(8_550);
+    expect(recovered.state.tick).toBe(first.openedTick + 11);
     expect(serializeHost(recovered.junction)).toBe(hostThen);
-    runTo(recovered, 9_000);
+    runTo(recovered, first.openedTick + 461);
     expect(stateHash(recovered.state)).toBe(stateHash(reference.state));
     expect(serializeHost(recovered.junction)).toBe(
       serializeHost(reference.junction),
@@ -251,7 +259,7 @@ describe("recovery in the middle of a battle (junction N-3, P6)", () => {
   test("an ended battle's stored log replays to its final hash and to the results the world log applied", () => {
     const store = new Store(":memory:");
     const host = botWorld(store);
-    runTo(host, 9_000);
+    runTo(host, first.openedTick + 461);
     const battles = store.battles(host.id);
     expect(battles.length).toBeGreaterThan(0);
     const log = store.commandsFrom(host.id, 0);
@@ -295,7 +303,7 @@ describe("recovery in the middle of a battle (junction N-3, P6)", () => {
   test("refuses a world whose open battle is not stored", () => {
     const store = new Store(":memory:");
     const host = botWorld(store);
-    runTo(host, 8_545);
+    runTo(host, first.openedTick + 6);
     expect(host.state.battles.length).toBeGreaterThan(0);
     store.transaction(() => {
       // An older file: the battle tables did not exist.

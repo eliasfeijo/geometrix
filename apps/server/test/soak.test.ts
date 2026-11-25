@@ -16,7 +16,10 @@ import {
 import { stateHash } from "../src/hash.ts";
 import { WorldHost } from "../src/world-host.ts";
 import { Store } from "../src/persistence.ts";
-import { testBattleParams, testParams } from "./helpers.ts";
+import { firstTeamBattle, testBattleParams, testParams } from "./helpers.ts";
+
+/** The first battle between the teams of seed 42 (see helpers). */
+const first = firstTeamBattle();
 
 describe("parseSoakArgs", () => {
   test("defaults: ×360, 5 kills, seed 42, port 8089, 2 clients per team dropping every 60 s, temp db, runs/", () => {
@@ -142,7 +145,7 @@ describe("rebuild", () => {
 });
 
 describe("checkBattles (junction spec section 7)", () => {
-  /** Seed 42 of the test params with two bots: a battle runs on 8,540–8,558. */
+  /** Seed 42 of the test params with two bots: firstTeamBattle opens the first battle. */
   function crashedInBattle() {
     const file = join(mkdtempSync(join(tmpdir(), "geo-soak-")), "geo.db");
     const config = {
@@ -162,7 +165,7 @@ describe("checkBattles (junction spec section 7)", () => {
         createdAt: "2026-11-14T00:00:00.000Z",
       },
     );
-    while (host.state.tick < 8_550) host.tick();
+    while (host.state.tick < first.openedTick + 11) host.tick();
     const cut = store
       .battles(host.id)
       .filter((b) => b.endedTick === null)
@@ -174,7 +177,7 @@ describe("checkBattles (junction spec section 7)", () => {
       store.world(host.id)!,
       testBattleParams(),
     );
-    while (back.state.tick < 9_000) back.tick();
+    while (back.state.tick < first.openedTick + 461) back.tick();
     return { store, id: host.id, cut, state: back.state };
   }
 

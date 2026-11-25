@@ -4,6 +4,7 @@ import { parseParams, type Params } from "@geometrix/sim";
 import { startApp } from "../src/app.ts";
 import { DEFAULT_CONFIG, type ServerConfig } from "../src/config.ts";
 import { Store } from "../src/persistence.ts";
+import { WorldHost } from "../src/world-host.ts";
 
 /** The sim tests' fixed params, so balancing does not change these tests. */
 export function testParams(): Params {
@@ -27,6 +28,70 @@ export function testBattleParams(): BattleParams {
       ),
     ),
   );
+}
+
+/** The first battle between the two teams of the tests' bot world. */
+export type TeamBattle = {
+  /** The tick it opens in: the world stands at this tick just before. */
+  openedTick: number;
+  battle: number;
+  /** Its lowest-id participant of team 0, and of team 1. */
+  team0: number;
+  team1: number;
+};
+
+let firstBattle: TeamBattle | null = null;
+
+/**
+ * Where the seed-42 bot world of the server tests (both teams bots, the
+ * tests' params) opens its first battle between the two teams, found by
+ * stepping a world in memory once per test file (~2 s). Tests start from it
+ * instead of a fixed tick and fixed ids, so a rule change that moves the
+ * battle moves them along instead of breaking them.
+ */
+export function firstTeamBattle(): TeamBattle {
+  if (firstBattle !== null) return firstBattle;
+  const host = WorldHost.create(
+    {
+      store: new Store(":memory:"),
+      config: {
+        snapshotEveryTicks: 300,
+        metricsEveryTicks: 60,
+        chronicleWelcome: 100,
+      },
+    },
+    {
+      seed: 42,
+      params: testParams(),
+      battleParams: testBattleParams(),
+      multiplier: 1,
+      botTeams: [0, 1],
+      createdAt: "2026-11-14T00:00:00.000Z",
+    },
+  );
+  const limit = host.state.params.world.durationSeconds;
+  while (host.state.tick < limit) {
+    host.tick();
+    for (const battle of host.state.battles) {
+      if (battle.openedTick !== host.state.tick - 1) continue;
+      const of = (team: number) =>
+        battle.participants.find((p) => {
+          const side = battle.sides[p.side]!;
+          return side.kind === "team" && side.team === team;
+        })?.id;
+      const team0 = of(0);
+      const team1 = of(1);
+      if (team0 === undefined || team1 === undefined) continue;
+      firstBattle = {
+        openedTick: battle.openedTick,
+        battle: battle.id,
+        team0,
+        team1,
+      };
+      return firstBattle;
+    }
+  }
+  throw new Error("firstTeamBattle: the bot world opened no team battle");
 }
 
 /** A clock and setTimeout the test moves by hand. */

@@ -10,7 +10,10 @@ import { view, type TeamView } from "@geometrix/sim";
 import { afterEach, describe, expect, test } from "vitest";
 import { WebSocket } from "ws";
 import { CLOSE } from "../src/ws.ts";
-import { testApp } from "./helpers.ts";
+import { firstTeamBattle, testApp } from "./helpers.ts";
+
+/** The first battle between the teams of seed 42 (see helpers). */
+const opening = firstTeamBattle();
 
 let close: (() => Promise<void>) | null = null;
 afterEach(async () => {
@@ -348,8 +351,8 @@ describe("WebSocket", () => {
 
 describe("the battle screen over the socket (junction plan section 7)", () => {
   /**
-   * Seed 42 with a bot on each team: battle 157 opens in the step of tick
-   * 8,539, the team 0 triangle 18 against the team 1 square 108. Ana (team
+   * Seed 42 with a bot on each team: the first battle between the teams
+   * (firstTeamBattle), team 0's creep against team 1's. Ana (team
    * 0) dominates the triangle; Bia (team 1) only watches the map.
    */
   async function battleSetup() {
@@ -364,10 +367,10 @@ describe("the battle screen over the socket (junction plan section 7)", () => {
     const ana = await join("Ana", 0);
     const bia = await join("Bia", 1);
     const host = t.app.worlds.get(1)!;
-    while (host.state.tick < 8_540) host.tick();
-    expect(host.submit(ana.playerId, { type: "dominate", creepId: 18 })).toBe(
-      null,
-    );
+    while (host.state.tick <= opening.openedTick) host.tick();
+    expect(
+      host.submit(ana.playerId, { type: "dominate", creepId: opening.team0 }),
+    ).toBe(null);
     host.tick();
     return { ...t, host, ana, bia };
   }
@@ -378,10 +381,10 @@ describe("the battle screen over the socket (junction plan section 7)", () => {
     const b = await connect(base, bia.token);
     await a.next("welcome");
     await b.next("welcome");
-    a.send({ type: "battleScreen", ref: 1, battleId: 157 });
+    a.send({ type: "battleScreen", ref: 1, battleId: opening.battle });
     expect(await a.next("ack")).toMatchObject({ ref: 1 });
     const open = await a.next("battleOpen");
-    expect(open.battleId).toBe(157);
+    expect(open.battleId).toBe(opening.battle);
     expect(open.arena.width).toBeGreaterThan(0);
     expect(open.roster.members.map((m) => m.creep)).toContain(18);
     const me = open.roster.members.find((m) => m.creep === 18)!.participant;
@@ -396,7 +399,7 @@ describe("the battle screen over the socket (junction plan section 7)", () => {
     a.send({
       type: "battleInput",
       ref: 2,
-      battleId: 157,
+      battleId: opening.battle,
       command: { type: "intent", id: me, move: "up", attack: false },
     });
     expect(await a.next("ack", sent)).toMatchObject({ ref: 2 });
@@ -405,7 +408,7 @@ describe("the battle screen over the socket (junction plan section 7)", () => {
     b.send({
       type: "battleInput",
       ref: 3,
-      battleId: 157,
+      battleId: opening.battle,
       command: { type: "intent", id: me, move: "up", attack: false },
     });
     expect(await b.next("reject")).toEqual({
@@ -434,7 +437,7 @@ describe("the battle screen over the socket (junction plan section 7)", () => {
       ref: 1,
       reason: "unknownBattle",
     });
-    a.send({ type: "battleScreen", ref: 2, battleId: 157 });
+    a.send({ type: "battleScreen", ref: 2, battleId: opening.battle });
     await a.next("battleOpen");
     host.tick();
     expect(host.junction.screens).toEqual([18]);
@@ -442,8 +445,8 @@ describe("the battle screen over the socket (junction plan section 7)", () => {
     await a.closed;
     host.tick();
     expect(host.junction.screens).toEqual([]);
-    expect(host.junction.instances.find((i) => i.battleId === 157)?.pace).toBe(
-      "world",
-    );
+    expect(
+      host.junction.instances.find((i) => i.battleId === opening.battle)?.pace,
+    ).toBe("world");
   }, 30_000);
 });
