@@ -217,7 +217,8 @@ describe("geo battle sweep (spec R-1)", () => {
       .split("\n");
     expect(csv).toHaveLength(1 + scenarios().length * REPORT_ARENAS.length);
     expect(csv[1]).toMatch(/^1x1 square-triangle,duel,aberta,2,/);
-  });
+    // The whole matrix: ~0.9 s alone, past 5 s with other suites running.
+  }, 30_000);
 
   test("--max-seconds fails a sweep over the budget", () => {
     let now = 0;

@@ -370,5 +370,6 @@ describe("updateVision over a bot world", () => {
     }
     expect(checks).toBe(24);
     expect(world.memory[0]!.deposits.length).toBeGreaterThan(0);
-  });
+    // A bot world: ~1 s alone, past 5 s with other suites running.
+  }, 30_000);
 });

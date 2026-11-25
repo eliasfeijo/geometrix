@@ -150,7 +150,8 @@ describe("geo sweep", () => {
     const perTeam =
       csv[1]!.split(",")[header.indexOf("deliveredMateriaByTeam")];
     expect(perTeam).toMatch(/^\d+;\d+$/);
-  });
+    // Four 1 h worlds: ~0.8 s alone, past 5 s with other suites running.
+  }, 30_000);
 
   test("--keep-runs writes each run in full", () => {
     const out = join(scratch, "keep");
