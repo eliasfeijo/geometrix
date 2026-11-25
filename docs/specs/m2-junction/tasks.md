@@ -1,6 +1,6 @@
 # M2 junction tasks — Slice D
 
-**Status:** F3 done (2026-11-24); F6 next (C1-1). Branches `m2/junction-f<n>-<slug>` (skill `commit`).
+**Status:** F3 done (2026-11-24); F6 done (2026-11-25); F4 next. Branches `m2/junction-f<n>-<slug>` (skill `commit`).
 **Spec:** [spec.md](spec.md) · **Plan:** [plan.md](plan.md)
 
 ## F0 — Spec, ADR and plan
@@ -185,22 +185,103 @@ again; the strategist unchanged until then (C1-4). Interpretations 2–6 stand; 
 
 ## F6 — The wanderers (runs after F3: C1-1)
 
-- [ ] The junction matrix (C1-2): `geo junction matrix`, battles auto-resolved from real world setups and arenas, DNA ×
+- [x] The junction matrix (C1-2): `geo junction matrix`, battles auto-resolved from real world setups and arenas, DNA ×
       DNA, loaded or empty, fight or flee (carrier), seeds 1–100; wins, deaths, escapes and durations per cell
-- [ ] The zones' distance to the border as a param (`battle.zone`), its value from the matrix (C1-3)
-- [ ] `Wanderer`, `state.wanderers`, the `wanderers` params (stats, band, curve, cap)
-- [ ] Birth by the curve in the band; roaming
-- [ ] Targets: loaded team creeps in sight (attack, no dialogue); joining a battle in sight on their side
-- [ ] In battle: their setup (HP 60, damage 12, marksman); carrying the loot; spoils or pile on death
-- [ ] Teams attack them, an extortion refused; the strategist counts them; the raider ignores them
-- [ ] Fog and view; drawing in a neutral color; chronicle (`wandererBorn`); metrics
-- [ ] **Checkpoint C1b:** the matrix, the zones' value, and the bot × bot report with wanderers against C1; whether
+- [x] The zones' distance to the border as a param (`battle.zone`), its value from the matrix (C1-3)
+- [x] `Wanderer`, `state.wanderers`, the `wanderers` params (stats, band, curve, cap)
+- [x] Birth by the curve in the band; roaming
+- [x] Targets: loaded team creeps in sight (attack, no dialogue); joining a battle in sight on their side
+- [x] In battle: their setup (HP 60, damage 12, marksman); carrying the loot; spoils or pile on death
+- [x] Teams attack them, an extortion refused; the strategist counts them; the raider ignores them
+- [x] Fog and view; drawing in a neutral color; chronicle (`wandererBorn`); metrics
+- [x] **Checkpoint C1b:** the matrix, the zones' value, and the bot × bot report with wanderers against C1; whether
       the bots need changing (C1-4)
+
+### F6 record
+
+**The wanderers as built** (spec D14, W-1..W-7). A `Wanderer` (`state.wanderers`, `wanderers` params: HP 60, damage
+12, band 8 rows, the first at 1 h, one every 60 down to 15 minutes, at most 4, spare 10 minutes) is born on a free
+band cell, roams the band, attacks a loaded team creep in sight with no dialogue, joins any battle with a team in
+sight on the one wanderers' side, never enters a core zone (its routes go around them), heals on the map like a
+creep and, after a battle, spares the creeps that were in it with it (W-7, owner 2026-11-25, after a 12 h run where one
+wanderer opened 638 battles against one gatherer). A team's creep may attack one; an extortion of one is refused;
+the bots' rules count them as enemies; a team sees them in its sight only. `SIM_VERSION` 11, `PROTOCOL_VERSION` 6,
+`BATTLE_VERSION` 5 (the setup's optional `damage`). Found on the way: an instance opened with a creep that joined on
+the opening's tick placed it twice (the end was refused); it now opens with the opening's creeps only.
+
+**Checkpoint C1b** (`runs/c1b-*` in the session scratchpad, not versioned; `geo verify --seed 42`: deterministic, 52
+battles replayed alone to the world log's results):
+
+The matrix (seeds 1–100, 3,600 battles per value; the victim dies / escapes, the other pairs pooled):
+
+| `battle.zone.insetPermille` | 500 (C1) | 650 | 750 (default) | 850 (max) |
+|---|---|---|---|---|
+| Victim empty, flees | 0% / 100% | 3% / 97% | 13% / 87% | 25% / 75% |
+| Victim full, flees | 19% / 81% | 17% / 83% | 37% / 63% | 48% / 52% |
+| Victim fights (empty / full): aggressor wins | 48% / 74% | 48% / 75% | 47% / 72% | 50% / 72% |
+
+The zones' distance matters for fleeing only: the arena is 47 × 27, so the nearest exit is the top or bottom ring
+whatever the inset. A circle beats a square in every case (aggressor circle × square victim, fighting: 100%).
+
+The bot × bot report with the wanderers against C1:
+
+| | C1 (F3) | C1b (F6) |
+|---|---|---|
+| `geo sim` 3 days, seed 42: wall time | 13.7 s, 14.2 s | 11.2 s, 11.9 s (baseline 10.7–11.7 s) |
+| Encounters between teams (sim) | 7 / 2 | 0 / 0 |
+| Battles (sim) | 9, from refused extortions | 218, all opened by a wanderer; 10 wanderer joins |
+| Deaths (sim) | 2 | 30 / 25 (47 squares, 5 triangles, 3 circles); 55 by wanderers |
+| Team creeps as a wanderer's victim (sim) | — | ■ 64: won 17, died 47 · ▲ 120: escaped 115, died 5 · ● 34: escaped 31, died 3 |
+| Wanderers (sim) | — | 22 born, 18 killed by team creeps; 4 alive from hour ~10 on |
+| Creeps at the end (sim) | 30 / 30 | 15 / 10 (39 / 29 produced) |
+| Delivered materia (sim) | 175,675 / 160,780 | 129,712 / 99,263 (gap 23%) |
+| Spoils at the end (sim) | — | 37 piles, 1,593 materia / 205 cristal (1 of 38 picked up: only the raider picks up) |
+| `geo sweep` 6 h, seeds 1–20: wall time | 10.1 s | 14.2 s (more battles) |
+| Battles per team-hour | 0.4 | 1.5 (331 with a wanderer, 27 between teams; C1: 90) |
+| Encounters per team-hour | 0.6 | 0.2 |
+| Deaths per team (of 6, no production in 6 h) | 0.6 | 2.6 (86 of 104 by wanderers) |
+| Victims dead / escaped by the border | 39% / — | 33% / 60% |
+| Resources taken per team | 43 | 26 |
+
+The pressure by knob (the same sweep, one knob at a time; deaths per team · creeps at the end · battles per
+team-hour):
+
+| | 0 | 1 | 2 | 4 |
+|---|---|---|---|---|
+| `wanderers.cap` | 0.8 · 5.2 · 0.2 | 1.8 · 4.2 · 0.9 | 2.2 · 3.8 · 1.2 | 2.6 · 3.4 · 1.5 |
+
+| | 6 | 9 | 12 |
+|---|---|---|---|
+| `wanderers.damage` | 2.3 · 3.7 · 1.5 | 2.3 · 3.7 · 1.5 | 2.6 · 3.4 · 1.5 |
+
+The damage barely matters: the square, the one that dies, loses to the circle's kiting at any damage; the cap sets
+the pressure.
+
+**Interpretations to validate** (implementation details the plan left open):
+
+1. The matrix's battle cell: one per seed, drawn uniformly among the standable cells outside both core zones.
+2. `battle.zone.insetPermille`: the zone's center offset from the arena's center, in ‰ of the half-size (500 the old
+   halfway); 850 is the largest that keeps the four zones apart.
+3. A zone as near to two edges (insets ≥ 600) faces the center along its dominant axis (the battle's arena rule).
+4. "Loaded" is any cargo above 0.
+5. A wanderer's name comes from the same name sequence as the creeps' (`state.births`).
+6. A wanderer that sees both a battle to join and a loaded creep goes for the battle.
+7. A wanderer that escapes by the border just stops and roams again (no flee order).
+8. An extortion order against a wanderer is refused as `invalidOrder`.
+9. The wanderers are drawn at their cell, with no glide between ticks.
+10. Their routes treat the core zones' cells as rock: they go around a zone; a target reachable only through one is
+    dropped.
+11. W-7's sparing starts when either of the pair leaves the battle alive (an escape or the end), 10 minutes from then.
+12. In the report, a team's side whose victim escaped "lost" (the wanderer was left alone and won).
+
+**C1b decisions** (owner, 2026-11-25; plan §12, "Decided at checkpoint C1b"): the zones' distance **750‰**; the
+wanderers' **cap stays 4** until the playtest; **the strategist unchanged** until the playtest (C1-4 closed); the
+square against the circle **watched in the playtest** (GDD 06). All provisional numbers; interpretations 1–12 stand.
 
 ## F4 — Network and server
 
 - [ ] Protocol: `battleInput`, `battleScreen`, `battleOpen`, `battleFrame`; the system commands refused from clients;
-      battles in the delta; `PROTOCOL_VERSION` 5
+      battles in the delta; `PROTOCOL_VERSION` 7 (F6 took 6)
 - [ ] `WorldHost` through the `JunctionHost`; the results committed with the tick
 - [ ] The `battles` and `battle_ticks` tables, in the tick's transaction; recovery rebuilding the instances
 - [ ] Presence of the battle screen; the battle clock (50 ms); the pace switch (D13)

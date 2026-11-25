@@ -55,5 +55,8 @@
 - **A deposit remembered as empty** (encounter F3 checkpoint, 2026-11-17): the autopilot only picks a deposit with a
   remembered amount above zero, and a depleted deposit out of sight regenerates without the team knowing. On seed 42,
   3 days, the harmed team delivers 20–25% less matéria. The owner left it for a balancing round.
+- **The presets and the wanderers** (checkpoint C1b, 2026-11-25): a loaded square fights a wanderer (its DNA's
+  posture) and mostly dies; only the raider picks up spoils, so in 3 days of seed 42 37 piles (1,593 matéria) lie on
+  the map. The owner kept the bots' strategist unchanged until the playtest.
 - **The road-builder preset** (owner session, 2026-11-20): it does not build (see the
   [dashboard](../dashboard/current-status.md)). Bug or rule?

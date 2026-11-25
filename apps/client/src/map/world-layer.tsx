@@ -1,5 +1,6 @@
-// What changes with the state but is not a creep: roads, road jobs,
-// deposits and the cores with their production.
+// What changes with the state but is not a team's creep: roads, road jobs,
+// deposits, spoils, the cores with their production and the wanderers in
+// sight (junction D14).
 
 import {
   isOwnTeam,
@@ -10,6 +11,7 @@ import {
   type Spoil,
   type Team,
   type TeamView,
+  type WandererView,
 } from "@geometrix/sim";
 import {
   arcDash,
@@ -50,6 +52,9 @@ export function WorldLayer({ state, params, width, zoom }: Props) {
       ))}
       {state.teams.map((team) => (
         <CoreMark key={team.id} team={team} params={params} />
+      ))}
+      {state.wanderers.map((wanderer) => (
+        <WandererMark key={wanderer.id} wanderer={wanderer} zoom={zoom} />
       ))}
     </g>
   );
@@ -196,6 +201,53 @@ function SpoilMark({ spoil, zoom }: { spoil: Spoil; zoom: number }) {
       {spoil.cargo[other] > 0 && (
         <circle cx={cx} cy={cy} r={r * 0.3} fill={COLORS[other]} />
       )}
+    </g>
+  );
+}
+
+/**
+ * A wanderer (junction D14): a circle in the neutral color, its load as a
+ * dot of the resource it carries most, dimmed while locked in a battle.
+ */
+function WandererMark({
+  wanderer,
+  zoom,
+}: {
+  wanderer: WandererView;
+  zoom: number;
+}) {
+  const cx = wanderer.x + 0.5;
+  const cy = wanderer.y + 0.5;
+  const r = 0.32 * Math.min(zoom, 1.4);
+  const { materia, cristal } = wanderer.cargo;
+  return (
+    <g class="wanderer" opacity={wanderer.battle === null ? 1 : 0.6}>
+      <DnaShape
+        dna="circle"
+        cx={cx}
+        cy={cy}
+        r={r}
+        fill={COLORS.wanderer}
+        stroke={COLORS.background}
+        strokeWidth={0.05 * zoom}
+      />
+      {materia + cristal > 0 && (
+        <circle
+          cx={cx}
+          cy={cy}
+          r={r * 0.35}
+          fill={cristal > materia ? COLORS.cristal : COLORS.materia}
+        />
+      )}
+      <text
+        x={cx}
+        y={cy - r - 0.12}
+        font-size={0.32 * Math.min(zoom, 1.4)}
+        text-anchor="middle"
+        fill={COLORS.wandererText}
+      >
+        {wanderer.name}
+      </text>
     </g>
   );
 }

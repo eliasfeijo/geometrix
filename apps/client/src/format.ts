@@ -61,7 +61,9 @@ export const REPLY_TEXTS: Record<Reply, string> = {
 
 export const TEAM_NAMES = ["Azul", "Laranja"];
 
-export const teamName = (team: number) => TEAM_NAMES[team] ?? `Time ${team}`;
+/** A team's name; null is the wanderers' side. */
+export const teamName = (team: number | null) =>
+  team === null ? "Andarilhos" : (TEAM_NAMES[team] ?? `Time ${team}`);
 
 /** Why a command was refused, for the notice. */
 export const REJECT_TEXTS: Record<RejectReason | "disconnected", string> = {

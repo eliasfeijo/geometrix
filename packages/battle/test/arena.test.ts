@@ -42,6 +42,19 @@ describe("parseArena", () => {
     expect(arena.entries.map((e) => e.facing)).toEqual(["down", "up"]);
   });
 
+  test("a zone as near to two edges faces the center along its farther axis (C1-3)", () => {
+    // Zone 1 is as near to the top as to the bottom, and off center to the
+    // left: it faces right.
+    const arena = parseArena([
+      "...........",
+      "...........",
+      "....1......",
+      "........2..",
+      "...........",
+    ]);
+    expect(arena.entries.map((e) => e.facing)).toEqual(["right", "up"]);
+  });
+
   test("a zone inside the arena faces away from the edge nearest to it", () => {
     const arena = parseArena([
       "...........",

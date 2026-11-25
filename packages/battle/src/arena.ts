@@ -94,7 +94,9 @@ export function parseArena(rows: readonly string[]): Arena {
 /**
  * Where a spawn zone faces (spec S-1): away from the ring edge nearest to it,
  * by the zone's summed distance to each edge (integers, no centroid). A zone
- * as near to two edges is refused: inward would be ambiguous.
+ * as near to two edges faces the center along the axis it is farther from
+ * the center on (a zone pushed toward the middle of a wide arena: junction
+ * checkpoint C1-3); with no such axis it is refused.
  */
 function stretchFacing(
   width: number,
@@ -120,12 +122,15 @@ function stretchFacing(
   }
   const nearest = Math.min(...sums.map(([sum]) => sum));
   const away = sums.filter(([sum]) => sum === nearest);
-  if (away.length !== 1) {
-    throw new ArenaError(
-      `zone ${side + 1} is as near to two edges: no inward direction`,
-    );
-  }
-  return away[0]![1];
+  if (away.length === 1) return away[0]![1];
+  // Twice the summed offset from the center, per axis (integers).
+  const dx = sums[0]![0] - sums[1]![0];
+  const dy = sums[2]![0] - sums[3]![0];
+  if (Math.abs(dx) > Math.abs(dy)) return dx < 0 ? "right" : "left";
+  if (Math.abs(dy) > Math.abs(dx)) return dy < 0 ? "down" : "up";
+  throw new ArenaError(
+    `zone ${side + 1} is as near to two edges: no inward direction`,
+  );
 }
 
 export function cellX(arena: Arena, cell: number): number {

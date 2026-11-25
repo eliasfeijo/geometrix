@@ -39,7 +39,11 @@ export type Decider = (typeof DECIDERS)[number];
 export const BATTLE_RESULTS = ["won", "lost", "idle", "empty", "open"] as const;
 export type BattleResult = (typeof BATTLE_RESULTS)[number];
 
-export const CAUSES = ["attack", "refused"] as const satisfies BattleCause[];
+export const CAUSES = [
+  "attack",
+  "refused",
+  "wanderer",
+] as const satisfies BattleCause[];
 export const END_REASONS = ["won", "idle", "empty"] as const;
 export type EndReason = (typeof END_REASONS)[number];
 
@@ -79,6 +83,24 @@ export type BattleStats = {
   fates: Fates;
 };
 
+/** The wanderers of a run (junction spec §7). */
+export type WandererStats = {
+  born: number;
+  died: number;
+  /** The most alive at once, and alive at the end of the run. */
+  maxAlive: number;
+  aliveAtEnd: number;
+  /** Battles a wanderer opened (its attacks), and wanderers joining one. */
+  attacks: number;
+  joins: number;
+  /** Team creeps a wanderer killed, and wanderers a team creep killed. */
+  kills: number;
+  killedByTeams: number;
+  /** What the wanderers won as loot, and what they carried when they died. */
+  looted: Stock;
+  lostOnDeath: Stock;
+};
+
 export type TeamEncounters = {
   team: number;
   /** Encounters opened with a creep of the team as aggressor, by intent. */
@@ -111,6 +133,8 @@ export type TeamEncounters = {
 export type EncounterMark = {
   tick: number;
   teams: { asAggressor: number; asVictim: number; deaths: number }[];
+  /** Wanderers alive at the mark. */
+  wanderers: number;
 };
 
 export type EncounterTally = {
@@ -118,6 +142,7 @@ export type EncounterTally = {
   /** Battles opened, all teams. */
   battlesOpened: number;
   battleStats: BattleStats;
+  wanderers: WandererStats;
   spoils: {
     /** Piles created (a drop on an existing pile adds to it). */
     created: number;
@@ -161,13 +186,15 @@ function teamEncounters(team: number): TeamEncounters {
   };
 }
 
-type Open = { aggressorTeam: number; victimTeam: number };
-/** A creep in a battle, as it entered. */
+/** An open extortion or attack; a wanderer victim has no team (null). */
+type Open = { aggressorTeam: number; victimTeam: number | null };
+/** A team's creep in a battle, as it entered. */
 type Entrant = { role: Role; dna: Dna; load: Load };
 type OpenBattle = {
-  sides: number[];
+  /** Each side's team; null the wanderers'. */
+  sides: (number | null)[];
   openedTick: number;
-  aggressorTeam: number;
+  aggressorTeam: number | null;
   entrants: Map<number, Entrant>;
 };
 
@@ -203,6 +230,8 @@ export class EncounterTracker {
   private readonly spoilIds = new Set<number>();
   /** Cargo in spoils at the end of the last tick. */
   private spoilCargo = zeroStock();
+  /** Each wanderer's cargo at the end of the last tick, by id. */
+  private wandererCargo = new Map<number, Stock>();
 
   constructor(teams: number) {
     this.tally = {
@@ -216,6 +245,18 @@ export class EncounterTracker {
         worldSeconds: durations(),
         battleSeconds: durations(),
         fates: emptyFates(),
+      },
+      wanderers: {
+        born: 0,
+        died: 0,
+        maxAlive: 0,
+        aliveAtEnd: 0,
+        attacks: 0,
+        joins: 0,
+        kills: 0,
+        killedByTeams: 0,
+        looted: zeroStock(),
+        lostOnDeath: zeroStock(),
       },
       spoils: {
         created: 0,
@@ -239,6 +280,7 @@ export class EncounterTracker {
   ): void {
     const teams = this.tally.teams;
     const stats = this.tally.battleStats;
+    const wanderers = this.tally.wanderers;
     for (const battle of finished) {
       const perSecond = battle.log.params.tick.ticksPerSecond;
       addDuration(stats.battleSeconds, battle.log.ticks / perSecond);
@@ -247,34 +289,37 @@ export class EncounterTracker {
     for (const event of events) {
       switch (event.type) {
         case "encounter": {
-          const aggressor = teams[event.aggressor.team]!;
-          const victim = teams[event.victim.team]!;
-          aggressor.asAggressor[event.intent] += 1;
-          victim.asVictim[event.intent] += 1;
-          if (inCoreZone(state, event.victim.team, event)) {
-            victim.victimInOwnCoreZone += 1;
+          // Only a team's creep declares itself; its victim may be a
+          // wanderer, of no team.
+          const aggressorTeam = event.aggressor.team!;
+          teams[aggressorTeam]!.asAggressor[event.intent] += 1;
+          const victimTeam = event.victim.team;
+          if (victimTeam !== null) {
+            const victim = teams[victimTeam]!;
+            victim.asVictim[event.intent] += 1;
+            if (inCoreZone(state, victimTeam, event)) {
+              victim.victimInOwnCoreZone += 1;
+            }
           }
-          this.open.set(event.encounter, {
-            aggressorTeam: event.aggressor.team,
-            victimTeam: event.victim.team,
-          });
+          this.open.set(event.encounter, { aggressorTeam, victimTeam });
           break;
         }
         case "reaction": {
-          const team = teams[event.creep.team]!;
+          const team = teams[event.creep.team!]!;
           team.reactions[event.choice] += 1;
           team.reactionsBy[event.by] += 1;
           break;
         }
         case "paid":
-          add(teams[event.from.team]!.extortionPaid, event.amount);
-          add(teams[event.to.team]!.extortionReceived, event.amount);
+          add(teams[event.from.team!]!.extortionPaid, event.amount);
+          add(teams[event.to.team!]!.extortionReceived, event.amount);
           this.close(event.encounter, "paid");
           break;
         case "battleOpened": {
           this.tally.battlesOpened += 1;
           stats.byCause[event.cause] += 1;
-          this.close(event.encounter, "battle");
+          if (event.cause === "wanderer") wanderers.attacks += 1;
+          if (event.encounter !== null) this.close(event.encounter, "battle");
           const battle: OpenBattle = {
             sides: event.sides.map((s) => s.team),
             openedTick: state.tick,
@@ -288,7 +333,8 @@ export class EncounterTracker {
           break;
         }
         case "battleJoined": {
-          teams[event.creep.team]!.joins += 1;
+          if (event.creep.team === null) wanderers.joins += 1;
+          else teams[event.creep.team]!.joins += 1;
           stats.joins += 1;
           const battle = this.battles.get(event.battle);
           if (battle !== undefined) {
@@ -300,7 +346,7 @@ export class EncounterTracker {
           break;
         }
         case "battleLeft":
-          if (event.reason === "edge") {
+          if (event.reason === "edge" && event.creep.team !== null) {
             teams[event.creep.team]!.escapes[event.creep.dna] += 1;
           }
           this.fate(
@@ -325,6 +371,7 @@ export class EncounterTracker {
             }
           }
           for (const [side, team] of event.sideTeams.entries()) {
+            if (team === null) continue;
             const result: BattleResult =
               event.reason !== "won"
                 ? event.reason
@@ -334,25 +381,45 @@ export class EncounterTracker {
             teams[team]!.battles[result] += 1;
           }
           for (const { creep, taken } of event.loot) {
-            add(teams[creep.team]!.lootTaken, taken);
+            if (creep.team === null) add(wanderers.looted, taken);
+            else add(teams[creep.team]!.lootTaken, taken);
           }
           break;
         }
         case "died": {
-          teams[event.creep.team]!.deaths[event.creep.dna] += 1;
+          if (event.creep.team === null) {
+            wanderers.died += 1;
+            const cargo = this.wandererCargo.get(event.creep.id);
+            if (cargo !== undefined) add(wanderers.lostOnDeath, cargo);
+            if (event.by !== null && event.by.team !== null) {
+              wanderers.killedByTeams += 1;
+            }
+          } else {
+            teams[event.creep.team]!.deaths[event.creep.dna] += 1;
+          }
           this.fate(event.battle, event.creep.id, "died");
-          if (event.by !== null) teams[event.by.team]!.kills += 1;
+          if (event.by !== null) {
+            if (event.by.team === null) wanderers.kills += 1;
+            else teams[event.by.team]!.kills += 1;
+          }
           break;
         }
         case "pickedUp":
-          add(teams[event.creep.team]!.pickedUp, event.taken);
+          add(teams[event.creep.team!]!.pickedUp, event.taken);
           add(picked, event.taken);
           this.tally.spoils.pickups += 1;
+          break;
+        case "wandererBorn":
+          wanderers.born += 1;
           break;
         case "born":
           break;
       }
     }
+    wanderers.maxAlive = Math.max(wanderers.maxAlive, state.wanderers.length);
+    this.wandererCargo = new Map(
+      state.wanderers.map((w) => [w.id, { ...w.cargo }]),
+    );
     const cargo = zeroStock();
     for (const spoil of state.spoils) {
       add(cargo, spoil.cargo);
@@ -378,6 +445,7 @@ export class EncounterTracker {
         asVictim: t.asVictim.attack + t.asVictim.extort,
         deaths: t.deaths.square + t.deaths.triangle + t.deaths.circle,
       })),
+      wanderers: state.wanderers.length,
     });
   }
 
@@ -386,13 +454,14 @@ export class EncounterTracker {
     for (const id of [...this.open.keys()]) this.close(id, "open");
     for (const battle of this.battles.values()) {
       for (const team of battle.sides) {
-        this.tally.teams[team]!.battles.open += 1;
+        if (team !== null) this.tally.teams[team]!.battles.open += 1;
       }
       for (const id of [...battle.entrants.keys()]) {
         this.fateIn(battle, id, "open");
       }
     }
     this.battles.clear();
+    this.tally.wanderers.aliveAtEnd = state.wanderers.length;
     const { spoils } = this.tally;
     spoils.left = state.spoils.length;
     spoils.leftCargo = zeroStock();
@@ -400,12 +469,17 @@ export class EncounterTracker {
     return this.tally;
   }
 
-  /** A creep entering a battle: its role, DNA and load as it entered. */
+  /**
+   * A creep entering a battle: its role, DNA and load as it entered. The
+   * wanderers count as participants, not in the teams' fates.
+   */
   private enter(
     state: WorldState,
     battle: OpenBattle,
-    ref: { id: number; team: number; dna: Dna },
+    ref: { id: number; team: number | null; dna: Dna },
   ): void {
+    this.tally.battleStats.participants += 1;
+    if (ref.team === null) return;
     const creep = state.creeps.find((c) => c.id === ref.id);
     const loaded =
       creep !== undefined && creep.cargo.materia + creep.cargo.cristal > 0;
@@ -414,7 +488,6 @@ export class EncounterTracker {
       dna: ref.dna,
       load: loaded ? "loaded" : "empty",
     });
-    this.tally.battleStats.participants += 1;
   }
 
   private fate(battleId: number, creepId: number, fate: Fate): void {
@@ -437,6 +510,8 @@ export class EncounterTracker {
     if (open === undefined) return;
     this.open.delete(id);
     this.tally.teams[open.aggressorTeam]!.outcomesAsAggressor[outcome] += 1;
-    this.tally.teams[open.victimTeam]!.outcomesAsVictim[outcome] += 1;
+    if (open.victimTeam !== null) {
+      this.tally.teams[open.victimTeam]!.outcomesAsVictim[outcome] += 1;
+    }
   }
 }

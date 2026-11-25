@@ -311,6 +311,20 @@ the exit ring, not the combat numbers. The owner decided:
 | C1-3 | **The spawn zones' distance to the border becomes a param**, its value chosen with the matrix and brought to the owner | The zones halfway between the border and the center, fixed (F3 interpretation 1) |
 | C1-4 | **The strategist unchanged until the wanderers are in**; changes to the bots, if still needed, come at C1b as a proposal | Raiders patrolling after exploring, mixed DNA and helping a teammate, together with F6 |
 
+### Decided at checkpoint C1b (2026-11-25)
+
+The bot × bot report with the wanderers (tasks, F6 record): they open 331 of the 358 sweep battles and kill 86 of the
+104 creeps that die; in 3 days of seed 42 the teams end with 15 / 10 creeps (C1: 30 / 30), no battle between teams
+is left, and 37 spoils piles lie on the map. The pressure follows the cap, not the damage; a circle beats a square in
+every junction battle. The owner decided:
+
+| # | Decision | Alternative not taken |
+|---|---|---|
+| C1b-1 | **`battle.zone.insetPermille` 750** (provisional): fleeing loaded has a real risk (37% die), fleeing empty mostly escapes (87%); the fights do not change | 850, the largest valid (48% of loaded fleers die); 500, the old halfway (19%) |
+| C1b-2 | **`wanderers.cap` stays 4** (provisional) until the playtest: the bots neither flee nor avoid the band, so the humans measure the real pressure | 2 or 1 alive at a time |
+| C1b-3 | **The strategist unchanged until the playtest** (closes C1-4); the bots' gaps with the wanderers (squares fight them, only the raider picks up spoils) are findings for later | Collectors picking up spoils in sight; loaded squares fleeing a wanderer |
+| C1b-4 | **The square against the circle is watched in the playtest** (an open question in GDD 06), not tuned now | A short round in `params/battle.json` before F4 |
+
 ## 13. Implementation order
 
 | Phase | Content | Checkpoint |

@@ -30,9 +30,9 @@ import { nameAt } from "./names.ts";
  * 10, not 1 (M2 encontro F6, plan C11). 10: the battle replaces the roll: an
  * attack or a refused extortion opens a battle stub, its participants lock,
  * the junction host's result commands end it; no dialogue flee (M2 junction
- * F2).
+ * F2). 11: the wanderers, a side that is not a team (M2 junction F6).
  */
-export const SIM_VERSION = 10;
+export const SIM_VERSION = 11;
 
 export type Stock = Record<Resource, number>;
 
@@ -122,8 +122,59 @@ export type Encounter = {
   reply: Reply | null;
 } & Cell;
 
-/** A side of a battle as the world knows it: a team (wanderers come in F6). */
-export type BattleSide = { kind: "team"; team: number };
+/**
+ * A side of a battle as the world knows it: a team, or the wanderers (at
+ * most one such side per battle, junction plan section 9).
+ */
+export type BattleSide = { kind: "team"; team: number } | { kind: "wanderers" };
+
+/** The team of a battle side, or null for the wanderers'. */
+export function sideTeam(side: BattleSide): number | null {
+  return side.kind === "team" ? side.team : null;
+}
+
+/**
+ * What a wanderer is doing (junction spec W-2): roaming to a cell of the
+ * band, approaching a team's creep to attack it (or a participant, to join
+ * its battle), or standing.
+ */
+export type WandererOrder =
+  | { type: "stop" }
+  | ({ type: "roam" } & Cell)
+  | { type: "approach"; targetId: number };
+
+/**
+ * A wanderer (junction spec D14, plan P4): a hostile circle of no team, in
+ * its own array so no per-team path has to tell it apart. Ids come from the
+ * same counter as everything else; its name from the same births.
+ */
+export type Wanderer = {
+  id: number;
+  dna: "circle";
+  name: string;
+  /** Hit points in thousandths, like a creep's. */
+  hp: number;
+  /** What it looted; it carries it until it dies (W-3). */
+  cargo: Stock;
+  /** Id of the Battle it is locked in, or null. */
+  battle: number | null;
+  order: WandererOrder;
+  movePoints: number;
+  /** Cached route on the real map (a wanderer knows it all). */
+  path: PathCache | null;
+  /**
+   * Creeps it leaves alone until `untilTick`: they were in a battle with it
+   * (W-7). By creep id.
+   */
+  spared: { creep: number; untilTick: number }[];
+} & Cell;
+
+/** Whatever a battle locks: a team's creep or a wanderer. */
+export type Fighter = Creep | Wanderer;
+
+export function isWanderer(fighter: Fighter): fighter is Wanderer {
+  return !("team" in fighter);
+}
 
 /**
  * How a participant enters the battle (junction spec D2, D10): with its DNA's
@@ -195,6 +246,13 @@ export type WorldState = {
   battles: Battle[];
   /** Spoils on the map, by id; one per cell at most (D11). */
   spoils: Spoil[];
+  /** The wanderers alive, by id (junction plan section 9). */
+  wanderers: Wanderer[];
+  /**
+   * The tick from which the next wanderer may be born (D14): it is, as
+   * soon as fewer than the cap are alive.
+   */
+  nextWandererTick: number;
   /** What each team has seen and remembers, by team id (fog plan N1). */
   memory: TeamMemory[];
   nextId: number;
@@ -254,6 +312,8 @@ export function createWorld(seed: number, params: Params): WorldState {
     encounters: [],
     battles: [],
     spoils: [],
+    wanderers: [],
+    nextWandererTick: params.wanderers.firstSeconds / params.world.tickSeconds,
     memory: createMemory(teams, layout.map),
     nextId,
     births,

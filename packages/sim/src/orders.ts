@@ -24,12 +24,11 @@ import {
   findRoadJob,
   nextSegment,
 } from "./roads.ts";
-import { battleToJoin } from "./battle.ts";
-import { findCreep } from "./domination.ts";
+import { battleToJoin, findFighter } from "./battle.ts";
 import { creepRef, emit, type EventLog } from "./events.ts";
 import { findSpoil, takeSpoil } from "./spoils.ts";
 import { recordDelivery } from "./stats.ts";
-import type { Creep, Deposit, WorldState } from "./world.ts";
+import type { Creep, Deposit, Fighter, WorldState } from "./world.ts";
 
 export type Order =
   | { type: "stop" }
@@ -121,7 +120,7 @@ export function resolveOrders(state: WorldState, log: EventLog): void {
  * join (junction J-3).
  */
 function approach(state: WorldState, creep: Creep, targetId: number): void {
-  const target = findCreep(state, targetId);
+  const target = findFighter(state, targetId);
   const visible = memoryOf(state, creep.team).visible;
   if (
     target === undefined ||
@@ -195,10 +194,10 @@ function flee(state: WorldState, creep: Creep, untilTick: number): void {
 }
 
 /** Stops in place, dropping accumulated points and the cached path. */
-export function halt(creep: Creep): void {
-  creep.order = { type: "stop" };
-  creep.movePoints = 0;
-  creep.path = null;
+export function halt(fighter: Fighter): void {
+  fighter.order = { type: "stop" };
+  fighter.movePoints = 0;
+  fighter.path = null;
 }
 
 const isAt = (creep: Creep, cell: Cell) =>

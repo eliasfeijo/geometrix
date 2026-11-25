@@ -20,6 +20,7 @@ import {
 } from "@geometrix/battle";
 import {
   canonicalJson,
+  findFighter,
   step,
   SYSTEM_PLAYER_ID,
   type BattleWindow,
@@ -116,7 +117,7 @@ export function battleTicksPerWorldTick(
 }
 
 function creepOf(world: WorldState, id: number) {
-  const creep = world.creeps.find((c) => c.id === id);
+  const creep = findFighter(world, id);
   if (creep === undefined) throw new JunctionError(`no creep ${id}`);
   return creep;
 }
@@ -258,10 +259,25 @@ function stepInstance(
   return events;
 }
 
-/** Opens an instance for a stub the world just opened. */
-function openInstance(world: WorldState, host: JunctionHost, battleId: number) {
-  const stub = world.battles.find((b) => b.id === battleId);
-  if (stub === undefined) throw new JunctionError(`no battle ${battleId}`);
+/**
+ * Opens an instance for a stub the world just opened, with the opening's
+ * two sides and creeps only: those who joined on the same tick come in by
+ * their battleJoined, like any later join.
+ */
+function openInstance(
+  world: WorldState,
+  host: JunctionHost,
+  opened: Extract<SimEvent, { type: "battleOpened" }>,
+) {
+  const battleId = opened.battle;
+  const found = world.battles.find((b) => b.id === battleId);
+  if (found === undefined) throw new JunctionError(`no battle ${battleId}`);
+  const openers = opened.sides.flatMap((side) => side.creeps.map((c) => c.id));
+  const stub = {
+    ...found,
+    sides: found.sides.slice(0, opened.sides.length),
+    participants: found.participants.filter((p) => openers.includes(p.id)),
+  };
   const { setup, placed } = battleSetup(world, stub);
   const state = createBattle(setup, host.battleParams);
   const instance: Instance = {
@@ -287,7 +303,7 @@ function checkApplied(world: WorldState, results: readonly Command[]): void {
         throw new JunctionError(`battle ${command.battleId}: end refused`);
       }
     } else if (command.type === "battleExit") {
-      const creep = world.creeps.find((c) => c.id === command.creepId);
+      const creep = findFighter(world, command.creepId);
       if (creep !== undefined && creep.battle === command.battleId) {
         throw new JunctionError(
           `battle ${command.battleId}: exit of ${command.creepId} refused`,
@@ -329,7 +345,7 @@ export function stepJunction(
   );
   for (const event of events) {
     if (event.type === "battleOpened") {
-      openInstance(world, host, event.battle);
+      openInstance(world, host, event);
     } else if (event.type === "battleJoined") {
       const instance = host.instances.find((i) => i.battleId === event.battle);
       if (instance === undefined) {

@@ -51,6 +51,8 @@ export type Participant = {
   carry: Carry;
   /** The most the carry may hold, from the setup (junction spec D9). */
   capacity: number;
+  /** The setup's own damage, when it has one (junction D14). */
+  damage?: number;
   controller: Controller;
   /** Replaced whole, never mutated in place (like the sim's rules). */
   gambits: Gambit[];

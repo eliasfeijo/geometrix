@@ -16,6 +16,7 @@ import type {
   RoadJob,
   Spoil,
   Team,
+  Wanderer,
   WorldState,
 } from "./world.ts";
 
@@ -71,6 +72,15 @@ export type BattleStubView = Omit<Battle, "participants"> & {
   participants: { id: number; side: number }[];
 };
 
+/**
+ * A wanderer in sight (junction W-5): seen like another team's creep, with
+ * no order or path.
+ */
+export type WandererView = Pick<
+  Wanderer,
+  "id" | "dna" | "name" | "hp" | "battle" | "x" | "y" | "cargo"
+>;
+
 /** Another team: its id and, once seen, where its core is (spec D7). */
 export type ForeignTeam = { id: number; core: Cell | null };
 
@@ -102,6 +112,8 @@ export type TeamView = {
    * sight, by id (junction D16).
    */
   battles: BattleStubView[];
+  /** The wanderers in sight, by id (junction W-5). */
+  wanderers: WandererView[];
   /** The spoils the team remembers, with the last cargo seen, by id. */
   spoils: Spoil[];
   /** Per cell: -1 never seen, else its Terrain (plan N6). */
@@ -182,6 +194,8 @@ export function view(state: WorldState, team: number): TeamView {
     if (own || inSight(battle)) battles.push(stubView(battle));
   }
 
+  const wanderers = state.wanderers.filter(inSight).map(wandererView);
+
   const roadJobs: RoadJob[] = [];
   for (const job of state.roadJobs) {
     if (job.team === team) roadJobs.push({ ...job });
@@ -218,6 +232,7 @@ export function view(state: WorldState, team: number): TeamView {
     ),
     encounters,
     battles,
+    wanderers,
     spoils: memory.spoils.map((s) => ({ ...s })),
     known,
     visible: seen,
@@ -244,6 +259,7 @@ export function fullView(state: WorldState): TeamView {
     players: state.players.map((p) => ({ ...p })),
     encounters: state.encounters.map((e) => ({ ...e })),
     battles: state.battles.map(stubView),
+    wanderers: state.wanderers.map(wandererView),
     spoils: state.spoils.map((s) => ({ ...s, cargo: { ...s.cargo } })),
     known: [...map.terrain],
     visible: map.terrain.map((_, i) => i),
@@ -307,6 +323,19 @@ function foreignEncounterView(encounter: Encounter): ForeignEncounterView {
     intent: encounter.intent,
     x: encounter.x,
     y: encounter.y,
+  };
+}
+
+function wandererView(wanderer: Wanderer): WandererView {
+  return {
+    id: wanderer.id,
+    dna: wanderer.dna,
+    name: wanderer.name,
+    hp: wanderer.hp,
+    battle: wanderer.battle,
+    x: wanderer.x,
+    y: wanderer.y,
+    cargo: wanderer.cargo,
   };
 }
 

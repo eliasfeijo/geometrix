@@ -13,13 +13,17 @@ import { isInMap, type Cell } from "./map.ts";
 import { cellModifier } from "./movement.ts";
 import { halt } from "./orders.ts";
 import { dropSpoil, transfer } from "./spoils.ts";
-import type {
-  Battle,
-  BattleWindow,
-  Creep,
-  Stance,
-  Stock,
-  WorldState,
+import {
+  isWanderer,
+  sideTeam,
+  type Battle,
+  type BattleSide,
+  type BattleWindow,
+  type Fighter,
+  type Stance,
+  type Stock,
+  type Wanderer,
+  type WorldState,
 } from "./world.ts";
 
 /**
@@ -28,8 +32,11 @@ import type {
  */
 export const SYSTEM_PLAYER_ID = 0;
 
-/** How a battle opened: an attack, or an extortion refused (O-1, O-2). */
-export type BattleCause = "attack" | "refused";
+/**
+ * How a battle opened: an attack, an extortion refused (O-1, O-2), or a
+ * wanderer's attack (W-2).
+ */
+export type BattleCause = "attack" | "refused" | "wanderer";
 
 /** What a participant leaves the battle with (plan section 3, P2). */
 export type BattleExitCommand = {
@@ -82,6 +89,51 @@ export function findBattle(state: WorldState, id: number): Battle | undefined {
   return state.battles.find((b) => b.id === id);
 }
 
+export function findWanderer(
+  state: WorldState,
+  id: number,
+): Wanderer | undefined {
+  return state.wanderers.find((w) => w.id === id);
+}
+
+/** A team's creep or a wanderer, by id. */
+export function findFighter(
+  state: WorldState,
+  id: number,
+): Fighter | undefined {
+  return findCreep(state, id) ?? findWanderer(state, id);
+}
+
+/** Whole max HP points: the DNA's for a creep, the wanderers' own (D14). */
+export function fighterMaxHp(state: WorldState, fighter: Fighter): number {
+  return isWanderer(fighter)
+    ? state.params.wanderers.hp
+    : state.params.hp.dna[fighter.dna].max;
+}
+
+/** What it can carry: a wanderer, the circle's base capacity (D14). */
+export function fighterCapacity(state: WorldState, fighter: Fighter): number {
+  return isWanderer(fighter)
+    ? state.params.dna.circle.capacity
+    : capacity(fighter, teamOf(state, fighter), state.params);
+}
+
+/** Removes a dead fighter from the state (a creep by slice A's rule). */
+export function removeFighter(state: WorldState, fighter: Fighter): void {
+  if (!isWanderer(fighter)) {
+    kill(state, fighter);
+    return;
+  }
+  state.wanderers = state.wanderers.filter((w) => w.id !== fighter.id);
+}
+
+/** The battle side `fighter` belongs on: its team's, or the wanderers'. */
+export function sideOf(fighter: Fighter): BattleSide {
+  return isWanderer(fighter)
+    ? { kind: "wanderers" }
+    : { kind: "team", team: fighter.team };
+}
+
 /**
  * The bubble (D5): `battle.window` cells centered on `cell`, shifted to stay
  * inside the map.
@@ -107,35 +159,33 @@ export function inWindow(window: BattleWindow, cell: Cell): boolean {
   );
 }
 
-/** Locks a creep in a battle (O-5): no order, no path, no dialogue. */
-function lock(creep: Creep, battle: Battle): void {
-  creep.battle = battle.id;
-  creep.engagement = null;
-  halt(creep);
+/** Locks a fighter in a battle (O-5): no order, no path, no dialogue. */
+function lock(fighter: Fighter, battle: Battle): void {
+  fighter.battle = battle.id;
+  if (!isWanderer(fighter)) fighter.engagement = null;
+  halt(fighter);
 }
 
 /**
- * Opens a battle (O-1, O-2) between the aggressor (side 0) and the victim
- * (side 1) on the victim's cell, after the declaration (`encounter`), and
- * locks both. The aggressor fights; the victim enters as its reaction said.
+ * Opens a battle (O-1, O-2, W-2) between the aggressor (side 0) and the
+ * victim (side 1) on the victim's cell, after the declaration (`encounter`,
+ * none for a wanderer), and locks both. The aggressor fights; the victim
+ * enters as its reaction said.
  */
 export function openBattle(
   state: WorldState,
   log: EventLog,
-  encounter: number,
+  encounter: number | null,
   cause: BattleCause,
-  aggressor: Creep,
-  victim: Creep,
+  aggressor: Fighter,
+  victim: Fighter,
   victimStance: Stance,
 ): Battle {
   const cell = { x: victim.x, y: victim.y };
   const battle: Battle = {
     id: state.nextId++,
     window: windowAround(state, cell),
-    sides: [
-      { kind: "team", team: aggressor.team },
-      { kind: "team", team: victim.team },
-    ],
+    sides: [sideOf(aggressor), sideOf(victim)],
     participants: [
       { id: aggressor.id, side: 0, stance: "fight" as Stance },
       { id: victim.id, side: 1, stance: victimStance },
@@ -151,21 +201,23 @@ export function openBattle(
     battle: battle.id,
     encounter,
     cause,
-    sides: [
-      { team: aggressor.team, creeps: [creepRef(aggressor)] },
-      { team: victim.team, creeps: [creepRef(victim)] },
-    ],
+    sides: battle.sides.map((side, i) => ({
+      team: sideTeam(side),
+      creeps: [creepRef(i === 0 ? aggressor : victim)],
+    })),
     ...cell,
   });
   return battle;
 }
 
 /**
- * The side of `team` in the battle: its own, or a new one while there is
+ * The index of `wanted` in the battle: its own, or a new one while there is
  * room for a side (D6), or null.
  */
-function sideFor(state: WorldState, battle: Battle, team: number) {
-  const own = battle.sides.findIndex((s) => s.team === team);
+function sideFor(state: WorldState, battle: Battle, wanted: BattleSide) {
+  const own = battle.sides.findIndex(
+    (s) => s.kind === wanted.kind && sideTeam(s) === sideTeam(wanted),
+  );
   if (own >= 0) return own;
   return battle.sides.length < state.params.battle.maxSides
     ? battle.sides.length
@@ -173,20 +225,22 @@ function sideFor(state: WorldState, battle: Battle, team: number) {
 }
 
 /**
- * The battle a creep approaching `target` to attack would join, when it is
- * inside its bubble (J-1), or undefined.
+ * The battle a fighter approaching `target` to attack would join, when it is
+ * inside its bubble (J-1, W-2), or undefined. A wanderer only ever attacks.
  */
 export function battleToJoin(
   state: WorldState,
-  creep: Creep,
+  fighter: Fighter,
 ): Battle | undefined {
-  if (creep.order.type !== "approach" || creep.order.intent !== "attack") {
-    return undefined;
+  const { order } = fighter;
+  if (order.type !== "approach") return undefined;
+  if (!isWanderer(fighter) && fighter.order.type === "approach") {
+    if (fighter.order.intent !== "attack") return undefined;
   }
-  const target = findCreep(state, creep.order.targetId);
+  const target = findFighter(state, order.targetId);
   if (target === undefined || target.battle === null) return undefined;
   const battle = findBattle(state, target.battle)!;
-  return inWindow(battle.window, creep) ? battle : undefined;
+  return inWindow(battle.window, fighter) ? battle : undefined;
 }
 
 /**
@@ -197,28 +251,32 @@ export function battleToJoin(
  */
 export function runJoins(state: WorldState, log: EventLog): void {
   if (state.battles.length === 0) return;
-  for (const creep of state.creeps) {
-    if (creep.battle !== null || creep.engagement !== null) continue;
-    const battle = battleToJoin(state, creep);
+  const fighters: Fighter[] =
+    state.wanderers.length === 0
+      ? state.creeps
+      : [...state.creeps, ...state.wanderers].sort((a, b) => a.id - b.id);
+  for (const fighter of fighters) {
+    if (fighter.battle !== null) continue;
+    if (!isWanderer(fighter) && fighter.engagement !== null) continue;
+    const battle = battleToJoin(state, fighter);
     if (battle === undefined) continue;
-    const side = sideFor(state, battle, creep.team);
+    const wanted = sideOf(fighter);
+    const side = sideFor(state, battle, wanted);
     if (side === null) continue;
     const members = battle.participants.filter((p) => p.side === side);
     if (members.length >= state.params.battle.sideCap) continue;
-    if (side === battle.sides.length) {
-      battle.sides.push({ kind: "team", team: creep.team });
-    }
+    if (side === battle.sides.length) battle.sides.push(wanted);
     battle.participants = [
       ...battle.participants,
-      { id: creep.id, side, stance: "fight" as Stance },
+      { id: fighter.id, side, stance: "fight" as Stance },
     ].sort((a, b) => a.id - b.id);
     // Approaching someone ends one's own safe conduct (E-8).
-    creep.safeConduct = null;
-    lock(creep, battle);
+    if (!isWanderer(fighter)) fighter.safeConduct = null;
+    lock(fighter, battle);
     emit(log, {
       type: "battleJoined",
       battle: battle.id,
-      creep: creepRef(creep),
+      creep: creepRef(fighter),
       side,
       x: battle.x,
       y: battle.y,
@@ -248,17 +306,15 @@ function isStock(stock: Stock): boolean {
 /** Whole HP in 1..max and a load that fits: what a living creep comes back with. */
 function returnIssue(
   state: WorldState,
-  creep: Creep,
+  fighter: Fighter,
   hp: number,
   cargo: Stock,
   cell: Cell,
 ): boolean {
-  const max = state.params.hp.dna[creep.dna].max;
+  const max = fighterMaxHp(state, fighter);
   if (!Number.isSafeInteger(hp) || hp < 1 || hp > max) return true;
   if (!isStock(cargo)) return true;
-  if (stockTotal(cargo) > capacity(creep, teamOf(state, creep), state.params)) {
-    return true;
-  }
+  if (stockTotal(cargo) > fighterCapacity(state, fighter)) return true;
   return !isStandable(state, cell);
 }
 
@@ -270,7 +326,7 @@ export function battleExitRefusal(
   if (playerId !== SYSTEM_PLAYER_ID) return "notSystem";
   const battle = findBattle(state, command.battleId);
   if (battle === undefined) return "unknownBattle";
-  const creep = findCreep(state, command.creepId);
+  const creep = findFighter(state, command.creepId);
   if (creep === undefined || creep.battle !== battle.id) return "notInBattle";
   if (command.outcome === "died") {
     return isInMap(state.map, command.cell) ? null : "invalidResult";
@@ -281,15 +337,45 @@ export function battleExitRefusal(
     : null;
 }
 
+/**
+ * W-7: a fighter leaving `battle` alive pairs up with the others still in
+ * it, a wanderer with each team's creep: the wanderer spares that creep for
+ * `wanderers.spareSeconds`.
+ */
+function spareOnLeaving(
+  state: WorldState,
+  battle: Battle,
+  leaving: Fighter,
+): void {
+  const untilTick =
+    state.tick + ticks(state, state.params.wanderers.spareSeconds);
+  const spare = (wanderer: Wanderer, creep: number) => {
+    wanderer.spared = [
+      ...wanderer.spared.filter((s) => s.creep !== creep),
+      { creep, untilTick },
+    ].sort((a, b) => a.creep - b.creep);
+  };
+  for (const p of battle.participants) {
+    if (p.id === leaving.id) continue;
+    const other = findFighter(state, p.id);
+    if (other === undefined || isWanderer(other) === isWanderer(leaving)) {
+      continue;
+    }
+    if (isWanderer(leaving)) spare(leaving, other.id);
+    else spare(other as Wanderer, leaving.id);
+  }
+}
+
 /** Back in the world on `cell` with its HP and load, unlocked and stopped. */
 function unlock(
   state: WorldState,
   battle: Battle,
-  creep: Creep,
+  creep: Fighter,
   hp: number,
   cargo: Stock,
   cell: Cell,
 ): void {
+  spareOnLeaving(state, battle, creep);
   creep.hp = hp * 1000;
   creep.cargo = { materia: cargo.materia, cristal: cargo.cristal };
   creep.x = cell.x;
@@ -310,13 +396,13 @@ export function applyBattleExit(
   command: BattleExitCommand,
 ): void {
   const battle = findBattle(state, command.battleId)!;
-  const creep = findCreep(state, command.creepId)!;
+  const creep = findFighter(state, command.creepId)!;
   const ref = creepRef(creep);
   if (command.outcome === "died") {
     battle.participants = battle.participants.filter((p) => p.id !== creep.id);
     const killer =
-      command.by === null ? undefined : findCreep(state, command.by);
-    kill(state, creep);
+      command.by === null ? undefined : findFighter(state, command.by);
+    removeFighter(state, creep);
     emit(log, {
       type: "died",
       creep: ref,
@@ -327,10 +413,13 @@ export function applyBattleExit(
     return;
   }
   unlock(state, battle, creep, command.hp, command.cargo, command.cell);
-  creep.order = {
-    type: "flee",
-    untilTick: state.tick + ticks(state, state.params.flee.seconds),
-  };
+  // A wanderer has no home to run to: it roams again.
+  if (!isWanderer(creep)) {
+    creep.order = {
+      type: "flee",
+      untilTick: state.tick + ticks(state, state.params.flee.seconds),
+    };
+  }
   emit(log, {
     type: "battleLeft",
     battle: battle.id,
@@ -377,7 +466,7 @@ export function battleEndRefusal(
       return "invalidResult";
   }
   for (const s of survivors) {
-    const creep = findCreep(state, s.creepId)!;
+    const creep = findFighter(state, s.creepId)!;
     if (returnIssue(state, creep, s.hp, s.cargo, s.cell)) {
       return "invalidResult";
     }
@@ -403,9 +492,9 @@ export function applyBattleEnd(
   command: BattleEndCommand,
 ): void {
   const battle = findBattle(state, command.battleId)!;
-  const survivors: Creep[] = [];
+  const survivors: Fighter[] = [];
   for (const s of command.survivors) {
-    const creep = findCreep(state, s.creepId)!;
+    const creep = findFighter(state, s.creepId)!;
     unlock(state, battle, creep, s.hp, s.cargo, s.cell);
     survivors.push(creep);
   }
@@ -447,8 +536,10 @@ export function applyBattleEnd(
     battle: battle.id,
     reason: command.reason,
     winner:
-      winner === null ? null : { side: command.winnerSide!, team: winner.team },
-    sideTeams: battle.sides.map((s) => s.team),
+      winner === null
+        ? null
+        : { side: command.winnerSide!, team: sideTeam(winner) },
+    sideTeams: battle.sides.map(sideTeam),
     survivors: survivors.map(creepRef),
     loot,
     spoils,
@@ -464,12 +555,11 @@ export function applyBattleEnd(
  */
 function collect(
   state: WorldState,
-  creep: Creep,
+  creep: Fighter,
   piles: { cargo: Stock }[],
 ): Stock {
   const taken = { materia: 0, cristal: 0 };
-  const room = () =>
-    capacity(creep, teamOf(state, creep), state.params) - cargoTotal(creep);
+  const room = () => fighterCapacity(state, creep) - cargoTotal(creep);
   for (const resource of ["cristal", "materia"] as const) {
     for (const pile of piles) {
       const amount = Math.min(pile.cargo[resource], room());

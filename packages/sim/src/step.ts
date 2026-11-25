@@ -3,13 +3,18 @@
 //   1. apply the tick's external commands, in seq order, the junction
 //      host's battle results included                  (F4; junction P2)
 //   2. per creep, by id: dominated keeps its order, free ones
-//      evaluate their rules; creeps in an encounter or a battle skip
+//      evaluate their rules; creeps in an encounter or a battle skip;
+//      then the wanderers decide                      (junction F6)
 //   3. resolve orders: movement, gathering, delivery, roads,
-//      approach; creeps in a battle skip           (F2 / F3; M2 encontro)
-//   4. encounters: open (an attack opens a battle), the extortion
-//      dialogue (a refusal opens one), joins       (M2 encontro §4; junction)
-//   5. core production queues, spawning (born event)           (F3)
-//   6. materia and HP regeneration; creeps in a battle do not heal
+//      approach; creeps in a battle skip; the wanderers walk
+//                                                (F2 / F3; M2 encontro)
+//   4. encounters: open (an attack opens a battle), the wanderers'
+//      attacks, the extortion dialogue (a refusal opens one), joins
+//                                                (M2 encontro §4; junction)
+//   5. core production queues, spawning (born event); wanderer births
+//                                                         (F3; junction)
+//   6. materia and HP regeneration (the wanderers' too); nobody in a
+//      battle heals
 //                                                    (F3; M2 encontro P1)
 //   7. vision and team memory; the events' audience  (M1.5 fog, N10;
 //      ADR-0007 rule 3)
@@ -27,6 +32,12 @@ import { resolveOrders } from "./orders.ts";
 import { runProduction } from "./production.ts";
 import { accumulateStats, recordCommand } from "./stats.ts";
 import { updateVision } from "./vision.ts";
+import {
+  decideWanderers,
+  moveWanderers,
+  regenerateWanderers,
+  runWandererBirths,
+} from "./wanderers.ts";
 import type { WorldState } from "./world.ts";
 
 /**
@@ -56,11 +67,15 @@ export function step(
     );
   }
   runAutopilot(state);
+  decideWanderers(state);
   resolveOrders(state, log);
+  moveWanderers(state);
   runEncounters(state, log);
   runProduction(state, log);
+  runWandererBirths(state, log);
   regenerate(state);
   regenerateHp(state);
+  regenerateWanderers(state);
   updateVision(state);
   setAudience(state, log.events);
   accumulateStats(state);

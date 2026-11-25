@@ -8,14 +8,30 @@
 import type { BattleCause, BattleEndReason } from "./battle.ts";
 import type { Cell } from "./map.ts";
 import type { Dna } from "./params.ts";
-import type { Creep, Stock, WorldState } from "./world.ts";
+import {
+  isWanderer,
+  sideTeam,
+  type Fighter,
+  type Stock,
+  type WorldState,
+} from "./world.ts";
 
-/** A creep as events name it: the dead leave the state, the chronicle needs them. */
-export type CreepRef = { id: number; team: number; dna: Dna; name: string };
+/**
+ * A creep as events name it: the dead leave the state, the chronicle needs
+ * them. A wanderer has no team (null, junction D14).
+ */
+export type CreepRef = {
+  id: number;
+  team: number | null;
+  dna: Dna;
+  name: string;
+};
 
 /** What an event says, without its place in the tick or its audience. */
 export type EventBody = (
   | { type: "born"; creep: CreepRef }
+  /** A wanderer was born on its cell (junction D15, W-1). */
+  | { type: "wandererBorn"; wanderer: CreepRef }
   | {
       type: "encounter";
       encounter: number;
@@ -43,13 +59,15 @@ export type EventBody = (
   | {
       /**
        * A battle opened on its cell (junction D15, O-1, O-2), from the
-       * declaration `encounter`: each side's team and creeps.
+       * declaration `encounter` (null for a wanderer's attack, which
+       * declares nothing): each side's team (null for the wanderers) and
+       * creeps.
        */
       type: "battleOpened";
       battle: number;
-      encounter: number;
+      encounter: number | null;
       cause: BattleCause;
-      sides: { team: number; creeps: CreepRef[] }[];
+      sides: { team: number | null; creeps: CreepRef[] }[];
     }
   | { type: "battleJoined"; battle: number; creep: CreepRef; side: number }
   | {
@@ -70,9 +88,9 @@ export type EventBody = (
       type: "battleEnded";
       battle: number;
       reason: BattleEndReason;
-      winner: { side: number; team: number } | null;
-      /** The team of each battle side, by side index. */
-      sideTeams: number[];
+      winner: { side: number; team: number | null } | null;
+      /** The team of each battle side, by side index; null the wanderers'. */
+      sideTeams: (number | null)[];
       survivors: CreepRef[];
       loot: { creep: CreepRef; taken: Stock }[];
       spoils: number[];
@@ -110,8 +128,13 @@ export function emit(log: EventLog, body: EventBody): void {
   });
 }
 
-export function creepRef(creep: Creep): CreepRef {
-  return { id: creep.id, team: creep.team, dna: creep.dna, name: creep.name };
+export function creepRef(fighter: Fighter): CreepRef {
+  return {
+    id: fighter.id,
+    team: isWanderer(fighter) ? null : fighter.team,
+    dna: fighter.dna,
+    name: fighter.name,
+  };
 }
 
 /**
@@ -121,12 +144,13 @@ export function creepRef(creep: Creep): CreepRef {
  */
 function involvedTeams(
   event: EventBody,
-  battleTeams: ReadonlyMap<number, readonly number[]>,
+  battleTeams: ReadonlyMap<number, readonly (number | null)[]>,
 ): number[] {
   const teams = participants(event).map((creep) => creep.team);
   const battle = battleOf(event);
-  if (battle === null) return teams;
-  return [...teams, ...(battleTeams.get(battle) ?? [])];
+  const all =
+    battle === null ? teams : [...teams, ...(battleTeams.get(battle) ?? [])];
+  return all.filter((team) => team !== null);
 }
 
 /** The battle an event belongs to, if any. */
@@ -146,6 +170,8 @@ function battleOf(event: EventBody): number | null {
 /** The creeps an event is about. */
 function participants(event: EventBody): CreepRef[] {
   switch (event.type) {
+    case "wandererBorn":
+      return [event.wanderer];
     case "born":
     case "reaction":
     case "pickedUp":
@@ -173,8 +199,8 @@ function participants(event: EventBody): CreepRef[] {
 export function setAudience(state: WorldState, events: SimEvent[]): void {
   const { width } = state.map;
   // The sides of the battles open, and of those that ended in the tick.
-  const battleTeams = new Map<number, readonly number[]>(
-    state.battles.map((b) => [b.id, b.sides.map((s) => s.team)]),
+  const battleTeams = new Map<number, readonly (number | null)[]>(
+    state.battles.map((b) => [b.id, b.sides.map(sideTeam)]),
   );
   for (const event of events) {
     if (event.type === "battleEnded") {

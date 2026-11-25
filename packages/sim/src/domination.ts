@@ -209,12 +209,20 @@ export function orderRefusal(
       if (order.intent !== "attack" && order.intent !== "extort") {
         return "invalidOrder";
       }
-      const target = findCreep(state, order.targetId);
       const visible = memoryOf(state, player.team).visible;
+      const seen = (cell: { x: number; y: number }) =>
+        visible[cell.y * state.map.width + cell.x] === 1;
+      // A wanderer in sight can be attacked, never extorted (junction W-4).
+      const wanderer = state.wanderers.find((w) => w.id === order.targetId);
+      if (wanderer !== undefined) {
+        if (!seen(wanderer)) return "unknownCreep";
+        return order.intent === "attack" ? null : "invalidOrder";
+      }
+      const target = findCreep(state, order.targetId);
       if (
         target === undefined ||
         target.team === player.team ||
-        visible[target.y * state.map.width + target.x] !== 1
+        !seen(target)
       ) {
         return "unknownCreep";
       }

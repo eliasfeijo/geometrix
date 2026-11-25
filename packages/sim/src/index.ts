@@ -26,4 +26,5 @@ export * from "./strategist.ts";
 export * from "./step.ts";
 export * from "./view.ts";
 export * from "./vision.ts";
+export * from "./wanderers.ts";
 export * from "./world.ts";

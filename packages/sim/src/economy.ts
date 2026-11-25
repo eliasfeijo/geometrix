@@ -25,7 +25,7 @@ export function capacity(
 }
 
 /** Units carried, both resources together. */
-export function cargoTotal(creep: Creep): number {
+export function cargoTotal(creep: { cargo: Stock }): number {
   return creep.cargo.materia + creep.cargo.cristal;
 }
 

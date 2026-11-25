@@ -129,4 +129,8 @@ sequenceDiagram
 
 ## Open questions
 - How movement is drawn in the game (the four lab options). After PLAYTEST group 7.
+- **The square against the circle in the junction's arena** (checkpoint C1b, 2026-11-25): in the junction matrix
+  a circle beats a square in every case (100%), and a wanderer, a circle with 60 HP, kills loaded squares that fight
+  it (47 of 64 in 3 days of seed 42) at any damage from 6 to 12: the marksman keeps its distance and the square never
+  reaches it in the real arena. The owner chose to watch it in the playtest before tuning anything.
 - **Critical hits?** (owner, 2026-11-18): a hit that sometimes deals more damage. With stats and skills; not in M2.
