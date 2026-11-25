@@ -5,7 +5,9 @@
 // team's sockets, at most once per broadcastIntervalMs (M1.5 plan section 5).
 // A socket may show a battle screen (junction plan section 7): it gets the
 // battle's opening once, then its frames (N-2), and sends the inputs of the
-// participant its player dominates (C-2). Closing the socket closes it.
+// participant its player dominates (C-2). Closing the socket closes it. A
+// battle's holds (R plan section 6) go to every socket of a team in it, also
+// to one that connects while they last, and P (battlePause) asks for one.
 
 import type { Server } from "node:http";
 import {
@@ -16,6 +18,7 @@ import {
   type WelcomeMessage,
 } from "@geometrix/protocol";
 import { WebSocket, WebSocketServer } from "ws";
+import type { Holds } from "./holds.ts";
 import { hashToken } from "./http.ts";
 import type { Timers } from "./loop.ts";
 import type { PlayerRow, Store } from "./persistence.ts";
@@ -54,7 +57,7 @@ export function attachWebSocket(server: Server, context: WsContext) {
   const broadcasterOf = (host: WorldHost) => {
     let b = broadcasters.get(host.id);
     if (b === undefined) {
-      b = new Broadcaster(host, context);
+      b = new Broadcaster(host, context.worlds.holds(host.id)!, context);
       broadcasters.set(host.id, b);
     }
     return b;
@@ -87,6 +90,8 @@ export function attachWebSocket(server: Server, context: WsContext) {
     }
     broadcaster.add(socket, player.team);
     context.presence?.connected(player);
+    const holds = context.worlds.holds(host.id)!;
+    for (const hold of holds.current(player.team)) send(socket, hold);
 
     socket.on("message", (data) => {
       context.presence?.input(player);
@@ -118,6 +123,16 @@ export function attachWebSocket(server: Server, context: WsContext) {
           message.battleId,
           message.command,
         );
+        send(
+          socket,
+          reason === null
+            ? { type: "ack", ref: message.ref, tick: host.state.tick }
+            : { type: "reject", ref: message.ref, reason },
+        );
+        return;
+      }
+      if (message.type === "battlePause") {
+        const reason = holds.request(player.id, message.battleId);
         send(
           socket,
           reason === null
@@ -246,7 +261,7 @@ class Broadcaster {
   private lastSent = -Infinity;
   private pending: unknown = null;
 
-  constructor(host: WorldHost, context: WsContext) {
+  constructor(host: WorldHost, holds: Holds, context: WsContext) {
     this.host = host;
     this.timers = context.timers;
     this.intervalMs = context.broadcastIntervalMs;
@@ -268,6 +283,12 @@ class Broadcaster {
     host.onTick((events) => {
       for (const stream of this.streams) stream.record(events);
       this.ticked();
+    });
+    // A hold goes at once to the sockets of the teams in the battle.
+    holds.onChange((message, teams) => {
+      for (const [socket, team] of this.sockets) {
+        if (teams.includes(team)) send(socket, message);
+      }
     });
     // A frame goes at once, serialized once, to the sockets that show it.
     host.onBattleFrame((frame) => {

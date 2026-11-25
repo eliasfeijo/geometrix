@@ -18,9 +18,11 @@ import {
 import {
   addInstances,
   createHost,
+  humanControls,
   instanceRecord,
   participantOf,
   rebuildInstance,
+  setHold,
   stepJunction,
   stepRealtime,
   type Instance,
@@ -123,6 +125,7 @@ export class WorldHost {
   /** Battle inputs for the next real-time battle tick, by battle (C-2). */
   private inputs = new Map<number, BattleInputCommand[]>();
   private readonly frameListeners: ((frame: BattleFrameMessage) => void)[] = [];
+  private readonly screenListeners: (() => void)[] = [];
 
   private constructor(
     context: HostContext,
@@ -403,7 +406,8 @@ export class WorldHost {
     if (ended) this.status = "ended";
     this.remember(events);
     for (const listener of this.listeners) listener(events);
-    // Inputs wait only for a battle on the real pace (or about to be).
+    // Inputs wait only for a battle on the real pace (or about to be), or
+    // held.
     for (const id of [...this.inputs.keys()]) {
       const instance = this.instance(id);
       if (instance === undefined || instance.pace === "world") {
@@ -464,13 +468,68 @@ export class WorldHost {
       team: player.team,
       battleId,
     });
-    this.syncScreens();
+    this.screensChanged();
     return this.opening(instance);
   }
 
   /** Back to the map, or the viewer left. */
   closeScreen(viewer: object): void {
-    if (this.screens.delete(viewer)) this.syncScreens();
+    if (this.screens.delete(viewer)) this.screensChanged();
+  }
+
+  /** Calls `listener` when a viewer opens or closes a battle screen. */
+  onScreens(listener: () => void): void {
+    this.screenListeners.push(listener);
+  }
+
+  private screensChanged(): void {
+    this.syncScreens();
+    for (const listener of this.screenListeners) listener();
+  }
+
+  /**
+   * The teams with a side in a battle going on, by id; null once it ended
+   * (or there is none).
+   */
+  battleTeams(battleId: number): number[] | null {
+    const stub = this.state.battles.find((b) => b.id === battleId);
+    if (stub === undefined || this.instance(battleId) === undefined) {
+      return null;
+    }
+    return stub.sides
+      .flatMap((side) => (side.kind === "team" ? [side.team] : []))
+      .sort((a, b) => a - b);
+  }
+
+  /**
+   * Whether the player controls a participant of the battle: the creep it
+   * dominates is in the arena and it shows the battle's screen (D13, D28).
+   */
+  controls(playerId: number, battleId: number): boolean {
+    const instance = this.instance(battleId);
+    const creep = this.state.creeps.find((c) => c.dominatedBy === playerId);
+    if (instance === undefined || creep === undefined) return false;
+    this.syncScreens();
+    return (
+      creep.battle === battleId &&
+      participantOf(instance, creep.id) !== null &&
+      this.junction.screens.includes(creep.id)
+    );
+  }
+
+  /** Whether some human controls a participant of the battle (BP-4). */
+  humanControlled(battleId: number): boolean {
+    this.syncScreens();
+    return humanControls(this.state, this.junction, battleId);
+  }
+
+  /**
+   * Holds a battle or releases it (R plan P11): while held it advances on
+   * neither clock. The holds are the server's (holds.ts), never stored.
+   */
+  setHold(battleId: number, held: boolean): void {
+    this.syncScreens();
+    setHold(this.state, this.junction, battleId, held);
   }
 
   /** The battle `viewer` shows, or null. */
@@ -500,7 +559,10 @@ export class WorldHost {
   /**
    * Queues a battle command of `playerId` for its battle's next real-time
    * tick (C-2): only for the participant of the creep it dominates. On the
-   * world clock, the inputs are dropped at the next world tick.
+   * world clock, the inputs are dropped at the next world tick. While the
+   * battle is held, only each participant's latest intent waits for the
+   * resume (a key released in the pause must not stay down); the one-shot
+   * commands are dropped.
    */
   battleInput(
     playerId: number,
@@ -517,7 +579,11 @@ export class WorldHost {
     if (participantOf(instance, creep.id) !== command.id) {
       return "notYourParticipant";
     }
-    const queued = this.inputs.get(battleId) ?? [];
+    let queued = this.inputs.get(battleId) ?? [];
+    if (instance.pace === "held") {
+      if (command.type !== "intent") return null;
+      queued = queued.filter((c) => c.type !== "intent" || c.id !== command.id);
+    }
     queued.push(command);
     this.inputs.set(battleId, queued);
     return null;

@@ -104,6 +104,8 @@ export const REJECT_TEXTS: Record<RejectReason | "disconnected", string> = {
   worldEnded: "O mundo terminou: só leitura.",
   notYourBattle: "Seu time não está nessa batalha.",
   notYourParticipant: "Você não comanda esse participante.",
+  notControlling: "Você não controla ninguém nessa batalha.",
+  countingDown: "Aguarde a contagem terminar.",
   emptyCargo: "Esse creep não carrega nada.",
   disconnected: "Sem conexão com o servidor.",
 };

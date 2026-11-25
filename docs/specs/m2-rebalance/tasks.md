@@ -316,8 +316,8 @@ The tick cost follows the population: 65–78 µs per tick on average with both 
 ## F5 — The pauses, network and server
 
 - [x] The held pace in the host (`holds`, `paceOf`), skipped by the battle clock (P11)
-- [ ] `holds.ts`: the opening hold, pausing, paused, resuming, released by absence (OC-1..OC-6, BP-1..BP-4)
-- [ ] `battlePause` and `battleHold`; the follow and drop orders; the hostile intent in the delta;
+- [x] `holds.ts`: the opening hold, pausing, paused, resuming, released by absence (OC-1..OC-6, BP-1..BP-4)
+- [x] `battlePause` and `battleHold`; the follow and drop orders; the hostile intent in the delta;
       `PROTOCOL_VERSION` 8
 - [ ] The bot's difficulty on its player row (migration), in world creation and `dev:multi --bot-difficulty`
 - [ ] The diff property with the new fields (U-4); `geo net` on today's default world still within targets

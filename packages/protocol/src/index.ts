@@ -204,6 +204,16 @@ export const clientMessage = z.discriminatedUnion("type", [
     ref: z.number().int().nonnegative(),
     battleId: id.nullable(),
   }),
+  /**
+   * P on a battle screen (R spec D28): pause a battle in real time, or
+   * resume a paused one, each after a countdown. Only for a player who
+   * controls a participant of it.
+   */
+  z.object({
+    type: z.literal("battlePause"),
+    ref: z.number().int().nonnegative(),
+    battleId: id,
+  }),
 ]);
 
 export type ClientMessage = z.infer<typeof clientMessage>;
@@ -216,6 +226,10 @@ export type BattleInputMessage = Extract<
 export type BattleScreenMessage = Extract<
   ClientMessage,
   { type: "battleScreen" }
+>;
+export type BattlePauseMessage = Extract<
+  ClientMessage,
+  { type: "battlePause" }
 >;
 
 /** The parsed message, or null when it is not a valid client message. */
@@ -371,11 +385,33 @@ export type BattleFrameMessage = {
   roster?: BattleRoster;
 };
 
+/**
+ * What holds a battle (R plan P11): the opening pause (D6), the countdown to
+ * a human's pause, the pause itself and the countdown out of it (D28). The
+ * battle does not advance while opening, paused or resuming.
+ */
+export type BattleHoldState = "opening" | "pausing" | "paused" | "resuming";
+
+/**
+ * Server -> client: a battle's hold changed, to every socket of a team with
+ * a side in it (and again to a socket that connects while one lasts). State
+ * null: nothing holds it any more. `remainingMs` is the countdown left when
+ * sent, in real time (null while paused, with no end, and with state null);
+ * relative, so the clocks of server and client need not agree.
+ */
+export type BattleHoldMessage = {
+  type: "battleHold";
+  battleId: number;
+  state: BattleHoldState | null;
+  remainingMs: number | null;
+};
+
 export type ServerMessage =
   | WelcomeMessage
   | DeltaMessage
   | BattleOpenMessage
   | BattleFrameMessage
+  | BattleHoldMessage
   | { type: "ack"; ref: number; tick: number }
   | { type: "reject"; ref: number; reason: RejectReason };
 
@@ -383,14 +419,18 @@ export type ServerMessage =
  * A sim refusal, or one from the server before the sim sees the command. A
  * battle screen of a battle the team has no side in is `notYourBattle`; a
  * battle input for a participant the player does not dominate is
- * `notYourParticipant` (C-2).
+ * `notYourParticipant` (C-2). A pause from a player who controls no
+ * participant of the battle is `notControlling`, one during a countdown
+ * `countingDown` (R spec BP-3).
  */
 export type RejectReason =
   | Refusal
   | "invalidMessage"
   | "worldEnded"
   | "notYourBattle"
-  | "notYourParticipant";
+  | "notYourParticipant"
+  | "notControlling"
+  | "countingDown";
 
 // Compile-time check that the client vocabulary matches the sim's commands,
 // less the system ones: the server's join and the junction host's battle
