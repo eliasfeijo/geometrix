@@ -2,7 +2,8 @@
 
 How to run a geometrix playtest session. The earlier sessions (M1 readability, the M1.5 fog, the M2 encounter, the
 lab groups 1–6 and 8) are done; their scripts are summarized below, and their findings live in each slice's
-`tasks.md`. **Pending:** the junction groups J1–J6 (slice D's checkpoint C2) and lab group 7 (the movement options).
+`tasks.md`. The junction groups J1–J5 were played freely at slice D's checkpoint C2 (2026-11-25; J6 left to P).
+**Pending:** lab group 7 (the movement options).
 **Next:** the friends' playtest (slice P, [ROADMAP](ROADMAP.md)), whose script is written in P's spec.
 
 The game's interface is in Portuguese; the labels below are quoted as they appear on screen, with a gloss.
@@ -49,7 +50,7 @@ Builds the client, starts the server at `http://localhost:8080`, creates a world
 | M1.5 fog | Does hiding information create decisions without making the map unreadable? | Black × remembered × visible; how far the team sees; find cristal; the last value seen; the enemy and its core; a road into the dark | [fog tasks](specs/m1.5-fog/tasks.md) |
 | M2 encounter | Does the encounter create conflict and story, change what the player does, without dominating the game? | `--mult 6 --seed 42 --bot`; read an encounter in the chronicle; HP; extort and attack while dominating; the reaction panel; spoils; the raider preset; what changed after the first ambush | [encounter tasks](specs/m2-encounter/tasks.md) |
 
-## The junction: the world with battles (checkpoint C2) — pending
+## The junction: the world with battles (checkpoint C2) — played 2026-11-25
 
 Slice D's sessions ([spec §8](specs/m2-junction/spec.md)): the encounter now opens a real battle instead of the roll.
 Two worlds, at ×6 and on seed 42: first alone against the bot (J1–J5, ~50 min), then three tabs with no bot (J6,
