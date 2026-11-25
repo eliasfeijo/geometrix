@@ -6,37 +6,41 @@
 
 ## Now
 
-**Updated:** 2026-11-25 (slice D closed at checkpoint C2)
+**Updated:** 2026-11-25 (the R and E-min design round)
 
 | | |
 |---|---|
 | **Milestone** | **M2 — The ambush** ([ROADMAP](../ROADMAP.md)). M0, M1 and M1.5 ✅ |
-| **Slices** | **A — The encounter** ✅ 2026-11-17 · **B — The battle lab** ✅ 2026-11-20 · **D — The junction** ([spec](../specs/m2-junction/spec.md) · [plan](../specs/m2-junction/plan.md) · [tasks](../specs/m2-junction/tasks.md)) ✅ 2026-11-25, closed at checkpoint C2 |
-| **In progress** | Nothing: the next slices need their design rounds |
-| **Next front** | **R — Rebalance and pace** and **E-min — The minimal end** (C2-2, C2-3), each with a design round, then spec → plan → tasks (`spec-slice` skill) |
-| **Then** | **P — The friends' playtest**; siege and repair (E) after P |
-| **Waiting on the owner** | (1) **The order of R and E-min** (agent's proposal: one design round for both, since the world's duration feeds a draw by the clock; R's parameter sweeps and E-min's code can then run in parallel). (2) [ADR-0009](../adr/0009-prediction-in-the-lab.md) (`Proposed`): prediction as a lab experiment option. (3) `gambits.meleeBerthSteps` 3 (provisional, lab F7). (4) Whenever the owner wants: PLAYTEST lab group 7 (the movement options) |
+| **Slices** | A ✅ 2026-11-17 · B ✅ 2026-11-20 · D ✅ 2026-11-25 · **R — Rebalance and pace**, **E-min — The minimal end** and **K — The DNA kits**: design round done 2026-11-25, specs to write |
+| **In progress** | Nothing: the three specs are next |
+| **Next front** | The specs of **R**, **E-min** and **K** (`spec-slice` skill), one session each; they can run in parallel (R: `sim` params, autopilot, strategist, map UI; E-min: the end rule, end screen and replay; K: `packages/battle`, gambits, lab, battle screen). R's final balance pass runs after K's merge |
+| **Then** | **P — The friends' playtest** (two teams: humans against humans, or co-op against the bot); after it, **E** (siege and repair) or **T** (more teams), chosen at P's checkpoint |
+| **Waiting on the owner** | (1) Each spec's approval. (2) [ADR-0009](../adr/0009-prediction-in-the-lab.md) (`Proposed`): prediction as a lab experiment option. (3) `gambits.meleeBerthSteps` 3 (provisional, lab F7). (4) Whenever the owner wants: PLAYTEST lab group 7 (the movement options) |
 | **Blockers** | None |
 
 ### Next steps
 
-1. **The design round for R and E-min** (an interactive round: cold analysis, then grouped questions). R's material
-   is in the junction [tasks](../specs/m2-junction/tasks.md), checkpoint C2: 9 battles won with no loss, a passive bot
-   that never reinforces and cannot replace its creeps (a creep costs 3,000 matéria), wanderers too late (3 in 3.9
-   world hours), the map explored in 3 of 72 world hours, movement slow at ×6, and the "follow" proposal
-   ([GDD 07](../gdd/07-autopilot.md)). E-min's: the [ROADMAP](../ROADMAP.md) row (how a match is won or drawn, the
-   end screen, replay markers). **Scope warning:** R grows M2 with the strategist and a new action.
-2. **🐞 The road-builder preset does not work for the player** (owner, 2026-11-20, seen since before slice A): it asks
-   for a point on the map, but nothing happens on click or mouse move (no road or cost preview); a road can only be
-   built by dominating a creep, in road mode. The bots build with the same preset, so the `sim` works. **A short fix
-   session** (repro, test, fix): the "15 minutes a day" style depends on the presets.
-3. **Session findings** for the rounds that touch them: extortion against the bot is almost free; the battle AI is
-   predictable in the corridors (GDD 06, parked); a battle on the world clock at ×36 lasts about a real second (D4);
-   a wanderer cannot be selected with a left click (no inspector for it); the soak's server process grows from about
-   150 MB to 210–256 MB within a run (RSS, not investigated).
-4. **To validate in P:** the interpretations of the junction F4 (1–9), F5 (1–14) and F7 (1–4) records, and J6 (two
+1. **The R spec.** What the round decided is in the GDD (01, 03, 05, 06, 07) and the [ROADMAP](../ROADMAP.md) row:
+   a 2-hour match through a shorter world at a moderate ×N with faster DNAs (sweeps with targets for 2 hours; at C2
+   the economy gave a first extra creep at ~3 world hours, the first wanderer came at world hour 1 and the map was
+   explored by hour 3); the wanderers early and regular; only the pace rescale against the snowball; the opening
+   countdown for humans (5 s, paused, an "Entrar" button); "follow"; helping an ally in battle as a preset rule; the
+   road builder as an autopilot preset with its plan on the map (replaces the 2026-11-20 bug); the strategist for
+   both P modes; the selected creep's destination on the map and the current action's estimated time in the panel.
+   **Scope warning:** the largest of the three.
+2. **The E-min spec** ([GDD 01](../gdd/01-world.md), "The minimal end before the siege"): elimination in fact,
+   concession, the bot conceding, the draw at the clock, the frozen world, the end screen, replay markers, N teams.
+3. **The K spec** ([GDD 02](../gdd/02-creeps-and-domination.md), [GDD 06](../gdd/06-battles.md)): the dodge, the
+   square's charged strike and charge (hold Space), the triangle's frontal guard, the circle's fan; open details in GDD
+   06's open questions. **Scope warning:** revises "only base stats in M2"; lab first.
+4. **Session findings** for the specs that touch them: extortion against the bot is almost free (R's strategist); the
+   battle AI is predictable in the corridors (GDD 06, parked); a wanderer cannot be selected with a left click (no
+   inspector for it); the soak's server process grows from about 150 MB to 210–256 MB within a run (RSS, not
+   investigated).
+5. **To validate in P:** the interpretations of the junction F4 (1–9), F5 (1–14) and F7 (1–4) records, and J6 (two
    humans in one battle, a teammate watching, a third creep joining).
-5. **Design rounds when the owner wants:** the role of cristal (GDD 03) and E (siege and repair).
+6. **Design rounds when the owner wants:** the role of cristal (GDD 03), E (siege and repair) and T (more teams, GDD
+   01's proposal with the agent's analysis).
 
 ### What the next front needs to know about the code
 

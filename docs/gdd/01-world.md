@@ -36,7 +36,32 @@
   whether creeps camp outside the enemy core.
 - **The minimal end** (owner, 2026-11-15; slice E): bringing down the core ends the world, and the end gets a screen
   with the result and a summary of the chronicle, and the replay gets markers for the main events. **When the clock
-  runs out with no core brought down, it is a draw** (provisional).
+  runs out with no core brought down, it is a draw** (provisional; kept by the owner in the R and E-min design round,
+  2026-11-25).
+- **The minimal end before the siege** (owner, R and E-min design round, 2026-11-25; slice E-min, before the friends'
+  playtest). The core only gets HP in slice E, after P, so until then a match ends otherwise:
+  - **defeat by elimination in fact:** a team with no creep alive, nothing in production and a stock below one
+    creep's cost can no longer come back, and loses;
+  - **concession:** any human of a team may concede, with a confirmation;
+  - **the bot concedes when it has no chance:** at most 1 creep, nothing in production and a stock below one creep's
+    cost;
+  - **the clock:** a draw among the teams still in the match;
+  - **the world ends when one team remains** and freezes, read-only, with its replay (agent, approved);
+  - **the end screen** (agent, approved): the result, the duration and, per team, creeps born and lost, battles won
+    and lost, matéria delivered and the five main events of the chronicle. **Replay markers** (agent, approved):
+    battles (start and end), deaths, births, wanderers and the end;
+  - **written for N teams** (agent, approved): the humans of an eliminated team become spectators; slices R and
+    E-min add no new two-team assumption.
+- **The pace of the friends' playtest** (owner, R and E-min design round, 2026-11-25; slice R): a match lasts **about
+  2 real hours**, from the start to the clock. It gets there with a **shorter world at a moderate ×N** (around ×6 to
+  ×12), not with a higher ×N on the 72-hour world: the duration, costs, production, regeneration and the wanderers
+  are rescaled in world time and the DNAs walk faster on the map. The numbers, the ×N and the map size come from a
+  balance pass of sweeps with targets for 2 hours (agent, approved). Why: at ×36 a 60-second human battle locks its
+  creeps for 36 world minutes, so anyone on the map arrives in time, and an auto battle goes by in about 2 real
+  seconds. The 3-day hypothesis (duration, above) stays for the game itself.
+- **More than two teams gets its own slice** (owner, 2026-11-25): **T**, a candidate right after P that competes with
+  E for its turn (the order is chosen at P's checkpoint), with its own design round. The first P plays two teams.
+  The owner's idea and the agent's analysis are in the proposal below.
 
 ## Proposal
 
@@ -57,6 +82,25 @@ from the core as the team builds.
   choices. The river has few crossings (fords, bridges), which become bottlenecks and natural battlegrounds.
 - **Foundation draft** *(optional)*: before the match, each team builds its starting population (a mix of DNAs) with
   the same point budget.
+
+### More than two teams (owner, 2026-11-25; slice T's design round)
+The owner: worlds with **up to 4 teams**, with a map that adapts to fit them all with room to explore and gather, and
+the number of wanderers adjusted. Besides the owner, three friends could play a collective playtest, but gathering
+everyone at the same time is hard.
+
+Agent's analysis (2026-11-25):
+- **Already takes N teams:** the state (teams by id), the fog and the per-team views, the battle's sides (up to 4,
+  wanderers included). And 4 humans already fit in two teams (`teams.maxHumans` is 3): 2 × 2, 3 × 1, or co-op
+  against the bot.
+- **Assumes two teams:** the map (point symmetry, one river between the sides; 4 teams need a square map with 90°
+  symmetry, e.g. a river in a cross, contested cristal at the center and the wanderers near the cross); the mirrored
+  path tie-break (`isRotatedSide`, one rotation for team 1) in pathfinding, vision, roads, the autopilot, the
+  strategist and the client's road plan; the client's names, colors, lobby and replay; `dev:multi` and the soak; a
+  strategist with several enemies; and a balance pass of its own. About the size of slice R.
+- **What the round decides:** alliances or free-for-all; what an eliminated team does while the world goes on; the
+  map's shape and size per number of teams; how many wanderers.
+- **The schedule problem is not solved by more teams:** a 2-hour match needs everyone online at once either way; the
+  bot filling the empty seats helps, and it already does with two teams.
 
 ### Victory in a world of days
 - **Destroying the base is a process, not an instant.** A siege on the core takes hours and warns the attacked team.

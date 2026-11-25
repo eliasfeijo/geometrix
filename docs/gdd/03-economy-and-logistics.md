@@ -30,6 +30,10 @@
     team's memory like a deposit.
   - **What drops when fleeing** (D10): whoever escapes drops 50% to 100% of each resource (rolled), provisional.
 - **Buildings only recover through paid repair** (owner, 2026-11-15; slice E).
+- **The snowball** (owner, R and E-min design round, 2026-11-25): at checkpoint C2 the bot lost 5 of its 6 creeps and
+  could not replace them (a creep costs 3,000 matéria, and a team's first extra creep comes at about world hour 3).
+  Slice R tries **only the rescale of the pace**, with no new rule: a creep then costs less of a session. The sweeps
+  measure whether it is enough.
 
 ## Proposal
 
@@ -77,4 +81,4 @@ A match of days needs sinks so the economy does not inflate: upkeep, structure w
   Postponed by the owner (2026-11-14) until there is a human playtest.
 - **Tie-break on a contested deposit.** When creeps of both teams gather at the same nearly empty deposit, the lower
   id takes the unit. With the fog, on seed 42 team 0 pulls ahead after ~15 h (151k × 140k matéria in 3 days).
-  Accepted for now; to revisit in a balancing round (owner, 2026-11-14).
+  Accepted for now; to revisit in a balancing round (owner, 2026-11-14); not in slice R (2026-11-25).

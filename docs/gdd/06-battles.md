@@ -94,6 +94,18 @@
   - **the movement drawing:** the four lab options in the network panel, from the lab's default, until PLAYTEST group
     7; prediction waits for P (D19).
 
+- **The opening countdown for humans** (owner, R and E-min design round, 2026-11-25; slice R): a battle opens
+  **paused for a few real seconds** (5 s, provisional, in the params) when some team in it has a human connected, with
+  an alert on the map, the countdown and an "Entrar" button that dominates the creep and opens the battle screen. With
+  no human connected (bots only, the sweeps) it does not wait. Why: at checkpoint C2 a wanderer attacked one of the
+  owner's triangles, and the battle, on the world clock, ended before the owner could watch or join it from the map.
+  The owner asked for a minimum reaction time of about 5 s, configurable; the agent's pause won over a minimum
+  duration, since a creep can die in the first seconds, and over 5 real-time seconds with damage already flowing.
+- **DNA kits in battle** (owner, R and E-min design round, 2026-11-25; slice K): a dodge for every DNA, the square's
+  charged strike and charge, the triangle's frontal guard and the circle's fan ([02](02-creeps-and-domination.md)).
+  The grid stays. Tried in the lab first, behind params; the gambits learn them, so auto-resolve uses them; what is
+  not fun in the lab does not reach the world (agent, approved).
+
 ## Proposal
 See [ADR-0001](../adr/0001-world-and-battle-as-separate-simulations.md). The world side of the contract is
 [ADR-0010](../adr/0010-world-side-of-the-battle-contract.md) (`Accepted`): battle instances next to the world, run by
@@ -129,8 +141,9 @@ sequenceDiagram
 
 ## Open questions
 - How movement is drawn in the game (the four lab options). After PLAYTEST group 7.
-- **The square against the circle in the junction's arena** (checkpoint C1b, 2026-11-25): in the junction matrix
-  a circle beats a square in every case (100%), and a wanderer, a circle with 60 HP, kills loaded squares that fight
-  it (47 of 64 in 3 days of seed 42) at any damage from 6 to 12: the marksman keeps its distance and the square never
-  reaches it in the real arena. The owner chose to watch it in the playtest before tuning anything.
+- **The kits' details** (slice K's spec): does the charge's hit carry the charge built while running, or is it the
+  basic hit? Which key is the dodge, how far it goes, and is the creep untouchable during it? What does a dodging or
+  charging creep do with the load it carries? Do the wanderers (circles) get the fan? Measured against: a circle beat
+  a square in every case of the junction matrix, and a wanderer killed 47 of 64 loaded squares that fought it in 3
+  days of seed 42 (checkpoint C1b).
 - **Critical hits?** (owner, 2026-11-18): a hit that sometimes deals more damage. With stats and skills; not in M2.
