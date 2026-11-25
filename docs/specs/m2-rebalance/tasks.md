@@ -198,7 +198,7 @@ more battles, from help and the bot's hard reaction, not overhead. F3/F7 should 
 
 - [x] The difficulty levels in `strategistCommands` (D26, S-6); the harness's strategist option with a difficulty
 - [x] The posture per level (D17); production before the upgrade pinned by a test (D15, S-2)
-- [ ] The defense of the core zone (D14, S-1)
+- [x] The defense of the core zone (D14, S-1)
 - [ ] The raid group and the escort with `follow` (D16, S-3)
 - [ ] The threat pass and the risk (D27, S-7); the harness runs it every tick like the server will
 - [ ] `WorldHost`: the threat pass every tick for hard bots (moved from F5, see "Running the phases")

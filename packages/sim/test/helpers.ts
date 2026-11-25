@@ -14,6 +14,7 @@ import {
   createWorld,
   type Creep,
   type Deposit,
+  type Wanderer,
   type WorldState,
 } from "../src/world.ts";
 
@@ -163,6 +164,35 @@ export function runUntil(
     if (done(step(world, []))) return i;
   }
   throw new Error(`runUntil: not done after ${max} ticks`);
+}
+
+/**
+ * A wanderer (always a circle) at full HP on the cell, stopped and empty
+ * unless `extra` says otherwise; the vision is not updated.
+ */
+export function addWanderer(
+  world: WorldState,
+  x: number,
+  y: number,
+  extra: Partial<Wanderer> = {},
+): Wanderer {
+  const wanderer: Wanderer = {
+    id: world.nextId++,
+    dna: "circle",
+    name: "W",
+    hp: world.params.wanderers.hp * 1000,
+    cargo: { materia: 0, cristal: 0 },
+    battle: null,
+    order: { type: "stop" },
+    movePoints: 0,
+    path: null,
+    spared: [],
+    x,
+    y,
+    ...extra,
+  };
+  world.wanderers.push(wanderer);
+  return wanderer;
 }
 
 /** The first creep of the team with that DNA. */

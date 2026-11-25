@@ -14,7 +14,13 @@ import { canAfford } from "./economy.ts";
 import type { Command, CommandInput } from "./commands.ts";
 import type { Difficulty, Player } from "./domination.ts";
 import { nearestUnseen } from "./known.ts";
-import { isRotatedSide, Terrain, type GameMap } from "./map.ts";
+import {
+  isRotatedSide,
+  manhattan,
+  Terrain,
+  type Cell,
+  type GameMap,
+} from "./map.ts";
 import { DNAS, type Dna, type Params } from "./params.ts";
 import {
   collectorRules,
@@ -232,6 +238,17 @@ function balanced(known: Knowledge): Command[] {
   return commands;
 }
 
+/**
+ * The enemies the team sees (R spec D18): every creep of another team and
+ * every wanderer, whatever the number of teams.
+ */
+function enemies(seen: TeamView): Cell[] {
+  return [
+    ...seen.creeps.filter((c) => c.team !== seen.team),
+    ...seen.wanderers,
+  ];
+}
+
 /** The DNA the team has fewest creeps of; ties in DNAS order (■ ▲ ●). */
 function scarcestDna(seen: TeamView, team: Team): Dna {
   const counts = DNAS.map(
@@ -302,6 +319,34 @@ const posture = (dna: Dna, level: Difficulty): Rule[] =>
   level === "easy" ? postureRules(dna) : standRules();
 
 /**
+ * The defense rule (R spec D14, S-1): on top of the rules of a creep inside
+ * its core zone while an enemy stands there, an attack approach on the
+ * enemies within the zone's radius of the creep.
+ */
+export function defenseRule(params: Params): Rule {
+  return {
+    when: { type: "always" },
+    then: {
+      type: "approach",
+      intent: "attack",
+      radius: params.hp.coreZoneRadius,
+      minCargo: 0,
+    },
+  };
+}
+
+/**
+ * The creep's rules without the ones the bot puts on top of a role's for a
+ * while (the defense rule), so roleOf reads the role underneath.
+ */
+function withoutWrappers(rules: readonly Rule[], params: Params): Rule[] {
+  const defense = canonicalJson(defenseRule(params));
+  let at = 0;
+  while (at < rules.length && canonicalJson(rules[at]!) === defense) at++;
+  return rules.slice(at);
+}
+
+/**
  * The rules of the presets without a target, without their reaction rules,
  * as canonical JSON: built once, since roleOf compares every creep with them
  * every minute.
@@ -319,16 +364,17 @@ const actionsOf = (rules: readonly Rule[]) =>
   );
 
 /**
- * The role a creep's rules match, leaving out the reaction rules; anything
- * else counts as materia.
+ * The role a creep's rules match, leaving out the reaction rules and the
+ * rules on top of the role (withoutWrappers); anything else counts as
+ * materia.
  */
-function roleOf(creep: Pick<Creep, "rules">): Role {
+function roleOf(creep: Pick<Creep, "rules">, params: Params): Role {
   presetJson ??= {
     cristal: canonicalJson(actionsOf(collectorRules("cristal"))),
     raider: canonicalJson(actionsOf(raiderRules())),
     builder: canonicalJson(actionsOf(roadBuilderRules())),
   };
-  const actions = actionsOf(creep.rules);
+  const actions = actionsOf(withoutWrappers(creep.rules, params));
   const rules = canonicalJson(actions);
   if (rules === presetJson.cristal) return { kind: "cristal" };
   if (rules === presetJson.raider) return { kind: "raider" };
@@ -396,7 +442,7 @@ function assignRoles(known: Knowledge): Command[] {
     ? Math.floor((creeps.length * raiders.numerator) / raiders.denominator)
     : 0;
 
-  const roles = new Map(creeps.map((c) => [c, roleOf(c)]));
+  const roles = new Map(creeps.map((c) => [c, roleOf(c, params)]));
   const next = new Map(roles);
   const inRole = (kind: Role["kind"]) =>
     creeps.filter((c) => next.get(c)!.kind === kind);
@@ -420,15 +466,23 @@ function assignRoles(known: Knowledge): Command[] {
   fill({ kind: "builder" }, wantBuilders);
   fill({ kind: "raider" }, wantRaiders);
 
+  // Defense (D14, normal and hard): while an enemy stands in the core zone,
+  // the creeps inside it attack on top of their role.
+  const inZone = (cell: Cell) =>
+    manhattan(cell, team.core) <= params.hp.coreZoneRadius;
+  const defending = level !== "easy" && enemies(seen).some(inZone);
+
   // A raider gets its preset; a gatherer, its role's preset behind its
   // posture (setRules), also when only the posture is missing (a newborn).
   const commands: Command[] = [];
   for (const creep of creeps) {
     const role = next.get(creep)!;
-    const rules = rulesFor(role, creep.dna, level);
+    const base = rulesFor(role, creep.dna, level);
+    const defends = defending && creep.dominatedBy === null && inZone(creep);
+    const rules = defends ? [defenseRule(params), ...base] : base;
     if (canonicalJson(creep.rules) === canonicalJson(rules)) continue;
     commands.push(
-      role.kind === "raider"
+      role.kind === "raider" && !defends
         ? { type: "applyPreset", creepId: creep.id, preset: "raider" }
         : { type: "setRules", creepId: creep.id, rules },
     );

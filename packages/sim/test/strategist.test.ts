@@ -15,6 +15,7 @@ import { step } from "../src/step.ts";
 import { roadTarget } from "../src/roads.ts";
 import type { Difficulty } from "../src/domination.ts";
 import {
+  defenseRule,
   postureRules,
   standRules,
   strategistCommands,
@@ -22,7 +23,14 @@ import {
 } from "../src/strategist.ts";
 import { view } from "../src/view.ts";
 import { createWorld, type WorldState } from "../src/world.ts";
-import { loadTestParams, revealWorld, textWorld } from "./helpers.ts";
+import {
+  addWanderer,
+  loadTestParams,
+  placeWorld,
+  revealWorld,
+  textWorld,
+  type Placed,
+} from "./helpers.ts";
 
 const params = loadTestParams();
 
@@ -412,6 +420,74 @@ describe("the posture at normal and hard (R spec D17, S-4)", () => {
     triangle.rules = presetRules("materiaCollector", "triangle");
     expect(rulesGiven(decide(world, 0), triangle.id)!.slice(0, 2)).toEqual(
       postureRules("triangle"),
+    );
+  });
+});
+
+/**
+ * A 30-cell line, team 0's core at x 0 (its zone reaches x 8) and team 1's
+ * at x 29, with the creeps placed and both bots joined at `difficulty`.
+ */
+function line(difficulty: Difficulty, placed: readonly Placed[]) {
+  const { world, creeps } = placeWorld(
+    ["A" + ".".repeat(28) + "B"],
+    placed,
+    params,
+  );
+  step(world, [
+    { playerId: 1, command: { type: "join", team: 0, bot: true, difficulty } },
+    { playerId: 2, command: { type: "join", team: 1, bot: true, difficulty } },
+  ]);
+  return { world, creeps };
+}
+
+describe("the core zone's defense (R spec D14, S-1)", () => {
+  test.each(["normal", "hard"] as const)(
+    "while an enemy stands in the zone, the creeps inside it attack on top of their role (%s)",
+    (difficulty) => {
+      const { world, creeps } = line(difficulty, [
+        [0, "square", 2, 0],
+        [0, "triangle", 12, 0],
+        [1, "circle", 6, 0],
+      ]);
+      const [inside, outside, enemy] = creeps;
+      const commands = decide(world, 0);
+      const rules = rulesGiven(commands, inside!.id)!;
+      expect(rules[0]).toEqual(defenseRule(world.params));
+      expect(defenseRule(world.params).then).toEqual({
+        type: "approach",
+        intent: "attack",
+        radius: 8,
+        minCargo: 0,
+      });
+      expect(rules.slice(1)).not.toContainEqual(defenseRule(world.params));
+      expect(rulesGiven(commands, outside!.id)?.[0]).not.toEqual(
+        defenseRule(world.params),
+      );
+      // Taken: the rules stay as they are.
+      inside!.rules = rules;
+      expect(rulesGiven(decide(world, 0), inside!.id)).toBeUndefined();
+      // No enemy left in the zone: the rule leaves, the role stays.
+      enemy!.x = 9;
+      expect(rulesGiven(decide(world, 0), inside!.id)).toEqual(rules.slice(1));
+    },
+  );
+
+  test("easy does not defend", () => {
+    const { world, creeps } = line("easy", [
+      [0, "square", 2, 0],
+      [1, "circle", 6, 0],
+    ]);
+    const rules = rulesGiven(decide(world, 0), creeps[0]!.id);
+    expect(rules?.[0]).not.toEqual(defenseRule(world.params));
+  });
+
+  test("a wanderer in the zone is an enemy too", () => {
+    const { world, creeps } = line("hard", [[0, "square", 2, 0]]);
+    addWanderer(world, 7, 0);
+    expect(view(world, 0).wanderers).toHaveLength(1);
+    expect(rulesGiven(decide(world, 0), creeps[0]!.id)?.[0]).toEqual(
+      defenseRule(world.params),
     );
   });
 });

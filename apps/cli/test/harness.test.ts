@@ -97,14 +97,23 @@ describe("a bot × bot world", () => {
   const ticks = 6 * 3600;
   const { state, log } = runBots(42, params, ticks, bots);
 
-  test("grows, buys the upgrade and builds roads on both sides", () => {
-    for (const team of state.teams) {
-      expect(teamCreeps(state, team.id).length).toBeGreaterThan(6);
+  // The economy's loop with slice D's bots (easy, R spec D26): the hard
+  // bots' defense and fights decide who grows on these params (R F3: one
+  // team lost every creep in 6 h), which the C1 runs measure.
+  test("grows, buys the upgrade and builds roads on both sides (easy)", () => {
+    const easy = runBots(
+      42,
+      params,
+      ticks,
+      botsFor(["balanced", "balanced"], ["easy", "easy"]),
+    ).state;
+    for (const team of easy.teams) {
+      expect(teamCreeps(easy, team.id).length).toBeGreaterThan(6);
       expect(team.upgrades.capacity).toBe(true);
-      expect(state.stats.teams[team.id]!.roadSegments).toBeGreaterThan(0);
-      expect(state.stats.teams[team.id]!.delivered.cristal).toBeGreaterThan(0);
+      expect(easy.stats.teams[team.id]!.roadSegments).toBeGreaterThan(0);
+      expect(easy.stats.teams[team.id]!.delivered.cristal).toBeGreaterThan(0);
     }
-  });
+  }, 30_000);
 
   test("replaying the log without bots reaches the same state", () => {
     const replay = createWorld(42, params);
