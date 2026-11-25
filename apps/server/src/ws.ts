@@ -105,6 +105,15 @@ export function attachWebSocket(server: Server, context: WsContext) {
         send(socket, welcome(host, player, stream));
         return;
       }
+      if (message.type === "battleInput" || message.type === "battleScreen") {
+        // No battle runs on the server yet (junction F4 wires the host).
+        send(socket, {
+          type: "reject",
+          ref: message.ref,
+          reason: "unknownBattle",
+        });
+        return;
+      }
       const tick = host.state.tick;
       const reason = host.submit(player.id, message.command);
       send(
