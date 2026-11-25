@@ -2,9 +2,11 @@ import {
   capacity,
   dominate,
   join,
+  orderRefusal,
   reactRefusal,
   step,
   updateVision,
+  type Wanderer,
 } from "@geometrix/sim";
 import { describe, expect, it } from "vitest";
 import {
@@ -65,7 +67,7 @@ describe("the right-click menu over an enemy (spec C-6)", () => {
       [enemy.id],
     );
     expect(option!.target.id).toBe(enemy.id);
-    expect(option!.demand).toEqual({
+    expect(option!.kind === "creep" && option!.demand).toEqual({
       cristal: Math.min(5, room),
       materia: Math.min(30, Math.max(0, room - 5)),
     });
@@ -79,7 +81,10 @@ describe("the right-click menu over an enemy (spec C-6)", () => {
       store.myCreep.value!,
       [enemy.id],
     );
-    expect(full!.demand).toEqual({ materia: 0, cristal: 0 });
+    expect(full!.kind === "creep" && full!.demand).toEqual({
+      materia: 0,
+      cristal: 0,
+    });
   });
 
   it("leaves own creeps out of the menu", () => {
@@ -91,6 +96,74 @@ describe("the right-click menu over an enemy (spec C-6)", () => {
       [mine.id, enemy.id],
     );
     expect(options.map((o) => o.target.id)).toEqual([enemy.id]);
+  });
+});
+
+describe("the right-click menu over a wanderer (junction W-4)", () => {
+  /** `facing`, with a loaded wanderer in sight next to the enemy. */
+  function withWanderer() {
+    const f = facing();
+    const { world, enemy } = f;
+    const wanderer: Wanderer = {
+      id: world.nextId++,
+      dna: "circle",
+      name: "Errante",
+      hp: world.params.wanderers.hp * 1000,
+      cargo: { materia: 12, cristal: 0 },
+      battle: null,
+      order: { type: "stop" },
+      movePoints: 0,
+      path: null,
+      spared: [],
+      x: enemy.x,
+      y: enemy.y + 2,
+    };
+    world.wanderers.push(wanderer);
+    updateVision(world);
+    step(world, []);
+    f.store.show(viewOf(world), 2);
+    return { ...f, wanderer };
+  }
+
+  it("opens on a wanderer, attack only, and the attack is an order the sim accepts", () => {
+    const { world, store, mine, wanderer, sent, send } = withWanderer();
+    order(store, { x: wanderer.x + 0.5, y: wanderer.y + 0.4 }, send, 3, PX);
+    expect(sent).toEqual([]);
+    expect(store.approach.value).toEqual({ ids: [wanderer.id], at: PX });
+    const options = approachOptions(
+      store.current.value!.state,
+      world.params,
+      store.myCreep.value!,
+      store.approach.value!.ids,
+    );
+    expect(options).toEqual([
+      {
+        kind: "wanderer",
+        target: expect.objectContaining({ id: wanderer.id }),
+      },
+    ]);
+    const attack = {
+      type: "approach",
+      targetId: wanderer.id,
+      intent: "attack",
+    } as const;
+    expect(orderRefusal(world, 7, mine.id, attack)).toBeNull();
+    expect(
+      orderRefusal(world, 7, mine.id, { ...attack, intent: "extort" }),
+    ).toBe("invalidOrder");
+  });
+
+  it("a click away from it moves there instead", () => {
+    const { store, mine, wanderer, sent, send } = withWanderer();
+    order(store, { x: wanderer.x + 1.5, y: wanderer.y + 0.5 }, send, 3, PX);
+    expect(store.approach.value).toBeNull();
+    expect(sent).toEqual([
+      {
+        type: "order",
+        creepId: mine.id,
+        order: { type: "moveTo", x: wanderer.x + 1, y: wanderer.y },
+      },
+    ]);
   });
 });
 

@@ -3,24 +3,33 @@
 // The script itself is soak-main.ts.
 
 import { parseArgs } from "node:util";
-import type { Replay } from "@geometrix/protocol";
+import { replayLog, type BattleLog, type LoggedTick } from "@geometrix/battle";
+import { replayResults } from "@geometrix/junction";
+import type { LoggedCommand, Replay } from "@geometrix/protocol";
 import {
+  canonicalJson,
   createWorld,
   step,
+  type Command,
   type CommandInput,
   type SimEvent,
   type WorldState,
 } from "@geometrix/sim";
+import { battleHash } from "./hash.ts";
+import type { BattleRow } from "./persistence.ts";
 
 export const SOAK_USAGE = `usage: npm run soak -- [options]
 
 Runs a whole bot x bot world through the real server loop, kills the server
-(kill -9) at random ticks and restarts it, stops it once cleanly (SIGTERM),
-and at the end rebuilds the exported replay in Node: its hash must match the
-server's. Headless clients follow their team streams the whole time, dropping
-their own connection now and then; each must end with the server's view and
-no hash mismatch (M1.5), and with the server's chronicle (M2). Samples memory, database size and loop speed into
-runs/soak-<id>/.
+(kill -9) at random ticks, each at the first battle open after its tick, and
+restarts it, stops it once cleanly (SIGTERM), and at the end rebuilds the
+exported replay in Node: its hash must match the server's. Each ended battle's
+stored log must replay to its final hash and to the results the world log
+applied, and the battles a kill cut through must have ended (M2 junction).
+Headless clients follow their team streams the whole time, dropping their own
+connection now and then; each must end with the server's view and no hash
+mismatch (M1.5), and with the server's chronicle (M2). Samples memory,
+database size and loop speed into runs/soak-<id>/.
 
   --mult <n>      time multiplier (default 360: 3 world days in ~12 min)
   --kills <n>     kill -9 + restart count (default 5)
@@ -154,6 +163,94 @@ export function rebuild(
     onEvents?.(events);
   }
   return state;
+}
+
+/** What the battle tables hold at the end, checked against the world log. */
+export type BattleCheck = {
+  battles: number;
+  ended: number;
+  /** Still open when the world ended: not checked. */
+  open: number[];
+  /** Ended battles whose stored log replays to another final hash. */
+  hashMismatches: number[];
+  /**
+   * Ended battles whose results disagree with the world log: the record's
+   * sent commands, or the results its log replays to (ADR-0010 rule 4).
+   */
+  resultMismatches: number[];
+  /**
+   * Ended with joins still waiting: their exits carry the world's creep as it
+   * was then, which the tables do not keep, so only the hash and the sent
+   * commands are checked.
+   */
+  lateJoins: number[];
+};
+
+/**
+ * The two logs agree after the crashes (junction spec section 7): each ended
+ * battle's stored log replays to its stored final hash, and the world log
+ * applied exactly the results the battle sent and its log replays to.
+ * `world` lends the map and the params (any tick of the run).
+ */
+export function checkBattles(
+  world: WorldState,
+  rows: readonly BattleRow[],
+  ticksOf: (battleId: number) => LoggedTick[],
+  log: readonly LoggedCommand[],
+): BattleCheck {
+  const applied = new Map<number, Command[]>();
+  for (const { command } of log) {
+    if (command.type !== "battleExit" && command.type !== "battleEnd") {
+      continue;
+    }
+    const list = applied.get(command.battleId) ?? [];
+    list.push(command);
+    applied.set(command.battleId, list);
+  }
+  const check: BattleCheck = {
+    battles: rows.length,
+    ended: 0,
+    open: [],
+    hashMismatches: [],
+    resultMismatches: [],
+    lateJoins: [],
+  };
+  // Key order differs between the tables and an exported replay.
+  const same = (a: unknown, b: unknown) =>
+    canonicalJson(a) === canonicalJson(b);
+  for (const row of rows) {
+    if (row.endedTick === null) {
+      check.open.push(row.battleId);
+      continue;
+    }
+    check.ended += 1;
+    const battleLog: BattleLog = {
+      battleVersion: row.battleVersion,
+      setup: row.setup,
+      params: row.params,
+      ticks: row.reachedTick,
+      commands: ticksOf(row.battleId),
+      finalHash: null,
+    };
+    if (battleHash(replayLog(battleLog)) !== row.finalHash) {
+      check.hashMismatches.push(row.battleId);
+    }
+    const worldSide = applied.get(row.battleId) ?? [];
+    let agree = same(row.record.sent, worldSide);
+    if (row.record.pending.length > 0) {
+      check.lateJoins.push(row.battleId);
+    } else {
+      const replayed = replayResults(world, {
+        ...row.record,
+        log: battleLog,
+        late: [],
+        results: row.record.sent,
+      });
+      agree &&= same(replayed, worldSide);
+    }
+    if (!agree) check.resultMismatches.push(row.battleId);
+  }
+  return check;
 }
 
 /** One reading taken while the world runs. */

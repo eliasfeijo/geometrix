@@ -11,7 +11,7 @@ import type {
   Spoil,
 } from "@geometrix/sim";
 import { battleSign } from "./combat-marks.ts";
-import { markerAt, markersAt, type Marker } from "./layout.ts";
+import { HIT_RADIUS, markerAt, markersAt, type Marker } from "./layout.ts";
 import { cellAt, type Point } from "./view.ts";
 
 export type Selection =
@@ -77,6 +77,22 @@ export function cellmates(
     .filter((c) => c.x === creep.x && c.y === creep.y)
     .map((c) => c.id)
     .sort((a, b) => a - b);
+}
+
+/**
+ * The wanderers in the view within a marker's hit radius of `point`, nearest
+ * first (junction W-4: a team's creep may attack one).
+ */
+export function wanderersAt(
+  point: Point,
+  wanderers: readonly (Cell & { id: number })[],
+): number[] {
+  const distance = (w: Cell) =>
+    Math.hypot(w.x + 0.5 - point.x, w.y + 0.5 - point.y);
+  return wanderers
+    .filter((w) => distance(w) <= HIT_RADIUS)
+    .sort((a, b) => distance(a) - distance(b) || a.id - b.id)
+    .map((w) => w.id);
 }
 
 /**

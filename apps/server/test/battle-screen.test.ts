@@ -17,8 +17,10 @@ import {
 } from "@geometrix/protocol";
 import { beforeAll, describe, expect, test } from "vitest";
 import { BattleClock } from "../src/battle-clock.ts";
-import { battleHash } from "../src/hash.ts";
+import { replayResults } from "@geometrix/junction";
+import { battleHash, stateHash } from "../src/hash.ts";
 import { Store } from "../src/persistence.ts";
+import { rebuild } from "../src/soak.ts";
 import { WorldHost } from "../src/world-host.ts";
 import { FakeTimers, testBattleParams, testParams } from "./helpers.ts";
 
@@ -85,7 +87,7 @@ function opened() {
   host.tick();
   const instance = host.junction.instances.find((i) => i.battleId === BATTLE)!;
   expect(instance.state.tick).toBe(0);
-  return { store, host, frames, instance };
+  return { file, store, host, frames, instance };
 }
 
 /** Ana dominates the triangle, through the command path. */
@@ -311,6 +313,113 @@ describe("a battle played by a human to its end (spec section 7: two logs agree)
     expect(applied.at(-1)?.type).toBe("battleEnd");
     expect(row.record.sent).toEqual(applied);
   }, 30_000);
+});
+
+describe("a crash in the middle of a real-time battle (junction spec section 7, N-3)", () => {
+  test("the battle comes back as the last world tick stored it, on the world clock, and both logs still agree", () => {
+    const { file, store, host, instance } = opened();
+    dominateArrow(host);
+    const viewer = {};
+    host.openScreen(viewer, { id: ana, team: 0 }, BATTLE);
+    host.tick();
+    expect(instance.pace).toBe("real");
+    const me = participant(host, ARROW);
+    const moves = ["up", "right", "down", "left"] as const;
+    const walk = (i: number) => {
+      if (i % 10 === 0) {
+        host.battleInput(ana, BATTLE, {
+          type: "intent",
+          id: me,
+          move: moves[(i / 10) % 4]!,
+          attack: i % 20 === 0,
+        });
+      }
+      host.realtimeTick();
+    };
+    // Three world seconds of Ana's inputs, each stored with its world tick.
+    for (let i = 0; i < 60; i++) {
+      walk(i);
+      if (i % 20 === 19) host.tick();
+    }
+    expect(instance.state.ended).toBeNull();
+    const stored = {
+      tick: host.state.tick,
+      world: stateHash(host.state),
+      battle: battleHash(instance.state),
+      battleTick: instance.state.tick,
+      inputs: instance.log.commands.length,
+    };
+    expect(stored.inputs).toBeGreaterThan(0);
+    // Battle ticks after the last world tick: never stored, so never applied.
+    for (let i = 60; i < 75; i++) walk(i);
+    expect(instance.state.tick).toBe(stored.battleTick + 15);
+    store.close(); // the crash: nothing written after the last world tick
+
+    const again = new Store(file);
+    const back = WorldHost.recover(
+      { store: again, config },
+      again.world(1)!,
+      testBattleParams(),
+    );
+    expect(back.state.tick).toBe(stored.tick);
+    expect(stateHash(back.state)).toBe(stored.world);
+    const rebuilt = back.junction.instances.find((i) => i.battleId === BATTLE)!;
+    expect(rebuilt.pace).toBe("world");
+    expect(rebuilt.state.tick).toBe(stored.battleTick);
+    expect(battleHash(rebuilt.state)).toBe(stored.battle);
+    expect(rebuilt.log.commands.length).toBe(stored.inputs);
+
+    // Nobody comes back to the screen: the world clock ends it.
+    for (
+      let i = 0;
+      i < 600 && back.state.battles.some((b) => b.id === BATTLE);
+      i++
+    ) {
+      back.tick();
+    }
+    expect(back.state.battles.some((b) => b.id === BATTLE)).toBe(false);
+    const row = again.battle(1, BATTLE)!;
+    const log = {
+      battleVersion: row.battleVersion,
+      setup: row.setup,
+      params: row.params,
+      ticks: row.reachedTick,
+      commands: again.battleTicks(1, BATTLE),
+      finalHash: null,
+    };
+    expect(battleHash(replayLog(log))).toBe(row.finalHash);
+    const worldLog = again.commandsFrom(1, 0);
+    const applied = worldLog
+      .map((c) => c.command)
+      .filter(
+        (c) =>
+          (c.type === "battleExit" || c.type === "battleEnd") &&
+          c.battleId === BATTLE,
+      );
+    expect(applied.at(-1)?.type).toBe("battleEnd");
+    expect(row.record.sent).toEqual(applied);
+    expect(row.record.pending).toEqual([]);
+    expect(
+      replayResults(back.state, {
+        ...row.record,
+        log,
+        late: [],
+        results: row.record.sent,
+      }),
+    ).toEqual(applied);
+    // The world log replays alone to the recovered world.
+    const world = again.world(1)!;
+    const replayed = rebuild({
+      simVersion: world.simVersion,
+      seed: world.seed,
+      params: world.params,
+      ticks: back.state.tick,
+      finalHash: stateHash(back.state),
+      commands: worldLog,
+    });
+    expect(stateHash(replayed)).toBe(stateHash(back.state));
+    again.close();
+  }, 60_000);
 });
 
 describe("the battle clock (junction plan section 7)", () => {

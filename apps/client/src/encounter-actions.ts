@@ -14,19 +14,31 @@ import {
   type Reply,
   type Stock,
   type TeamView,
+  type WandererView,
 } from "@geometrix/sim";
 import { viewCapacity, type Creep } from "./creep-status.ts";
 import { windowSeconds } from "./map/combat-marks.ts";
 
-/** The right-click menu over an enemy in sight (C-6). */
-export type ApproachOption = {
-  target: Creep;
-  /**
-   * What an extortion would demand now (D8): the target's cargo up to the
-   * free room of the dominated creep, cristal first. Zero disables it.
-   */
-  demand: Stock;
-};
+/**
+ * The right-click menu over an enemy in sight (C-6): another team's creep or
+ * a wanderer (junction W-4).
+ */
+export type ApproachOption =
+  | {
+      kind: "creep";
+      target: Creep;
+      /**
+       * What an extortion would demand now (D8): the target's cargo up to
+       * the free room of the dominated creep, cristal first. Zero disables
+       * it.
+       */
+      demand: Stock;
+    }
+  | {
+      /** Attacked only: an extortion of a wanderer is refused (W-4). */
+      kind: "wanderer";
+      target: WandererView;
+    };
 
 export function approachOptions(
   state: TeamView,
@@ -38,9 +50,18 @@ export function approachOptions(
     viewCapacity(mine, state.teams[mine.team], params) - stockTotal(mine.cargo);
   const options: ApproachOption[] = [];
   for (const id of targets) {
+    const wanderer = state.wanderers.find((w) => w.id === id);
+    if (wanderer !== undefined) {
+      options.push({ kind: "wanderer", target: wanderer });
+      continue;
+    }
     const target = state.creeps.find((c) => c.id === id);
     if (target === undefined || target.team === mine.team) continue;
-    options.push({ target, demand: demandFor(room, target.cargo) });
+    options.push({
+      kind: "creep",
+      target,
+      demand: demandFor(room, target.cargo),
+    });
   }
   return options;
 }

@@ -5,7 +5,7 @@
 import { markersNow } from "./map/creep-layer.tsx";
 import type { ClientCommand } from "@geometrix/protocol";
 import { CURSORS, cursorKind, type CursorKind } from "./map/cursor.ts";
-import { enemiesIn, orderAt, pickAt } from "./map/pick.ts";
+import { enemiesIn, orderAt, pickAt, wanderersAt } from "./map/pick.ts";
 import { roadPreview } from "./map/road-plan.ts";
 import { cellAt, centerOn, type Point } from "./map/view.ts";
 import type { GameStore } from "./store.ts";
@@ -80,16 +80,18 @@ export function cursorAt(
   );
   const core = state.teams[team]?.core;
   const dominated = orders && store.myCreep.value !== null;
+  const enemy =
+    enemiesIn(pick, state.creeps, team).length > 0 ||
+    (pick?.kind !== "battle" && wanderersAt(point, state.wanderers).length > 0);
   return cursorKind({
     mode: store.mode.value.type,
-    pick:
-      pick === null
+    pick: enemy
+      ? "enemy"
+      : pick === null
         ? null
-        : enemiesIn(pick, state.creeps, team).length > 0
-          ? "enemy"
-          : pick.kind === "creep" || pick.kind === "stack"
-            ? "creep"
-            : "other",
+        : pick.kind === "creep" || pick.kind === "stack"
+          ? "creep"
+          : "other",
     order:
       dominated && core !== undefined && core !== null
         ? orderAt(point, state.deposits, state.spoils, core, false).type
@@ -132,7 +134,11 @@ export function order(
       store.cores.value,
       store.view.value?.scale ?? 1,
     );
-    const enemies = enemiesIn(pick, state.creeps, me.team);
+    // Another team's creeps, then the wanderers under the click (W-4).
+    const enemies = [
+      ...enemiesIn(pick, state.creeps, me.team),
+      ...wanderersAt(point, state.wanderers),
+    ];
     if (enemies.length > 0) {
       store.stack.value = null;
       store.approach.value = { ids: enemies, at: px };
