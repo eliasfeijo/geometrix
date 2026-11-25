@@ -48,6 +48,21 @@ Before the first line of code, list what the phase needs and that **neither the 
 5. Mark `[x]` in the `tasks.md` and commit (`commit` skill) with the task and the `[x]` together.
 
 - **Order:** if a task depends on one listed later, do the dependency first. Each keeps its own commit and `[x]`.
+- **A new word in the closed vocabulary** (an order, a condition, an action, an event, a refusal) touches the same
+  places every time; go down the list instead of finding them by typecheck rounds (~20 s each):
+  1. `sim`: the type (`orders.ts` `Order`, `autopilot.ts` `Condition`/`Action`, `domination.ts` `OrderInput` and
+     `DominationRefusal`, `events.ts` `EventBody`); what it does (`resolveOrders`, `holds`, `orderFor`, `toOrder`,
+     `orderRefusal`); the copy and checks of `rules.ts` (`copyCondition`, `copyAction`, `setRulesRefusal`); an
+     event's `participants`/`battleOf` in `events.ts`.
+  2. `protocol` (`src/index.ts`): the zod `condition`, `action` or `orderInput`; the `sameVocabulary` compile check
+     fails until the schema matches the sim.
+  3. `client`: `format.ts` (`conditionText`, `actionText`, `orderText`, the refusal texts), `rules-draft.ts`
+     (`CONDITION_TYPES`/`ACTION_TYPES`, the labels, `conditionOf`/`actionOf`), `panels/rules-editor.tsx` (the
+     fields), `map/creep-layer.tsx` (`orderTarget`), `chronicle/narrate.ts` and `templates.ts` (an event's
+     sentence). A word the editor cannot offer yet stays out of `ACTION_TYPES` and the client's vocabulary test says
+     why.
+  4. Tests: the sim's behavior on a text map; a new param also changes the fixed hashes (serialize, the junction's
+     6 h bot world).
 - **A refactor** that comes up goes in a separate `refactor` commit.
 - **An owner's decision mid-phase:** record it in the spec/plan (and in the GDD, via the `gdd-decision` skill) in a
   separate `docs` commit and remove the item from the dashboard's pending list.
@@ -67,7 +82,10 @@ Before the first line of code, list what the phase needs and that **neither the 
    it needs to know about the code, live pending items (remove the resolved ones). What the phase measured,
    interpreted and decided goes into its record in the slice's `tasks.md`. Commit
    `docs: update status dashboard for the end of F<n>`.
-4. Merge into `main` (`commit` skill), then `npm run check` on `main`.
+4. Merge into `main` (`commit` skill), then `npm run check` on `main`. **A session isolated in a worktree** (a
+   background job) cannot run git in the checkout that holds `main`: write the merge message to a file and end the
+   report with the owner's one line, `! scripts/merge-phase.sh <branch> <message-file> [--cleanup]`, which merges,
+   runs the check there and cleans up (`--no-check` for a docs-only branch).
 
 ## 5. Report to the owner
 
@@ -79,6 +97,18 @@ Short, in the language of the conversation:
 - **Next:** the following phase and its branch.
 
 ## Pitfalls already seen
+
+- **Background sessions refuse complex shell commands.** The worktree guard rejects heredocs, `python -c` with
+  several statements, `git -C` or `cd` into another checkout. Write the script to the job's `tmp/` and run it with
+  one plain command (`python3 <file>`); edit several files in one script instead of one `Edit` call per hunk.
+- **Tests pinned to an emergent moment break with any rule change.** A fixture like "battle 157 opens at tick 8,539"
+  moves whenever a rule shifts the bot world (R F2 broke ten server tests that way). Find the moment by searching
+  (`firstTeamBattle` in `apps/server/test/helpers.ts`), and give coverage floors (battles in the delta property)
+  room, with the measured values in a comment.
+- **Know what a check costs** (R F2, 2026-11-25, WSL worktree): `npm run check` ~125–130 s (typecheck ~21 s, lint
+  ~5 s, tests ~95 s, of which the protocol's two 6 h delta-property worlds ~48 s); one workspace's tests: `sim`
+  ~16 s, `server` ~21 s. Lint fails in ~27 s, before the tests. Iterate with `npx vitest run <files>` and
+  `npm run typecheck`; run the full check once per task, before its commit.
 
 - **"Green" is `npm run check`'s exit code, not filtered output.** In `npm run check | grep ... && git commit`, the
   `grep` decides the `&&`: a red typecheck or lint passes, because `grep` finds lines. Run

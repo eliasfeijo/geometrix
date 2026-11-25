@@ -17,7 +17,9 @@ geometrix commit rules. Sources: the owner's request (Conventional Commits, one 
   squash or rebase): each phase becomes a merge commit, `git log --first-parent main` shows one line per phase, and the
   per-unit commits are kept. Message: `merge: m2/junction-f1-contract (M2 D F1 — The contract)`, with a body
   summarizing the phase and the trailers. `git merge` does not read `-F -`: write the message to a scratchpad file and
-  use `git merge --no-ff <branch> -F <file>`, in the checkout that has `main`.
+  use `git merge --no-ff <branch> -F <file>`, in the checkout that has `main`, or `scripts/merge-phase.sh <branch>
+  <file>`, which does it from any checkout (with the checks and the cleanup; the owner runs it when the session is
+  isolated in a worktree).
 - Before the merge, update `docs/dashboard/current-status.md` on the phase branch itself.
 - Work between phases (docs, owner decisions, harness) goes in as the first commits of the **next** phase's branch,
   created from `main` if it does not exist yet, or on a `docs/<slug>` branch.
