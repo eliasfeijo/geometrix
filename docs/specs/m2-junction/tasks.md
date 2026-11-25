@@ -288,6 +288,49 @@ square against the circle **watched in the playtest** (GDD 06). All provisional 
 - [x] Battle inputs only for the dominated participant (C-2); frames only to the open screens (N-2)
 - [x] The diff property test with battles and locked creeps; `geo net` with a watcher (frames against 16 KB/s)
 
+### F4 record
+
+**What it does.** The server steps each hosted world through the junction host (`WorldHost.junction`,
+`stepJunction`): the battles' results enter the tick's command log after the players' commands, as the system
+player's, in the tick's transaction, with the `battles` table (setup, params, the instance's record, the tick it
+reached, the end and its hash) and `battle_ticks` (only ticks with commands). Recovery replays the world alone, then
+rebuilds each open battle from its rows with `replayLog`, on the world clock (N-3). A socket's `battleScreen` opens
+the screen of a battle its team has a side in (`battleOpen`: arena, params, roster and the view now) and frames
+follow (`battleFrame`: the delta of the battle view and the events), only to the sockets that show it (N-2); a
+dominating player's open screen puts the battle in real time from the next world tick (D13), and a 50 ms battle
+clock per world steps it (`battle-clock.ts`, T-2). `battleInput` is queued only for the participant of the creep
+the player dominates (C-2). The diff property test runs through the host again, with its floors of battles opened
+and closed, locked creeps, deaths and spoils. `PROTOCOL_VERSION` 7; `SIM_VERSION` and `BATTLE_VERSION` unchanged.
+
+**Measured.** `geo net --seed 42 --days 3` (`runs/f4-net-s42`, not versioned): the world delta 146 B/s per client
+(target 2,048), 133–146 µs per send (target 250), 0 mismatches in 518,400 checks. A watcher over the run's 218
+battles (3,221 battle seconds, mostly 1 × 1 with a wanderer): with the full view in every frame, 12,301 B/s on
+average and **16,799 B/s in the worst battle, over the 16 KB/s guess**; so, as plan section 7 says, the frames are
+deltas of the battle view (`diffBattleView`, on delta.ts's entity diff): **2,467 B/s on average, 3,387 at worst**,
+133 B per real-time frame, 344 B per world-clock frame, 4,377 B for the opening. On the server (seed 42 of the test
+params, a scratchpad probe): a world tick 0.18 ms with no battle, 0.8–1.2 ms with battles (20 battle ticks each, and
+their rows); a real-time battle tick with its frame 22–33 µs, against the 50 ms tick.
+
+**Interpretations to validate** (implementation details the plan left open):
+
+1. On the world clock, a watcher gets one frame per world tick: the view after the battle's second and the events
+   of its 20 ticks. At ×6 that is six jumps of a battle second each per real second (D4: battle time is world time).
+2. The pace changes on the next world tick after a screen opens or closes, or a domination changes (up to 1/N s);
+   inputs sent before it wait for it, and those of a battle still on the world clock after the world tick are
+   dropped.
+3. Any player of a team with a side in the stub may open the screen, even when its participants all left; the
+   server closes a battle's screens after its last frame (no closing message: the last frame has `ended`).
+4. A battle input gets an ack or a reject, like a command; the frames carry no "applied" list (the lab's input
+   delay measure).
+5. The battle params are kept with the world (`worlds.battle_params_json`; `GEO_BATTLE_PARAMS` for new worlds); a
+   world stored before them gets the server's.
+6. The battles table keeps the instance's record (members, the world side of each battle side, the joins waiting,
+   the results sent) with the reached tick, since `replayLog` rebuilds only the battle's state.
+7. A frame carries the roster only when someone joined, and none once the world closed the stub.
+8. The battle clock runs all the time (20 wakes a second per world); after a stall it runs at most 40 ticks (2 s),
+   then drops the backlog (`maxCatchUpBattleTicks`, an operating value).
+9. A world with an open battle and no battle rows (a file from before F4) is not hosted (`RecoveryError`).
+
 ## F5 — Client
 
 - [ ] The arena view, input, motion and effects moved to `apps/client/src/battle/`; the lab unchanged on top of it
