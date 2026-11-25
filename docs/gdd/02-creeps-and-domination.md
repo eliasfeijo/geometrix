@@ -55,10 +55,25 @@
     damage grow as the attack is charged, with a bar that fills up to the strike's limit. **The charge** (investida):
     holding Space speeds up the square while it moves, and the attack goes out by itself when it collides with an
     enemy creep during the charge.
-  - **▲ The triangle's frontal guard:** holding the skill key, it stands still facing one direction and blocks the
+  - **▲ The triangle's frontal guard:** holding Space (below), it stands still facing one direction and blocks the
     projectiles that come from the front; the square's charged strike breaks the guard; the flank stays open. It
     shields the allies behind it.
   - **● The circle's fan:** three projectiles at once, in the front lane and the two next to it, with a long cooldown.
+- **The kits' details** (owner, slice K's spec round, 2026-11-25; [kits spec](../specs/m2-kits/spec.md) D3–D7;
+  numbers provisional, in the params):
+  - **One key, Space:** there is no separate skill key. A **tap** is the DNA's basic attack; **held**, Space fills the
+    DNA's bar up to its limit, in a time set per DNA, and the hold is the DNA's skill: the square charges its strike,
+    the **triangle guards while the bar fills**, the **circle charges its fan's range**. "Segurar barra de espaço
+    carrega a habilidade (...), tudo configurável, não precisa de outra tecla."
+  - **■ The strike:** the basic hit (a tap) also stuns; the longer Space is held, the larger the damage, the stun's
+    duration **and the square's walking speed**. The strike can be charged while walking; the charge's collision
+    strikes **with the bar built while running**.
+  - **■ The charge's limit:** it lasts at most a configurable duration and has no cooldown of its own: it comes back
+    with the attack's cooldown after the strike.
+  - **The dodge:** a **double tap of a direction** (arrow or WASD) dashes 2 cells that way, fast, **untouchable**
+    during the dash. **The dodge has priority** and resets the bar.
+  - **The load acts as in walking:** the charge multiplies the speed the load already slows; the dodge keeps its
+    distance and its cooldown grows with the load.
 
 ## Proposal
 - Dominating only changes **who emits the creep's commands**. See [ADR-0002](../adr/0002-every-action-is-a-command.md).

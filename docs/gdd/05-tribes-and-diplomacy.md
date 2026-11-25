@@ -33,10 +33,16 @@
   the first around 5 real minutes into the match, then at short intervals, at most 4 alive (numbers provisional, set
   by the sweeps). At checkpoint C2, 3 were born in 3.9 world hours, the first at world hour 1 (10 real minutes at
   ×6).
+- **The wanderers' kit in slice K** (owner, slice K's spec round, 2026-11-25; [kits spec](../specs/m2-kits/spec.md)
+  D8): the wanderers get **the circle's kit** (the dodge and the fan), with their own stats, until their own DNA and kit
+  (below) have their design round.
 
 ## Proposal
 
 ## Parked (the owner's ideas, no milestone)
+- **The wanderers' own DNA and kit** (owner, 2026-11-25): "os errantes poderiam ter um DNA e kit únicos, inclusive a
+  forma geométrica poderia ser um círculo com moicano (ex: espinhos triangulares no topo do círculo), e deve propor um
+  combate desafiador do início ao fim do jogo". The owner chose **its own design round** for it, outside slice K.
 - **Bosses:** they live at a spot on the map, are slow and respawn slowly; buff bosses give the team that defeats them
   a temporary buff and sit on the enemy's path; a stronger river boss drops a rare item. Whoever lands the last hit
   takes the buff or item.
