@@ -106,6 +106,16 @@
   - **The bots' strategists lead several squads**, how many and how they behave by the difficulty, configurable
     ([07](07-autopilot.md)). **A bot's squad shows its symbol but no glow** (owner, G's spec review, 2026-11-25): the
     glow means a human plays that creep.
+- **The squad's cap and who controls what** (owner, G's spec review, 2026-11-25):
+  - each player has a **maximum of creeps in their squad**, by the number of players in the team and the free
+    creeps: the team's living creeps divided by its connected players, rounded down, and **the remainder, one each,
+    to the active players with the fewest creeps in their squad** (formula by the agent, accepted); a player is
+    **active** with the game's tab visible and some input in the last 15 s (provisional);
+  - **creeps that die do not affect the creeps already in a squad**: the cap is checked only when adding, and only a
+    manual release takes a creep out;
+  - **a player controls only their own squad's creeps or free ones** (no loan in battle, [06](06-battles.md));
+  - **new creeps**, paid with resources, are **born free**, on autopilot with the default preset, as the first
+    generation.
 - **The panel** (owner, slice G's design round and spec review, 2026-11-25): **C** toggles one **fixed panel**, in
   the world and in battle, which stays open while the player clicks its actions (Esc closes it): **the squad on top,
   numbered 1 to 9** like the number keys, in an order the player changes (drag and drop, or Shift+↑/↓), the embodied

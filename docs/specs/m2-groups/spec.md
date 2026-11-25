@@ -41,6 +41,7 @@ A summary; the source is GDD 02, 06 and 07 (the R spec's review and G's design r
 | The symbol | Each player picks a symbol for their squad from a predefined list of SVGs; every creep of the squad shows it. It names the squad in the formation commands |
 | Disconnecting | The player keeps the squad: the embodied creep goes back to its autopilot rules, the others keep following it, and everything is as it was on reconnecting |
 | The bots | The bots' strategists lead **several squads**, how many and how they behave by the difficulty, configurable |
+| The cap and control | Each player has a **maximum of creeps in their squad**, by the number of players in the team and the free creeps; when a squad creep dies, the others stay (only a manual release takes a creep out). **A player controls only their own squad's creeps or free ones.** **New creeps** (paid with resources) **are born free**, on autopilot with the default preset, as the first generation; **the player with the fewest creeps in their squad has preference when active** (owner, the spec's review, 2026-11-25) |
 | The panel | **C** toggles one fixed panel, in the world and in battle: **the squad on top, numbered 1 to 9** like the number keys, in an order the player changes (drag and drop, or Shift+↑/↓), **the embodied creep always 1**; the rest of the team below. Each line can **select, dominate and center on the map** (owner, design round; one panel and the numbers at the spec's review, 2026-11-25) |
 | In the world | The squad's other creeps **follow the embodied creep in the default formation**: **squares in front, triangles in the middle and on the flanks, circles behind**. An **individual order detaches a member**, which goes back to the formation when the order is done |
 | World orders | A minimal set for P, through Z: **follow in formation**, **hold position**, **attack a target** (the whole squad engages, **each DNA from its side**: the square from any direction, the triangles by the flanks, the circle from the side of the ally with the highest HP) and **release**. Formation shapes come later |
@@ -57,7 +58,7 @@ numbers are in §6 and are guesses.
 | # | Decision | Default | Why |
 |---|---|---|---|
 | D1 | The squad as state **(agent)** | A **squad** is a world entity: an id from `nextId`, its leader player, its symbol and its **anchor** (the creep the others follow). A creep has a `squad` (an id, or none). **A human player has exactly one squad**, created when the player joins; **a bot has several** (D19). The embodied creep is the human squad's anchor, and `dominatedBy` keeps meaning "the embodied creep of this player": a dominated creep is always in its player's squad | Several squads per bot (owner) need an identity apart from the player. Keeping `dominatedBy` for the embodied creep keeps the junction's "human controller" and the battle screen's opening as they are |
-| D2 | Joining the squad **(owner, the spec's review, 2026-11-25; interpretation)** | **Ctrl** adds: a drag box with Ctrl held adds every selected free creep of the team (up to `maxSize`), **Ctrl+click toggles** one creep in or out, and **dominating** a free creep adds it too; the symbol appears or disappears on the creep at once. A creep of another player's squad is refused (`inOtherSquad`); a full squad refuses (`squadFull`). **When the squad has no embodied creep, the first creep added becomes it.** The domination params (cost, cooldown, distance, all 0) apply when a creep joins; changing the embodied creep inside the squad is free. On macOS, ⌘ stands for Ctrl (Ctrl+click is a right click there) | Owner: building a squad is explicit, so creeps left on autopilot can take an occasional order without following the squad. The first creep being embodied keeps the squad's anchor |
+| D2 | Joining the squad **(owner, the spec's review, 2026-11-25; interpretation)** | **Ctrl** adds: a drag box with Ctrl held adds every selected free creep of the team (up to `maxSize`), **Ctrl+click toggles** one creep in or out, and **dominating** a free creep adds it too; the symbol appears or disappears on the creep at once. A creep of another player's squad is refused (`inOtherSquad`); a squad at the player's cap refuses (`squadCap`, D26). **When the squad has no embodied creep, the first creep added becomes it.** The domination params (cost, cooldown, distance, all 0) apply when a creep joins; changing the embodied creep inside the squad is free. On macOS, ⌘ stands for Ctrl (Ctrl+click is a right click there) | Owner: building a squad is explicit, so creeps left on autopilot can take an occasional order without following the squad. The first creep being embodied keeps the squad's anchor |
 | D3 | The embodied creep **(owner, the spec's review, 2026-11-25; interpretation)** | **Shift+N** dominates the squad's creep N; the panel's and the inspector's "Dominar" too. The embodied creep is **always number 1** of the squad's list: the dominated creep N **swaps places** with the previous number 1. **The squad keeps an embodied creep while it has creeps:** when it dies or leaves the squad, **number 2** becomes it. **The list's order lives in the squad's state** (a reorder command), so the panel, the numbers and that succession agree, also for an away player | Owner: dominating has its own key, the numbers select. A swap keeps every other creep's number |
 | D4 | The glow and the name **(owner; interpretation)** | The embodied creep of a human shows a **glow** and **its player's name at every zoom level**, on the map and in the arena. An enemy sees them **only for a creep it sees** (the fog holds): the team view of a foreign creep in sight gains its squad's symbol and, if embodied, its player's name (revising the fog spec's D7, the enemy in sight, and its D8, under which who dominates an enemy creep stayed hidden) | Owner: visible to all. The fog's rule (GDD 01) stays: no glow through the black |
 | D5 | The symbols **(owner; agent)** | **Eight** geometric symbols (a star, a cross, a crescent, a ring, a bolt, an arrow, a diamond, a hex), none of them a DNA's shape (pillar 6: the shape tells the role). Picked **in the lobby** and changeable in the match by a command; **unique within a team**; a player who does not pick gets the first free one. The bots' squads take free symbols too | Owner: a predefined list. A symbol shaped like a square or circle would read as a DNA |
@@ -71,16 +72,19 @@ numbers are in §6 and are guesses.
 | D13 | The autopilot and the squad **(agent)** | A creep in a squad does **not** run its autopilot rules (as a dominated creep today); released, it goes back to them. The anchor of an away player (D6) is the exception. The rules editor keeps working on squad creeps; its rules apply once released. R's `follow` rule and "Seguir…" for a free creep stay: they serve the bots and a human leaving an escort behind | A squad creep obeys one player. Today's domination already works this way |
 | D14 | The encounter window **(agent)** | An encounter on any creep of a squad gives its leader the human's window (encounter D6, at least 10 real seconds by R D3); with no answer, the creep's reaction rules apply | Today only the dominated creep has a window; the squad's creeps are the player's too |
 | D15 | Where a creep is born in the arena **(gameplay; agent)** | **A joiner** is born **in the arena block of the world cell it stands on** when it joins (the bubble is the arena's window, junction D5), on the free floor cell of that block nearest to the battle's center and **off the exit ring**; when the block has none, in its side's zone as today. **At the opening**, each side's zone is the one **toward where its creeps stand in the world**, and its creeps are born there **in formation** (D8, facing the enemy's zone). This replaces "born in its side's zone" for joiners (junction D6) | The ROADMAP's "the side each DNA engages from revises where a joiner is born": a triangle that flanks in the world flanks in the arena |
-| D16 | Who commands a participant **(owner; the loan's end by the owner at the spec's review)** | A player is **active in a battle** when they control a participant of it on the battle screen. The leader of a squad commands its participants when active in the battle (playing the embodied one, or by Shift+N into the squad's participants there). **With the leader not active**, the squad's participants follow the last command (D17), and another active player of the team may play one of them on **loan**: a battle-only control (the creep stays in its squad in the world). **When the leader becomes active, the loan ends at once** and the borrower goes to their own next participant, or to watching | Owner: the leader has priority, taken back at once (spec review, 2026-11-25, over "the borrower keeps it until letting go" and "no loan"). The loan keeps a human in the fight when the leader is elsewhere |
+| D16 | Who commands a participant **(owner; no loan by the owner at the spec's review, 2026-11-25)** | A player is **active in a battle** when they control a participant of it on the battle screen. The leader of a squad commands its participants when active in the battle (playing the embodied one, or by Shift+N into the squad's participants there). **With the leader not active**, the squad's participants play their gambits under the last command (D17; attack freely by default), and **no other player may play them**: a player controls only their own squad's creeps or free ones (D28) | Owner: the leader has priority; at the review the owner dropped the loan the agent had proposed (another player playing an absent leader's creep), since it broke "only your squad or free creeps" |
 | D17 | The battle's formation commands **(owner; Z and the default by the owner at the spec's review, 2026-11-25)** | **Z** then **1 form on me:** each takes its D8 slot around the played participant, facing its facing, and attacks enemies in reach without leaving its slot more than 2 cells; **2 hold position:** stay on the current cell, turn and attack in reach; **3 attack freely:** the DNA's gambits preset (today's behavior); **4 fall back:** the carrier's flight to the nearest exit, dropping the load if an enemy is near (K's carrier); 0 cancels. Sent to **the selected participants of the squad**, else to all but the one played; a participant a human plays ignores it. **The default is 3**, so a squad with no command fights as today. One battle command naming the participants (ADR-0002) | Owner: the commands through Z; attack freely as the default (over "form on me"), which keeps every battle without a human as today |
 | D18 | The battle bots' commands **(owner; interpretation)** | A side whose squad has no active human gets its commands from a **squad AI**, a short ordered list like the gambits: **fall back** when the side's HP is below `fallBackPermille` of the enemy sides' HP, **hold** when help is coming (D23, when on), **attack freely** otherwise. Easy sends none; normal and hard use it (R D26's levels) | Owner: the bots use the same commands. The list is the gambits' shape, so the lab's editor can show it |
 | D19 | The bots' squads **(owner; the glow by the owner at the spec's review; the rest by the agent)** | Slice R's raid group (a raider and 2 followers) and escort become **squads of the bot**, with the raider (the escorted collector) as the anchor; they walk in formation and attack a target by D11. **How many:** hard 2 (raid and escort), normal 1 (raid), easy none, in the strategist's settings. A bot's anchor shows its squad's symbol and **no glow**: the glow means a human plays that creep | Owner: several squads by difficulty; no glow for a bot (spec review, 2026-11-25): telling a human from a bot is information the other side uses |
 | D20 | The panel **(owner; agent)** | **C** toggles it, in the world and in battle; Esc closes it. **The squad** on top, numbered 1–9 in its order (drag and drop or Shift+↑/↓ reorders; number 1 stays the embodied creep); **the teammates' squads** (by symbol); then **the free creeps**. Each line: the DNA icon, name, HP, load, the current action, the squad's symbol and leader, and "em batalha". Actions: **select**, **dominate** (refused for another player's squad), **center**, **add or release** (own squad), and **"Entrar"** for a creep in a battle. In battle, the squad's creeps outside the battle are greyed | Owner: one panel, the numbers, select, dominate, center. The rest is what P's new player asks first: where is it, what is it doing |
-| D21 | "Entrar" with squads **(agent)** | It plays **the player's squad's participant highest in the list**; with none, **a free participant of the team** (it joins the squad, as a dominate does); with none, a loan (D16); with none, it opens the screen to watch. Revises R's D7 | R's D7 rule, with the squad first |
+| D21 | "Entrar" with squads **(agent)** | It plays **the player's squad's participant highest in the list**; with none, **a free participant of the team** (it joins the squad, as a dominate does, within the cap, D26); with none, it opens the screen to watch. Revises R's D7 | R's D7 rule, with the squad first and no loan (D16) |
 | D22 | Selecting several **(owner, the spec's review, 2026-11-25)** | A **drag box** selects the team's creeps in it, **Shift+click** toggles one in the selection, **0** clears it; in battle, N, Tab and a click on a participant select. The inspector lists a multiple selection (R's D23 actors' list). With Ctrl, the same gestures build the squad (D2) | Owner: the selection is who takes an order or a command; it is no longer cuttable |
 | D23 | The load experiment **(owner's proposal; agent; lab only, cuttable)** | A battle side gets a **"help coming"** count from the host (world → battle): its team's creeps in the world with an attack approach on a participant or a follow on one, within `helpRadius` cells of the battle. A gambits condition `helpComing` and a squad AI one (D18); the carrier preset gets "hold the load while help is coming, drop otherwise". **Off in the world's params** (`gambits.helpComing.enabled` 0); the lab sets the count by hand in its setup | GDD 06: lab only, cut first. R's D27 already decides keep or drop in the world |
 | D24 | Versions | `SIM_VERSION` (squads, their orders and commands, presence, the autopilot skipping squad creeps, the formation, the view's new fields); `BATTLE_VERSION` (the squad command, formation and hold behaviors, the birth cells, the squad AI, `helpComing`); `PROTOCOL_VERSION` (the new commands, the view and battle frame fields); fixed hashes. Old snapshots and replays become invalid (ADR-0004) | The project's rule (CLAUDE.md) |
 | D25 | Two checkpoints | **G1, in the lab:** the Z commands, birth in formation and by entry, the squad AI, the load experiment; the owner plays a squad. **G2, in the world:** squads built with Ctrl, one-shot orders, the embodied creep, the panel, the selection keys, formation walking, attack a target, and **two humans of one team in one battle** with their squads (P's J6) | Lab first (ROADMAP). G2 is the closest rehearsal of P |
+| D26 | The squad's cap **(owner; the formula by the agent, accepted at the spec's review, 2026-11-25)** | When a player adds a creep (Ctrl, a dominate, "Entrar"), the system checks the player's **cap**: with **total** the team's living creeps and **n** the team's connected players, each player's cap is **⌊total ÷ n⌋**, plus **1 for each of the r = total mod n active players with the fewest creeps in their squad** (ties: the player who joined first), and never above `squads.maxSize`. A squad at its cap refuses the add (`squadCap`). **The cap is checked only on adding:** a death, a birth or a player joining never releases anyone. A player with a cap of 0 still gives one-shot orders to free creeps | Owner: a maximum by players and free creeps; deaths do not touch the squads; preference to the active player with the fewest. With 2 players and 7 creeps: 3 each, and the 7th for the active one with the fewest |
+| D27 | Active **(owner; details by the agent)** | A player is **active** while connected, with the game's tab **visible** and **some input** (a key, a click, a mouse movement) in the last `squads.activeSeconds` (§6: 15 s). The client tells the server only when that changes; the server logs it as a system command (active, idle), next to D6's away and back, since the cap is computed in the `sim`. Idle changes nothing else: the squad and the embodied creep stay as they are (D6 applies only to a disconnect) | Owner: "aba do jogo aberta e com qualquer atividade/input observado nos últimos 15s". A visible tab and the mouse movement keep a player who is reading the map active |
+| D28 | Only one's own squad or free creeps; new creeps free **(owner)** | Any command from a player to a creep of **another player's squad** is refused (`inOtherSquad`): an order, a dominate, an add, a squad command, a battle input, **and the rules editor**. A creep the team produces is **born free**, on autopilot with the default preset, as the first generation (today the matéria collector for every DNA, with slice R's help rule; a default per DNA would be a new decision) | Owner. The rules editor is the agent's reading of "control": editing another squad's creep would change what it does once released |
 
 ## 4. Scope
 
@@ -91,7 +95,7 @@ numbers are in §6 and are guesses.
   fields (D4), the bots' squads in the strategist (D19), `SIM_VERSION`.
 - **`@geometrix/battle`:** the squad command and its behaviors (D17), the birth cells (D15), the squad AI (D18),
   `helpComing` (D23), the side cap (D7), `BATTLE_VERSION`.
-- **`@geometrix/junction`:** the leader's priority and the loan (D16), the birth cell of a joiner from its world cell
+- **`@geometrix/junction`:** the leader's priority (D16), the birth cell of a joiner from its world cell
   and the opening's zones (D15), the "help coming" count (D23).
 - **Protocol and server:** the new commands, presence instead of the disconnect's release (D6), inputs and squad
   commands routed by D16, `PROTOCOL_VERSION`.
@@ -117,10 +121,10 @@ Format: *When [trigger], the system shall [response].* "The team" is the player'
 ### Squads (`sim`)
 - **S-1** When a human player joins, the system shall create their squad, empty, with the first free symbol of the team.
 - **S-2** When a player adds a free creep of their team to the squad (the add command, sent by Ctrl+click, a Ctrl
-  drag box or a dominate), the system shall put it at the end of the squad's list (refusing with `squadFull` at
-  `maxSize`) and apply the domination params; with no embodied creep, it shall become the embodied one (D2).
-- **S-3** An add, order or dominate from a player to a creep of another player's squad shall be refused
-  (`inOtherSquad`).
+  drag box or a dominate), the system shall put it at the end of the squad's list (refusing with `squadCap` at the
+  player's cap, D26) and apply the domination params; with no embodied creep, it shall become the embodied one (D2).
+- **S-3** An add, order, dominate, squad command, battle input or rules edit from a player to a creep of another
+  player's squad shall be refused (`inOtherSquad`) (D28).
 - **S-4** When a player dominates a creep of their squad, it shall become their embodied creep and swap places in the
   list with the previous number 1, which stays in the squad as a follower (D3).
 - **S-5** When the embodied creep dies or leaves the squad, number 2 shall become the embodied one; with none left,
@@ -134,6 +138,9 @@ Format: *When [trigger], the system shall [response].* "The team" is the player'
 - **S-8** The server shall log a player's going away and coming back as system commands, and shall release nothing on
   a disconnect (D6).
 - **S-9** A symbol command shall be refused for a symbol another squad of the team holds.
+- **S-10** On an add, the player's cap shall be ⌊total ÷ n⌋ plus one for the r active players with the fewest squad
+  creeps, at most `maxSize` (D26); no death, birth or join shall take a creep out of a squad.
+- **S-11** The server shall log a player's going active and idle (D27); a produced creep shall be born free (D28).
 
 ### The squad in the world (`sim`)
 - **W-1** While its squad follows, each follower shall walk toward its slot (D8) by the team's known map, recomputed
@@ -154,8 +161,8 @@ Format: *When [trigger], the system shall [response].* "The team" is the player'
 - **B-3** The squad command shall set the named participants' behavior: form, hold, free or fall back (D17); a
   participant played by a human ignores it.
 - **B-4** A side with no active human shall get its squad AI's commands (D18) on the gambits' reaction time.
-- **B-5** The host shall give a participant to its squad's leader when the leader is active, else keep the last
-  command; another active player of the team may play it on loan until the leader becomes active (D16).
+- **B-5** The host shall give a participant to its squad's leader when the leader is active, else keep its last
+  command on gambits; no other player shall play it (D16).
 - **B-6** With `helpComing` on, the host shall send each side its help count on change, and the gambits and squad AI
   conditions shall read it (D23).
 - **B-7** With the squad command never sent and `helpComing` off, a battle shall play as before G (the sweep, §7).
@@ -173,7 +180,8 @@ Format: *When [trigger], the system shall [response].* "The team" is the player'
 - **U-4** Z shall open the formation options and 1–3 (the world, then a click for the target) or 1–4 (the battle)
   shall send them to the selected squad creeps or the whole squad; 0 or Esc cancels; the battle screen shows each
   participant's current command (D10, D17).
-- **U-5** The lobby shall offer the symbol; the inspector shall show a creep's squad and leader, and "Liberar".
+- **U-5** The client shall report the player's activity changes (D27) and show the squad's cap in the panel ("3 / 4");
+  the lobby shall offer the symbol; the inspector shall show a creep's squad and leader, and "Liberar".
 - **U-6** "Dominar" shall stay on a selected creep's panel next to Shift+N; the right click shall order the selection
   by D9 without adding anything to the squad.
 
@@ -192,6 +200,7 @@ Format: *When [trigger], the system shall [response].* "The team" is the player'
 |---|---|---|---|
 | `sim` | `squads.maxSize` | 4 | the embodied creep and 3 |
 | | formation: front / flank / back | 1 / 1 / 2 cells | D8 |
+| | `squads.activeSeconds` | 15 s | the owner's (D27) |
 | | bots' squads: hard / normal / easy | 2 / 1 / 0 | the strategist's settings (D19) |
 | `battle` | `limits.maxPerSide` (the world's) | 8 (from 5) | the lab keeps 5 by default (D7) |
 | | form: the farthest from the slot | 2 cells | D17 |
@@ -222,7 +231,9 @@ The targets are guesses; when one fails, the owner decides at the checkpoint.
    Shift+N, the swap, the list's order, death and release; presence and the away anchor's autopilot;
    the slots by heading and around rock; detaching and coming back; hold; attack a target from each DNA's cell; joining
    by squad; the window to the leader; the birth cell of a joiner and the opening's zones in formation; each squad
-   command; the leader's priority and the loan; the squad AI; `helpComing`; the symbols' uniqueness; the selection, Ctrl,
+   command; the leader's priority with no loan; the cap with its
+   remainder for the active player with the fewest, and no release on a death; activity; another squad's creep
+   refused everywhere, the rules editor included; the squad AI; `helpComing`; the symbols' uniqueness; the selection, Ctrl,
    Z and the panel in the client.
 2. **Harness:** H-1 to H-3; the sweep with no commands (B-7).
 3. **G1, the owner's lab session** (a new PLAYTEST lab group): a squad of 3 against the AI's 3 with Z's commands; the AI's
@@ -237,8 +248,8 @@ The targets are guesses; when one fails, the owner decides at the checkpoint.
 
 ## 9. Prerequisites before the `plan.md`
 
-- The owner's acceptance of the agent's proposals (D1–D25 where marked); D8's pace, D16's loan, D17's default and
-  D19's glow are the owner's answers at the review (2026-11-25).
+- The owner's acceptance of the agent's proposals (D1–D28 where marked); D8's pace, D16 with no loan, D17's default,
+  D19's glow, D26's cap and D28 are the owner's answers at the review (2026-11-25).
 - **R and K merged, or their plans as the base:** G builds on R's `follow`, groups, difficulty, pause and "Entrar",
   and on K's kits and carrier preset. The plan is written against both approved plans and rebased on their merges.
 - **No new ADR expected:** dominating still only changes who emits a creep's commands (ADR-0002); the squad command and
@@ -247,5 +258,5 @@ The targets are guesses; when one fails, the owner decides at the checkpoint.
 
 ## 10. Open questions
 
-None in this spec: the owner answered the squad's pace, the loan's end, the battle's default command and the bot's
-glow at the spec's review (2026-11-25; D8, D16, D17, D19).
+None in this spec: the owner answered the squad's pace, the loan, the battle's default command, the bot's glow and the
+squad's cap at the spec's review (2026-11-25; D8, D16, D17, D19, D26–D28).

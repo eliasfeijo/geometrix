@@ -149,9 +149,9 @@
   [02](02-creeps-and-domination.md)):
   - **the squad decides who commands a participant:** among the players active in the battle, the **squad's leader
     has priority** over its creeps. When two players of a team each embody a creep in the same battle and their
-    followers come in, each player commands their own squad. With the leader not playing in that battle, another
-    player of the team may play one of its creeps on loan; **when the leader comes in, the loan ends at once** (owner,
-    G's spec review, 2026-11-25);
+    followers come in, each player commands their own squad. **No loan** (owner, G's spec review, 2026-11-25): with
+    the leader not playing in that battle, its squad's creeps play their gambits under the last command, and no other
+    player plays them;
   - **the human plays the embodied creep** (WASD, Space); **Shift+N** plays the squad's participant N; N and Tab
     select (owner, G's spec review, 2026-11-25: Tab no longer moves the embodiment, as the lab's Tab does);
   - **tactical commands through Z** (owner, G's spec review; the design round had them on the bare number keys): Z
@@ -176,8 +176,7 @@ a junction host; the world log keeps only the results.
   or drop the load, so G only adds the battle's side (the world telling the battle that help is coming).
 - **Slice G's battle details** (agent, slice G's design round, 2026-11-25; to approve in G's spec): a squad that opens
   or joins a battle is born **in its formation**, on the side each DNA engages from (revising where a joiner is born,
-  junction D6); with its leader absent from the battle, a squad's creeps play their gambits under the last command
-  given, and another active player of the team may embody one until the leader comes in, who then takes it back.
+  junction D6).
 
 ```mermaid
 sequenceDiagram
