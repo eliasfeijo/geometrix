@@ -337,7 +337,8 @@ their rows); a real-time battle tick with its frame 22–33 µs, against the 50 
 - [x] The battle screen: opens by itself (N-1), back to the map, return; countdown, signs, end table
 - [x] Watching from the battle sign (teams with a participant)
 - [x] The map: the bubble, the battle sign, participants "in battle"; the inspector
-- [ ] The reaction panel with pay and refuse only; the mid-fight flee button removed
+- [x] The reaction panel with pay and refuse only; the mid-fight flee button removed (done with F2's
+      vocabulary change, `88ddc6f`; tested in `encounter-actions.test.ts`)
 - [ ] The chronicle sentences for the new events
 - [ ] The movement drawing selector in the `?net=1` panel (D19)
 
