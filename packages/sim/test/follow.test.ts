@@ -4,9 +4,8 @@ import { dominate, join } from "../src/domination.ts";
 import { kill } from "../src/hp.ts";
 import { manhattan } from "../src/map.ts";
 import { step } from "../src/step.ts";
-import { updateVision } from "../src/vision.ts";
 import type { Creep, WorldState } from "../src/world.ts";
-import { run, textWorld } from "./helpers.ts";
+import { placeWorld, run, runUntil, type Placed } from "./helpers.ts";
 
 // 30 × 7, the cores in opposite corners (R spec F-1..F-6).
 const MAP = [
@@ -19,20 +18,8 @@ const MAP = [
   ".............................B",
 ];
 
-type Placed = [team: number, dna: Creep["dna"], x: number, y: number];
-
 function world(placed: Placed[]) {
-  const w = textWorld(MAP);
-  const used = new Set<Creep>();
-  const creeps = placed.map(([team, dna, x, y]) => {
-    const creep = w.creeps.find(
-      (c) => c.team === team && c.dna === dna && !used.has(c),
-    )!;
-    used.add(creep);
-    Object.assign(creep, { x, y });
-    return creep;
-  });
-  updateVision(w);
+  const { world: w, creeps } = placeWorld(MAP, placed);
   return { w, creeps };
 }
 
@@ -61,9 +48,7 @@ describe("follow walks with its target (F-1)", () => {
     leader.order = { type: "moveTo", x: 15, y: 3 };
     step(w, [{ playerId: PLAYER, command: order(follower.id, leader.id) }]);
     expect(follower.order).toEqual({ type: "follow", targetId: leader.id });
-    run(w, 600);
-    expect(leader).toMatchObject({ x: 15, y: 3 });
-    expect(manhattan(follower, leader)).toBeLessThanOrEqual(2);
+    runUntil(w, () => leader.x === 15 && manhattan(follower, leader) <= 2);
     const at = { x: follower.x, y: follower.y };
     run(w, 20);
     expect(follower).toMatchObject(at);
@@ -84,8 +69,7 @@ describe("follow walks with its target (F-1)", () => {
       { when: { type: "always" }, then: { type: "moveTo", x: 0, y: 6 } },
     ];
     leader.order = { type: "moveTo", x: 15, y: 3 };
-    run(w, 600);
-    expect(manhattan(follower, leader)).toBeLessThanOrEqual(2);
+    runUntil(w, () => leader.x === 15 && manhattan(follower, leader) <= 2);
     kill(w, leader);
     step(w, []);
     expect(follower.order).toEqual({ type: "moveTo", x: 0, y: 6 });
@@ -122,13 +106,11 @@ describe("follow joins its target's battle (F-2, F-3)", () => {
         then: { type: "follow", creepId: leader.id },
       },
     ];
-    let joined = false;
-    for (let i = 0; i < 400 && !joined; i++) {
-      joined = step(w, []).some(
+    runUntil(w, (events) =>
+      events.some(
         (e) => e.type === "battleJoined" && e.creep.id === follower.id,
-      );
-    }
-    expect(joined).toBe(true);
+      ),
+    );
     const battle = w.battles.find((b) => b.id === leader.battle)!;
     const side = (c: Creep) =>
       battle.participants.find((p) => p.id === c.id)!.side;
@@ -189,11 +171,10 @@ describe("a loaded follower delivers first when the core is cheaper (F-6, H-4)",
     step(w, []);
     follower.order = { type: "follow", targetId: leader.id };
     const stock = w.teams[0]!.stock.materia;
-    run(w, 150);
-    expect(follower.cargo.materia).toBe(0);
+    runUntil(w, () => follower.cargo.materia === 0);
     expect(w.teams[0]!.stock.materia).toBe(stock + 5);
     expect(follower.order).toEqual({ type: "follow", targetId: leader.id });
-    expect(manhattan(follower, w.teams[0]!.core)).toBeGreaterThan(0);
+    runUntil(w, () => manhattan(follower, w.teams[0]!.core) > 0);
   });
 
   test("closer to the battle than to its core, it helps with its load", () => {

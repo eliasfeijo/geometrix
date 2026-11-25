@@ -1,9 +1,8 @@
 import { describe, expect, test } from "vitest";
 import type { Rule } from "../src/autopilot.ts";
 import { step } from "../src/step.ts";
-import { updateVision } from "../src/vision.ts";
 import { maxHp, type Creep } from "../src/world.ts";
-import { revealWorld, textWorld } from "./helpers.ts";
+import { placeWorld, revealWorld, runUntil, textWorld } from "./helpers.ts";
 
 // 30 × 7, team 0's core on the left of row 3 (R spec H-1..H-4).
 const MAP = [
@@ -26,28 +25,19 @@ const ROAD_MAP = [
   ".............................B",
 ];
 
-type Placed = [team: number, dna: Creep["dna"], x: number, y: number];
-
 /**
- * A battle at (17, 3), the victim's cell: team 0's square attacks team 1's square at (17, 3)
- * and both are locked; then `helper` (team 0's triangle) is placed.
+ * A battle at (17, 3), the victim's cell: team 0's square attacks team 1's
+ * square there and both are locked; `helper` (team 0's triangle) stands at
+ * `helperAt`. Every team remembers the whole map.
  */
 function battleWorld(rows: string[], helperAt: [number, number]) {
-  const w = textWorld(rows);
+  const { world: w, creeps } = placeWorld(rows, [
+    [0, "square", 16, 3],
+    [1, "square", 17, 3],
+    [0, "triangle", ...helperAt],
+  ]);
   revealWorld(w);
-  const used = new Set<Creep>();
-  const place = ([team, dna, x, y]: Placed) => {
-    const creep = w.creeps.find(
-      (c) => c.team === team && c.dna === dna && !used.has(c),
-    )!;
-    used.add(creep);
-    Object.assign(creep, { x, y });
-    return creep;
-  };
-  const ally = place([0, "square", 16, 3]);
-  const enemy = place([1, "square", 17, 3]);
-  const helper = place([0, "triangle", ...helperAt]);
-  updateVision(w);
+  const [ally, enemy, helper] = creeps as [Creep, Creep, Creep];
   ally.order = { type: "approach", targetId: enemy.id, intent: "attack" };
   step(w, []);
   expect(ally.battle).not.toBeNull();
@@ -92,13 +82,9 @@ describe("joinBattle (H-2)", () => {
   test("approaches an enemy participant and joins on the team's side", () => {
     const { w, ally, helper } = battleWorld(MAP, [11, 3]);
     helper.rules = help(6);
-    let joined = false;
-    for (let i = 0; i < 300 && !joined; i++) {
-      joined = step(w, []).some(
-        (e) => e.type === "battleJoined" && e.creep.id === helper.id,
-      );
-    }
-    expect(joined).toBe(true);
+    runUntil(w, (events) =>
+      events.some((e) => e.type === "battleJoined" && e.creep.id === helper.id),
+    );
     const battle = w.battles.find((b) => b.id === ally.battle)!;
     const side = (c: Creep) =>
       battle.participants.find((p) => p.id === c.id)!.side;
@@ -134,8 +120,7 @@ describe("helping with a load (H-4)", () => {
     step(w, []);
     expect(helper.order).toEqual({ type: "deliver" });
     const stock = w.teams[0]!.stock.materia;
-    for (let i = 0; i < 200 && helper.cargo.materia > 0; i++) step(w, []);
-    expect(helper.cargo.materia).toBe(0);
+    runUntil(w, () => helper.cargo.materia === 0);
     expect(w.teams[0]!.stock.materia).toBe(stock + 5);
     step(w, []);
     expect(helper.order.type).toBe("approach");

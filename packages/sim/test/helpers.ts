@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import type { SimEvent } from "../src/events.ts";
 import { Terrain, type Cell, type GameMap } from "../src/map.ts";
 import {
   parseParams,
@@ -118,6 +119,50 @@ export function textWorld(
   world.memory = createMemory(world.teams, world.map);
   updateVision(world);
   return world;
+}
+
+/** A creep a test places: its team, its DNA and its cell. */
+export type Placed = [team: number, dna: Dna, x: number, y: number];
+
+/**
+ * A textWorld with some of its creeps placed: each entry moves the first
+ * creep of that team and DNA not placed yet onto its cell, in order; the
+ * others stay on their cores. The vision is updated after.
+ */
+export function placeWorld(
+  rows: string[],
+  placed: readonly Placed[],
+  params: Params = loadTestParams(),
+): { world: WorldState; creeps: Creep[] } {
+  const world = textWorld(rows, params);
+  const used = new Set<Creep>();
+  const creeps = placed.map(([team, dna, x, y]) => {
+    const creep = world.creeps.find(
+      (c) => c.team === team && c.dna === dna && !used.has(c),
+    );
+    if (creep === undefined) throw new Error(`no ${dna} left in team ${team}`);
+    used.add(creep);
+    Object.assign(creep, { x, y });
+    return creep;
+  });
+  updateVision(world);
+  return { world, creeps };
+}
+
+/**
+ * Steps the world with no commands until `done` holds after a tick (given
+ * that tick's events), and returns how many ticks it took; fails after
+ * `max`. For tests that wait on a moment instead of guessing its tick.
+ */
+export function runUntil(
+  world: WorldState,
+  done: (events: SimEvent[]) => boolean,
+  max = 10_000,
+): number {
+  for (let i = 1; i <= max; i++) {
+    if (done(step(world, []))) return i;
+  }
+  throw new Error(`runUntil: not done after ${max} ticks`);
 }
 
 /** The first creep of the team with that DNA. */
