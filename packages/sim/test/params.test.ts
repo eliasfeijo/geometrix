@@ -98,6 +98,11 @@ describe("parseParams", () => {
     ["battle.zone.depth", 2, "battle.zone.depth: must be odd"],
     ["battle.zone.breadth", 4, "battle.zone.breadth: must be odd"],
     [
+      "battle.zone.insetPermille",
+      1000,
+      "battle.zone.insetPermille: must be < 1000",
+    ],
+    [
       "battle.sideCap",
       16,
       "battle.sideCap: must fit in a zone (depth × breadth)",

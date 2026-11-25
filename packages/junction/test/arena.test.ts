@@ -1,8 +1,13 @@
 import { parseArena } from "@geometrix/battle";
 import { windowAround } from "@geometrix/sim";
 import { describe, expect, test } from "vitest";
-import { arenaOf, arenaShape, worldCellOf } from "../src/arena.ts";
-import { textWorld } from "./helpers.ts";
+import {
+  arenaOf,
+  arenaShape,
+  JunctionArenaError,
+  worldCellOf,
+} from "../src/arena.ts";
+import { paramsWith, textWorld } from "./helpers.ts";
 
 // 12 × 7: rock at (3, 1) and (4, 1); a river row at y = 5 with a crossing.
 const MAP = [
@@ -59,6 +64,27 @@ describe("the arena from the window (junction D5, O-4, P7)", () => {
       "down",
       "up",
     ]);
+  });
+
+  test("the zones' distance to the border is a param (C1-3)", () => {
+    const first = (inset: number, glyph: string) => {
+      const params = paramsWith((p) => {
+        p.battle.zone.insetPermille = inset;
+      });
+      const moved = textWorld(MAP, params);
+      const rows = arenaOf(moved, windowAround(moved, { x: 2, y: 1 }));
+      const y = rows.findIndex((r) => r.includes(glyph));
+      return [rows[y]!.indexOf(glyph), y];
+    };
+    // 750‰ of the way: x = floor(23 × 0.75) = 17, y = floor(13 × 0.75) = 9.
+    expect(first(750, "1")).toEqual([16, 11]);
+    expect(first(750, "2")).toEqual([28, 11]);
+    expect(first(750, "3")).toEqual([21, 8]);
+    expect(first(750, "4")).toEqual([21, 16]);
+    expect(first(500, "1")).toEqual([10, 11]);
+    // Too close to the edge, or the zones on top of each other: refused.
+    expect(() => first(50, "1")).toThrow(JunctionArenaError);
+    expect(() => first(950, "1")).toThrow(/overlap/);
   });
 
   test("arena cells map back by floor division; the ring to the outer cells", () => {

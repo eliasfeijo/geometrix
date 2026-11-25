@@ -2,8 +2,9 @@
 // window of world cells, each drawn as a `cellBlock` × `cellBlock` block of
 // arena cells, plus the exit ring. Rock stays rock; river, ford, road and
 // jungle become floor. North stays up. The four spawn zones are always floor:
-// sides 0 and 1 on the left and right, halfway between the border and the
-// center, sides 2 and 3 at the top and bottom, as in the lab's arenas.
+// sides 0 and 1 on the left and right, sides 2 and 3 at the top and bottom,
+// as in the lab's arenas, each centered `battle.zone.insetPermille` of the
+// way from the edge to the center (checkpoint C1-3; 500 is halfway).
 
 import {
   isStandable,
@@ -35,12 +36,11 @@ type Rect = { x0: number; y0: number; x1: number; y1: number };
 
 /** The four spawn zones, by side (P7). */
 function zones(state: WorldState, shape: ArenaShape): Rect[] {
-  const { depth, breadth } = state.params.battle.zone;
+  const { depth, breadth, insetPermille } = state.params.battle.zone;
   const cx = Math.floor((shape.width - 1) / 2);
   const cy = Math.floor((shape.height - 1) / 2);
-  // Halfway between the border and the center.
-  const qx = Math.floor(cx / 2);
-  const qy = Math.floor(cy / 2);
+  const qx = Math.floor((cx * insetPermille) / 1000);
+  const qy = Math.floor((cy * insetPermille) / 1000);
   const d = (depth - 1) / 2;
   const b = (breadth - 1) / 2;
   const across = (x: number): Rect => ({
@@ -106,6 +106,17 @@ export function arenaOf(state: WorldState, window: BattleWindow): string[] {
       throw new JunctionArenaError(
         `zone ${i + 1} does not fit inside the ring`,
       );
+    }
+    for (const [j, other] of rects.entries()) {
+      if (
+        j > i &&
+        r.x0 <= other.x1 &&
+        other.x0 <= r.x1 &&
+        r.y0 <= other.y1 &&
+        other.y0 <= r.y1
+      ) {
+        throw new JunctionArenaError(`zones ${i + 1} and ${j + 1} overlap`);
+      }
     }
   }
   const rows: string[] = [];

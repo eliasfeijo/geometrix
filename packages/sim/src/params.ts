@@ -133,13 +133,15 @@ const schema = {
    * drawn as `cellBlock` × `cellBlock` arena cells by the junction host; a
    * side takes at most `sideCap` participants and a battle at most
    * `maxSides` sides. Each side spawns in a `zone` of `depth` × `breadth`
-   * arena cells (the lab's arenas: 3 × 5), across the way it faces.
+   * arena cells (the lab's arenas: 3 × 5), across the way it faces, its
+   * center `insetPermille` of the way from the arena's edge to its center
+   * (junction checkpoint C1-3; 500 is halfway).
    */
   battle: {
     window: { width: positive, height: positive, cellBlock: positive },
     sideCap: positive,
     maxSides: positive,
-    zone: { depth: positive, breadth: positive },
+    zone: { depth: positive, breadth: positive, insetPermille: positive },
   },
   /**
    * The encounter (D5, D6): it opens within `radius` (Manhattan); a dominated
@@ -261,6 +263,9 @@ function checkConsistency(p: Params, issues: string[]): void {
   if (zone.breadth % 2 === 0) issues.push("battle.zone.breadth: must be odd");
   if (p.battle.sideCap > zone.depth * zone.breadth) {
     issues.push("battle.sideCap: must fit in a zone (depth × breadth)");
+  }
+  if (zone.insetPermille >= 1000) {
+    issues.push("battle.zone.insetPermille: must be < 1000");
   }
   // Point symmetry (plan section 6) needs even sides and a centered river.
   if (p.map.width % 2 !== 0) issues.push("map.width: must be even");

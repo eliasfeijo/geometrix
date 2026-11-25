@@ -187,7 +187,7 @@ again; the strategist unchanged until then (C1-4). Interpretations 2–6 stand; 
 
 - [x] The junction matrix (C1-2): `geo junction matrix`, battles auto-resolved from real world setups and arenas, DNA ×
       DNA, loaded or empty, fight or flee (carrier), seeds 1–100; wins, deaths, escapes and durations per cell
-- [ ] The zones' distance to the border as a param (`battle.zone`), its value from the matrix (C1-3)
+- [x] The zones' distance to the border as a param (`battle.zone`), its value from the matrix (C1-3)
 - [ ] `Wanderer`, `state.wanderers`, the `wanderers` params (stats, band, curve, cap)
 - [ ] Birth by the curve in the band; roaming
 - [ ] Targets: loaded team creeps in sight (attack, no dialogue); joining a battle in sight on their side
