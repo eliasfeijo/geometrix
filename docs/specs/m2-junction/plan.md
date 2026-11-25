@@ -325,6 +325,19 @@ every junction battle. The owner decided:
 | C1b-3 | **The strategist unchanged until the playtest** (closes C1-4); the bots' gaps with the wanderers (squares fight them, only the raider picks up spoils) are findings for later | Collectors picking up spoils in sight; loaded squares fleeing a wanderer |
 | C1b-4 | **The square against the circle is watched in the playtest** (an open question in GDD 06), not tuned now | A short round in `params/battle.json` before F4 |
 
+### Decided at checkpoint C2 (2026-11-25)
+
+The owner's session against the bot at ×6 (tasks, checkpoint C2): 9 battles won by micro with no creep lost, a
+passive bot that never reinforces and cannot replace its creeps, wanderers too late, the map explored in 3 of 72
+world hours, and no way to end a match. The owner decided:
+
+| # | Decision | Alternative not taken |
+|---|---|---|
+| C2-1 | **Close C2 with this session**; J6 (two humans) is left to the friends' playtest | J6 before closing; J1–J5 again after a rebalance |
+| C2-2 | **Only E's minimal end before P** (the match ends; the end screen); siege and repair after P | All of E before P; P first, with no end |
+| C2-3 | **A rebalance and pace round before the next playtest:** the world's pace (duration, DNA speed, map size, ×N), the wanderers, the bots' strategist, combat and economy, and the "follow" action | Parameters only (pace and wanderers), the strategist left as is |
+| C2-4 | **"Follow" enters GDD 07 as a proposal**, discussed in that round, for humans and the strategist | Parked with no milestone; inside P's scope |
+
 ## 13. Implementation order
 
 | Phase | Content | Checkpoint |

@@ -1,6 +1,6 @@
 # M2 junction tasks — Slice D
 
-**Status:** F3 done (2026-11-24); F6, F4 and F5 done (2026-11-25); F7 built (2026-11-25), checkpoint C2 waiting on the owner. Branches `m2/junction-f<n>-<slug>` (skill `commit`).
+**Status:** Done (2026-11-25): F1–F7 and checkpoint C2. Branches `m2/junction-f<n>-<slug>` (skill `commit`).
 **Spec:** [spec.md](spec.md) · **Plan:** [plan.md](plan.md)
 
 ## F0 — Spec, ADR and plan
@@ -396,7 +396,7 @@ the sign; two humans fought each other with the predict option, each keeping con
 
 - [x] The soak test with a `kill -9` mid-battle; world and battle hashes after the restart
 - [x] The PLAYTEST junction groups (spec §8)
-- [ ] **Checkpoint C2:** the owner's sessions; the hypothesis questions; the order of E against P
+- [x] **Checkpoint C2:** the owner's sessions; the hypothesis questions; the order of E against P (2026-11-25)
 
 ### F7 record
 
@@ -436,3 +436,45 @@ process; the loop at 100% of ×360 (median), 10% in its slowest sample (around a
    are listed, the creeps first. A left click on a wanderer still selects nothing (no inspector for wanderers).
 4. A battle that ends with joins still waiting is checked by its hash and its sent commands only (the exits of the
    late joiners carry the world's creep as it was then, which the tables do not keep); the soak had none.
+
+### Checkpoint C2 (2026-11-25)
+
+**The session.** The owner played alone against the bot (`dev:multi --clients 1 --bot --mult 6 --seed 42`), the J1–J5
+groups freely, for about 40 real minutes (world #1 stopped at tick 13,931, day 1 03:52). From the world's database:
+
+- **9 battles, 9 won by the owner, no creep lost.** 7 attacks on Orange (5 deaths, 2 escapes by the border) and 2
+  fights with wanderers (both died), all by two dominated creeps, the triangle Udo and the circle Velta. Each lasted
+  46–107 world seconds, in real time.
+- **Orange ended with 1 creep and 110 matéria** (a creep costs 3,000): it could not replace its losses. Blue: 6
+  creeps, 1,510 matéria.
+- **3 wanderers born in 3.9 world hours** (the first at 1 h, then every hour shrinking to 15 min).
+- A triangle walks 3 cells per world minute: 0.3 cells per real second at ×6, ~3.5 real minutes across the 64-cell
+  map. The owner still explored the whole map before day 1 03:00; the world lasts 72 h (12 real hours at ×6).
+
+**The owner's findings** (in their words, condensed):
+
+1. The movement on the map feels slow at ×6, yet the whole map was explored before day 1 03:00.
+2. The enemy bot is very passive: every loaded creep tries to flee except the square, which dies easily to a
+   well-kited circle or triangle. Most attacks happened next to the enemy core, full of Orange creeps, and none came
+   to help in any fight, which lost the bot the match.
+3. The wanderers take too long to be born.
+4. A **"follow"** action is missing, to walk in a group: the follower could join the fight by itself when its target
+   attacks or is attacked. A bot's strategist could do the same to attack strategically or to protect a scout.
+5. With every enemy creep dead (or one left exploring), there is no way to win or end the match, only to stop the
+   process by hand.
+6. A rebalance and pace round is due.
+
+**The hypothesis** (spec §1), answered against this bot: the fight is won by micro with no real risk (9–0), and the
+bot never sends a reinforcement, so neither the risk (question 1) nor arriving in time (question 2) could show; the
+snowball (question 3) happened as soon as a human played, since the losing side cannot afford a new creep. The world
+was readable with battles in it (no finding against question 4). The F4, F5 and F7 interpretations were not reviewed
+one by one; they stay to validate in the friends' playtest. J6 (two humans) was not played: P has real humans.
+
+**Decided** (owner, 2026-11-25), recorded in the [plan](plan.md) (C2-1 to C2-4), the
+[ROADMAP](../../ROADMAP.md) and [GDD 07](../../gdd/07-autopilot.md):
+
+1. **C2 closes** with this session.
+2. **Only E's minimal end before P;** siege and repair after.
+3. **A rebalance and pace round before the next playtest**, covering the world's pace, the wanderers, the bots'
+   strategist, combat and economy, and the "follow" action on an allied creep (for humans and for the strategist).
+4. **"Follow" is a proposal** in GDD 07, discussed in that round.

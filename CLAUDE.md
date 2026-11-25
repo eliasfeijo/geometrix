@@ -3,11 +3,11 @@
 A multiplayer browser game: a **persistent strategy/economy world (RTS + sandbox + building)** with **real-time,
 MOBA-style battles** as the spice. 100% geometric visuals (SVG, shapes as the language).
 
-**Current phase: M2 (The ambush).** Slices A (the encounter, `docs/specs/m2-encounter/`) and B (the battle lab,
-`docs/specs/m2-battle-lab/`, `packages/battle`, `apps/client/src/lab/`) are done. **Next: slice D, the junction** (the
-encounter opens the battle instance instead of the roll), **then slice P, the friends' playtest** (the local server
-through a free tunnel, more than one human, real gameplay to test). Slice E (siege, repair, the minimal end) is placed
-at D's checkpoint. See `docs/ROADMAP.md`.
+**Current phase: M2 (The ambush).** Slices A (the encounter, `docs/specs/m2-encounter/`), B (the battle lab,
+`docs/specs/m2-battle-lab/`, `packages/battle`, `apps/client/src/lab/`) and D (the junction, `docs/specs/m2-junction/`,
+`packages/junction`) are done. **Next: slice R, rebalance and pace, and slice E-min, the minimal end** (each with its
+own design round), **then slice P, the friends' playtest** (the local server through a free tunnel, more than one
+human, real gameplay to test). Siege and repair (the rest of E) come after P. See `docs/ROADMAP.md`.
 
 ## Sources of truth
 
@@ -88,7 +88,7 @@ floating-point literals. The battle imports neither the `sim` nor the `protocol`
   `Decided` and out of the other sections.
 - **Do not invent gameplay.** If something is not in the GDD, ask. Numbers (costs, times, stats) are provisional
   until validated in a playtest or simulation.
-- **Stay on the goal.** The current goal is the junction and the friends' playtest. A new idea goes into the GDD's
+- **Stay on the goal.** The current goal is the rebalance, the minimal end and the friends' playtest. A new idea goes into the GDD's
   `Parked` (or a question to the owner), not into the plan; brainstorm documents are not written unless the owner asks.
 - **First the concrete, then the generic.** No "engine" abstraction without a game need. Code should be modular so
   parts can become libraries later, but with no speculative generalization.

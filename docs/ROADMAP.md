@@ -16,17 +16,21 @@ milestone** and what comes **right after it**; ideas with no milestone stay in t
 |---|---|---|
 | **A — The encounter** ([spec](specs/m2-encounter/spec.md)) | Names, creep HP, death; approach, attack, extort; pay, refuse, flee; spoils, loot, safe-conduct; the fight by a throwaway roll; autopilot stances; `sim` events and the chronicle | ✅ 2026-11-17 |
 | **B — The battle lab** ([spec](specs/m2-battle-lab/spec.md)) | The deterministic battle package, the first combat rule (the grid), the gambits AI, base stats per DNA and simulated latency, on a local page with no world | ✅ 2026-11-20 |
-| **D — The junction** | The encounter opens the battle instance instead of the roll; two or more sides and joining mid-fight; a human plays the battle from the world client; auto-resolve with no human; the result returns to the world; the **wanderers**, the first neutral faction. Its own ADR for the world side of the contract | **Next** |
-| **P — The friends' playtest** | Prepare the ground for a multiplayer playtest with more than one human: the local server reached through a free tunnel, friends joining from their machines, several humans in the same world and the same battle | After D |
-| **E — Siege and repair** | HP of the core, finished roads and road jobs; how a building is attacked; paid repair; victory by the core; **the minimal end** (a draw when the clock runs out, an end screen with the chronicle summary, replay markers). Needs its own design round | Order vs. P: at D's checkpoint |
+| **D — The junction** ([spec](specs/m2-junction/spec.md)) | The encounter opens the battle instance instead of the roll; two or more sides and joining mid-fight; a human plays the battle from the world client; auto-resolve with no human; the result returns to the world; the **wanderers**, the first neutral faction. Its own ADR for the world side of the contract | ✅ 2026-11-25 |
+| **R — Rebalance and pace** | The world's pace (duration, DNA speed, map size, ×N), the wanderers, the bots' strategist, combat and economy, and the "follow" action ([GDD 07](gdd/07-autopilot.md), proposal). Needs its own design round | **Next**, before P (C2) |
+| **E-min — The minimal end** | E's end of a match: how a match is won or drawn, an end screen with the chronicle summary, replay markers. Needs its own design round | Before P (C2) |
+| **P — The friends' playtest** | Prepare the ground for a multiplayer playtest with more than one human: the local server reached through a free tunnel, friends joining from their machines, several humans in the same world and the same battle | After R and E-min |
+| **E — Siege and repair** | HP of the core, finished roads and road jobs; how a building is attacked; paid repair; victory by the core. Needs its own design round | After P (C2) |
 
 ```mermaid
 flowchart LR
-    A["A · the encounter ✅"] --> D["D · the junction"]
+    A["A · the encounter ✅"] --> D["D · the junction ✅"]
     B["B · the battle lab ✅"] --> D
-    D --> P["P · the friends' playtest"]
-    D -.-> E["E · siege and repair"]
-    E -.-> P
+    D --> R["R · rebalance and pace"]
+    D --> M["E-min · the minimal end"]
+    R --> P["P · the friends' playtest"]
+    M --> P
+    P --> E["E · siege and repair"]
 ```
 
 ### Why this order (owner, 2026-11-20)
@@ -40,8 +44,11 @@ flowchart LR
 - **P right after D:** the deploy, even a test one, and client prediction waited for the joined cycle (C10). The
   playtest runs on the owner's machine with a free tunnel ([ADR-0005](adr/0005-mvp-deploy-vps-websocket.md):
   Cloudflare Tunnel or Tailscale Funnel), not a VPS.
-- **E is the open question:** without it a match has no goal (the core cannot fall). Whether E enters before the
-  friends' playtest is decided at D's checkpoint.
+- **E split at D's checkpoint** (owner, 2026-11-25, C2): the owner's session against the bot ended with every enemy
+  creep dead and no way to end the match. Only E's **minimal end** comes before P; siege and repair after it.
+- **A rebalance and pace round before P** (owner, 2026-11-25, C2): the bot never helped a fight, could not replace its
+  losses, the wanderers came late and the map was explored in 3 of 72 world hours. **Scope warning:** R grows M2 with
+  the strategist's changes and a new action ("follow"); its design round decides what is in.
 - **Slice C** (chat, console and macros) left M2 (2026-11-20); it waits for a milestone.
 
 ### What P should contain (agent's proposal, to approve in P's spec)

@@ -47,6 +47,9 @@
 - **Phase 2, script:** JS in a server sandbox (QuickJS/WASM or isolated-vm), with CPU and memory limits. References:
   Screeps, Gladiabots.
 - The same interface serves the **test bots**: whole matches run headless, for balancing.
+- **"Follow" an allied creep** (owner, checkpoint C2, 2026-11-25; to discuss in the rebalance and pace round): a
+  creep follows another to walk in a group, and the follower joins the fight by itself when its target attacks or is
+  attacked. The bots' strategist could use it too, to attack strategically or to protect a scout.
 
 ## Open questions
 - Where does the autopilot live: per creep, per group of creeps, or per player?
@@ -57,6 +60,8 @@
   3 days, the harmed team delivers 20–25% less matéria. The owner left it for a balancing round.
 - **The presets and the wanderers** (checkpoint C1b, 2026-11-25): a loaded square fights a wanderer (its DNA's
   posture) and mostly dies; only the raider picks up spoils, so in 3 days of seed 42 37 piles (1,593 matéria) lie on
-  the map. The owner kept the bots' strategist unchanged until the playtest.
+  the map. The owner kept the bots' strategist unchanged until the playtest; at checkpoint C2 (2026-11-25) the
+  strategist enters the rebalance and pace round (the bot never reinforces a fight, its loaded creeps all flee, and
+  it cannot replace its losses).
 - **The road-builder preset** (owner session, 2026-11-20): it does not build (see the
   [dashboard](../dashboard/current-status.md)). Bug or rule?
