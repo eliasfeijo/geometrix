@@ -20,6 +20,7 @@ import {
   type Spoil,
   type Team,
   type TeamView,
+  type WandererView,
 } from "@geometrix/sim";
 
 /**
@@ -41,6 +42,7 @@ export type Delta = {
   players?: EntityDelta<Player | ForeignPlayer>;
   encounters?: EntityDelta<EncounterView | ForeignEncounterView>;
   battles?: EntityDelta<BattleStubView>;
+  wanderers?: EntityDelta<WandererView>;
   spoils?: EntityDelta<Spoil>;
   /** Cells that got a road, increasing. Roads never go away in M1. */
   roads?: number[];
@@ -69,6 +71,7 @@ export type Sent = {
   players: Entity[];
   encounters: Entity[];
   battles: Entity[];
+  wanderers: Entity[];
   spoils: Entity[];
   roads: Set<number>;
   /**
@@ -90,6 +93,7 @@ export function emptySent(): Sent {
     players: [],
     encounters: [],
     battles: [],
+    wanderers: [],
     spoils: [],
     roads: new Set(),
     known: [],
@@ -114,6 +118,7 @@ export function emptyView(team: number, cells: number): TeamView {
     players: [],
     encounters: [],
     battles: [],
+    wanderers: [],
     spoils: [],
     known: new Array<number>(cells).fill(-1),
     visible: [],
@@ -145,6 +150,7 @@ const KINDS = {
   players: {},
   encounters: { demand: "value" },
   battles: { window: "value", sides: "value", participants: "value" },
+  wanderers: { cargo: "value" },
   spoils: { cargo: "value" },
 } satisfies Record<
   keyof Omit<Sent, "roads" | "tick" | "team" | "known" | "visible">,
@@ -322,6 +328,7 @@ export function sentView(sent: Sent): TeamView {
     players: sent.players,
     encounters: sent.encounters,
     battles: sent.battles,
+    wanderers: sent.wanderers,
     spoils: sent.spoils,
     known: sent.known,
     visible: sent.visible,

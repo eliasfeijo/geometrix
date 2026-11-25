@@ -12,34 +12,43 @@ import {
   type ParticipantSetup,
 } from "@geometrix/battle";
 import {
-  capacity,
-  teamOf,
+  findFighter,
+  fighterCapacity,
+  fighterMaxHp,
+  isWanderer,
   type Battle,
-  type Creep,
+  type Fighter,
   type Stance,
   type WorldState,
 } from "@geometrix/sim";
 import { arenaOf } from "./arena.ts";
 
 /** HP in whole points for the battle: the thousandths drop, at least 1 (D9). */
-export function battleHp(creep: Creep): number {
-  return Math.max(1, Math.floor(creep.hp / 1000));
+export function battleHp(fighter: Pick<Fighter, "hp">): number {
+  return Math.max(1, Math.floor(fighter.hp / 1000));
 }
 
+/**
+ * A wanderer enters as a circle with its own max HP and damage (D14), the
+ * circle's preset (the marksman) and capacity.
+ */
 export function participantSetup(
   state: WorldState,
-  creep: Creep,
+  fighter: Fighter,
   stance: Stance,
 ): ParticipantSetup {
   return {
-    name: creep.name,
-    dna: creep.dna,
-    hp: battleHp(creep),
-    maxHp: state.params.hp.dna[creep.dna].max,
-    carry: { materia: creep.cargo.materia, cristal: creep.cargo.cristal },
-    capacity: capacity(creep, teamOf(state, creep), state.params),
+    name: fighter.name,
+    dna: fighter.dna,
+    hp: battleHp(fighter),
+    maxHp: fighterMaxHp(state, fighter),
+    carry: { materia: fighter.cargo.materia, cristal: fighter.cargo.cristal },
+    capacity: fighterCapacity(state, fighter),
+    ...(isWanderer(fighter) ? { damage: state.params.wanderers.damage } : {}),
     gambits:
-      stance === "flee" ? presetGambits("carrier") : defaultGambits(creep.dna),
+      stance === "flee"
+        ? presetGambits("carrier")
+        : defaultGambits(fighter.dna),
     reaction: "normal",
   };
 }
@@ -69,7 +78,7 @@ export function battleSetup(
     battle.participants
       .filter((p) => p.side === side)
       .map((p) => {
-        const creep = state.creeps.find((c) => c.id === p.id)!;
+        const creep = findFighter(state, p.id)!;
         placed.push(creep.id);
         return participantSetup(state, creep, p.stance);
       }),

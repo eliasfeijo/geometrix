@@ -49,7 +49,12 @@ function template(event: TeamEvent): {
       };
     case "battleOpened":
       return {
-        text: pick(event, TEMPLATES.battleOpened),
+        text: pick(
+          event,
+          event.cause === "wanderer"
+            ? TEMPLATES.battleOpenedByWanderer
+            : TEMPLATES.battleOpened,
+        ),
         creeps: {
           first: event.sides[0]!.creeps[0]!,
           second: event.sides[1]!.creeps[0]!,
@@ -70,7 +75,12 @@ function template(event: TeamEvent): {
       };
     case "battleEnded":
       return {
-        text: pick(event, TEMPLATES.battleEnded[event.reason]),
+        text: pick(
+          event,
+          event.reason === "won" && event.winner?.team === null
+            ? TEMPLATES.battleEnded.wanderers
+            : TEMPLATES.battleEnded[event.reason],
+        ),
         creeps: {},
         values: { team: teamName(event.winner?.team ?? -1) },
       };
@@ -96,6 +106,12 @@ function template(event: TeamEvent): {
       return {
         text: pick(event, TEMPLATES.born[event.creep.dna]),
         creeps: { creep: event.creep },
+        values: {},
+      };
+    case "wandererBorn":
+      return {
+        text: pick(event, TEMPLATES.wandererBorn),
+        creeps: { creep: event.wanderer },
         values: {},
       };
   }

@@ -107,6 +107,16 @@ export const TEMPLATES = {
    * with the battle screen (junction F5).
    */
   battleOpened: ["Começa uma batalha: {first} contra {second}."],
+  /** A wanderer, {first}, fell on {second} (junction D14: no dialogue). */
+  battleOpenedByWanderer: [
+    "{first}, um andarilho, cai sobre {second} sem aviso.",
+    "Da mata sai {first}, um andarilho, direto em {second}.",
+  ],
+  /** A wanderer, {creep}, appeared in the band along the river. */
+  wandererBorn: [
+    "Um andarilho, {creep}, surge na mata do rio.",
+    "{creep}, um andarilho, ronda a beira do rio.",
+  ],
   /** {creep} entered a battle already open. */
   battleJoined: ["{creep} entra na batalha."],
   /** {creep} back in the world alive: by the border, or with no winner. */
@@ -117,6 +127,7 @@ export const TEMPLATES = {
   /** The end; {team} is the winner's team. */
   battleEnded: {
     won: ["A batalha termina com a vitória do time {team}."],
+    wanderers: ["A batalha termina com a vitória dos andarilhos."],
     idle: ["A batalha termina sem vencedor."],
     empty: ["A batalha termina sem ninguém de pé."],
   },
@@ -159,9 +170,14 @@ export const TEMPLATES = {
   reaction: Record<"pay" | "refuse", Voiced>;
   paid: readonly string[];
   battleOpened: readonly string[];
+  battleOpenedByWanderer: readonly string[];
+  wandererBorn: readonly string[];
   battleJoined: readonly string[];
   battleLeft: Record<"edge" | "idle", readonly string[]>;
-  battleEnded: Record<"won" | "idle" | "empty", readonly string[]>;
+  battleEnded: Record<
+    "won" | "wanderers" | "idle" | "empty",
+    readonly string[]
+  >;
   died: Record<"killed" | "alone", readonly string[]>;
   pickedUp: readonly string[];
   born: Voiced;

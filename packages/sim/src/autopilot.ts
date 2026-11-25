@@ -33,6 +33,7 @@ import {
   type Deposit,
   type Encounter,
   type WorldState,
+  type Fighter,
 } from "./world.ts";
 
 export type Condition =
@@ -332,23 +333,28 @@ function holds(
 type EnemyFilter = { radius: number; dna?: Dna[]; minCargo: number };
 
 /**
- * Enemy creeps in the team's sight (at the end of the last tick) within the
+ * Enemy creeps and wanderers (junction spec: the bots count them as
+ * enemies) in the team's sight (at the end of the last tick) within the
  * filter, by id. The team sees them: deciding by them leaks nothing.
  */
 function enemiesInSight(
   state: WorldState,
   creep: Creep,
   filter: EnemyFilter,
-): Creep[] {
+): Fighter[] {
   const { visible } = known(state, creep);
   const { width } = state.map;
-  return state.creeps.filter(
-    (other) =>
-      other.team !== creep.team &&
-      visible[other.y * width + other.x] === 1 &&
-      manhattan(creep, other) <= filter.radius &&
-      (filter.dna === undefined || filter.dna.includes(other.dna)) &&
-      cargoTotal(other) >= filter.minCargo,
+  const passes = (other: Fighter) =>
+    visible[other.y * width + other.x] === 1 &&
+    manhattan(creep, other) <= filter.radius &&
+    (filter.dna === undefined || filter.dna.includes(other.dna)) &&
+    cargoTotal(other) >= filter.minCargo;
+  const enemies: Fighter[] = state.creeps.filter(
+    (other) => other.team !== creep.team && passes(other),
+  );
+  if (state.wanderers.length === 0) return enemies;
+  return [...enemies, ...state.wanderers.filter(passes)].sort(
+    (a, b) => a.id - b.id,
   );
 }
 

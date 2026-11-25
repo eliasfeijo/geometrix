@@ -48,7 +48,7 @@ test("a 6 h bot world of seed 42 through the host hashes to a stable value", () 
     .update(serializeHost(host))
     .digest("hex");
   expect(hash).toMatchInlineSnapshot(
-    `"7c7a0e2b19545fb0c02ddeceec9106ca127b3ae73932fd42924d8c7c095b9a81"`,
+    `"7d299ca9a28cfa48b7aeedfda7212e1baf8efb187659dcda76defa917b10ef81"`,
   );
   // Growing to the population cap, with raiders exploring, the world takes
   // over 10 s alone and some 30 s with the whole suite running.

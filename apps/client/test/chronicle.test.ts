@@ -14,7 +14,7 @@ import { TEMPLATES } from "../src/chronicle/templates.ts";
 import { CHRONICLE_KEEP, GameStore } from "../src/store.ts";
 import { encounterWorld, testWorld, welcomeOf } from "./helpers.ts";
 
-const ref = (id: number, dna: Dna, team = id % 2): CreepRef => ({
+const ref = (id: number, dna: Dna, team: number | null = id % 2): CreepRef => ({
   id,
   team,
   dna,
@@ -26,6 +26,7 @@ const stock = (materia: number, cristal: number) => ({ materia, cristal });
 function bodies(dna: Dna): EventBody[] {
   const a = ref(1, dna);
   const b = ref(2, "square");
+  const wanderer = ref(3, "circle", null);
   const at = { x: 3, y: 4 };
   return [
     { type: "born", creep: a, ...at },
@@ -85,6 +86,30 @@ function bodies(dna: Dna): EventBody[] {
     { type: "died", creep: b, by: a, battle: 20, ...at },
     { type: "died", creep: b, by: null, battle: 20, ...at },
     { type: "pickedUp", creep: a, spoil: 77, taken: stock(2, 0), ...at },
+    // The wanderers (junction F6): no team, no dialogue.
+    { type: "wandererBorn", wanderer, ...at },
+    {
+      type: "battleOpened",
+      battle: 21,
+      encounter: null,
+      cause: "wanderer",
+      sides: [
+        { team: null, creeps: [wanderer] },
+        { team: b.team, creeps: [b] },
+      ],
+      ...at,
+    },
+    {
+      type: "battleEnded",
+      battle: 21,
+      reason: "won",
+      winner: { side: 0, team: null },
+      sideTeams: [null, b.team],
+      survivors: [wanderer],
+      loot: [],
+      spoils: [],
+      ...at,
+    },
   ];
 }
 
@@ -118,6 +143,8 @@ describe("narrate (spec K-3, D17)", () => {
     );
     expect(texts.join("\n")).toContain("12 matéria e 4 cristal");
     expect(texts.join("\n")).toContain("vitória do time Laranja");
+    expect(texts.join("\n")).toContain("vitória dos andarilhos");
+    expect(texts.join("\n")).toMatch(/Nome3, um andarilho, cai sobre Nome2/);
   });
 
   it("picks the variant by (tick × 7919 + index) mod n", () => {

@@ -188,12 +188,12 @@ again; the strategist unchanged until then (C1-4). Interpretations 2–6 stand; 
 - [x] The junction matrix (C1-2): `geo junction matrix`, battles auto-resolved from real world setups and arenas, DNA ×
       DNA, loaded or empty, fight or flee (carrier), seeds 1–100; wins, deaths, escapes and durations per cell
 - [x] The zones' distance to the border as a param (`battle.zone`), its value from the matrix (C1-3)
-- [ ] `Wanderer`, `state.wanderers`, the `wanderers` params (stats, band, curve, cap)
-- [ ] Birth by the curve in the band; roaming
-- [ ] Targets: loaded team creeps in sight (attack, no dialogue); joining a battle in sight on their side
-- [ ] In battle: their setup (HP 60, damage 12, marksman); carrying the loot; spoils or pile on death
-- [ ] Teams attack them, an extortion refused; the strategist counts them; the raider ignores them
-- [ ] Fog and view; drawing in a neutral color; chronicle (`wandererBorn`); metrics
+- [x] `Wanderer`, `state.wanderers`, the `wanderers` params (stats, band, curve, cap)
+- [x] Birth by the curve in the band; roaming
+- [x] Targets: loaded team creeps in sight (attack, no dialogue); joining a battle in sight on their side
+- [x] In battle: their setup (HP 60, damage 12, marksman); carrying the loot; spoils or pile on death
+- [x] Teams attack them, an extortion refused; the strategist counts them; the raider ignores them
+- [x] Fog and view; drawing in a neutral color; chronicle (`wandererBorn`); metrics
 - [ ] **Checkpoint C1b:** the matrix, the zones' value, and the bot × bot report with wanderers against C1; whether
       the bots need changing (C1-4)
 

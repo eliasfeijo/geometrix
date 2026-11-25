@@ -287,6 +287,7 @@ export function renderReport(run: RunData): string {
 
   out(...encounterSection(run.encounters, teamIds, total, params));
   out(...battleSection(run.encounters, teamIds.length, total));
+  out(...wandererSection(run.encounters));
 
   // Timeline.
   const window = windowSeconds(total);
@@ -606,7 +607,7 @@ function battleSection(
   return [
     "## Batalhas",
     "",
-    `- Abertas: ${number(opened)} (ataque ${number(stats.byCause.attack)}, extorsão recusada ${number(stats.byCause.refused)}), ${number((opened * HOUR) / totalSeconds / teams, 1)} por time por hora.`,
+    `- Abertas: ${number(opened)} (ataque ${number(stats.byCause.attack)}, extorsão recusada ${number(stats.byCause.refused)}, andarilho ${number(stats.byCause.wanderer)}), ${number((opened * HOUR) / totalSeconds / teams, 1)} por time por hora.`,
     `- Terminadas: ${number(ended)} (vitória ${number(stats.ended.won)}, inatividade ${number(stats.ended.idle)}, ninguém sobrou ${number(stats.ended.empty)}); abertas no fim: ${number(opened - ended)}.`,
     `- Participantes: ${number(stats.participants)} (${opened === 0 ? "—" : number(stats.participants / opened, 1)} por batalha), dos quais ${number(stats.joins)} entraram com a batalha aberta (${opened === 0 ? "—" : number(stats.joins / opened, 1)} por batalha).`,
     `- Duração (média / máxima): ${durationPair(stats.worldSeconds)} no relógio do mundo; ${durationPair(stats.battleSeconds)} de tempo de batalha.`,
@@ -614,7 +615,7 @@ function battleSection(
     ...(rows.length === 0
       ? []
       : [
-          "Como cada participante saiu, pelo lado (o do agressor ou o da vítima), DNA e carga ao entrar:",
+          "Como cada participante de um time saiu, pelo lado (o do agressor ou o da vítima), DNA e carga ao entrar (numa batalha aberta por um andarilho, o creep do time é a vítima):",
           "",
           table(
             ["Participante", "Entraram", ...FATES.map((f) => FATE_LABELS[f])],
@@ -622,6 +623,24 @@ function battleSection(
           ),
           "",
         ]),
+  ];
+}
+
+/** The wanderers (junction spec §7): born, alive, battles, loot, deaths. */
+function wandererSection(tally: EncounterTally): string[] {
+  const w = tally.wanderers;
+  const alive = tally.timeline
+    .filter((_, i, all) => i % Math.max(1, Math.floor(all.length / 12)) === 0)
+    .map((m) => String(m.wanderers));
+  return [
+    "## Andarilhos",
+    "",
+    `- Nascidos: ${number(w.born)}; mortos: ${number(w.died)} (${number(w.killedByTeams)} por creeps de time); vivos no máximo ${number(w.maxAlive)} ao mesmo tempo, ${number(w.aliveAtEnd)} no fim.`,
+    `- Vivos ao longo da partida (amostras): ${alive.length === 0 ? "—" : alive.join(" · ")}.`,
+    `- Batalhas: ${number(w.attacks)} abertas por um andarilho; ${number(w.joins)} entradas de andarilho numa batalha aberta.`,
+    `- Creeps de time mortos por andarilhos: ${number(w.kills)}.`,
+    `- Saque dos andarilhos (matéria / cristal): ${stockPair(w.looted)}; o que carregavam ao morrer (vira pilha ou espólio): ${stockPair(w.lostOnDeath)}.`,
+    "",
   ];
 }
 

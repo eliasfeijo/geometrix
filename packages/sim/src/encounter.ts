@@ -9,7 +9,7 @@
 
 import { demandFor, freeCapacity, opening, ticks } from "./approach.ts";
 import { ruleReaction } from "./autopilot.ts";
-import { openBattle, runJoins } from "./battle.ts";
+import { findWanderer, openBattle, runJoins } from "./battle.ts";
 import { capacity, cargoTotal, teamOf } from "./economy.ts";
 import { findCreep } from "./domination.ts";
 import { creepRef, emit, type EventLog } from "./events.ts";
@@ -18,12 +18,20 @@ import { manhattan, Terrain } from "./map.ts";
 import { halt } from "./orders.ts";
 import { nextInt } from "./rng.ts";
 import { transfer } from "./spoils.ts";
-import type { Creep, Encounter, Reply, Stance, WorldState } from "./world.ts";
+import type {
+  Creep,
+  Encounter,
+  Reply,
+  Stance,
+  Wanderer,
+  WorldState,
+} from "./world.ts";
 
 /** Stage 4 of the tick (plan section 5; junction plan section 3). */
 export function runEncounters(state: WorldState, log: EventLog): void {
   expireProtections(state);
   openEncounters(state, log);
+  openWandererAttacks(state, log);
   if (state.encounters.length > 0) {
     const closed = new Set<number>();
     for (const encounter of state.encounters) {
@@ -68,6 +76,11 @@ function openEncounters(state: WorldState, log: EventLog): void {
   const pairs: Pair[] = [];
   for (const a of state.creeps) {
     if (a.order.type !== "approach" || a.engagement !== null) continue;
+    const wanderer = findWanderer(state, a.order.targetId);
+    if (wanderer !== undefined) {
+      attackWanderer(state, log, a, wanderer);
+      continue;
+    }
     const target = findCreep(state, a.order.targetId);
     if (target === undefined || target.team === a.team) continue;
     if (manhattan(a, target) > radius) continue;
@@ -89,6 +102,8 @@ function openEncounters(state: WorldState, log: EventLog): void {
   pairs.sort((p, q) => key(p) - key(q));
   for (const { a, b, mutual } of pairs) {
     if (a.engagement !== null || b.engagement !== null) continue;
+    // Locked by an opening earlier in this step: the joins take it.
+    if (a.battle !== null || b.battle !== null) continue;
     if (!mutual) {
       tryOpen(state, log, a, b, false);
       continue;
@@ -97,6 +112,61 @@ function openEncounters(state: WorldState, log: EventLog): void {
     if (!tryOpen(state, log, first, second, true)) {
       tryOpen(state, log, second, first, true);
     }
+  }
+}
+
+/**
+ * A team's creep reached a wanderer (W-4): an attack opens the battle at
+ * once, the wanderer fighting; an extortion is impossible and ends (J-2). A
+ * wanderer in a battle is joined instead (runJoins).
+ */
+function attackWanderer(
+  state: WorldState,
+  log: EventLog,
+  creep: Creep,
+  wanderer: Wanderer,
+): void {
+  if (creep.order.type !== "approach") return;
+  if (creep.order.intent === "extort") {
+    halt(creep);
+    return;
+  }
+  if (wanderer.battle !== null) return;
+  if (manhattan(creep, wanderer) > state.params.encounter.radius) return;
+  const id = state.nextId++;
+  creep.safeConduct = null;
+  emit(log, {
+    type: "encounter",
+    encounter: id,
+    aggressor: creepRef(creep),
+    victim: creepRef(wanderer),
+    intent: "attack",
+    demand: null,
+    mutual: false,
+    x: wanderer.x,
+    y: wanderer.y,
+  });
+  openBattle(state, log, id, "attack", creep, wanderer, "fight");
+}
+
+/**
+ * The wanderers' attacks (W-2), after the teams' openings: a free wanderer
+ * within the encounter radius of its free target opens a battle at once,
+ * with no declaration (D14: no dialogue); the victim enters as its rules
+ * react to an attack. A target in a battle is joined instead (runJoins), one
+ * in an extortion is waited for.
+ */
+function openWandererAttacks(state: WorldState, log: EventLog): void {
+  const { radius } = state.params.encounter;
+  for (const wanderer of state.wanderers) {
+    const { order } = wanderer;
+    if (wanderer.battle !== null || order.type !== "approach") continue;
+    const victim = findCreep(state, order.targetId);
+    if (victim === undefined || victim.battle !== null) continue;
+    if (victim.engagement !== null) continue;
+    if (manhattan(wanderer, victim) > radius) continue;
+    const stance = decide(state, victim, "attacked").stance;
+    openBattle(state, log, null, "wanderer", wanderer, victim, stance);
   }
 }
 

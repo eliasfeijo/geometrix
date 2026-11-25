@@ -32,10 +32,16 @@ export const COLORS = {
   hp: { high: "#7fdba0", mid: "#ffd166", low: "#ff5d5d" },
   /** A fight between two creeps (C-3). */
   fight: "#ff5d5d",
+  /** The wanderers, a side of no team (junction D14): a neutral sand. */
+  wanderer: "#c9bc9c",
+  wandererText: "#ece4cf",
 } as const;
 
-export const teamColor = (team: number): string =>
-  COLORS.teams[team] ?? COLORS.outline;
+/** A team's color; null is the wanderers' side. */
+export const teamColor = (team: number | null): string =>
+  team === null ? COLORS.wanderer : (COLORS.teams[team] ?? COLORS.outline);
 
-export const teamTextColor = (team: number): string =>
-  COLORS.teamText[team] ?? COLORS.outline;
+export const teamTextColor = (team: number | null): string =>
+  team === null
+    ? COLORS.wandererText
+    : (COLORS.teamText[team] ?? COLORS.outline);

@@ -58,7 +58,8 @@ describe("verify", () => {
     expect(result.runs.map((r) => r.name)).toEqual([
       "run 1",
       "run 2",
-      "snapshot at tick 3600 -> restore",
+      // A wanderer's battle is open at hour 1 in this seed (junction F6).
+      "snapshot at tick 3863 (mid-battle) -> restore",
       `replay of the log (${log.length} commands)`,
     ]);
     for (const r of result.runs) expect(r.hash).toBe(stateHash(state));

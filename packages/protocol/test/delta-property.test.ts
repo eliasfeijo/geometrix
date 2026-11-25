@@ -112,3 +112,54 @@ test.each([1, 42, 649])(
   },
   60_000,
 );
+
+// The wanderers (junction F6): the test params have none (cap 0), so this
+// world turns them on. Without the junction host their battles never end;
+// the property still holds while they are born, roam, come into a team's
+// sight and leave it.
+test.each([42])(
+  "seed %i: 2 h with wanderers, the deltas rebuild each team's view",
+  (seed) => {
+    const withWanderers = JSON.parse(JSON.stringify(params)) as typeof params;
+    // Born from minute 10, one every 10 minutes: they meet the teams early.
+    withWanderers.wanderers.cap = 4;
+    withWanderers.wanderers.firstSeconds = 600;
+    withWanderers.wanderers.intervalSeconds = { start: 600, end: 600 };
+    const state = createWorld(seed, parseParams(withWanderers));
+    const ticks = (2 * 3600) / state.params.world.tickSeconds;
+    const bots = botsFor(["balanced", "balanced"]);
+    const teams = [0, 1];
+    const sent = teams.map(() => emptySent());
+    const cells = state.map.width * state.map.height;
+    const client = teams.map((team) => emptyView(team, cells));
+    let upserts = 0;
+    let removes = 0;
+    for (;;) {
+      for (const team of teams) {
+        const seen = view(state, team);
+        const delta = JSON.parse(
+          JSON.stringify(diffView(sent[team]!, seen)),
+        ) as Delta;
+        upserts += delta.wanderers?.upsert?.length ?? 0;
+        removes += delta.wanderers?.remove?.length ?? 0;
+        client[team] = applyDelta(client[team]!, delta);
+        if (JSON.stringify(client[team]) !== JSON.stringify(seen)) {
+          expect(viewJson(client[team]!), `tick ${state.tick}`).toBe(
+            viewJson(seen),
+          );
+          expect.fail(`tick ${state.tick}, team ${team}: key order differs`);
+        }
+      }
+      if (state.tick >= ticks) break;
+      const accepted = botCommands(state, bots).filter(
+        ({ playerId, command }) => validate(state, command, playerId) === null,
+      );
+      step(state, accepted);
+    }
+    expect(state.wanderers.length).toBeGreaterThan(0);
+    // 62 upserts and 31 removes in this seed.
+    expect(upserts).toBeGreaterThan(30);
+    expect(removes).toBeGreaterThan(10);
+  },
+  60_000,
+);

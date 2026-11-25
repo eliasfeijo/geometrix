@@ -153,6 +153,25 @@ const schema = {
    * aggressor cannot extort the same creep again for `blockSeconds`.
    */
   safeConduct: { seconds: nonNegative, blockSeconds: nonNegative },
+  /**
+   * The wanderers (junction spec D14, plan section 9): circles of their own
+   * with `hp` and battle `damage` below the circle's; the rest of their kit,
+   * their world speed, sight and capacity are the circle's. They are born in
+   * the band of rows within `bandRows` of the river, outside the core zones:
+   * the first at `firstSeconds`, then every `intervalSeconds`, shrinking
+   * linearly from `start` to `end` over the world's duration, while fewer
+   * than `cap` are alive (0: none). After a battle a wanderer leaves alone
+   * the creeps that were in it with it for `spareSeconds` (W-7).
+   */
+  wanderers: {
+    hp: positive,
+    damage: positive,
+    bandRows: nonNegative,
+    firstSeconds: nonNegative,
+    intervalSeconds: { start: positive, end: positive },
+    cap: nonNegative,
+    spareSeconds: nonNegative,
+  },
 } as const satisfies Schema;
 
 type FromSchema<S> = {
@@ -227,6 +246,10 @@ function checkConsistency(p: Params, issues: string[]): void {
     ["encounter.reactionSeconds", p.encounter.reactionSeconds],
     ["safeConduct.seconds", p.safeConduct.seconds],
     ["safeConduct.blockSeconds", p.safeConduct.blockSeconds],
+    ["wanderers.firstSeconds", p.wanderers.firstSeconds],
+    ["wanderers.intervalSeconds.start", p.wanderers.intervalSeconds.start],
+    ["wanderers.intervalSeconds.end", p.wanderers.intervalSeconds.end],
+    ["wanderers.spareSeconds", p.wanderers.spareSeconds],
   ];
   for (const [path, seconds] of durations) {
     if (seconds % tickSeconds !== 0) {
@@ -266,6 +289,10 @@ function checkConsistency(p: Params, issues: string[]): void {
   }
   if (zone.insetPermille >= 1000) {
     issues.push("battle.zone.insetPermille: must be < 1000");
+  }
+  const { intervalSeconds } = p.wanderers;
+  if (intervalSeconds.end > intervalSeconds.start) {
+    issues.push("wanderers.intervalSeconds.end: must be <= start");
   }
   // Point symmetry (plan section 6) needs even sides and a centered river.
   if (p.map.width % 2 !== 0) issues.push("map.width: must be even");

@@ -168,5 +168,17 @@
   "safeConduct": {
     "seconds": 600,
     "blockSeconds": 1800
+  },
+  "wanderers": {
+    "hp": 60,
+    "damage": 12,
+    "bandRows": 8,
+    "firstSeconds": 3600,
+    "intervalSeconds": {
+      "start": 3600,
+      "end": 900
+    },
+    "cap": 0,
+    "spareSeconds": 600
   }
 }

@@ -30,13 +30,16 @@ export function cellModifier(
     : movementPermille.crossing;
 }
 
-export function isLoaded(creep: Creep): boolean {
+export function isLoaded(creep: Pick<Creep, "cargo">): boolean {
   return creep.cargo.materia + creep.cargo.cristal > 0;
 }
 
-/** Points the creep gains this tick while heading into cell `index`. */
+/**
+ * Points the creep (or a wanderer, at its DNA's speed) gains this tick while
+ * heading into cell `index`.
+ */
 export function movePointsPerTick(
-  creep: Creep,
+  creep: Pick<Creep, "dna" | "cargo">,
   map: GameMap,
   index: number,
   params: Params,

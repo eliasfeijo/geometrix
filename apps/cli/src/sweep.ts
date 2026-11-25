@@ -130,6 +130,9 @@ export type RunSummary = {
   aggressorWinPercent: number | null;
   victimDeathPercent: number | null;
   victimEscapePercent: number | null;
+  /** Wanderers born, and battles they opened or joined (junction §7). */
+  wanderersBorn: number;
+  wandererBattles: number;
   /** Encounters in the victim's own core zone, of all (D21). */
   campingPercent: number | null;
   deaths: number;
@@ -370,6 +373,12 @@ const COLUMNS: { key: ScalarKey; label: string; digits: number }[] = [
     label: "Vítimas que escaparam pela borda (%)",
     digits: 0,
   },
+  { key: "wanderersBorn", label: "Andarilhos nascidos", digits: 1 },
+  {
+    key: "wandererBattles",
+    label: "Batalhas com andarilho (abertas + entradas)",
+    digits: 1,
+  },
   {
     key: "campingPercent",
     label: "Encontros na zona do Núcleo da vítima (%)",
@@ -426,6 +435,8 @@ function battleFacts(tally: EncounterTally) {
     aggressorWinPercent: rate(aggressors, "won"),
     victimDeathPercent: rate(victims, "died"),
     victimEscapePercent: rate(victims, "escaped"),
+    wanderersBorn: tally.wanderers.born,
+    wandererBattles: tally.wanderers.attacks + tally.wanderers.joins,
   };
 }
 

@@ -3,7 +3,13 @@
 // action and the client, which shows the demand before confirming (C-6).
 
 import { capacity, cargoTotal, teamOf } from "./economy.ts";
-import type { Creep, Stock, WorldState } from "./world.ts";
+import {
+  isWanderer,
+  type Creep,
+  type Fighter,
+  type Stock,
+  type WorldState,
+} from "./world.ts";
 
 /**
  * What an extortion demands (spec D8): the victim's cargo up to the
@@ -50,9 +56,11 @@ export const ticks = (state: WorldState, seconds: number) =>
 export function opening(
   state: WorldState,
   aggressor: Creep,
-  victim: Creep,
+  victim: Fighter,
   intent: "attack" | "extort",
 ): "open" | "wait" | "end" {
+  // A wanderer can only be attacked (junction W-4).
+  if (isWanderer(victim)) return intent === "attack" ? "open" : "end";
   if (victim.battle !== null) return intent === "attack" ? "open" : "end";
   if (victim.engagement !== null) return "wait";
   if (victim.safeConduct?.team === aggressor.team) return "wait";
