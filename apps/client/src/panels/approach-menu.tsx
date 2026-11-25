@@ -1,6 +1,7 @@
 // The right-click menu over an enemy in sight (M2 encontro spec C-6, plan
 // section 9): attack, or extort with the demand shown before confirming.
-// Opens at the click; one row per enemy hit (a stack can have several).
+// Opens at the click; one row per enemy hit (a stack can have several). A
+// wanderer can only be attacked (junction W-4).
 
 import { stockTotal } from "@geometrix/sim";
 import { useGame } from "../context.ts";
@@ -51,7 +52,42 @@ export function ApproachMenu() {
         </button>
       </div>
       <ul>
-        {options.map(({ target, demand }) => {
+        {options.map((option) => {
+          if (option.kind === "wanderer") {
+            const { target } = option;
+            const load = stockTotal(target.cargo);
+            return (
+              <li key={target.id} class="approach-row wanderer">
+                <div class="approach-target">
+                  <DnaIcon dna={target.dna} team={null} size={16} />
+                  <strong>{target.name}</strong>
+                  <span class="muted small">
+                    andarilho · HP {hpPoints(target.hp)} ·{" "}
+                    {load === 0 ? "vazio" : `leva ${stockText(target.cargo)}`}
+                    {target.battle !== null && " · em batalha"}
+                  </span>
+                </div>
+                <div class="approach-buttons">
+                  <button
+                    class="danger"
+                    role="menuitem"
+                    disabled={!canAct}
+                    onClick={() => approach(target.id, "attack")}
+                  >
+                    Atacar
+                  </button>
+                  <button
+                    role="menuitem"
+                    disabled
+                    title="Um andarilho não paga: só se luta com ele."
+                  >
+                    Extorquir (não negocia)
+                  </button>
+                </div>
+              </li>
+            );
+          }
+          const { target, demand } = option;
           const total = stockTotal(demand);
           return (
             <li key={target.id} class={`approach-row team-${target.team}`}>
