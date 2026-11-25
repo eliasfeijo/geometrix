@@ -161,7 +161,8 @@
     },
     "sideCap": 5,
     "maxSides": 4,
-    "zone": { "depth": 3, "breadth": 5, "insetPermille": 750 }
+    "zone": { "depth": 3, "breadth": 5, "insetPermille": 750 },
+    "hold": { "openingMs": 5000, "countdownMs": 3000 }
   },
   "encounter": {
     "radius": 1,

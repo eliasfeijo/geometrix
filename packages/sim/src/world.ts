@@ -30,9 +30,13 @@ import { nameAt } from "./names.ts";
  * 10, not 1 (M2 encontro F6, plan C11). 10: the battle replaces the roll: an
  * attack or a refused extortion opens a battle stub, its participants lock,
  * the junction host's result commands end it; no dialogue flee (M2 junction
- * F2). 11: the wanderers, a side that is not a team (M2 junction F6).
+ * F2). 11: the wanderers, a side that is not a team (M2 junction F6). 12:
+ * the R vocabulary: follow, help, drop, the road builder with its own target,
+ * the hostile intent and the bot's difficulty (M2 R F2). 13: the params hold
+ * the battle pause times, so a stored world of 12 has not enough params (M2 R
+ * F5).
  */
-export const SIM_VERSION = 12;
+export const SIM_VERSION = 13;
 
 export type Stock = Record<Resource, number>;
 

@@ -149,13 +149,17 @@ const schema = {
    * `maxSides` sides. Each side spawns in a `zone` of `depth` × `breadth`
    * arena cells (the lab's arenas: 3 × 5), across the way it faces, its
    * center `insetPermille` of the way from the arena's edge to its center
-   * (junction checkpoint C1-3; 500 is halfway).
+   * (junction checkpoint C1-3; 500 is halfway). The `hold` times are real
+   * milliseconds the sim never reads (R plan P11): the server holds a battle
+   * `openingMs` when it opens with a human connected (D6), and counts down
+   * `countdownMs` before a human's pause and before its end (D28).
    */
   battle: {
     window: { width: positive, height: positive, cellBlock: positive },
     sideCap: positive,
     maxSides: positive,
     zone: { depth: positive, breadth: positive, insetPermille: positive },
+    hold: { openingMs: nonNegative, countdownMs: nonNegative },
   },
   /**
    * The encounter (D5, D6): it opens within `radius` (Manhattan); a dominated
