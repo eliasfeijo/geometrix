@@ -11,7 +11,7 @@
 
 ## F1 — Baseline and the pace harness
 
-- [ ] `world.multiplier` in the params schema and `params/default.json`; `params/world-72h.json` with today's numbers
+- [x] `world.multiplier` in the params schema and `params/default.json`; `params/world-72h.json` with today's numbers
       and ×6 (P1, P2)
 - [ ] `geo sim` and `geo sweep`: `--mult`, every time also in real minutes
 - [ ] `apps/cli/src/pace.ts`: the §7 metrics (crossing, the first extra creep, exploring, the wanderers, population,

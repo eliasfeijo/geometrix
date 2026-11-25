@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, test } from "vitest";
 import { ParamsError, parseParams, type Params } from "../src/params.ts";
 import { readDefaultParamsJson, readTestParamsJson } from "./helpers.ts";
@@ -30,6 +31,19 @@ describe("parseParams", () => {
     expect(params.world.durationSeconds).toBe(3 * 24 * 60 * 60);
   });
 
+  test("accepts params/world-72h.json: the 72-hour world at ×6 (M2 R P2)", () => {
+    const params: Params = parseParams(
+      JSON.parse(
+        readFileSync(
+          new URL("../../../params/world-72h.json", import.meta.url),
+          "utf8",
+        ),
+      ),
+    );
+    expect(params.world.durationSeconds).toBe(3 * 24 * 60 * 60);
+    expect(params.world.multiplier).toBe(6);
+  });
+
   test("accepts test/params.json", () => {
     const params: Params = parseParams(readTestParamsJson());
     expect(params.creep.cost.materia).toBe(40);
@@ -38,6 +52,8 @@ describe("parseParams", () => {
   test.each([
     ["creep.cost.materia", -1, "creep.cost.materia: must be >= 0"],
     ["world.tickSeconds", 0, "world.tickSeconds: must be >= 1"],
+    ["world.multiplier", 0, "world.multiplier: must be >= 1"],
+    ["world.multiplier", undefined, "world.multiplier: missing"],
     ["dna.circle.capacity", 1.5, "dna.circle.capacity: expected an integer"],
     ["map.width", "64", "map.width: expected an integer"],
     ["map.crossings", undefined, "map.crossings: missing"],
