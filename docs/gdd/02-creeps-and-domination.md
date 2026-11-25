@@ -3,6 +3,8 @@
 ## Decided
 - **Hero = a dominated allied creep.** There is no fixed hero.
 - Each player has at most **1 active domination**. A creep can only be dominated by one player at a time.
+  **Revised by slice G's design round** (2026-11-25, below): the one domination is the player's **embodied** creep;
+  the player also leads a squad of several creeps.
 - When **released**, the creep keeps its autopilot configuration and keeps obeying it. It can be dominated again, by
   the same player or another of the team.
 - **Creeps are produced with resources.**
@@ -74,8 +76,38 @@
     during the dash. **The dodge has priority** and resets the bar.
   - **The load acts as in walking:** the charge multiplies the speed the load already slows; the dodge keeps its
     distance and its cooldown grows with the load.
+- **Squads and the embodied creep** (owner, slice G's design round, 2026-11-25; slice G, before P). Why: the
+  difference between a *dominated* and a *selected* creep was vague, and dominating was an extra step whose only gain
+  was control. Three layers:
+  - **selecting only inspects** (any creep, of any side), as today;
+  - **the squad** is the set of creeps a player commands. A free creep of the team **joins the player's squad when the
+    player gives it an order** (a right click), with no "Dominar" button in between; it then takes commands **only
+    from that player until it is released**. Each player has their own squad, and a creep is in at most one;
+  - **the embodied creep** (o encarnado) is the hero of pillar 3: the squad's creep the player plays directly.
+    **Dominating is how a player picks the embodied creep**, at most one per player. **Tab** (Shift+Tab backwards)
+    dominates the squad's next creep and centers the map on it, in the world as in battle.
+  - **The embodied creep is visible to everyone** (allies and enemies, humans and bots): a **glow** on the creep and
+    **the player's name, visible at every zoom level**, in the world and in battle. ("cada encarnado tem um efeito de
+    'glow' no creep e o nome do jogador visível em todos os níveis de zoom, e o mesmo se aplica durante a batalha.")
+  - **The squad's symbol:** each player picks a symbol from a predefined list of SVGs for their squad, and every creep
+    of the squad shows it, in the world and in battle. It tells which squad a creep belongs to and names the squad in
+    the formation commands ([07](07-autopilot.md)).
+  - **A player who disconnects keeps the squad:** the embodied creep goes back to its autopilot rules, the others keep
+    following it, and on reconnecting everything is as it was.
+  - **The bots' strategists lead several squads**, how many and how they behave by the difficulty, configurable
+    ([07](07-autopilot.md)).
+- **The team's roster** (owner, slice G's design round, 2026-11-25): a key toggles a **fixed panel** with the list of
+  the team's creeps, which stays open while the player clicks its actions (Esc closes it). Each line has actions:
+  **select, dominate, center on the map**. Tab stays free for the cycle above.
 
 ## Proposal
+- **Slice G's control details** (agent, slice G's design round, 2026-11-25; to approve in G's spec): shift+click and a
+  drag box give the order to several creeps at once (all join the squad); the roster's line also shows the DNA, name,
+  HP, load, current action, squad symbol and who leads it, and an **"Entrar"** for a creep in a battle; the symbol is
+  picked in the lobby and can be changed in the match, one per squad within a team; an enemy sees the embodied
+  creep's glow and name only when the creep is in its sight (the fog holds); the squad's size is a param, tuned in
+  the lab with the battle's side cap (5 today, `maxPerSide`): two squads of one team in one battle exceed it.
+  "Liberar" releases one creep or the whole squad.
 - Dominating only changes **who emits the creep's commands**. See [ADR-0002](../adr/0002-every-action-is-a-command.md).
 - **Population needs a limiter.** In a world of days, without a limit, the number of creeps grows and weighs on
   performance and balance. Candidates: upkeep, a housing cap, or aging.

@@ -8,8 +8,10 @@
 | **DNA** | The creep's innate shape/archetype (square, circle, triangle), as opposed to individual evolution. |
 | **Core** | The heart of a team's base. It produces creeps and receives deliveries; destroying it wins the match (slice E). |
 | **Matéria / cristal** | The two resources. Matéria: heavy, abundant, renewable. Cristal: light, rare, depletable. |
-| **Dominate / release** | Take direct control of a free allied creep / end that control. At most 1 active domination per player. |
-| **Autopilot** | The configured behavior (ordered condition → action rules) a creep follows when nobody dominates it. |
+| **Dominate / release** | Pick the creep of one's squad that one plays directly (the embodied creep) / end that control. At most 1 active domination per player (revised in slice G's design round: before it, dominating was the only way to command a creep). |
+| **Squad** | The creeps a player commands: a free creep of the team joins it when the player gives it an order, and obeys only that player until released. Each squad has its player's symbol. Bots lead several (slice G). |
+| **Embodied creep** (encarnado) | The squad's creep a player dominates and plays directly, the hero of pillar 3; the others follow it in formation. Shown to everyone with a glow and the player's name (slice G). |
+| **Autopilot** | The configured behavior (ordered condition → action rules) a creep follows when it is in no squad. |
 | **Preset** | A ready-made autopilot rule list (gatherer, scout, road builder, raider; in battle: frontline, marksman, skirmisher, carrier). |
 | **Command** | The only way to act in a simulation. Humans, macros, autopilot and bots emit the same commands ([ADR-0002](adr/0002-every-action-is-a-command.md)). |
 | **Fog** (fog of war) | What the team does not see now. Only the core and the team's creeps give sight; outside it, the team knows only its memory (black fog at the start). |
