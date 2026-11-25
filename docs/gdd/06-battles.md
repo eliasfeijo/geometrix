@@ -105,6 +105,12 @@
   charged strike and charge, the triangle's frontal guard and the circle's fan ([02](02-creeps-and-domination.md)).
   The grid stays. Tried in the lab first, behind params; the gambits learn them, so auto-resolve uses them; what is
   not fun in the lab does not reach the world (agent, approved).
+- **The kits' details** (owner, slice K's spec round, 2026-11-25; [kits spec](../specs/m2-kits/spec.md) D3–D8;
+  details in [02](02-creeps-and-domination.md)): **Space is every DNA's kit key** (a tap attacks, a hold fills the
+  DNA's bar); the charge's collision **carries the bar** built while running; the charge is limited and comes back
+  with the attack's cooldown; **the dodge is a double tap** of a direction, a 2-cell dash, **untouchable**, with
+  priority over the bar; **the load acts as in walking**; the wanderers get the circle's kit in slice K, and their
+  own DNA and kit get their own design round ([05](05-tribes-and-diplomacy.md)).
 
 ## Proposal
 See [ADR-0001](../adr/0001-world-and-battle-as-separate-simulations.md). The world side of the contract is
@@ -141,9 +147,4 @@ sequenceDiagram
 
 ## Open questions
 - How movement is drawn in the game (the four lab options). After PLAYTEST group 7.
-- **The kits' details** (slice K's spec): does the charge's hit carry the charge built while running, or is it the
-  basic hit? Which key is the dodge, how far it goes, and is the creep untouchable during it? What does a dodging or
-  charging creep do with the load it carries? Do the wanderers (circles) get the fan? Measured against: a circle beat
-  a square in every case of the junction matrix, and a wanderer killed 47 of 64 loaded squares that fought it in 3
-  days of seed 42 (checkpoint C1b).
 - **Critical hits?** (owner, 2026-11-18): a hit that sometimes deals more damage. With stats and skills; not in M2.
