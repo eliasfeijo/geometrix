@@ -6,33 +6,33 @@
 
 ## Now
 
-**Updated:** 2026-11-25 (end of F5)
+**Updated:** 2026-11-25 (F7 built; checkpoint C2 open)
 
 | | |
 |---|---|
 | **Milestone** | **M2 — The ambush** ([ROADMAP](../ROADMAP.md)). M0, M1 and M1.5 ✅ |
 | **Slices** | **A — The encounter** ([spec](../specs/m2-encounter/spec.md) · [plan](../specs/m2-encounter/plan.md) · [tasks](../specs/m2-encounter/tasks.md)) ✅ 2026-11-17 · **B — The battle lab** ([spec](../specs/m2-battle-lab/spec.md) · [plan](../specs/m2-battle-lab/plan.md) · [tasks](../specs/m2-battle-lab/tasks.md)) ✅ 2026-11-20 |
-| **In progress** | **D — The junction** ([spec](../specs/m2-junction/spec.md) · [plan](../specs/m2-junction/plan.md) · [tasks](../specs/m2-junction/tasks.md)), spec and plan ✅ 2026-11-24. **F1** ✅ · **F2** ✅ (`SIM_VERSION` 10) · **F3** ✅ (checkpoint C1 decided) · **F6** ✅ (the wanderers; `SIM_VERSION` 11; checkpoint C1b decided) · **F4** ✅ (network and server; `PROTOCOL_VERSION` 7) · **F5** ✅ 2026-11-25 (the world client's battle screen, the battle on the map, watching, the chronicle's battle voices, the movement selector; `BATTLE_VERSION` 6) |
-| **Next front** | **F7 — Soak and playtest** (branch `m2/junction-f7-soak`): the soak test with a `kill -9` mid-battle, the PLAYTEST junction groups (spec §8), then **checkpoint C2** with the owner |
-| **Then** | **P — The friends' playtest**; E's order vs. P decided at C2 |
-| **Waiting on the owner** | (1) [ADR-0009](../adr/0009-prediction-in-the-lab.md) (`Proposed`): prediction as a lab experiment option. (2) `gambits.meleeBerthSteps` 3 (provisional, lab F7). (3) Whenever the owner wants: [PLAYTEST](../PLAYTEST.md) lab group 7 (the four movement options at 0 and 150 ms), which feeds the prediction decision; the world's battle screen now has the same four options in `?net=1` |
+| **In progress** | **D — The junction** ([spec](../specs/m2-junction/spec.md) · [plan](../specs/m2-junction/plan.md) · [tasks](../specs/m2-junction/tasks.md)). F1–F6 ✅ · **F7** built on branch `m2/junction-f7-soak` (not merged): the soak kills mid-battle and checks every battle log (OK: 5 kills in a battle, 218 battles agree); a server test of a crash mid real-time battle; the client attacks wanderers (a bug found); the [PLAYTEST](../PLAYTEST.md) junction groups J1–J6 |
+| **Next front** | **Checkpoint C2** with the owner: the PLAYTEST groups J1–J6 at ×6, the hypothesis questions, the order of E against P. Then F7's closing and merge |
+| **Then** | **P — The friends' playtest**, or E first (decided at C2) |
+| **Waiting on the owner** | (1) **Checkpoint C2**: play J1–J6 ([PLAYTEST](../PLAYTEST.md)), answer Q1–Q17 and C2-1, C2-2; validate the interpretations of the F4 (1–9), F5 (1–14) and F7 (1–4) records. (2) [ADR-0009](../adr/0009-prediction-in-the-lab.md) (`Proposed`): prediction as a lab experiment option. (3) `gambits.meleeBerthSteps` 3 (provisional, lab F7). (4) Whenever the owner wants: PLAYTEST lab group 7 (the movement options); J6 step 5 covers the same in the world |
 | **Blockers** | None |
 
 ### Next steps
 
-1. **F7** from the [tasks](../specs/m2-junction/tasks.md): the soak test (`npm run soak`) with a `kill -9` while a
-   battle is open, checking the world and battle hashes after the restart; the PLAYTEST junction groups from spec §8
-   (against the bot, two tabs, watching, the wanderers), written for the owner's sessions at ×6; then checkpoint C2.
-   The F4 record has 9 interpretations to validate in the playtest, the F5 record 14 (the screen's flow, keys,
-   colors, the end table, the sign).
+1. **Checkpoint C2** (a human session, in the Windows checkout or the F7 worktree): the owner plays the junction groups,
+   one group per message; Claude reads the world's `battles` table afterwards and builds the tables. The decisions go
+   to the tasks (F7 record), the plan (decisions) and the GDD; then F7 closes (dashboard) and merges.
 2. **🐞 The road-builder preset does not work for the player** (owner, 2026-11-20, seen since before slice A): it asks
    for a point on the map, but nothing happens on click or mouse move (no road or cost preview); a road can only be
    built by dominating a creep, in road mode. The bots build with the same preset, so the `sim` works. **A short fix
-   session** (repro, test, fix), alongside D: the "15 minutes a day" style depends on the presets.
+   session** (repro, test, fix): the "15 minutes a day" style depends on the presets.
 3. **Session findings** for the rounds that touch them: the roll-only fight does not pay off the risk (D replaces
    it); extortion against the bot is almost free; the mid-game at ×6 empties after exploring (encounter F6, C14); the
    battle AI is predictable in the corridors (GDD 06, parked). **F5:** a battle on the world clock at ×36 lasts about
-   a real second (D4), too short to open and watch; at ×6 about six battle seconds pass per real second.
+   a real second (D4), too short to open and watch; at ×6 about six battle seconds pass per real second. **F7:** a
+   wanderer cannot be selected with a left click (no inspector for it); the soak's server process grows from about
+   150 MB to 210–256 MB within a run (RSS, not investigated; no earlier number recorded).
 4. **Design rounds when the owner wants:** the role of cristal (GDD 03) and slice E (siege and repair).
 
 ### What the next front needs to know about the code
@@ -48,9 +48,9 @@
   recovery (on the world clock until a human is back, N-3); `battle-clock.ts` steps real-paced battles every 50 ms;
   screens per socket, frames only to open screens, inputs only for the dominated participant.
 - **The soak test** (`npm run soak`, `apps/server/src/soak*.ts`): a bot × bot world ×360 with `kill -9` and restart,
-  WebSocket clients following the deltas, the exported replay checked against the server's hash. F7 adds a kill
-  while a battle is open and the battle hashes (`geo battle verify` replays a battle log; the server keeps each
-  battle's final hash in `battles`).
+  WebSocket clients following the deltas, the exported replay checked against the server's hash. Since F7 each kill
+  waits for a battle open in the tables, and `checkBattles` replays every ended battle's log to its final hash and
+  to the world log's results (canonical JSON: the exported replay orders keys differently).
 - **The world client's battle screen** (`apps/client/src`, F5): `battle/` holds what the lab shares (arena view,
   keyboard, motion, interpolation, signs, result table, events list, labels, `battle.css`); `battle-session.ts` (the
   screen from the messages, the auto-open), `battle-control.ts` (requests, reconnect, inputs, the round trip),

@@ -1,6 +1,6 @@
 # M2 junction tasks — Slice D
 
-**Status:** F3 done (2026-11-24); F6, F4 and F5 done (2026-11-25); F7 next. Branches `m2/junction-f<n>-<slug>` (skill `commit`).
+**Status:** F3 done (2026-11-24); F6, F4 and F5 done (2026-11-25); F7 built (2026-11-25), checkpoint C2 waiting on the owner. Branches `m2/junction-f<n>-<slug>` (skill `commit`).
 **Spec:** [spec.md](spec.md) · **Plan:** [plan.md](plan.md)
 
 ## F0 — Spec, ADR and plan
@@ -397,3 +397,42 @@ the sign; two humans fought each other with the predict option, each keeping con
 - [x] The soak test with a `kill -9` mid-battle; world and battle hashes after the restart
 - [x] The PLAYTEST junction groups (spec §8)
 - [ ] **Checkpoint C2:** the owner's sessions; the hypothesis questions; the order of E against P
+
+### F7 record
+
+**What it does.** `npm run soak` now kills the server only with a battle open: after each planned tick, the soak
+polls the `battles` table (read-only, every 5 ms, up to 60 s) and sends the `kill -9` as soon as one has no end, then
+reads which battles the last commit left open, the ones recovery has to rebuild (N-3). At the end, besides the world
+replay, the clients and the chronicle, every ended battle's stored log must replay to its stored final hash and to the
+results the world log applied (`checkBattles`, the soak's version of `geo verify`'s fifth path), and every battle a
+kill cut through must have ended after the restart. A server test covers what the bot × bot soak cannot: a crash in
+the middle of a **real-time** battle with a human's inputs. The battle ticks run since the last world tick are lost
+together with their results, so nothing is half-applied. The battle comes back as that commit stored it, on the world
+clock, and both logs agree to the end.
+
+**A bug found and fixed** while writing the playtest: the client could not attack a wanderer. The `sim` accepts the
+attack approach (W-4), but the map's markers hold only creeps, so a right click on a wanderer moved there. Without it,
+hunting a loaded wanderer and reinforcing a battle against one (331 of the 358 sweep battles have one) could not be
+played. The right-click menu now lists the wanderers under the click.
+
+**A harness bug found and fixed:** the first full soak reported 150 battles whose results disagreed with the world
+log. They agreed; the exported replay orders a command's keys differently from the tables. The comparison is now on
+canonical JSON, and the test feeds it a log with reordered keys.
+
+**Measured.** `npm run soak` (seed 42, ×360, 3 world days, 12.1 min real; `runs/soak-20261125-094737-s42`, not
+versioned): **OK**. Five `kill -9`, each with a battle open (302, 319, 327, 330, 500), and one SIGTERM; restarts in
+0.3 s. All 218 battles ended, none open at the world's end; every battle log replays to its final hash and to the world
+log's results; the world replay rebuilt in Node gives the server's hash (`104c9ad5…`, 614 logged commands). The four
+clients end with the server's view and chronicle, with 0 hash mismatches in 3,589 checks each, 6 reconnects and 11–12
+resumes each. Chronicle 738 rows, the same as the replay's events. SQLite 108.9 MB at the end. Memory 145–256 MB per
+process; the loop at 100% of ×360 (median), 10% in its slowest sample (around a restart). 2,885 tests (2,881 before).
+
+**Interpretations to validate** (implementation details the plan left open):
+
+1. A planned kill waits for the first battle open after its tick (up to 60 real seconds); the SIGTERM does not wait.
+2. A wanderer in the right-click menu: "Atacar", and "Extorquir (não negocia)" disabled, with its HP, its load
+   ("leva …" or "vazio") and "em batalha" when it is in one.
+3. The click hits a wanderer within half a cell of its center; with another team's creep under the click too, both
+   are listed, the creeps first. A left click on a wanderer still selects nothing (no inspector for wanderers).
+4. A battle that ends with joins still waiting is checked by its hash and its sent commands only (the exits of the
+   late joiners carry the world's creep as it was then, which the tables do not keep); the soak had none.
