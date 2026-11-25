@@ -4,22 +4,22 @@
 // client never holds an object of the state: a bug of in-place mutation shows
 // up as a difference. Views are compared as plain JSON every tick (stricter
 // than canonical JSON, and fast enough for CI) and as viewJson, the hashed
-// form, every world minute. With the encounter (M2 encontro spec N-3) the
-// world also has battle stubs, and the test asserts a floor of them, so it
-// does exercise the locked creeps. Deaths and
-// spoils need the junction host to end the battles: their floors come back
-// when this test runs through it (junction F4).
+// form, every world minute. The world steps through the junction host
+// (junction spec N-4), so battles open, lock their creeps and end: creeps die,
+// spoils drop and stubs close, and the test asserts floors of each.
 
+import { parseBattleParams } from "@geometrix/battle";
+import { createHost, stepJunction } from "@geometrix/junction";
 import {
   botCommands,
   botsFor,
   createWorld,
   parseParams,
-  step,
   validate,
   view,
 } from "@geometrix/sim";
 import { expect, test } from "vitest";
+import battleParams from "../../battle/test/params.json" with { type: "json" };
 import params from "../../sim/test/params.json" with { type: "json" };
 import {
   applyDelta,
@@ -36,6 +36,7 @@ test.each([1, 42, 649])(
   "seed %i: 6 h of deltas rebuild each team's view in every tick",
   (seed) => {
     const state = createWorld(seed, parseParams(params));
+    const host = createHost(parseBattleParams(battleParams));
     const ticks = (HOURS * 3600) / state.params.world.tickSeconds;
     const bots = botsFor(["balanced", "balanced"]);
     const teams = [0, 1];
@@ -49,6 +50,10 @@ test.each([1, 42, 649])(
     let sight = 0;
     let foreign = 0;
     let battles = 0;
+    let closed = 0;
+    let locked = 0;
+    let deaths = 0;
+    let spoils = 0;
     const enemyCoreSeen = teams.map(() => false);
     for (;;) {
       for (const team of teams) {
@@ -59,9 +64,24 @@ test.each([1, 42, 649])(
         upserts += delta.creeps?.upsert?.length ?? 0;
         removes += delta.creeps?.remove?.length ?? 0;
         roads += delta.roads?.length ?? 0;
-        // Battles opened, as each team saw them.
+        // The team's own creeps never leave its view: a remove is a death.
+        const own = new Set(
+          client[team]!.creeps.filter((c) => c.team === team).map((c) => c.id),
+        );
+        deaths += (delta.creeps?.remove ?? []).filter((id) =>
+          own.has(id),
+        ).length;
+        // Battles opened and closed, creeps locked in one, spoils dropped,
+        // as each team saw them.
         battles += (delta.battles?.upsert ?? []).filter(
           (battle) => battle.x !== undefined,
+        ).length;
+        closed += delta.battles?.remove?.length ?? 0;
+        locked += (delta.creeps?.upsert ?? []).filter(
+          (creep) => creep.battle != null,
+        ).length;
+        spoils += (delta.spoils?.upsert ?? []).filter(
+          (spoil) => spoil.x !== undefined,
         ).length;
         explored += delta.known?.length ?? 0;
         sight += delta.visible?.remove?.length ?? 0;
@@ -91,15 +111,17 @@ test.each([1, 42, 649])(
       const accepted = botCommands(state, bots).filter(
         ({ playerId, command }) => validate(state, command, playerId) === null,
       );
-      step(state, accepted);
+      stepJunction(state, host, accepted);
     }
     // The world did move: creeps were born and changed, roads were built,
     // cells were explored and left sight, enemy creeps came into sight (with
     // the D7 fields: a new entity is sent whole, so it has its team) and left
     // it, and each team found the enemy core (seen after ~4.5-5.3 h in these
-    // seeds). Since the junction (F2) battles open and lock their creeps: 8,
-    // 4 and more as the two teams saw them in these seeds. A bot's extortion
-    // is answered in the tick it opens, so no delta carries it.
+    // seeds). Through the junction host, battles open, lock their creeps
+    // and close, creeps die and spoils drop: 20-76 battles opened and closed,
+    // 40-152 locked creeps sent, 5-12 deaths and 1-8 spoils (as the two teams
+    // saw them) in these seeds. A bot's extortion is answered in the tick it
+    // opens, so no delta carries it.
     expect(state.creeps.length).toBeGreaterThan(12);
     expect(upserts).toBeGreaterThan(ticks);
     expect(explored).toBeGreaterThan(300);
@@ -108,15 +130,18 @@ test.each([1, 42, 649])(
     expect(removes).toBeGreaterThan(0);
     expect(foreign).toBeGreaterThan(20);
     expect(enemyCoreSeen).toEqual([true, true]);
-    expect(battles).toBeGreaterThanOrEqual(2);
+    expect(battles).toBeGreaterThanOrEqual(20);
+    expect(closed).toBeGreaterThanOrEqual(20);
+    expect(locked).toBeGreaterThanOrEqual(40);
+    expect(deaths).toBeGreaterThanOrEqual(5);
+    expect(spoils).toBeGreaterThanOrEqual(1);
   },
-  60_000,
+  120_000,
 );
 
 // The wanderers (junction F6): the test params have none (cap 0), so this
-// world turns them on. Without the junction host their battles never end;
-// the property still holds while they are born, roam, come into a team's
-// sight and leave it.
+// world turns them on. The property holds while they are born, roam, come
+// into a team's sight and leave it, fight and die.
 test.each([42])(
   "seed %i: 2 h with wanderers, the deltas rebuild each team's view",
   (seed) => {
@@ -126,6 +151,7 @@ test.each([42])(
     withWanderers.wanderers.firstSeconds = 600;
     withWanderers.wanderers.intervalSeconds = { start: 600, end: 600 };
     const state = createWorld(seed, parseParams(withWanderers));
+    const host = createHost(parseBattleParams(battleParams));
     const ticks = (2 * 3600) / state.params.world.tickSeconds;
     const bots = botsFor(["balanced", "balanced"]);
     const teams = [0, 1];
@@ -154,7 +180,7 @@ test.each([42])(
       const accepted = botCommands(state, bots).filter(
         ({ playerId, command }) => validate(state, command, playerId) === null,
       );
-      step(state, accepted);
+      stepJunction(state, host, accepted);
     }
     expect(state.wanderers.length).toBeGreaterThan(0);
     // 62 upserts and 31 removes in this seed.
