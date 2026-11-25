@@ -1,8 +1,15 @@
-import { eventsFor, type SimEvent } from "@geometrix/sim";
+import {
+  eventsFor,
+  SIM_VERSION,
+  SYSTEM_PLAYER_ID,
+  type SimEvent,
+} from "@geometrix/sim";
 import { describe, expect, test } from "vitest";
+import { stateHash } from "../src/hash.ts";
 import { Store } from "../src/persistence.ts";
+import { rebuild } from "../src/soak.ts";
 import { WorldHost, type HostContext } from "../src/world-host.ts";
-import { testParams } from "./helpers.ts";
+import { testBattleParams, testParams } from "./helpers.ts";
 
 const params = testParams();
 
@@ -18,6 +25,7 @@ function setup(
   const host = WorldHost.create(context, {
     seed: 42,
     params,
+    battleParams: testBattleParams(),
     multiplier: 1,
     botTeams,
     createdAt: "2026-11-14T00:00:00.000Z",
@@ -137,6 +145,7 @@ describe("WorldHost", () => {
     const host = WorldHost.create(context, {
       seed: 1,
       params: short,
+      battleParams: testBattleParams(),
       multiplier: 1,
       botTeams: [],
       createdAt: "2026-11-14T00:00:00.000Z",
@@ -174,5 +183,45 @@ describe("WorldHost", () => {
     // A copy: changing it does not change what the host keeps.
     host.chronicle(1).pop();
     expect(host.chronicle(1)).toHaveLength(3);
-  });
+  }, 20_000);
+});
+
+describe("the world through the junction host (junction F4, P2, P5)", () => {
+  test("a battle's results are logged as the system player's, after the players' commands, and the log replays alone", () => {
+    const { host, store } = setup([0, 1]);
+    // Seed 42 of the test params: the first battle ends near tick 8,560.
+    let ended = -1;
+    while (ended < 0 && host.state.tick < 12_000) {
+      host.tick();
+      const tick = host.state.tick - 1;
+      if (
+        store
+          .commandsFrom(host.id, tick)
+          .some((c) => c.command.type === "battleEnd")
+      ) {
+        ended = tick;
+      }
+    }
+    expect(ended).toBeGreaterThan(0);
+    const log = store.commandsFrom(host.id, 0);
+    const results = log.filter(
+      (c) => c.command.type === "battleExit" || c.command.type === "battleEnd",
+    );
+    expect(results.every((c) => c.playerId === SYSTEM_PLAYER_ID)).toBe(true);
+    for (const result of results) {
+      const players = log.filter(
+        (c) => c.tick === result.tick && c.playerId !== SYSTEM_PLAYER_ID,
+      );
+      expect(players.every((c) => c.seq < result.seq)).toBe(true);
+    }
+    const state = rebuild({
+      simVersion: SIM_VERSION,
+      seed: 42,
+      params,
+      ticks: host.state.tick,
+      finalHash: stateHash(host.state),
+      commands: log,
+    });
+    expect(stateHash(state)).toBe(stateHash(host.state));
+  }, 30_000);
 });

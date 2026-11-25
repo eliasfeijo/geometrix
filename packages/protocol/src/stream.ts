@@ -3,6 +3,7 @@
 // would otherwise enter the client's main bundle: the client imports values
 // from "@geometrix/protocol/stream" and types from "@geometrix/protocol".
 
+export * from "./battle-delta.ts";
 export * from "./delta.ts";
 
 /**
@@ -13,6 +14,7 @@ export * from "./delta.ts";
  * team's events in the delta and its chronicle in the welcome (M2 encontro).
  * 5: the battle stubs in the view and the delta, react with pay or refuse
  * only, the battle events (M2 junction). 6: the wanderers in the view and
- * the delta (M2 junction F6).
+ * the delta (M2 junction F6). 7: the battle screen, its inputs, opening and
+ * frames, the frames as deltas of the battle view (M2 junction F4).
  */
-export const PROTOCOL_VERSION = 6;
+export const PROTOCOL_VERSION = 7;

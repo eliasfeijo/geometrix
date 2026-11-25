@@ -4,6 +4,9 @@ import { parseClientMessage } from "../src/index.ts";
 const message = (command: unknown) =>
   JSON.stringify({ type: "command", ref: 7, command });
 
+const battle = (command: unknown) =>
+  JSON.stringify({ type: "battleInput", ref: 4, battleId: 9, command });
+
 describe("parseClientMessage", () => {
   test.each([
     { type: "dominate", creepId: 3 },
@@ -63,8 +66,82 @@ describe("parseClientMessage", () => {
       "a resync without a seq",
       JSON.stringify({ type: "resync", reason: "seqGap" }),
     ],
+    [
+      "a battle exit, which only the junction host emits",
+      message({
+        type: "battleExit",
+        battleId: 1,
+        creepId: 2,
+        outcome: "escaped",
+        hp: 10,
+        cargo: { materia: 0, cristal: 0 },
+        cell: { x: 1, y: 1 },
+        by: null,
+      }),
+    ],
+    [
+      "a battle end, which only the junction host emits",
+      message({
+        type: "battleEnd",
+        battleId: 1,
+        winnerSide: 0,
+        reason: "won",
+        survivors: [],
+        piles: [],
+      }),
+    ],
+    [
+      "a battle control, which only the host sends",
+      battle({ type: "control", id: 1, controller: "human" }),
+    ],
+    [
+      "a battle join, which only the host sends",
+      battle({ type: "join", side: 0, participant: {} }),
+    ],
+    [
+      "the lab's setGambits",
+      battle({ type: "setGambits", id: 1, gambits: [] }),
+    ],
+    [
+      "an intent with an unknown direction",
+      battle({ type: "intent", id: 1, move: "north", attack: false }),
+    ],
+    [
+      "a battle input without a battle",
+      JSON.stringify({
+        type: "battleInput",
+        ref: 1,
+        command: { type: "drop", id: 1 },
+      }),
+    ],
+    [
+      "a battle screen without a ref",
+      JSON.stringify({ type: "battleScreen", battleId: 3 }),
+    ],
   ])("rejects %s", (_, raw) => {
     expect(parseClientMessage(raw)).toBeNull();
+  });
+
+  test.each([
+    { type: "intent", id: 2, move: "left", attack: true },
+    { type: "intent", id: 2, move: null, attack: false, bag: "pickup" },
+    { type: "intent", id: 2, move: null, attack: false, bag: null },
+    { type: "attackOnce", id: 2 },
+    { type: "face", id: 2, dir: "up" },
+    { type: "drop", id: 2 },
+    { type: "pickup", id: 2 },
+  ])("accepts the battle input $type", (command) => {
+    expect(parseClientMessage(battle(command))).toEqual({
+      type: "battleInput",
+      ref: 4,
+      battleId: 9,
+      command,
+    });
+  });
+
+  test.each([9, null])("accepts a battle screen of %s", (battleId) => {
+    const screen = { type: "battleScreen", ref: 5, battleId };
+    expect(parseClientMessage(JSON.stringify(screen))).toEqual(screen);
   });
 
   test("accepts a resync request", () => {

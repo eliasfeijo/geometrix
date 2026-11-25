@@ -52,7 +52,8 @@ export type Delta = {
   visible?: { add?: number[]; remove?: number[] };
 };
 
-type Entity = { id: number } & Record<string, unknown>;
+/** An entity of a view collection, as the diff sees it. */
+export type Entity = { id: number } & Record<string, unknown>;
 
 /**
  * What the team already received, as copied values: the state mutates its
@@ -130,7 +131,7 @@ export function emptyView(team: number, cells: number): TeamView {
  * "value": an object of primitives or null (orders are recreated every tick
  * with the same value, plan section 1). "ref": compared by reference.
  */
-type FieldKinds = Record<string, "value" | "ref">;
+export type FieldKinds = Record<string, "value" | "ref">;
 
 const KINDS = {
   teams: {
@@ -239,7 +240,7 @@ function diffSorted(
  * Both lists in id order: a merge walk. `copies` is the sent list for `after`:
  * the old copy of an unchanged entity, a new one of a changed entity.
  */
-function diffEntities(
+export function diffEntities(
   before: readonly Entity[],
   after: readonly Entity[],
   kinds: FieldKinds,
@@ -364,7 +365,7 @@ export function applyDelta(previous: TeamView, delta: Delta): TeamView {
   return next;
 }
 
-function applyEntities(
+export function applyEntities(
   items: readonly Entity[],
   changes: EntityDelta<Entity>,
 ): Entity[] {

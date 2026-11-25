@@ -101,6 +101,8 @@ export const REJECT_TEXTS: Record<RejectReason | "disconnected", string> = {
   invalidResult: "Resultado de batalha inválido.",
   invalidMessage: "Mensagem inválida.",
   worldEnded: "O mundo terminou: só leitura.",
+  notYourBattle: "Seu time não está nessa batalha.",
+  notYourParticipant: "Você não comanda esse participante.",
   disconnected: "Sem conexão com o servidor.",
 };
 

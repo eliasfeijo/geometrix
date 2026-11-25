@@ -3,6 +3,9 @@
 // commands and gets an ack (with the tick the command will apply on) or a
 // reject. After ticks, each team's stream sends the delta of its view to the
 // team's sockets, at most once per broadcastIntervalMs (M1.5 plan section 5).
+// A socket may show a battle screen (junction plan section 7): it gets the
+// battle's opening once, then its frames (N-2), and sends the inputs of the
+// participant its player dominates (C-2). Closing the socket closes it.
 
 import type { Server } from "node:http";
 import {
@@ -105,6 +108,24 @@ export function attachWebSocket(server: Server, context: WsContext) {
         send(socket, welcome(host, player, stream));
         return;
       }
+      if (message.type === "battleScreen") {
+        screen(socket, host, player, message.ref, message.battleId);
+        return;
+      }
+      if (message.type === "battleInput") {
+        const reason = host.battleInput(
+          player.id,
+          message.battleId,
+          message.command,
+        );
+        send(
+          socket,
+          reason === null
+            ? { type: "ack", ref: message.ref, tick: host.state.tick }
+            : { type: "reject", ref: message.ref, reason },
+        );
+        return;
+      }
       const tick = host.state.tick;
       const reason = host.submit(player.id, message.command);
       send(
@@ -115,6 +136,7 @@ export function attachWebSocket(server: Server, context: WsContext) {
       );
     });
     socket.on("close", () => {
+      host.closeScreen(socket);
       broadcaster.remove(socket);
       context.presence?.disconnected(player);
     });
@@ -127,6 +149,31 @@ export function attachWebSocket(server: Server, context: WsContext) {
       wss.close();
     },
   };
+}
+
+/**
+ * Opens or closes the socket's battle screen: an open one gets the ack and
+ * the battle's opening, with its view now, then the frames.
+ */
+function screen(
+  socket: WebSocket,
+  host: WorldHost,
+  player: PlayerRow,
+  ref: number,
+  battleId: number | null,
+): void {
+  if (battleId === null) {
+    host.closeScreen(socket);
+    send(socket, { type: "ack", ref, tick: host.state.tick });
+    return;
+  }
+  const open = host.openScreen(socket, player, battleId);
+  if (typeof open === "string") {
+    send(socket, { type: "reject", ref, reason: open });
+    return;
+  }
+  send(socket, { type: "ack", ref, tick: host.state.tick });
+  send(socket, open);
 }
 
 function welcome(
@@ -221,6 +268,16 @@ class Broadcaster {
     host.onTick((events) => {
       for (const stream of this.streams) stream.record(events);
       this.ticked();
+    });
+    // A frame goes at once, serialized once, to the sockets that show it.
+    host.onBattleFrame((frame) => {
+      let json: string | null = null;
+      for (const socket of this.sockets.keys()) {
+        if (socket.readyState !== WebSocket.OPEN) continue;
+        if (host.screenOf(socket) !== frame.battleId) continue;
+        json ??= JSON.stringify(frame);
+        socket.send(json);
+      }
     });
   }
 

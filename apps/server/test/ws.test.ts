@@ -345,3 +345,105 @@ describe("WebSocket", () => {
     expect(await client.closed).toBe(CLOSE.unauthorized);
   });
 });
+
+describe("the battle screen over the socket (junction plan section 7)", () => {
+  /**
+   * Seed 42 with a bot on each team: battle 157 opens in the step of tick
+   * 8,539, the team 0 triangle 18 against the team 1 square 108. Ana (team
+   * 0) dominates the triangle; Bia (team 1) only watches the map.
+   */
+  async function battleSetup() {
+    const t = await testApp();
+    close = t.app.close;
+    await t.post("/api/worlds", { seed: 42, botTeams: [0, 1] });
+    const join = async (name: string, team: number) =>
+      (await t.post("/api/worlds/1/join", { name, team })).body as {
+        token: string;
+        playerId: number;
+      };
+    const ana = await join("Ana", 0);
+    const bia = await join("Bia", 1);
+    const host = t.app.worlds.get(1)!;
+    while (host.state.tick < 8_540) host.tick();
+    expect(host.submit(ana.playerId, { type: "dominate", creepId: 18 })).toBe(
+      null,
+    );
+    host.tick();
+    return { ...t, host, ana, bia };
+  }
+
+  test("an open screen gets the ack and the opening with the battle now, then a frame per battle tick", async () => {
+    const { host, base, ana, bia, timers } = await battleSetup();
+    const a = await connect(base, ana.token);
+    const b = await connect(base, bia.token);
+    await a.next("welcome");
+    await b.next("welcome");
+    a.send({ type: "battleScreen", ref: 1, battleId: 157 });
+    expect(await a.next("ack")).toMatchObject({ ref: 1 });
+    const open = await a.next("battleOpen");
+    expect(open.battleId).toBe(157);
+    expect(open.arena.width).toBeGreaterThan(0);
+    expect(open.roster.members.map((m) => m.creep)).toContain(18);
+    const me = open.roster.members.find((m) => m.creep === 18)!.participant;
+    // The next world tick puts it in real time; the clock steps it.
+    host.tick();
+    const tick = open.view.tick;
+    const from = a.messages.length;
+    timers.advance(50);
+    const frame = await a.next("battleFrame", from);
+    expect(frame.delta.tick).toBe(tick + 1);
+    const sent = a.messages.length;
+    a.send({
+      type: "battleInput",
+      ref: 2,
+      battleId: 157,
+      command: { type: "intent", id: me, move: "up", attack: false },
+    });
+    expect(await a.next("ack", sent)).toMatchObject({ ref: 2 });
+    // Bia's socket shows the map: no battle message reaches it.
+    expect(b.messages.some((m) => m.type.startsWith("battle"))).toBe(false);
+    b.send({
+      type: "battleInput",
+      ref: 3,
+      battleId: 157,
+      command: { type: "intent", id: me, move: "up", attack: false },
+    });
+    expect(await b.next("reject")).toEqual({
+      type: "reject",
+      ref: 3,
+      reason: "notYourParticipant",
+    });
+    // Back to the map: no more frames.
+    const back = a.messages.length;
+    a.send({ type: "battleScreen", ref: 4, battleId: null });
+    expect(await a.next("ack", back)).toMatchObject({ ref: 4 });
+    const closed = a.messages.length;
+    timers.advance(200);
+    expect(a.messages.slice(closed).some((m) => m.type === "battleFrame")).toBe(
+      false,
+    );
+  }, 30_000);
+
+  test("a battle the team has no side in, or none, is refused; a dropped socket closes its screen", async () => {
+    const { host, base, ana } = await battleSetup();
+    const a = await connect(base, ana.token);
+    await a.next("welcome");
+    a.send({ type: "battleScreen", ref: 1, battleId: 9_999 });
+    expect(await a.next("reject")).toEqual({
+      type: "reject",
+      ref: 1,
+      reason: "unknownBattle",
+    });
+    a.send({ type: "battleScreen", ref: 2, battleId: 157 });
+    await a.next("battleOpen");
+    host.tick();
+    expect(host.junction.screens).toEqual([18]);
+    a.socket.close();
+    await a.closed;
+    host.tick();
+    expect(host.junction.screens).toEqual([]);
+    expect(host.junction.instances.find((i) => i.battleId === 157)?.pace).toBe(
+      "world",
+    );
+  }, 30_000);
+});

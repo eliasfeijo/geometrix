@@ -10,8 +10,13 @@ import {
   type WorldState,
 } from "@geometrix/sim";
 import { describe, expect, test } from "vitest";
+import { serializeBattle } from "@geometrix/battle";
 import {
+  addInstances,
   createHost,
+  instanceRecord,
+  participantOf,
+  rebuildInstance,
   restoreHost,
   serializeHost,
   setScreen,
@@ -87,6 +92,76 @@ describe("the world clock (junction T-1, D4)", () => {
       stepJunction(w, host, []);
       expect(host.instances[0]?.state.tick ?? 20 * n).toBe(20 * n);
     }
+  });
+});
+
+describe("the battles a world tick stepped (the screen's frames, F4)", () => {
+  test("each world-paced battle comes with the events of its second", () => {
+    const { w, host } = duel();
+    expect(stepJunction(w, host, []).stepped).toEqual([]);
+    const battleId = host.instances[0]!.battleId;
+    const { stepped } = stepJunction(w, host, []);
+    expect(stepped.map((b) => b.battleId)).toEqual([battleId]);
+    // The countdown's first second: nothing happens yet.
+    expect(stepped[0]!.events).toEqual([]);
+    const later = [];
+    for (let i = 0; i < 30 && host.instances.length > 0; i++) {
+      later.push(...stepJunction(w, host, []).stepped.flatMap((b) => b.events));
+    }
+    expect(later.map((e) => e.type)).toContain("ended");
+  });
+
+  test("a battle in real time is not stepped by the world tick", () => {
+    const { w, hunter, host } = duel();
+    join(w, 5, 0, false);
+    stepJunction(w, host, []);
+    dominate(w, 5, hunter.id);
+    setScreen(host, hunter.id, true);
+    expect(stepJunction(w, host, []).stepped).toEqual([]);
+  });
+});
+
+describe("the member lookup (C-2)", () => {
+  test("a creep's participant while it is in the arena, null otherwise", () => {
+    const { w, hunter, prey, host } = duel();
+    stepJunction(w, host, []);
+    const instance = host.instances[0]!;
+    expect(participantOf(instance, hunter.id)).toBe(
+      instance.members.find((m) => m.creep === hunter.id)!.participant,
+    );
+    expect(participantOf(instance, prey.id)).not.toBeNull();
+    expect(participantOf(instance, 999)).toBeNull();
+    untilOver(w, host);
+    // Whoever left the arena (died or escaped) has no participant now.
+    const departed = instance.state.departed.map((d) => d.id);
+    expect(departed.length).toBeGreaterThan(0);
+    for (const { creep, participant } of instance.members) {
+      expect(participantOf(instance, creep)).toBe(
+        departed.includes(participant) ? null : participant,
+      );
+    }
+  });
+});
+
+describe("rebuilding an instance (P6, N-3)", () => {
+  test("from its record and its log, it is the battle it was and ends the same", () => {
+    const straight = duel();
+    const ended = untilOver(straight.w, straight.host);
+    const cut = duel();
+    for (let i = 0; i < 4; i++) stepJunction(cut.w, cut.host, []);
+    const live = cut.host.instances[0]!;
+    const rebuilt = rebuildInstance(instanceRecord(live), live.log);
+    expect(serializeBattle(rebuilt.state)).toBe(serializeBattle(live.state));
+    expect(rebuilt.pace).toBe("world");
+    const w = restore(serialize(cut.w));
+    const host = createHost(cut.host.battleParams);
+    addInstances(host, [rebuilt]);
+    expect(serializeHost(host)).toBe(serializeHost(cut.host));
+    const rest = untilOver(w, host);
+    expect(rest.finished.map((f) => f.results)).toEqual(
+      ended.finished.map((f) => f.results),
+    );
+    expect(serialize(w)).toBe(serialize(straight.w));
   });
 });
 

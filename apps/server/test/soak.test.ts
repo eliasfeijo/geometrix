@@ -12,7 +12,7 @@ import {
 import { stateHash } from "../src/hash.ts";
 import { WorldHost } from "../src/world-host.ts";
 import { Store } from "../src/persistence.ts";
-import { testParams } from "./helpers.ts";
+import { testBattleParams, testParams } from "./helpers.ts";
 
 describe("parseSoakArgs", () => {
   test("defaults: ×360, 5 kills, seed 42, port 8089, 2 clients per team dropping every 60 s, temp db, runs/", () => {
@@ -105,6 +105,7 @@ describe("rebuild", () => {
       {
         seed: 3,
         params: testParams(),
+        battleParams: testBattleParams(),
         multiplier: 1,
         botTeams: [0, 1],
         createdAt: "2026-11-14T00:00:00.000Z",

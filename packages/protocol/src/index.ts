@@ -2,10 +2,21 @@
 // checked structurally here, with zod; whether a command makes sense in the
 // world is the sim's validate (plan section 4). Server messages are plain
 // types: the server builds them, so there is nothing to check. The replay file
-// is here too, at the end: it is checked like a client message.
+// is here too, at the end: it is checked like a client message. The battle
+// screen's messages (junction plan section 7, P9) carry the battle package's
+// types as they are: its view, events, arena and params.
 
+import type {
+  Arena,
+  BattleCommand,
+  BattleEvent,
+  BattleParams,
+  BattleView,
+} from "@geometrix/battle";
+import type { BattleViewDelta } from "./battle-delta.ts";
 import { parseParams, ParamsError, SIM_VERSION } from "@geometrix/sim";
 import type {
+  BattleSide,
   Command,
   Params,
   Refusal,
@@ -124,6 +135,30 @@ export const clientCommand = z.discriminatedUnion("type", [
 
 export type ClientCommand = z.infer<typeof clientCommand>;
 
+const dir = z.enum(["up", "right", "down", "left"]);
+
+/**
+ * The battle commands a client may send (junction spec C-2): only those a
+ * participant takes from whoever controls it, for the participant the player
+ * dominates (the server checks the id). The host's own (control, join) and
+ * the lab's (setGambits) never come from a client.
+ */
+export const battleInputCommand = z.discriminatedUnion("type", [
+  z.object({
+    type: z.literal("intent"),
+    id,
+    move: dir.nullable(),
+    attack: z.boolean(),
+    bag: z.enum(["drop", "pickup"]).nullable().optional(),
+  }),
+  z.object({ type: z.literal("attackOnce"), id }),
+  z.object({ type: z.literal("face"), id, dir }),
+  z.object({ type: z.literal("drop"), id }),
+  z.object({ type: z.literal("pickup"), id }),
+]);
+
+export type BattleInputCommand = z.infer<typeof battleInputCommand>;
+
 /**
  * Client -> server: a command, whose `ref` comes back in the ack or reject,
  * or a request for the full view (spec S-6, C-2, C-3) after a gap in the
@@ -140,11 +175,35 @@ export const clientMessage = z.discriminatedUnion("type", [
     reason: z.enum(["seqGap", "hashMismatch"]),
     seq: z.number().int().nonnegative(),
   }),
+  /** A battle command for the participant the player dominates (C-2). */
+  z.object({
+    type: z.literal("battleInput"),
+    ref: z.number().int().nonnegative(),
+    battleId: id,
+    command: battleInputCommand,
+  }),
+  /**
+   * The battle screen this socket shows, or null when it shows the map
+   * (junction plan section 7): frames go only to open screens (N-2).
+   */
+  z.object({
+    type: z.literal("battleScreen"),
+    ref: z.number().int().nonnegative(),
+    battleId: id.nullable(),
+  }),
 ]);
 
 export type ClientMessage = z.infer<typeof clientMessage>;
 export type ResyncMessage = Extract<ClientMessage, { type: "resync" }>;
 export type ResyncReason = ResyncMessage["reason"];
+export type BattleInputMessage = Extract<
+  ClientMessage,
+  { type: "battleInput" }
+>;
+export type BattleScreenMessage = Extract<
+  ClientMessage,
+  { type: "battleScreen" }
+>;
 
 /** The parsed message, or null when it is not a valid client message. */
 export function parseClientMessage(raw: string): ClientMessage | null {
@@ -260,14 +319,65 @@ export type DeltaMessage = {
   events?: TeamEvent[];
 };
 
+/** A world creep in a battle: its battle participant id (junction). */
+export type BattleMember = { participant: number; creep: number };
+
+/**
+ * Who is who in a battle: the world creep of each participant that ever
+ * entered, and the world side of each battle side, by battle side id (a
+ * team, or the wanderers).
+ */
+export type BattleRoster = { members: BattleMember[]; sides: BattleSide[] };
+
+/**
+ * Server -> client: a battle screen opened (junction plan section 7, P9),
+ * once per opening: what never changes in the battle (the arena, its params),
+ * the roster and the battle view now, which the frames' deltas build on.
+ */
+export type BattleOpenMessage = {
+  type: "battleOpen";
+  battleId: number;
+  arena: Arena;
+  params: BattleParams;
+  roster: BattleRoster;
+  view: BattleView;
+};
+
+/**
+ * Server -> client: the battle after one battle tick in real time, or after
+ * a world tick's battle second on the world clock: the changes of its view
+ * since the previous frame (applyBattleDelta), with the events of the ticks
+ * it covers. `roster` only when someone joined. A frame whose view gets
+ * `ended` is the battle's last: the screen closes on the server.
+ */
+export type BattleFrameMessage = {
+  type: "battleFrame";
+  battleId: number;
+  delta: BattleViewDelta;
+  events: BattleEvent[];
+  roster?: BattleRoster;
+};
+
 export type ServerMessage =
   | WelcomeMessage
   | DeltaMessage
+  | BattleOpenMessage
+  | BattleFrameMessage
   | { type: "ack"; ref: number; tick: number }
   | { type: "reject"; ref: number; reason: RejectReason };
 
-/** A sim refusal, or one from the server before the sim sees the command. */
-export type RejectReason = Refusal | "invalidMessage" | "worldEnded";
+/**
+ * A sim refusal, or one from the server before the sim sees the command. A
+ * battle screen of a battle the team has no side in is `notYourBattle`; a
+ * battle input for a participant the player does not dominate is
+ * `notYourParticipant` (C-2).
+ */
+export type RejectReason =
+  | Refusal
+  | "invalidMessage"
+  | "worldEnded"
+  | "notYourBattle"
+  | "notYourParticipant";
 
 // Compile-time check that the client vocabulary matches the sim's commands,
 // less the system ones: the server's join and the junction host's battle
@@ -278,6 +388,16 @@ const sameVocabulary: Same<
   Exclude<Command, { type: "join" | "battleExit" | "battleEnd" }>
 > = true;
 void sameVocabulary;
+
+// The same for the battle inputs: what a participant's controller sends.
+const sameBattleInputs: Same<
+  BattleInputCommand,
+  Extract<
+    BattleCommand,
+    { type: "intent" | "attackOnce" | "face" | "drop" | "pickup" }
+  >
+> = true;
+void sameBattleInputs;
 
 // Replay file (plan section 8, F8 details): enough to rebuild a world tick by
 // tick. The initial state is createWorld(seed, params); the logged commands

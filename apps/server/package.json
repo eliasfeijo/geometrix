@@ -10,6 +10,8 @@
   "dependencies": {
     "better-sqlite3": "^13.1.1",
     "ws": "^8.23.0",
+    "@geometrix/battle": "*",
+    "@geometrix/junction": "*",
     "@geometrix/sim": "*",
     "@geometrix/protocol": "*"
   },

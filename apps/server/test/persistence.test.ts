@@ -6,15 +6,17 @@ import {
 } from "@geometrix/sim";
 import { describe, expect, test } from "vitest";
 import { Store } from "../src/persistence.ts";
-import { testParams } from "./helpers.ts";
+import { testBattleParams, testParams } from "./helpers.ts";
 
 const params = testParams();
+const battleParams = testBattleParams();
 
 function storeWithWorld() {
   const store = new Store(":memory:");
   const id = store.createWorld({
     seed: 42,
     params,
+    battleParams,
     simVersion: SIM_VERSION,
     multiplier: 36,
     createdAt: "2026-11-14T00:00:00.000Z",
@@ -29,6 +31,7 @@ describe("Store", () => {
       id,
       seed: 42,
       params,
+      battleParams,
       simVersion: SIM_VERSION,
       multiplier: 36,
       status: "running",
