@@ -24,6 +24,7 @@ import {
 import { DNAS, type Dna, type Params } from "./params.ts";
 import {
   collectorRules,
+  helpRule,
   raiderRules,
   roadBuilderRules,
   withHelp,
@@ -36,6 +37,7 @@ import {
   isOwnPlayer,
   ownTeam,
   view,
+  type CreepView,
   type ForeignPlayer,
   type TeamView,
 } from "./view.ts";
@@ -62,6 +64,14 @@ export const BALANCED = {
    * still reach a cell never seen (F3 checkpoint, C1).
    */
   raiderShare: { numerator: 1, denominator: 6 },
+  /**
+   * At normal and hard the raider role is a group (R spec D16, S-3): one
+   * raider and `followers` following it, from `minCreeps` creeps on and
+   * while the team can still explore (raiderShare is the easy bot's).
+   */
+  raidGroup: { minCreeps: 8, followers: 2 },
+  /** One cristal collector's escort at normal and hard (D16). */
+  escort: { minCreeps: 10, followers: 1 },
   /**
    * The gatherers' posture when approached (see postureRules and
    * standRules): below this HP share they flee; at normal and hard they pay
@@ -212,7 +222,9 @@ type Role =
   | { kind: "materia" }
   | { kind: "cristal" }
   | { kind: "builder" }
-  | { kind: "raider" };
+  | { kind: "raider" }
+  /** A raid group's member or an escort (D16): follows `leader`. */
+  | { kind: "follower"; leader: number };
 
 function balanced(known: Knowledge): Command[] {
   const commands: Command[] = [];
@@ -314,6 +326,20 @@ export function standRules(): Rule[] {
   ];
 }
 
+/**
+ * A raid group member's or an escort's rules (R spec D16, D8): the stand,
+ * following its leader (and joining its battles), the DNA's help rule, and
+ * the materia collector's rules, which take over once the leader is gone.
+ */
+export function followerRules(leader: number, dna: Dna): Rule[] {
+  return [
+    ...standRules(),
+    { when: { type: "always" }, then: { type: "follow", creepId: leader } },
+    helpRule(dna),
+    ...collectorRules("materia"),
+  ];
+}
+
 /** A gatherer's posture at the bot's difficulty (D17, D26). */
 const posture = (dna: Dna, level: Difficulty): Rule[] =>
   level === "easy" ? postureRules(dna) : standRules();
@@ -355,6 +381,7 @@ let presetJson: {
   cristal: string;
   raider: string;
   builder: string;
+  materia: string;
 } | null = null;
 
 /** The rules but the reactions and the help rule, which every role has. */
@@ -373,8 +400,16 @@ function roleOf(creep: Pick<Creep, "rules">, params: Params): Role {
     cristal: canonicalJson(actionsOf(collectorRules("cristal"))),
     raider: canonicalJson(actionsOf(raiderRules())),
     builder: canonicalJson(actionsOf(roadBuilderRules())),
+    materia: canonicalJson(collectorRules("materia")),
   };
   const actions = actionsOf(withoutWrappers(creep.rules, params));
+  const [first, ...rest] = actions;
+  if (
+    first?.then.type === "follow" &&
+    canonicalJson(rest) === presetJson.materia
+  ) {
+    return { kind: "follower", leader: first.then.creepId };
+  }
   const rules = canonicalJson(actions);
   if (rules === presetJson.cristal) return { kind: "cristal" };
   if (rules === presetJson.raider) return { kind: "raider" };
@@ -402,6 +437,8 @@ function rulesFor(role: Role, dna: Dna, level: Difficulty): Rule[] {
       );
     case "builder":
       return withHelp([...posture(dna, level), ...roadBuilderRules()], dna);
+    case "follower":
+      return followerRules(role.leader, dna);
   }
 }
 
@@ -436,16 +473,46 @@ function assignRoles(known: Knowledge): Command[] {
   );
   const wantBuilders = target === null ? 0 : BALANCED.builders;
   // With nothing left to explore, a raider would only wait at its core
-  // (encontro F3 checkpoint, C1): it goes back to gathering.
+  // (encontro F3 checkpoint, C1): it goes back to gathering. At normal and
+  // hard the raider leads a group (D16).
+  const groups = level !== "easy";
   const raiders = BALANCED.raiderShare;
-  const wantRaiders = canExplore
-    ? Math.floor((creeps.length * raiders.numerator) / raiders.denominator)
-    : 0;
+  const { raidGroup, escort } = BALANCED;
+  const wantRaiders = !canExplore
+    ? 0
+    : groups
+      ? creeps.length >= raidGroup.minCreeps
+        ? 1
+        : 0
+      : Math.floor((creeps.length * raiders.numerator) / raiders.denominator);
+  const wantEscorts =
+    groups && creeps.length >= escort.minCreeps ? escort.followers : 0;
 
   const roles = new Map(creeps.map((c) => [c, roleOf(c, params)]));
   const next = new Map(roles);
   const inRole = (kind: Role["kind"]) =>
     creeps.filter((c) => next.get(c)!.kind === kind);
+  const byId = new Map(creeps.map((c) => [c.id, c]));
+  const followersOf = (leader: CreepView) =>
+    creeps.filter((c) => {
+      const role = next.get(c)!;
+      return role.kind === "follower" && role.leader === leader.id;
+    });
+  /**
+   * The materia creeps a group may take (D16): free, healthiest first by
+   * their share of the DNA's HP, ties to the lower id.
+   */
+  const strongest = () =>
+    inRole("materia")
+      .filter(
+        (c) =>
+          c.dominatedBy === null && c.engagement === null && c.battle === null,
+      )
+      .sort(
+        (a, b) =>
+          b.hp * params.hp.dna[a.dna].max - a.hp * params.hp.dna[b.dna].max ||
+          a.id - b.id,
+      );
 
   const trim = (kind: Role["kind"], want: number) => {
     const members = inRole(kind);
@@ -462,9 +529,45 @@ function assignRoles(known: Knowledge): Command[] {
   trim("builder", wantBuilders);
   trim("cristal", wantCristal);
   trim("raider", wantRaiders);
+  // A follower whose leader is gone or left its role gathers (D16).
+  for (const creep of inRole("follower")) {
+    const role = next.get(creep) as Extract<Role, { kind: "follower" }>;
+    const leader = byId.get(role.leader);
+    const kind = leader === undefined ? null : next.get(leader)!.kind;
+    if (kind !== "raider" && kind !== "cristal") {
+      next.set(creep, { kind: "materia" });
+    }
+  }
   fill({ kind: "cristal" }, wantCristal);
   fill({ kind: "builder" }, wantBuilders);
-  fill({ kind: "raider" }, wantRaiders);
+  if (groups) {
+    const missing = wantRaiders - inRole("raider").length;
+    for (const creep of strongest().slice(0, Math.max(0, missing))) {
+      next.set(creep, { kind: "raider" });
+    }
+  } else {
+    fill({ kind: "raider" }, wantRaiders);
+  }
+  /** Keeps `want` followers on `leader`: the lowest ids leave first. */
+  const follow = (leader: CreepView, want: number) => {
+    const members = followersOf(leader);
+    for (const creep of members.slice(0, Math.max(0, members.length - want))) {
+      next.set(creep, { kind: "materia" });
+    }
+    const missing = want - followersOf(leader).length;
+    for (const creep of strongest().slice(0, Math.max(0, missing))) {
+      next.set(creep, { kind: "follower", leader: leader.id });
+    }
+  };
+  if (groups) {
+    for (const raider of inRole("raider")) follow(raider, raidGroup.followers);
+    // The escort stays with its collector; a new one takes the lowest id.
+    const collectors = inRole("cristal");
+    const escorted = collectors.filter((c) => followersOf(c).length > 0);
+    const leader = escorted[0] ?? collectors[0];
+    for (const other of collectors) if (other !== leader) follow(other, 0);
+    if (leader !== undefined) follow(leader, wantEscorts);
+  }
 
   // Defense (D14, normal and hard): while an enemy stands in the core zone,
   // the creeps inside it attack on top of their role.

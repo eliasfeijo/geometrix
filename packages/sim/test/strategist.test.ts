@@ -16,6 +16,7 @@ import { roadTarget } from "../src/roads.ts";
 import type { Difficulty } from "../src/domination.ts";
 import {
   defenseRule,
+  followerRules,
   postureRules,
   standRules,
   strategistCommands,
@@ -489,6 +490,135 @@ describe("the core zone's defense (R spec D14, S-1)", () => {
     expect(rulesGiven(decide(world, 0), creeps[0]!.id)?.[0]).toEqual(
       defenseRule(world.params),
     );
+  });
+});
+
+/** Applies both bots' commands of this tick without moving the world. */
+function settle(world: WorldState): void {
+  for (const input of botInputs(world)) {
+    step(world, [input]);
+    world.tick -= 1;
+  }
+}
+
+/** Team 0 grows to `count` creeps: copies of its first ones, new ids. */
+function growTo(world: WorldState, count: number): void {
+  const mine = teamCreeps(world, 0);
+  for (let i = mine.length; i < count; i++) {
+    world.creeps.push({
+      ...structuredClone(mine[i % mine.length]!),
+      id: world.nextId++,
+    });
+  }
+}
+
+const isRaider = (c: WorldState["creeps"][number]) =>
+  canonicalJson(c.rules) === canonicalJson(withHelp(raiderRules(), c.dna));
+const followsWith = (c: WorldState["creeps"][number], leader: number) =>
+  canonicalJson(c.rules) === canonicalJson(followerRules(leader, c.dna));
+
+describe("the raid group and the escort (R spec D16, S-3)", () => {
+  test.each(["normal", "hard"] as const)(
+    "from 8 creeps, one raider and 2 followers, the healthiest first (%s)",
+    (difficulty) => {
+      const world = withDark(difficulty);
+      growTo(world, 7);
+      settle(world);
+      expect(teamCreeps(world, 0).filter(isRaider)).toEqual([]);
+      growTo(world, 8);
+      // 3 cristal collectors and the road builder are the lowest ids; the
+      // lowest-id materia creep left is wounded: the group passes it over.
+      const wounded = teamCreeps(world, 0)[4]!;
+      wounded.hp = Math.floor(wounded.hp / 2);
+      settle(world);
+      const raiders = teamCreeps(world, 0).filter(isRaider);
+      expect(raiders).toHaveLength(1);
+      const raider = raiders[0]!;
+      const followers = teamCreeps(world, 0).filter((c) =>
+        followsWith(c, raider.id),
+      );
+      expect(followers).toHaveLength(2);
+      expect([raider, ...followers]).not.toContain(wounded);
+      expect(followerRules(raider.id, "square")).toEqual([
+        ...standRules(),
+        {
+          when: { type: "always" },
+          then: { type: "follow", creepId: raider.id },
+        },
+        helpRule("square"),
+        ...collectorRules("materia"),
+      ]);
+      // Taken: nothing changes.
+      expect(
+        decide(world, 0).filter(
+          (c) => c.type === "setRules" || c.type === "applyPreset",
+        ),
+      ).toEqual([]);
+      // The raider dies: below 8 creeps, its followers gather again.
+      world.creeps = world.creeps.filter((c) => c !== raider);
+      settle(world);
+      for (const follower of followers) {
+        expect(follower.rules).toEqual(
+          withHelp(
+            [...standRules(), ...collectorRules("materia")],
+            follower.dna,
+          ),
+        );
+      }
+    },
+  );
+
+  test("a dead raider's followers are reassigned at the next decision", () => {
+    const world = withDark("hard");
+    growTo(world, 9);
+    settle(world);
+    const raider = teamCreeps(world, 0).find(isRaider)!;
+    const followers = teamCreeps(world, 0).filter((c) =>
+      followsWith(c, raider.id),
+    );
+    world.creeps = world.creeps.filter((c) => c !== raider);
+    settle(world);
+    // Still 8 creeps: a new group, and the old followers are not left
+    // following a dead creep.
+    const next = teamCreeps(world, 0).find(isRaider)!;
+    expect(next).toBeDefined();
+    for (const follower of followers) {
+      expect(followsWith(follower, raider.id)).toBe(false);
+    }
+  });
+
+  test("from 10 creeps, the lowest-id cristal collector gets one escort (hard)", () => {
+    const world = withDark("hard");
+    growTo(world, 9);
+    settle(world);
+    const collectors = () =>
+      teamCreeps(world, 0).filter(
+        (c) =>
+          canonicalJson(c.rules) ===
+          canonicalJson(
+            withHelp([...standRules(), ...collectorRules("cristal")], c.dna),
+          ),
+      );
+    const escorts = (leader: number) =>
+      teamCreeps(world, 0).filter((c) => followsWith(c, leader));
+    expect(collectors().flatMap((c) => escorts(c.id))).toEqual([]);
+    growTo(world, 10);
+    settle(world);
+    const [first, ...others] = collectors();
+    expect(escorts(first!.id)).toHaveLength(1);
+    for (const other of others) expect(escorts(other.id)).toEqual([]);
+  });
+
+  test("easy keeps slice D's raiders: one per 6 creeps, no followers", () => {
+    const world = withDark("easy");
+    growTo(world, 12);
+    settle(world);
+    expect(teamCreeps(world, 0).filter(isRaider)).toHaveLength(2);
+    expect(
+      teamCreeps(world, 0).filter((c) =>
+        c.rules.some((r) => r.then.type === "follow"),
+      ),
+    ).toEqual([]);
   });
 });
 
