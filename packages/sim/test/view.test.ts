@@ -53,6 +53,14 @@ const withoutSimFields = (creep: Creep) => {
   return rest;
 };
 
+const withHostile = (creep: Creep) => ({
+  ...withoutSimFields(creep),
+  hostile:
+    creep.order.type === "approach"
+      ? { intent: creep.order.intent, target: creep.order.targetId }
+      : null,
+});
+
 // 40 × 3. Core A sees x ≤ 8 on row 1, core B x ≥ 31; the middle is dark.
 const ROWS = [
   "........................................",
@@ -111,7 +119,7 @@ describe("view", () => {
     expect(seen.teams[1]).not.toBe(world.teams[1]);
     const own = world.creeps.filter((c) => c.team === 1);
     expect(seen.creeps.filter((c) => c.team === 1)).toEqual(
-      own.map(withoutSimFields),
+      own.map(withHostile),
     );
     for (const creep of seen.creeps) {
       expect(creep).not.toHaveProperty("path");
@@ -188,6 +196,7 @@ describe("view", () => {
         x: 3,
         y: 1,
         cargo: { materia: 0, cristal: 4 },
+        hostile: null,
       },
     ]);
     expect(seen.creeps.map((c) => c.id)).not.toContain(hidden.id);
@@ -419,7 +428,7 @@ describe("fullView", () => {
     const all = fullView(world);
     expect(all.team).toBe(-1);
     expect(all.teams).toEqual(world.teams);
-    expect(all.creeps).toEqual(world.creeps.map(withoutSimFields));
+    expect(all.creeps).toEqual(world.creeps.map(withHostile));
     expect(all.deposits).toEqual(world.deposits);
     expect(all.roadJobs).toEqual(world.roadJobs);
     expect(all.players).toEqual(world.players);

@@ -242,6 +242,7 @@ describe("diffView / applyDelta", () => {
         battle: null,
         ...world.teams[0]!.core,
         cargo: enemy.cargo,
+        hostile: null,
       },
     ]);
     const seen = expectApplies(world, client, entered);

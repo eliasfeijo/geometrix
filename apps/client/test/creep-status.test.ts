@@ -67,6 +67,7 @@ describe("an enemy creep in sight (spec C-2)", () => {
         "cargo",
         "dna",
         "engagement",
+        "hostile",
         "hp",
         "id",
         "name",

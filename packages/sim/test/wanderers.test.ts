@@ -497,7 +497,17 @@ describe("teams and wanderers (W-4, W-5)", () => {
     const seen = view(w, 0).wanderers;
     expect(seen).toHaveLength(1);
     expect(Object.keys(seen[0]!).sort()).toEqual(
-      ["battle", "cargo", "dna", "hp", "id", "name", "x", "y"].sort(),
+      [
+        "battle",
+        "cargo",
+        "dna",
+        "hostile",
+        "hp",
+        "id",
+        "name",
+        "x",
+        "y",
+      ].sort(),
     );
     // Its birth reaches only the teams that see the cell.
     const w2 = world();
