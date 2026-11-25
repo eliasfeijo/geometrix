@@ -39,6 +39,26 @@
   with the **normal** reaction; **no battle gambits editor in the world client** in slice D (spec D10, owner with the
   spec).
 
+- **"Follow" an allied creep** (owner, checkpoint C2 and the R and E-min design round, 2026-11-25; slice R): a creep
+  follows another to walk in a group, and the follower joins the fight by itself when its target attacks or is
+  attacked. A right click on an ally gives "Seguir" (a dominated ally too); when the target dies, the follower goes back
+  to its next rules. The bots' strategist uses it to escort and to attack in a group.
+- **Helping an ally in battle** (owner, R and E-min design round, 2026-11-25; slice R): a new condition, **an ally in
+  battle in sight**, with the action to join it, with a radius and a posture per DNA, in the presets by default, for
+  the creeps of human teams and of the bot alike, and editable like any rule. Why: at checkpoint C2 no creep on
+  autopilot ever helped a fight, the bot's or a human team's.
+- **The road builder is an autopilot preset** (owner, 2026-11-25; slice R): the autopilot decides where to build (the
+  rule the bots' strategist already uses), not a point the player picks on the map. It builds while there is a stretch
+  to build and stock for it, and gathers matéria when the stock is short. A human who dominates the creep chooses
+  where to build with the action every dominated creep already has in its panel. With the creep selected, the map
+  shows the plan: the path from the core to the deposit, with the total cost against what is already paid. Replaces
+  the 2026-11-20 "it does not build" bug (the preset asked for a point and nothing happened).
+- **The bots' strategist for P** (owner, R and E-min design round, 2026-11-25; slice R): the bot plays in both modes
+  of the friends' playtest, humans against humans (the bot only in solo tests and sweeps) and humans in co-op against
+  the bot, so it has to be a real opponent (agent, approved): it reinforces fights in sight, defends its core, replaces
+  its losses, attacks in a group with "follow", and its posture stops sending every loaded creep fleeing (which also
+  ends the almost free extortion against it: its triangle always pays).
+
 ## Proposal
 - Humans, macros, autopilot and bots emit the **same commands** ([ADR-0002](../adr/0002-every-action-is-a-command.md)).
   A script never has more power than a human.
@@ -47,9 +67,6 @@
 - **Phase 2, script:** JS in a server sandbox (QuickJS/WASM or isolated-vm), with CPU and memory limits. References:
   Screeps, Gladiabots.
 - The same interface serves the **test bots**: whole matches run headless, for balancing.
-- **"Follow" an allied creep** (owner, checkpoint C2, 2026-11-25; to discuss in the rebalance and pace round): a
-  creep follows another to walk in a group, and the follower joins the fight by itself when its target attacks or is
-  attacked. The bots' strategist could use it too, to attack strategically or to protect a scout.
 
 ## Open questions
 - Where does the autopilot live: per creep, per group of creeps, or per player?
@@ -57,11 +74,8 @@
 - What is the difference between a client macro (only while online) and the autopilot (on the server)?
 - **A deposit remembered as empty** (encounter F3 checkpoint, 2026-11-17): the autopilot only picks a deposit with a
   remembered amount above zero, and a depleted deposit out of sight regenerates without the team knowing. On seed 42,
-  3 days, the harmed team delivers 20–25% less matéria. The owner left it for a balancing round.
+  3 days, the harmed team delivers 20–25% less matéria. The owner left it for a balancing round; not in slice R
+  (2026-11-25).
 - **The presets and the wanderers** (checkpoint C1b, 2026-11-25): a loaded square fights a wanderer (its DNA's
   posture) and mostly dies; only the raider picks up spoils, so in 3 days of seed 42 37 piles (1,593 matéria) lie on
-  the map. The owner kept the bots' strategist unchanged until the playtest; at checkpoint C2 (2026-11-25) the
-  strategist enters the rebalance and pace round (the bot never reinforces a fight, its loaded creeps all flee, and
-  it cannot replace its losses).
-- **The road-builder preset** (owner session, 2026-11-20): it does not build (see the
-  [dashboard](../dashboard/current-status.md)). Bug or rule?
+  the map. The strategist's changes for P are decided above (2026-11-25); who picks up spoils stays open.

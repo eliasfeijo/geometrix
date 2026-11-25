@@ -29,6 +29,10 @@
     provisional), like slice A's extortion block; it still attacks other loaded creeps. Without it, a creep that
     escaped by the border came back a few cells from the wanderer and was attacked again at once (owner,
     2026-11-25, after a bot × bot run with 638 battles of one wanderer against one gatherer in 6 h).
+- **The wanderers in the new pace** (owner, R and E-min design round, 2026-11-25; slice R): **early and regular**:
+  the first around 5 real minutes into the match, then at short intervals, at most 4 alive (numbers provisional, set
+  by the sweeps). At checkpoint C2, 3 were born in 3.9 world hours, the first at world hour 1 (10 real minutes at
+  ×6).
 
 ## Proposal
 

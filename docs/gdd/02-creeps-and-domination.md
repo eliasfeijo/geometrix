@@ -24,7 +24,8 @@
 - **M2 design round** (owner, 2026-11-15):
   - **In M2, only base stats per DNA** (life, damage, range, battle speed), in the params. Level, XP, evolution and
     skills come later, to see combat without progression on top. In battle, who wins depends on level, stats, skills
-    and micro, not on DNA alone ([06](06-battles.md)).
+    and micro, not on DNA alone ([06](06-battles.md)). **Revised on 2026-11-25:** the DNA kits enter M2 (below);
+    level, XP, evolution and leveled skills still come later.
   - **HP persists in the world:** a creep that leaves a battle wounded returns wounded to the map and recovers HP
     slowly, faster near the core. Wounded, it becomes a target.
   - **Retreating is possible, at a cost:** the encounter's escape is dropping the purse and running ([06](06-battles.md)).
@@ -44,6 +45,20 @@
   participant and keeps only combat stats. HP crosses in whole points. **Domination in battle:** dominating a creep of
   one's team in a battle takes it from its gambits, with no countdown; releasing it gives it back; the domination goes
   on in the world after the battle.
+
+- **DNA kits** (owner, R and E-min design round, 2026-11-25; slice K, before P; a direction validated in the lab
+  first, numbers provisional): unique combat mechanics per DNA, **innate to the DNA** (nothing unlocked by level), so
+  that combat feels like a 2D MOBA-lite on a grid, with interesting micro. Why: in the junction's matrix a circle beats
+  a square in every case; the square never reaches a kiting circle (checkpoint C1b).
+  - **Every DNA: a dodge** (esquiva), with a cooldown.
+  - **■ The square's charged strike:** its melee hit causes a micro-stun on the victim's movement, whose duration and
+    damage grow as the attack is charged, with a bar that fills up to the strike's limit. **The charge** (investida):
+    holding Space speeds up the square while it moves, and the attack goes out by itself when it collides with an
+    enemy creep during the charge.
+  - **▲ The triangle's frontal guard:** holding the skill key, it stands still facing one direction and blocks the
+    projectiles that come from the front; the square's charged strike breaks the guard; the flank stays open. It
+    shields the allies behind it.
+  - **● The circle's fan:** three projectiles at once, in the front lane and the two next to it, with a long cooldown.
 
 ## Proposal
 - Dominating only changes **who emits the creep's commands**. See [ADR-0002](../adr/0002-every-action-is-a-command.md).
