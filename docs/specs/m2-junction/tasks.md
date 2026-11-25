@@ -394,6 +394,6 @@ the sign; two humans fought each other with the predict option, each keeping con
 
 ## F7 — Soak and playtest
 
-- [ ] The soak test with a `kill -9` mid-battle; world and battle hashes after the restart
+- [x] The soak test with a `kill -9` mid-battle; world and battle hashes after the restart
 - [ ] The PLAYTEST junction groups (spec §8)
 - [ ] **Checkpoint C2:** the owner's sessions; the hypothesis questions; the order of E against P

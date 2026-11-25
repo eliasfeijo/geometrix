@@ -1,6 +1,10 @@
-import { eventsFor, type SimEvent } from "@geometrix/sim";
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { canonicalJson, eventsFor, type SimEvent } from "@geometrix/sim";
 import { describe, expect, test } from "vitest";
 import {
+  checkBattles,
   interruptions,
   parseSoakArgs,
   rebuild,
@@ -134,6 +138,85 @@ describe("rebuild", () => {
       );
     }
   });
+});
+
+describe("checkBattles (junction spec section 7)", () => {
+  /** Seed 42 of the test params with two bots: a battle runs on 8,540–8,558. */
+  function crashedInBattle() {
+    const file = join(mkdtempSync(join(tmpdir(), "geo-soak-")), "geo.db");
+    const config = {
+      snapshotEveryTicks: 300,
+      metricsEveryTicks: 60,
+      chronicleWelcome: 100,
+    };
+    let store = new Store(file);
+    const host = WorldHost.create(
+      { store, config },
+      {
+        seed: 42,
+        params: testParams(),
+        battleParams: testBattleParams(),
+        multiplier: 1,
+        botTeams: [0, 1],
+        createdAt: "2026-11-14T00:00:00.000Z",
+      },
+    );
+    while (host.state.tick < 8_550) host.tick();
+    const cut = store
+      .battles(host.id)
+      .filter((b) => b.endedTick === null)
+      .map((b) => b.battleId);
+    store.close();
+    store = new Store(file);
+    const back = WorldHost.recover(
+      { store, config },
+      store.world(host.id)!,
+      testBattleParams(),
+    );
+    while (back.state.tick < 9_000) back.tick();
+    return { store, id: host.id, cut, state: back.state };
+  }
+
+  test("after a crash mid-battle, every ended battle replays to its hash and to the world log's results; tampering shows", () => {
+    const { store, id, cut, state } = crashedInBattle();
+    expect(cut.length).toBeGreaterThan(0);
+    const rows = store.battles(id);
+    const ticksOf = (battleId: number) => store.battleTicks(id, battleId);
+    // As the soak gets it: the exported replay, keys in another order.
+    const log = store.commandsFrom(id, 0).map((c) => ({
+      ...c,
+      command: JSON.parse(canonicalJson(c.command)) as typeof c.command,
+    }));
+    const check = checkBattles(state, rows, ticksOf, log);
+    expect(check).toEqual({
+      battles: rows.length,
+      ended: rows.length,
+      open: [],
+      hashMismatches: [],
+      resultMismatches: [],
+      lateJoins: [],
+    });
+    expect(rows.map((r) => r.battleId)).toEqual(expect.arrayContaining(cut));
+
+    const battle = cut[0]!;
+    const tampered = rows.map((r) =>
+      r.battleId === battle ? { ...r, finalHash: "0".repeat(64) } : r,
+    );
+    expect(checkBattles(state, tampered, ticksOf, log).hashMismatches).toEqual([
+      battle,
+    ]);
+    const lost = log.filter(
+      (c) => !(c.command.type === "battleEnd" && c.command.battleId === battle),
+    );
+    expect(checkBattles(state, rows, ticksOf, lost).resultMismatches).toEqual([
+      battle,
+    ]);
+    const open = rows.map((r) =>
+      r.battleId === battle ? { ...r, endedTick: null } : r,
+    );
+    expect(checkBattles(state, open, ticksOf, log).open).toEqual([battle]);
+    store.close();
+  }, 60_000);
 });
 
 describe("summarize", () => {

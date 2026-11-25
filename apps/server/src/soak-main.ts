@@ -13,6 +13,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
+import Database from "better-sqlite3";
 import { join, resolve } from "node:path";
 import { parseReplay, type WorldSummary } from "@geometrix/protocol";
 import { viewJson } from "@geometrix/protocol/stream";
@@ -21,6 +22,7 @@ import { stateHash } from "./hash.ts";
 import { Store } from "./persistence.ts";
 import { SOAK_CHRONICLE_KEEP, SoakClient } from "./soak-client.ts";
 import {
+  checkBattles,
   interruptions,
   parseSoakArgs,
   rebuild,
@@ -34,6 +36,13 @@ import {
 } from "./soak.ts";
 
 const SAMPLE_MS = 2000;
+/**
+ * A kill waits for a battle open in the tables (junction spec section 7):
+ * battles last a few world seconds, tens of real milliseconds at ×360.
+ */
+const BATTLE_POLL_MS = 5;
+/** A kill that finds no battle open by then goes on without one. */
+const BATTLE_WAIT_MS = 60_000;
 /** The server can take a while to start on /mnt/c (WSL): poll, do not sleep. */
 const STARTUP_TIMEOUT_MS = 120_000;
 const ROOT = new URL("../../../", import.meta.url);
@@ -63,6 +72,8 @@ type Event = Interruption & {
   recoveredTick: number;
   exitCode: number | null;
   restartSeconds: number;
+  /** Battles open in the tables when the process died (kills only). */
+  openBattles: number[];
 };
 
 let server: ChildProcess | null = null;
@@ -144,6 +155,17 @@ await exited(server);
 // row per event and team that saw it, as the rebuilt replay emits them; and
 // each client's chronicle is the server's latest entries for its team.
 const store = new Store(db);
+const battles = checkBattles(
+  final,
+  store.battles(worldId),
+  (battleId) => store.battleTicks(worldId, battleId),
+  replay.commands,
+);
+const killedInBattle = events.filter((e) => e.openBattles.length > 0);
+// Every battle a crash cut through ended later and was checked.
+const cutEnded = killedInBattle
+  .flatMap((e) => e.openBattles)
+  .every((b) => !battles.open.includes(b));
 const chronicleRows = store.chronicleCount(worldId);
 const chronicleBytes = store.chronicleBytes(worldId);
 const expectedRows = [0, 1].reduce(
@@ -170,9 +192,15 @@ const clientsOk = finals.every(
     f.report.errors.length === 0,
 );
 const chronicleOk = chronicleRows === expectedRows;
+const battlesOk =
+  battles.hashMismatches.length === 0 &&
+  battles.resultMismatches.length === 0 &&
+  cutEnded &&
+  (options.kills === 0 || killedInBattle.length > 0);
 const ok =
   hashOk &&
   recoveredOk &&
+  battlesOk &&
   events.length === plan.length &&
   clientsOk &&
   chronicleOk;
@@ -200,8 +228,30 @@ function report(): string {
       (e) =>
         `  - ${e.kind === "kill" ? "kill -9" : "SIGTERM"} at tick ${e.seenTick} ` +
         `(exit ${e.exitCode}), back at tick ${e.recoveredTick} ` +
-        `in ${e.restartSeconds.toFixed(1)} s`,
+        `in ${e.restartSeconds.toFixed(1)} s` +
+        (e.kind === "kill"
+          ? e.openBattles.length > 0
+            ? `, battles open: ${e.openBattles.join(", ")}`
+            : ", no battle open"
+          : ""),
     ),
+    `- Battles: ${battles.battles} in the tables, ${battles.ended} ended, ` +
+      `${battles.open.length} open at the world's end; ` +
+      `${killedInBattle.length} kills cut through a battle ` +
+      `(${cutEnded ? "each ended after the restart" : "ONE NEVER ENDED"})`,
+    `- Battle logs replayed: ${
+      battles.hashMismatches.length === 0
+        ? "every final hash the same"
+        : `DIFFERENT final hash in ${battles.hashMismatches.join(", ")}`
+    }; results against the world log: ${
+      battles.resultMismatches.length === 0
+        ? "the same"
+        : `DIFFERENT in ${battles.resultMismatches.join(", ")}`
+    }` +
+      (battles.lateJoins.length > 0
+        ? ` (${battles.lateJoins.length} ended with joins waiting: sent ` +
+          "commands checked, not replayed)"
+        : ""),
     `- Memory: max ${mb(summary.maxRssMb)}; per process (first → last): ` +
       summary.rssByProcess
         .map((p) => `${mb(p.firstMb)} → ${mb(p.lastMb)}`)
@@ -275,10 +325,13 @@ async function startClients(): Promise<SoakClient[]> {
 }
 
 async function interrupt(step: Interruption, seenTick: number): Promise<Event> {
+  if (step.kind === "kill") await battleOpen();
   const stopped = Date.now();
   const old = server!;
   old.kill(step.kind === "kill" ? "SIGKILL" : "SIGTERM");
   const exitCode = await exited(old);
+  // What recovery will rebuild: the battles the last commit left open.
+  const openBattles = step.kind === "kill" ? openInTables() : [];
   server = await startServer();
   const recoveredTick = (await world()).tick;
   const event = {
@@ -287,12 +340,40 @@ async function interrupt(step: Interruption, seenTick: number): Promise<Event> {
     recoveredTick,
     exitCode,
     restartSeconds: (Date.now() - stopped) / 1000,
+    openBattles,
   };
   log(
     `${step.kind} at tick ${seenTick}: back at ${recoveredTick} ` +
-      `in ${event.restartSeconds.toFixed(1)} s`,
+      `in ${event.restartSeconds.toFixed(1)} s` +
+      (step.kind === "kill"
+        ? `, battles open: [${openBattles.join(", ")}]`
+        : ""),
   );
   return event;
+}
+
+/** Waits until the tables hold an open battle, or BATTLE_WAIT_MS. */
+async function battleOpen(): Promise<void> {
+  const deadline = Date.now() + BATTLE_WAIT_MS;
+  while (Date.now() < deadline && openInTables().length === 0) {
+    await sleep(BATTLE_POLL_MS);
+  }
+}
+
+/** The world's battles with no end in the tables (a read-only look). */
+function openInTables(): number[] {
+  const reader = new Database(db, { readonly: true, fileMustExist: true });
+  try {
+    const rows = reader
+      .prepare(
+        `SELECT battle_id FROM battles
+         WHERE world_id = ? AND ended_tick IS NULL ORDER BY battle_id`,
+      )
+      .all(worldId) as { battle_id: number }[];
+    return rows.map((r) => r.battle_id);
+  } finally {
+    reader.close();
+  }
 }
 
 function sampleOf(tick: number): SoakSample {
