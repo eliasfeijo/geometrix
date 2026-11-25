@@ -1,6 +1,6 @@
 # M2 spec — The minimal end
 
-**Status:** Draft · **Date:** 2026-11-25 · **Milestone:** M2 — The ambush ([ROADMAP](../../ROADMAP.md)), slice E-min
+**Status:** Approved (2026-11-25) · **Date:** 2026-11-25 · **Milestone:** M2 — The ambush ([ROADMAP](../../ROADMAP.md)), slice E-min
 **Related GDD:** [01](../../gdd/01-world.md) (the minimal end before the siege, the draw at the clock),
 [06](../../gdd/06-battles.md) (the battle instance), [07](../../gdd/07-autopilot.md) (the bots' strategist),
 [08](../../gdd/08-chronicle-chat-and-console.md) (chronicle, replay markers) ·
@@ -42,9 +42,9 @@ A summary; the source is [GDD 01](../../gdd/01-world.md), "The minimal end" and 
 
 ## 3. Scope decisions this spec assumes
 
-Decisions marked **owner** come from the R and E-min design round (2026-11-25, GDD 01). The others are the **agent's
-proposal** and only hold with the owner's acceptance of the spec. Those marked **(gameplay)** complete the GDD and go
-into it on acceptance. The numbers are in §6 and are guesses.
+Decisions marked **owner** come from the R and E-min design round (2026-11-25, GDD 01) or the spec's approval. The
+others were the **agent's proposal**, **accepted by the owner with the spec** (2026-11-25). Those marked
+**(gameplay)** complete the GDD and are in it (01, 07, 08). The numbers are in §6 and are guesses.
 
 | # | Decision | Default | Why |
 |---|---|---|---|
@@ -57,18 +57,19 @@ into it on acceptance. The numbers are in §6 and are guesses.
 | D7 | A team out in a world that goes on **(gameplay; agent; only with 3 or more teams, slice T revises)** | Its humans become **spectators**: they keep their team's view, their commands are refused with a new `teamOut`, and their dominations are released. Its creeps (after a concession) stay on the map with the autopilot rules they had and no player; its core and stock stay, and it can produce no more. A team out never comes back into the match. **With two teams this never happens** (the world ends). Spectators of the whole world come with P's spectators | The owner asked for spectators and left "what an eliminated team does while the world goes on" to T's round (GDD 01 proposal). This is the smallest rule that runs with N teams and changes nothing with two |
 | D8 | The end is public **(gameplay; agent)** | A team leaving the match (eliminated or conceded) and the world's end are events **every team receives**, through the fog: a team learns that another left the match and how, nothing else about it. The chronicle narrates them | Who is still in the match is what decides the end; hiding it would make the end come from nowhere |
 | D9 | The end screen **(gameplay; owner, details by the agent)** | When the world ends, **the end screen opens by itself** in place of the map (over the battle screen too), and opens again whenever a player enters an ended world. It shows: the **result** ("Azul venceu", or "Empate entre Azul e Laranja") and **how** (elimination, concession, the bot's concession, the clock); the **duration** in world time and, on a server world, in real time; **per team**: creeps born in the match (the initial population does not count), creeps lost, battles won and lost (an end by inactivity counts as neither), matéria delivered, and when it left the match; and **the five main events of the match** (D10; for the whole match, not per team: owner, 2026-11-25), each as its chronicle sentence. Buttons: **"Ver o mapa"** (the frozen world in the team's view) and **"Ver o replay"** (the world's replay screen, D11) | The owner's list; seen by the loser too |
-| D10 | The summary in the state **(agent)** | The counters (born, lost, battles won and lost) join the team stats in the state, and the **five main events** are kept in the state as they happen, by a fixed ranking (§6): in a two-team match, the loser leaving and the four largest battles, e.g. "Laranja desistiu" and "Azul venceu a batalha no vau do meio: 3 contra 2 e um errante; levou 120 de matéria". The server, the CLI, a reconnection and the replay give the same summary without reading the whole log | The end screen needs the whole match; the stats already accumulate in the state (M1) |
+| D10 | The summary in the state **(agent)** | The counters (born, lost, battles won and lost) join the team stats in the state, and the **five main events** are kept in the state as they happen, by a fixed ranking (§6): in a two-team match, the loser leaving, the first blood (D15) and the three largest battles, e.g. "Laranja desistiu" and "Azul venceu a batalha no vau do meio: 3 contra 2 e um errante; levou 120 de matéria". The server, the CLI, a reconnection and the replay give the same summary without reading the whole log | The end screen needs the whole match; the stats already accumulate in the state (M1) |
 | D11 | Replay markers **(gameplay; owner, details by the agent)** | The replay timeline marks: **battle opened** and **battle ended**, **deaths** (team creeps and wanderers), **births** in the match, **wanderer born**, **a team leaving the match** and **the end**. Each kind has its own mark and color; a toggle per kind hides it; hovering a mark shows its chronicle sentence and clicking it jumps to that tick. The marks are ready when the replay opens, from the events of the whole replay (the plan decides how) | GDD 08 proposal, approved in the round; a 2-hour match has hundreds of births and deaths, so the toggles keep it readable |
 | D12 | Written for N teams **(owner)** | No part of the slice (the standing, the end rule, the events, the summary, the end screen, the markers, the lobby, the CLI report) assumes two teams. Tests use a hand-built world of 3 teams | The owner: R and E-min add no new two-team assumption; T needs it |
 | D13 | The harness **(agent)** | `geo sim` and `geo sweep` stop at the world's end like the server, and report how and when each run ended (§7). `geo verify` covers worlds that end by elimination and by concession. The soak test keeps its `kill -9` in the middle of a battle and checks the end it reaches | A bot that concedes shortens runs: the reports must say so, for R's balance pass too |
 | D14 | What changes on purpose | `SIM_VERSION` (the end in the state, the clock's end in the `sim`, the new counters and events) and `PROTOCOL_VERSION` (`concede`, `teamOut`, the standing and the result in the view, the summary) as a `BREAKING CHANGE`; the fixed hashes. `BATTLE_VERSION` does not change | New gameplay: old snapshots and replays become invalid (ADR-0004) |
+| D15 | First blood **(gameplay; owner at the spec's approval, details by the agent)** | **The first death of a team's creep in the match**, whoever killed it (another team's creep or a wanderer), is the match's **first blood**: the death event carries the mark, the chronicle narrates it with **its own sentence** (in the slice A voice), and it is **always among the five main events** of the end (§6). It reaches the teams any death reaches (the fog spec, junction K-2): it is not a public announcement. A wanderer's death is never first blood | The owner (2026-11-25): a sentence for the first blood that also appears among the end's five events |
 
 ## 4. Scope
 
 ### In
 - **`sim`:** the standing and the result in the state (D1); elimination in fact (D2); `concede` (D3); the end rule and
   the clock (D5); the frozen world (D6); a team out (D7); the events (D8); the counters and the five main events
-  (D10); the team view with the standing of every team and the result.
+  (D10); the first blood mark (D15); the team view with the standing of every team and the result.
 - **Bot strategist:** conceding by D4.
 - **Junction host:** stopping open battles at the world's end (D6); a team out's dominated participants back to their
   gambits (D7).
@@ -76,7 +77,7 @@ into it on acceptance. The numbers are in §6 and are guesses.
 - **Server:** the clock's end comes from the `sim` (D1); the world's end on any tick (D5, D6); the result in the
   lobby's list; the export from the end tick.
 - **Client:** "Desistir" and its confirmation (D3); the end screen (D9); the frozen world read-only; a spectator of
-  its team (D7); the chronicle sentences of the new events (D8); the replay markers and their toggles (D11); the
+  its team (D7); the chronicle sentences of the new events and the first blood (D8, D15); the replay markers and their toggles (D11); the
   result in the lobby.
 - **Harness:** the ends in `geo sim` and `geo sweep`, `geo verify` and the soak test (D13).
 - **Playtest:** E-min questions in [PLAYTEST.md](../../PLAYTEST.md).
@@ -128,6 +129,8 @@ Format: *When [trigger], the system shall [response].*
   emit structured events, in the same order on any run.
 - **K-2** Every team shall receive the K-1 events, whatever it sees (D8); nothing else about a team out shall leak.
 - **K-3** The team view shall carry every team's standing and, after the end, the result and the summary.
+- **K-4** The first death of a team's creep in the match shall carry the first blood mark (D15), once per world; the
+  chronicle shall narrate it with its own sentence.
 
 ### End screen, replay and lobby (client and server)
 - **S-1** When the world ends, the client shall show the end screen in place of the map or the battle screen (D9);
@@ -168,7 +171,7 @@ flowchart TD
 | The bot's concession threshold (D4) | at most 1 creep alive | the strategist's settings |
 | Elimination (D2) | 0 creeps; the stock compared with `creep.cost` (no new number) | the rule |
 | Main events in the summary (D10) | 5 | `sim` params |
-| The ranking of main events (D10) | first, a team leaving the match; then battles ended, by participants (joins included), then by the load collected or left as spoils, then the earliest. Every other event is a mark in the replay, not a main event | the `sim`; the owner reviews at the checkpoint |
+| The ranking of main events (D10) | first, a team leaving the match; then the first blood (D15); then battles ended, by participants (joins included), then by the load collected or left as spoils, then the earliest. Every other event is a mark in the replay, not a main event | the `sim`; the owner reviews at the checkpoint |
 | Duration of a session match (§8) | a short params file for the owner's sessions, so the end is reached in minutes instead of R's 2-hour default world | `params/` |
 
 ## 7. Harness and acceptance criteria
@@ -204,7 +207,7 @@ The targets are guesses. When one fails, the owner decides at the checkpoint.
 
 ## 9. Prerequisites before the `plan.md`
 
-- The owner's acceptance of D1–D14; the gameplay ones go into the GDD (01, 07, 08).
+- The owner's acceptance of D1–D15 ✅ (2026-11-25, with the spec); the gameplay ones are in the GDD (01, 07, 08).
 - **No new ADR expected:** the end as world state follows ADR-0003 and ADR-0004, `concede` follows ADR-0002, and
   stopping battles at the end stays within ADR-0010. If the plan finds otherwise, it drafts one with the `adr` skill.
 - **Running next to R** (spec approved 2026-11-25): both touch the strategist (R's difficulty, D26, and encounter
