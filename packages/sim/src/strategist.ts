@@ -357,7 +357,15 @@ function respond(
   const { seen, map, params, level } = known;
   const own = ownCreeps(seen);
   const victims = new Set(threats.map((t) => t.victim.id));
-  const locked = new Set(victims);
+  // A victim the bot does not choose for (empty, or in an encounter with no
+  // response) keeps taking its role's and the defense's rules.
+  const locked = new Set(
+    threats
+      .filter(
+        ({ victim }) => choosesFor(victim) || responseOf(victim.rules) !== null,
+      )
+      .map((t) => t.victim.id),
+  );
   for (const creep of own) {
     const first = creep.rules[0]?.then;
     if (first?.type === "follow" && victims.has(first.creepId)) {
@@ -418,9 +426,18 @@ function respond(
  * The enemies the team sees (R spec D18): every creep of another team and
  * every wanderer, whatever the number of teams.
  */
-function enemies(seen: TeamView): Cell[] {
+/**
+ * The enemies in sight that threaten the team (R F3's C1-1): every wanderer,
+ * and each creep of another team chasing one of the team's creeps.
+ */
+function threatening(seen: TeamView): Cell[] {
+  const own = new Set(ownCreeps(seen).map((c) => c.id));
+  const chases = (c: (typeof seen.creeps)[number]) => {
+    const target = c.hostile?.target;
+    return target !== undefined && target !== null && own.has(target);
+  };
   return [
-    ...seen.creeps.filter((c) => c.team !== seen.team),
+    ...seen.creeps.filter((c) => c.team !== seen.team && chases(c)),
     ...seen.wanderers,
   ];
 }
@@ -753,11 +770,12 @@ function assignRoles(known: Knowledge, locked: ReadonlySet<number>): Command[] {
     if (leader !== undefined) follow(leader, wantEscorts);
   }
 
-  // Defense (D14, normal and hard): while an enemy stands in the core zone,
-  // the creeps inside it attack on top of their role.
+  // Defense (D14, normal and hard): while an enemy that threatens the team
+  // stands in the core zone (C1-1), the creeps inside it attack on top of
+  // their role.
   const inZone = (cell: Cell) =>
     manhattan(cell, team.core) <= params.hp.coreZoneRadius;
-  const defending = level !== "easy" && enemies(seen).some(inZone);
+  const defending = level !== "easy" && threatening(seen).some(inZone);
 
   // A raider gets its preset; a gatherer, its role's preset behind its
   // posture (setRules), also when only the posture is missing (a newborn).

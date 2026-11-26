@@ -319,6 +319,19 @@ describe("the full decision at hard", () => {
   const decide = (world: WorldState) =>
     strategistCommands("balanced", view(world, 0), world.map, world.params);
 
+  test("an empty victim is not held: it keeps taking its role's rules", () => {
+    const { world, creeps } = scene([
+      [0, "triangle", 12, 3],
+      [1, "circle", 15, 3],
+    ]);
+    const [victim, attacker] = creeps as [Creep, Creep];
+    victim.rules = [];
+    chase(attacker, victim);
+    expect(rulesOf(decide(world), victim.id)).toBeDefined();
+    load(victim);
+    expect(rulesOf(decide(world), victim.id)).toEqual(dropFleeRules());
+  });
+
   test("keeps a victim's and its helpers' rules while the threat lasts, then gives the role back", () => {
     const { world, creeps } = scene([
       [0, "triangle", 12, 3],

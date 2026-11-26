@@ -444,7 +444,7 @@ function line(difficulty: Difficulty, placed: readonly Placed[]) {
 
 describe("the core zone's defense (R spec D14, S-1)", () => {
   test.each(["normal", "hard"] as const)(
-    "while an enemy stands in the zone, the creeps inside it attack on top of their role (%s)",
+    "while an enemy chasing one of its creeps stands in the zone, the creeps inside it attack on top of their role (%s)",
     (difficulty) => {
       const { world, creeps } = line(difficulty, [
         [0, "square", 2, 0],
@@ -452,6 +452,15 @@ describe("the core zone's defense (R spec D14, S-1)", () => {
         [1, "circle", 6, 0],
       ]);
       const [inside, outside, enemy] = creeps;
+      // Passing or gathering in the zone, the enemy is no threat (C1-1).
+      expect(rulesGiven(decide(world, 0), inside!.id)?.[0]).not.toEqual(
+        defenseRule(world.params),
+      );
+      enemy!.order = {
+        type: "approach",
+        targetId: inside!.id,
+        intent: "attack",
+      };
       const commands = decide(world, 0);
       const rules = rulesGiven(commands, inside!.id)!;
       expect(rules[0]).toEqual(defenseRule(world.params));
@@ -489,7 +498,29 @@ describe("the core zone's defense (R spec D14, S-1)", () => {
       [1, "circle", 6, 0],
     ]);
     creeps[1]!.team = 2;
+    creeps[1]!.order = {
+      type: "approach",
+      targetId: creeps[0]!.id,
+      intent: "extort",
+    };
     expect(rulesGiven(decide(world, 0), creeps[0]!.id)?.[0]).toEqual(
+      defenseRule(world.params),
+    );
+  });
+
+  test("an enemy in the zone chasing one of the team's creeps outside it is a threat too", () => {
+    const { world, creeps } = line("hard", [
+      [0, "square", 2, 0],
+      [0, "triangle", 12, 0],
+      [1, "circle", 6, 0],
+    ]);
+    const [inside, outside, enemy] = creeps;
+    enemy!.order = {
+      type: "approach",
+      targetId: outside!.id,
+      intent: "attack",
+    };
+    expect(rulesGiven(decide(world, 0), inside!.id)?.[0]).toEqual(
       defenseRule(world.params),
     );
   });
