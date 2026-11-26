@@ -118,10 +118,10 @@ test.each([1, 42, 649])(
     // the D7 fields: a new entity is sent whole, so it has its team) and left
     // it, and each team found the enemy core (seen after ~4.5-5.3 h in these
     // seeds). Through the junction host, battles open, lock their creeps
-    // and close, creeps die and spoils drop. Since R F3's hard bots (the
-    // defense, the groups and the threat pass's drops), seeds 1, 42 and 649
-    // end with 10, 16 and 15 creeps, with 200, 188 and 324 battles opened
-    // and closed, 605-1,363 locked creeps sent, 62-64 deaths and 62-112
+    // and close, creeps die and spoils drop. With R F3's hard bots (the
+    // defense against threats, C1-1, and the threat pass's drops), seeds 1,
+    // 42 and 649 end with 53, 56 and 59 creeps, with 28, 36 and 14 battles
+    // opened and closed, 78-144 locked creeps sent, 15-22 deaths and 7-32
     // spoils (as the two teams saw them; before R F3: 12-16 battles, 5-12
     // deaths, 1-8 spoils). A bot's extortion is answered in the tick it
     // opens, so no delta carries it.
@@ -187,7 +187,7 @@ test.each([42])(
       );
       stepJunction(state, host, accepted);
     }
-    // Since R F3 the hard bots kill every wanderer before the end.
+    // The most alive at once: the hard bots may kill the last ones (R F3).
     expect(alive).toBeGreaterThan(0);
     // 62 upserts and 31 removes in this seed.
     expect(upserts).toBeGreaterThan(30);
