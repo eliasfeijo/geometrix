@@ -6,22 +6,25 @@
 
 ## Now
 
-**Updated:** 2026-11-25 (R's F3 at its checkpoint C1: the strategist measured, waiting on the owner)
+**Updated:** 2026-11-26 (R's F3 done: the strategist; C1 answered; F4 next after F3 and F5 merge)
 
 | | |
 |---|---|
 | **Milestone** | **M2 — The ambush** ([ROADMAP](../ROADMAP.md)). M0, M1 and M1.5 ✅ |
-| **Slices** | A ✅ 2026-11-17 · B ✅ 2026-11-20 · D ✅ 2026-11-25 · **R — Rebalance and pace** (F1 and F2 done 2026-11-25; F3 at C1, F5 in its lane), **E-min — The minimal end** (spec and plan approved 2026-11-25, F1 next) and **K — The DNA kits** (spec and plan approved 2026-11-25, F1 next) |
-| **In progress** | **R's F3 at checkpoint C1** (2026-11-25, branch `m2/rebalance-f3-strategist`, not merged): the difficulty levels, the D17 posture, the D14 defense, the D16 groups and escort, the D27 threat pass (in the harness and in `WorldHost`) and their metrics in report.md; C1 measured on the 72-hour world at ×6 (F3 record in the [tasks](../specs/m2-rebalance/tasks.md), nine interpretations to validate); the merge waits for the owner's answers (below). **R's F5** runs in lane B (`m2/rebalance-f5-pauses`); **G's design round done** (2026-11-25, on `docs/g-design`: squads, the embodied creep, the panel, formations; the [spec](../specs/m2-groups/spec.md) approved and the [plan](../specs/m2-groups/plan.md) drafted; GDD 02, 06, 07); **E-min's F1** (the end in the world) waiting for a lane (below): the [E-min spec](../specs/m2-minimal-end/spec.md) and [plan](../specs/m2-minimal-end/plan.md) approved 2026-11-25, worktree `~/workspace/geometrix/emin-f1` on `m2/emin-f1-world`; **K's F1** (the bar and the strike) waiting for a lane (below): the [K spec](../specs/m2-kits/spec.md) and [plan](../specs/m2-kits/plan.md) approved 2026-11-25, worktree `~/workspace/geometrix/kits-f1` on `m2/kits-f1-bar-strike` |
+| **Slices** | A ✅ 2026-11-17 · B ✅ 2026-11-20 · D ✅ 2026-11-25 · **R — Rebalance and pace** (F1 and F2 done 2026-11-25, F3 done 2026-11-26; F5 in its lane, F4 next), **E-min — The minimal end** (spec and plan approved 2026-11-25, F1 next) and **K — The DNA kits** (spec and plan approved 2026-11-25, F1 next) |
+| **In progress** | **R's F3 done** (2026-11-26, the strategist: the difficulty levels, the D17 posture, the D14 defense against threats, the D16 groups and escort, the D27 threat pass in the harness and in `WorldHost`, their metrics in report.md), branch `m2/rebalance-f3-strategist` waiting for the owner's merge (`scripts/merge-phase.sh`); C1 answered (C1-1..C1-3, F3 record in the [tasks](../specs/m2-rebalance/tasks.md), ten interpretations to validate). **R's F5** runs in lane B (`m2/rebalance-f5-pauses`); **next in lane A: wave 3**, F4 (the balance pass) once F3 and F5 are in `main`; **G's design round done** (2026-11-25, on `docs/g-design`: squads, the embodied creep, the panel, formations; the [spec](../specs/m2-groups/spec.md) approved and the [plan](../specs/m2-groups/plan.md) drafted; GDD 02, 06, 07); **E-min's F1** (the end in the world) waiting for a lane (below): the [E-min spec](../specs/m2-minimal-end/spec.md) and [plan](../specs/m2-minimal-end/plan.md) approved 2026-11-25, worktree `~/workspace/geometrix/emin-f1` on `m2/emin-f1-world`; **K's F1** (the bar and the strike) waiting for a lane (below): the [K spec](../specs/m2-kits/spec.md) and [plan](../specs/m2-kits/plan.md) approved 2026-11-25, worktree `~/workspace/geometrix/kits-f1` on `m2/kits-f1-bar-strike` |
 | **Next front** | The phases of **R**, **E-min** and **K** in **two lanes at most** ([R's waves](../specs/m2-rebalance/tasks.md#running-the-phases-waves-lanes-and-models)): lane A on Opus 5.5 for the deep phases (`sim` rules, strategist, battle mechanics), lane B on Sonnet 5.5 for server, client, balance runs and soak. R: wave 1 F2 alone; wave 2 F3 (A) ∥ F5 (B); wave 3 F4 then F6 (B), lane A free for E-min or K; wave 4 F7; F8 after K's merge. Lane B opens only with room in `/usage` (session < ~50%, week < ~70%); otherwise sequential. K is the safe partner (no file shared with R F2–F7); E-min's sim phases collide with R's (`SIM_VERSION`, hashes, strategist) |
 | **Then** | **G — Groups and formations** (after K; spec approved and [plan](../specs/m2-groups/plan.md) drafted 2026-11-25: squads built with Ctrl and the embodied creep, the panel and the selection keys, formations in the world and in battle, the side each DNA engages from, the battle bot's load experiment; lab first; **scope warning:** about R's size), then **P — The friends' playtest** (two teams: humans against humans, or co-op against the bot); after it, **E** (siege and repair) or **T** (more teams), chosen at P's checkpoint |
-| **Waiting on the owner** | (1) [ADR-0009](../adr/0009-prediction-in-the-lab.md) (`Proposed`): prediction as a lab experiment option. (2) `gambits.meleeBerthSteps` 3 (provisional, lab F7). (3) K's checkpoint K1 when F5 ends. (4) Whenever the owner wants: PLAYTEST lab group 7 (the movement options). **R's C1** (F3 record): (5) **The defense wipes teams:** with a normal or hard bot, a team ends with 0 creeps on 13 of 20 runs (easy × easy 0/5), its 6 starting creeps killed by the other team's D14 defense while they gather a deposit inside that team's core zone (radius 8), before its first extra creep; keep D14 and leave it to F4's opening and zone, or defend only against an enemy that threatens (an approach on one of the team's creeps, or a wanderer)? (6) **No raid group or escort ever forms** on this world (the map is explored and the cristal gone before 8–10 creeps), so no bot extorts and D27's "pay" never happens: keep D16's "can still explore", or form the group without it (and then, with nothing to explore, where does it raid)? (7) The tick cost: 48 µs per tick for hard × hard, ~94 µs (1.9× F1's) in the busiest easy × hard world (30 creeps, ~200 battles; the threat pass is 2.3% of it): accept, or a cost pass before F4? |
+| **Waiting on the owner** | (1) [ADR-0009](../adr/0009-prediction-in-the-lab.md) (`Proposed`): prediction as a lab experiment option. (2) `gambits.meleeBerthSteps` 3 (provisional, lab F7). (3) K's checkpoint K1 when F5 ends. (4) Whenever the owner wants: PLAYTEST lab group 7 (the movement options). |
 | **Blockers** | None |
 
 ### Next steps
 
 1. **R's F2–F8** from the [approved plan](../specs/m2-rebalance/plan.md) ([tasks](../specs/m2-rebalance/tasks.md);
-   `implement-phase` skill), **F2 done** (the world vocabulary; F2 record in the tasks: the tick cost of a 3-day sim went from ~13.5 s to ~18 s, mostly the junction's extra battles), from the [approved spec](../specs/m2-rebalance/spec.md)
+   `implement-phase` skill), **F3 done** (the strategist; F3 record in the tasks: with the defense only against
+   threats, C1-1, no team is wiped at normal or hard, hard beats easy on 10/10 runs, and D16's groups never form on
+   the 72-hour world, measured again at F4's C2, C1-2; the tick cost follows the population, 65–78 µs per tick with
+   both teams near the cap, accepted at C1-3), **F2 done** (the world vocabulary), from the [approved spec](../specs/m2-rebalance/spec.md)
    (D1–D29). **Waves and models** in the tasks' "Running the phases": two tasks moved (the server's threat pass from F5
    to F3, `geo net` on the new world from F5 to F7) so F5 depends on F2 alone and runs next to F3. **F1 is done:** the pace harness (`--mult`, real minutes, the §7 targets table, `--shock`) and the
    baseline of the 72-hour world at ×6 (F1 record in the tasks): of the measured targets it misses the length (720
@@ -66,9 +69,14 @@
 - **The pace harness** (R F1, `apps/cli`): `world.multiplier` in the params (6; the sim never reads it;
   `params/world-72h.json` keeps the 72-hour world); `geo sim`/`geo sweep --mult`, real minutes in the reports;
   `pace.ts` (`PaceTracker`, `pace.json`, the §7 `TARGETS` and the targets table per run and per sweep value;
-  `TeamPace.helpJoins` is null until F2/F3 tell a help or follow join apart); `shock.ts` (`--shock t:n@m`, no
-  `replay.json`, refused by `geo verify`); `format.ts` (the report formatters). The tick-cost baseline is ~50 µs per
-  world tick (seed 42, the 72-hour world).
+  `TeamPace.helpJoins` from the encounter tally since R F3); `shock.ts` (`--shock t:n@m`, no `replay.json`, refused
+  by `geo verify`); `format.ts` (the report formatters). The tick-cost baseline is ~50 µs per world tick (seed 42,
+  the 72-hour world).
+- **The strategist** (R F3, `packages/sim/src/strategist.ts`, `threat.ts`): `botsFor(strategists, difficulties)`
+  (hard by default); `geo sim --strategist balanced:hard,balanced:easy`; the level comes from the team's first bot
+  player (`teamDifficulty`). `threatPass(state, team)` runs on every tick between the full decisions in `botCommands`
+  and in `WorldHost.tick`; the settings (posture, groups, `RISK`) live in `BALANCED`, not in the params.
+  `apps/cli/src/choices.ts` reads the bots' choices from the log for report.md's "Estrategista" section.
 
 - **Packages:** `packages/battle` (pure combat, ADR-0008, `BATTLE_VERSION` 6: a participant's `control` changes only
   that participant, so several humans play one battle; the lab's page releases its previous one itself),

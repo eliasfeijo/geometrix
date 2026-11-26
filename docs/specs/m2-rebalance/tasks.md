@@ -204,8 +204,8 @@ more battles, from help and the bot's hard reaction, not overhead. F3/F7 should 
 - [x] `WorldHost`: the threat pass every tick for hard bots (moved from F5, see "Running the phases")
 - [x] Any number of teams in the new rules (D18, S-5)
 - [x] The strategist's metrics in the reports: help joins, groups, defense, payments, drops, the D27 choices
-- [ ] **Checkpoint C1:** bot × bot at each difficulty and hard against easy, the 72-hour world at ×6 in real time
-      (measured and answered, below; the defense only against a threat, C1-1)
+- [x] **Checkpoint C1:** bot × bot at each difficulty and hard against easy, the 72-hour world at ×6 in real time
+      (measured and answered, below; the defense only against a threat, C1-1, measured again)
 
 ### F3 record (2026-11-25)
 
@@ -228,7 +228,8 @@ more battles, from help and the bot's hard reaction, not overhead. F3/F7 should 
   report.md; the help-joins target in the pace table is measured now.
 - Tests on hand-made maps for every choice, the lock, the per-tick pass, HS-3 and a third team; the server's
   fixtures find their battle in the instance's opening members; the protocol's delta-property floors and the
-  junction's bot-world hash moved with the hard bots (188–324 battles in 6 h on the test params, 12–16 before).
+  junction's bot-world hash moved with the hard bots (14–36 battles in 6 h on the test params after C1-1, 12–16
+  before F3).
 - `perf(sim)`: the bot's wrappers and responses are told apart before serializing (same hashes).
 
 **C1** (`params/world-72h.json` at ×6, the whole 72-hour match, seeds 1–5, `geo sim --strategist
@@ -268,6 +269,24 @@ balanced:<a>,balanced:<b>`; runs in the job's scratchpad, not versioned). Means 
 2. D16 keeps "while the team can still explore"; the groups are measured again at F4's C2.
 3. The tick cost is accepted; a `roadTarget` cache per `roadRevision` is parked for F4/F7.
 
+**C1 again, with C1-1** (`3591852`; same runs and seeds). The threat pass also holds only the victims it chooses for
+(loaded and free, or with a response), so an empty chased creep still takes the defense:
+
+| | easy × easy | normal × normal | hard × hard | hard × easy (both sides, 10 runs) |
+|---|---|---|---|---|
+| A team wiped (0 creeps at the end) | 0/5 | **0/5** (3/5 before) | **0/5** (4/5) | **2/10** (6/10), the easy side, real minutes 192 and 316 |
+| Creeps at the end | 23 / 20 | 29 / 28 | 30 / 30 on every seed | hard 30, easy 17 |
+| Matéria delivered | 138k / 139k | 152k / 162k | 168k / 167k | hard 174k, easy 94k; hard ahead 10/10 |
+| Battles per team per 10 real min | 0.4–2.8 | 0.4–1.8 | 0.3–1.6 | hard 0.7–1.9, easy 0.1–1.2 |
+| Help joins per team per 30 real min (target ≥ 1) | 0.2–4.7 | 0.3–7.0 | 0.7–10.7 | hard 2–10, easy 0–4 |
+| D27 per hard team: help (helpers) / pay / drop-flee / drop-fight | — | — | 73 (77) / 0 / 68 / 32 | 159 (163) / 0 / 127 / 74 |
+| Drops · pickups after a fight, per hard team | — | — | 100 · 11 | 203 · 26 |
+| Defense entries per team | — | 2 | 2 | hard 2 |
+| Followers (raid group, escort) | — | 0 | 0 | 0 |
+
+The tick cost follows the population: 65–78 µs per tick on average with both teams near the cap (hard × hard 78, at
+30 + 30 creeps), accepted at C1-3 and measured again at F4's C2.
+
 **Interpretations to validate in the playtest:**
 
 1. The team's difficulty is its first bot player's (by id); a team with no bot is hard.
@@ -281,6 +300,8 @@ balanced:<a>,balanced:<b>`; runs in the job's scratchpad, not versioned). Means 
 7. A wanderer's power uses `wanderers.hp` as its HP.
 8. A help join is a join on a side the team already had (the help rule, a follow or the defense).
 9. `--strategist name:difficulty`, comma-separated per team; a missing difficulty is hard.
+10. C1-1's threat is another team's creep whose hostile intent targets one of the team's creeps, anywhere, while it
+    stands in the zone, or any wanderer in the zone; the defenders still attack the nearest enemy within the radius.
 
 ## F4 — The balance pass
 
