@@ -259,7 +259,7 @@ test.each([42])(
       const { events } = stepJunction(state, host, accepted);
       drops += events.filter((e) => e.type === "dropped").length;
     }
-    // 180 follow orders and 59 hostile intents sent, 45 loads dropped and 314
+    // 199 follow orders and 45 hostile intents sent, 48 loads dropped and 155
     // battle ticks held in this seed.
     expect(follows).toBeGreaterThan(0);
     expect(hostiles).toBeGreaterThan(0);
