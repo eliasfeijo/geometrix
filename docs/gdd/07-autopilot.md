@@ -88,9 +88,11 @@
     and 400‰, ▲ 6 and 500‰, ● 8 and 500‰, provisional); in every preset after the reaction rules;
   - **the road builder:** its `buildRoad` has no cell and resolves to the strategist's `roadTarget` each time; the
     action with a cell stays for the editor and the dominated creep;
-  - **the strategist:** defends its core zone (an attack rule on its creeps there while an enemy is inside); produces
-    before the upgrade when below its population peak; a raid group of a raider and 2 followers from 8 creeps, an
-    escort on a cristal collector from 10; its posture pays a demand of at most 250‰ of the load, flees below 400‰
+  - **the strategist:** defends its core zone (an attack rule on its creeps there while an enemy that threatens it
+    is inside: another team's creep chasing one of its creeps, or a wanderer; owner, R F3's checkpoint C1,
+    2026-11-26); produces before the upgrade when below its population peak; a raid group of a raider and 2 followers
+    from 8 creeps while the team can still explore (kept at C1, measured again at F4's C2), an escort on a cristal
+    collector from 10; its posture pays a demand of at most 250‰ of the load, flees below 400‰
     HP and fights otherwise; every rule reads any number of teams;
   - **the difficulty**, per bot, chosen at the world's creation, **hard** by default: hard adds the encounter reactions
     and the battle reaction `hard`; normal keeps the posture, defense and groups, with `normal`; easy plays slice D's

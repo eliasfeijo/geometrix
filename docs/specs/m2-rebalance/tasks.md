@@ -205,7 +205,7 @@ more battles, from help and the bot's hard reaction, not overhead. F3/F7 should 
 - [x] Any number of teams in the new rules (D18, S-5)
 - [x] The strategist's metrics in the reports: help joins, groups, defense, payments, drops, the D27 choices
 - [ ] **Checkpoint C1:** bot × bot at each difficulty and hard against easy, the 72-hour world at ×6 in real time
-      (measured, below; waiting on the owner's answers in the dashboard)
+      (measured and answered, below; the defense only against a threat, C1-1)
 
 ### F3 record (2026-11-25)
 
@@ -261,6 +261,13 @@ balanced:<a>,balanced:<b>`; runs in the job's scratchpad, not versioned). Means 
   creeps, ~200 battles) at ~94 µs. In that world's profile the threat pass is 2.3% of the time; the full decision
   is 23%, three quarters of it `roadTarget` (on `main` since F2) and the rules' serialization.
 
+**The owner's decisions at C1** (2026-11-26; plan §12, C1-1..C1-3):
+
+1. The D14 defense starts only for a threat in the zone: a wanderer, or another team's creep chasing one of the
+   team's creeps.
+2. D16 keeps "while the team can still explore"; the groups are measured again at F4's C2.
+3. The tick cost is accepted; a `roadTarget` cache per `roadRevision` is parked for F4/F7.
+
 **Interpretations to validate in the playtest:**
 
 1. The team's difficulty is its first bot player's (by id); a team with no bot is hard.
@@ -282,7 +289,8 @@ balanced:<a>,balanced:<b>`; runs in the job's scratchpad, not versioned). Means 
 - [ ] The wanderers' curve against its targets
 - [ ] The encounter windows (PA-3) and the other durations
 - [ ] The 2-hour default world in `params/default.json`; the PA-1/PA-3 test; the fixed hashes
-- [ ] **Checkpoint C2:** the targets' table per ×N candidate; the owner picks the candidates to play
+- [ ] **Checkpoint C2:** the targets' table per ×N candidate; the owner picks the candidates to play; the D16
+      groups and the tick cost measured again (R F3's C1-2, C1-3)
 
 ## F5 — The pauses, network and server
 

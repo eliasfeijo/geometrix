@@ -173,9 +173,9 @@ apps/client/src/
     left, so D15 holds today; what C2 lacked was stock (110 matéria for a 3,000 creep), which is the pace's job (D4).
     F3 pins the order with a test and changes nothing else (no peak: the view has no history of the team, and the
     strategist stays memoryless, fog spec B-1);
-  - **defense** (D14, normal and hard): while an enemy creep or wanderer in sight stands in its core zone, its free
-    creeps in the zone get `approach attack` with the zone's radius on top of their rules; the rule leaves when no
-    enemy is left there;
+  - **defense** (D14, normal and hard): while a threat in sight stands in its core zone (a wanderer, or another
+    team's creep whose hostile intent targets one of the team's creeps; C1, 2026-11-26), its free creeps in the zone
+    get `approach attack` with the zone's radius on top of their rules; the rule leaves when no threat is left there;
   - **groups and escort** (D16, normal and hard): the raider role holds one raider and two followers (`follow` rules
     on the raider's id) from 8 creeps; one escort follows a cristal collector from 10; members whose leader died go
     back to gathering at the next decision;
@@ -301,6 +301,18 @@ apps/client/src/
 | P13 | **The §7 targets in a CLI module**, printed with pass or fail; thresholds are harness criteria, not params | Targets in a JSON file next to the params |
 | P14 | **The ETA in the client**, from the sim's path and speed helpers on the team's known map | The server sends an ETA per creep (more delta for a readout) |
 | P15 | **One pick list for every actor**, the creeps' stack list generalized | A separate list for structures |
+
+**At F3's checkpoint C1** (owner, 2026-11-26; the numbers in the F3 record of the tasks):
+
+- **C1-1** D14's defense starts only for a threat in the zone: a wanderer, or another team's creep chasing one of the
+  team's creeps (it wiped the teams whose collectors worked a deposit in the zone). Its attack still goes to the
+  nearest enemy within the radius (the `approach` action's choice).
+- **C1-2** D16 keeps "while the team can still explore"; the groups are measured again at F4's checkpoint C2, on the
+  2-hour world. If they still never form, where a group raids with nothing to explore goes to the owner as a design
+  question.
+- **C1-3** The tick cost is accepted (48 µs per tick for hard × hard, ~94 µs in the busiest easy × hard world, the
+  threat pass 2.3% of it). A cache of `roadTarget` per `roadRevision` is parked for F4/F7, if the 2-hour world's
+  cost passes 1.5× F1's.
 
 ## 13. Implementation order
 
