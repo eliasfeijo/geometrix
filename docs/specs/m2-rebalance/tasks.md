@@ -344,7 +344,7 @@ In the code:
 of view and diff per send for 2 teams (<= 250), battle frames 5,584 B/s in the worst battle (<= 16,384), 0
 divergences. The new diff property world (3 h, seed 42): 199 follow orders and 45 hostile intents sent, 48 drops,
 155 battle ticks held, 0 divergences (all measured after the rebase on F3). `npm run soak` (port 8081) is OK with the holds: its clients are connected
-humans, so 93 of the 102 ended battles lasted ~1,800 ticks (the 5 real seconds at ×360); 5 kills cut through open
+humans, so 83 of the 94 ended battles lasted ~1,800 ticks (the 5 real seconds at ×360); 5 kills cut through open
 battles, every battle log replayed to its hash and to the world log. At ×360 a hold locks creeps for 30 world
 minutes: F7 should keep that in mind when reading its soak.
 
