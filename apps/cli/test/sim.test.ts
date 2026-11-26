@@ -140,6 +140,19 @@ describe("runs/<id>/", () => {
     expect(renderReport(data)).toBe(file(RUN_FILES.report));
   });
 
+  test("the bots' choices agree with what the world shows of them", () => {
+    const { encounters, pace } = result;
+    const choices = encounters.choices!;
+    for (const t of encounters.teams) {
+      const c = choices[t.team]!;
+      // A drop comes only from a drop response, and not every one lands.
+      expect(t.drops).toBeLessThanOrEqual(c.dropFlee + c.dropFight);
+      expect(t.helpJoins).toBeLessThanOrEqual(t.joins);
+      expect(c.helpers).toBeGreaterThanOrEqual(c.help);
+      expect(pace.teams[t.team]!.helpJoins).toBe(t.helpJoins);
+    }
+  });
+
   test("report.md covers the spec section 7 metrics", () => {
     const report = file(RUN_FILES.report);
     for (const heading of [
@@ -147,6 +160,7 @@ describe("runs/<id>/", () => {
       "## Metas do ritmo (spec R §7)",
       "## Resumo por time",
       "## Encontros",
+      "## Estrategista",
       "## Linha do tempo",
       "## Depósitos",
       "## Fatos para a revisão",
@@ -184,6 +198,12 @@ describe("runs/<id>/", () => {
       "Batalhas abertas:",
       "Catado de despojos",
       "Despojos:",
+      // The strategist (R spec §7, F3).
+      "Ameaças: ajuda / pagar / largar e fugir / largar e lutar",
+      "Entradas no lado do próprio time",
+      "Postos a seguir (grupo de incursão ou escolta)",
+      "Postos na defesa da zona do Núcleo",
+      "Largou a carga",
       "HP médio dos creeps no fim",
       "| Abordou / abordado | Mortes | HP médio |",
       "- Diferença entre os times no fim:",
@@ -226,7 +246,7 @@ describe("geo sim / geo report", () => {
           "--hours",
           "1",
           "--strategist",
-          "balanced,none",
+          "balanced:easy,none",
           "--out",
           out,
           "--id",
@@ -236,12 +256,17 @@ describe("geo sim / geo report", () => {
       ),
     ).toBe(0);
     expect(io.lines[0]).toBe(
-      "geo sim --seed 3: 3600 ticks at ×6, balanced x none",
+      "geo sim --seed 3: 3600 ticks at ×6, balanced:easy x none",
     );
     const meta = JSON.parse(
       readFileSync(join(out, "one", RUN_FILES.meta), "utf8"),
     );
     expect(meta.strategists).toEqual(["balanced", "none"]);
+    // The bot's difficulty (R spec D26): named, or hard.
+    expect(meta.difficulties).toEqual(["easy", "hard"]);
+    expect(readFileSync(join(out, "one", RUN_FILES.report), "utf8")).toContain(
+      "| Estrategistas | time 0: balanced (easy) · time 1: none |",
+    );
     expect(meta.paramsSource).toBe("params/default.json");
 
     const report = capture();
@@ -254,7 +279,7 @@ describe("geo sim / geo report", () => {
     const argv = ["sim", "--hours", "1", "--mult", "12", "--out", out];
     expect(run([...argv, "--id", "x12"], io)).toBe(0);
     expect(io.lines[0]).toBe(
-      "geo sim --seed 42: 3600 ticks at ×12, balanced x balanced",
+      "geo sim --seed 42: 3600 ticks at ×12, balanced:hard x balanced:hard",
     );
     const meta = JSON.parse(
       readFileSync(join(out, "x12", RUN_FILES.meta), "utf8"),
@@ -270,6 +295,9 @@ describe("geo sim / geo report", () => {
     [["sim", "--days", "1", "--hours", "2"], "use --days or --hours, not both"],
     [["sim", "--strategist", "greedy"], "unknown strategist: greedy"],
     [["sim", "--strategist", "balanced,none,none"], "needs 1 or 2 names"],
+    [["sim", "--strategist", "balanced:brutal"], "bad difficulty"],
+    [["sim", "--strategist", "none:hard"], "bad difficulty"],
+    [["sim", "--strategist", "balanced:hard:x"], "bad difficulty"],
     [["sim", "--hours", "0"], "--hours must be an integer >= 1"],
     [["sim", "--mult", "0"], "--mult must be an integer >= 1"],
     [["report"], "geo report takes one run directory"],

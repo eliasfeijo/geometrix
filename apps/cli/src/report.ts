@@ -29,6 +29,7 @@ import {
   type TeamEncounters,
 } from "./encounters.ts";
 import {
+  botsLine,
   HOUR,
   hours,
   minutes,
@@ -131,10 +132,7 @@ export function renderReport(run: RunData): string {
           "Multiplicador de tempo",
           `×${mult}: os tempos reais do relatório são o tempo de mundo ÷ ${mult}`,
         ],
-        [
-          "Estrategistas",
-          meta.strategists.map((s, t) => `time ${t}: ${s}`).join(" · "),
-        ],
+        ["Estrategistas", botsLine(meta.strategists, meta.difficulties)],
         ["Parâmetros", `\`${meta.paramsSource}\``],
         ["Versão do sim", String(meta.simVersion)],
         ...(meta.shock === null
@@ -297,6 +295,7 @@ export function renderReport(run: RunData): string {
   );
 
   out(...encounterSection(run.encounters, teamIds, total, params));
+  out(...strategistSection(run.encounters, teamIds));
   out(...battleSection(run.encounters, teamIds.length, total));
   out(...wandererSection(run.encounters));
 
@@ -564,6 +563,60 @@ function encounterSection(
     ),
     "",
     `Batalhas abertas: ${number(tally.battlesOpened)}. Despojos: ${number(spoils.created)} pilhas criadas com ${stockPair(spoils.dropped)}, ${number(spoils.pickups)} catadas; no fim, ${number(spoils.left)} no mapa com ${stockPair(spoils.leftCargo)}.`,
+    "",
+  ];
+}
+
+/**
+ * The bots' choices (R spec §7, F3): the threats they answered and how, the
+ * groups, the defense, and what the world shows of them (help joins, drops,
+ * payments). Absent in a run written before R F3.
+ */
+function strategistSection(tally: EncounterTally, teamIds: number[]): string[] {
+  const { choices } = tally;
+  if (choices === undefined) return [];
+  const team = (t: number) => tally.teams[t]!;
+  const choice = (t: number) => choices[t]!;
+  const perTeam = (cell: (t: number) => string) => teamIds.map(cell);
+  return [
+    "## Estrategista",
+    "",
+    "As escolhas dos bots, lidas das regras que deram aos creeps (um `setRules` só sai quando as regras mudam). Ameaça: um inimigo à vista persegue um creep carregado e livre (só no difícil).",
+    "",
+    table(
+      ["Métrica", ...teamIds.map((t) => `Time ${t}`)],
+      [
+        [
+          "Ameaças: ajuda / pagar / largar e fugir / largar e lutar",
+          ...perTeam((t) => {
+            const c = choice(t);
+            return `${c.help} / ${c.pay} / ${c.dropFlee} / ${c.dropFight}`;
+          }),
+        ],
+        ["Ajudantes enviados", ...perTeam((t) => String(choice(t).helpers))],
+        [
+          "Entradas no lado do próprio time (ajuda, seguir, defesa)",
+          ...perTeam((t) => `${team(t).helpJoins} de ${team(t).joins}`),
+        ],
+        [
+          "Postos a seguir (grupo de incursão ou escolta)",
+          ...perTeam((t) => String(choice(t).followers)),
+        ],
+        [
+          "Postos na defesa da zona do Núcleo",
+          ...perTeam((t) => String(choice(t).defense)),
+        ],
+        ["Largou a carga", ...perTeam((t) => String(team(t).drops))],
+        [
+          "Mandados catar despojos depois de lutar",
+          ...perTeam((t) => String(choice(t).pickups)),
+        ],
+        [
+          "Pagou extorsão (vezes)",
+          ...perTeam((t) => String(team(t).reactions.pay)),
+        ],
+      ],
+    ),
     "",
   ];
 }

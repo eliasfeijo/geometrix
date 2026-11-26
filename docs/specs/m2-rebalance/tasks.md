@@ -196,15 +196,112 @@ more battles, from help and the bot's hard reaction, not overhead. F3/F7 should 
 
 ## F3 — The strategist
 
-- [ ] The difficulty levels in `strategistCommands` (D26, S-6); the harness's strategist option with a difficulty
-- [ ] The posture per level (D17); production before the upgrade pinned by a test (D15, S-2)
-- [ ] The defense of the core zone (D14, S-1)
-- [ ] The raid group and the escort with `follow` (D16, S-3)
-- [ ] The threat pass and the risk (D27, S-7); the harness runs it every tick like the server will
-- [ ] `WorldHost`: the threat pass every tick for hard bots (moved from F5, see "Running the phases")
-- [ ] Any number of teams in the new rules (D18, S-5)
-- [ ] The strategist's metrics in the reports: help joins, groups, defense, payments, drops, the D27 choices
-- [ ] **Checkpoint C1:** bot × bot at each difficulty and hard against easy, the 72-hour world at ×6 in real time
+- [x] The difficulty levels in `strategistCommands` (D26, S-6); the harness's strategist option with a difficulty
+- [x] The posture per level (D17); production before the upgrade pinned by a test (D15, S-2)
+- [x] The defense of the core zone (D14, S-1)
+- [x] The raid group and the escort with `follow` (D16, S-3)
+- [x] The threat pass and the risk (D27, S-7); the harness runs it every tick like the server will
+- [x] `WorldHost`: the threat pass every tick for hard bots (moved from F5, see "Running the phases")
+- [x] Any number of teams in the new rules (D18, S-5)
+- [x] The strategist's metrics in the reports: help joins, groups, defense, payments, drops, the D27 choices
+- [x] **Checkpoint C1:** bot × bot at each difficulty and hard against easy, the 72-hour world at ×6 in real time
+      (measured and answered, below; the defense only against a threat, C1-1, measured again)
+
+### F3 record (2026-11-25)
+
+`npm run check` green (2999 tests). In the code:
+
+- `sim/strategist.ts`: `Bot.difficulty` (`botsFor(strategists, difficulties)`, hard by default), the level in the
+  bot's knowledge from `teamDifficulty` (the team's first bot player by id, hard with none). easy is slice D's
+  strategist; normal and hard add the D17 posture (`standRules`: pay up to 250‰, flee below 400‰ HP, else fight), the
+  D14 defense (`defenseRule`: attack within `hp.coreZoneRadius` while an enemy creep or wanderer is in the zone, on
+  top of the role) and the D16 groups (`followerRules`; `BALANCED.raidGroup` 8 creeps / 2 followers,
+  `BALANCED.escort` 10 / 1). `roleOf` reads a role under the wrappers (defense, a helper's follow, the pickup).
+- `sim/threat.ts` (D27): `threatsIn`, the power (`RISK.strengthPermille` ■ 310, ▲ 510, ● 640, the junction matrix's
+  mean win rates), `choose` (help / pay / drop and flee / drop and fight) and the response rules. `threatPass(state,
+  team)` runs on every tick between full decisions, for hard teams only, and reads the state only to skip building
+  the view when nobody chases the team; the full decision holds victims and helpers while their threat lasts.
+- `apps/server/src/world-host.ts`: the threat pass on the ticks without a full decision, as `botCommands` does; a
+  3 h server world reaches the harness world's hash.
+- `apps/cli`: `--strategist name:difficulty`; `choices.ts` (the D27 choices, helpers, followers, defense entries
+  and pickups from the bots' setRules); the encounter tally's `helpJoins` and `drops`; the "Estrategista" section of
+  report.md; the help-joins target in the pace table is measured now.
+- Tests on hand-made maps for every choice, the lock, the per-tick pass, HS-3 and a third team; the server's
+  fixtures find their battle in the instance's opening members; the protocol's delta-property floors and the
+  junction's bot-world hash moved with the hard bots (14–36 battles in 6 h on the test params after C1-1, 12–16
+  before F3).
+- `perf(sim)`: the bot's wrappers and responses are told apart before serializing (same hashes).
+
+**C1** (`params/world-72h.json` at ×6, the whole 72-hour match, seeds 1–5, `geo sim --strategist
+balanced:<a>,balanced:<b>`; runs in the job's scratchpad, not versioned). Means per team over the 5 seeds:
+
+| | easy × easy | normal × normal | hard × hard | hard × easy (both sides, 10 runs) |
+|---|---|---|---|---|
+| A team wiped (0 creeps at the end) | 0/5 | 3/5 | 4/5 | 6/10, always the easy side |
+| When (real minute) | — | 106–178 | 92–213 | 125–282 |
+| Creeps at the end | 23 / 20 | 18 / 11 | 9 / 22 | hard 30 on 10/10, easy 5.5 |
+| Matéria delivered | 138k / 139k | 120k / 80k | 54k / 133k | hard 176k, easy 58k; hard ahead 10/10 |
+| Battles per team per 10 real min | 0.4–2.8 | 0.2–3.1 | 0.1–2.6 | hard 1.7–4.0, easy 0.1–3.1 |
+| Help joins per team per 30 real min (target ≥ 1) | 0.2–4.7 | 0.1–8.8 | 0.1–11.4 | hard 7–34, easy 0–4 |
+| D27 per hard team: help (helpers) / pay / drop-flee / drop-fight | — | — | 73 (76) / 0 / 81 / 32 | 178 (183) / 0 / 135 / 71 |
+| Drops · pickups after a fight, per hard team | — | — | 113 · 12 | 207 · 26 |
+| Defense entries per team | — | 15 | 25 | hard 96 |
+| Followers (raid group, escort) | — | 0 | 0 | 0 |
+| Extortions paid | 0.5 | 0 | 0 | 0 |
+
+- **The wipes come from the defense (D14).** In hard × hard seed 1, 15 of the 16 encounters of the first 12 world
+  hours were opened by the defense rule, 14 of them inside the defender's own core zone (radius 8), where the other
+  team's collectors work a deposit; normal × normal seed 1: 10 of 10. A wiped team loses its 6 starting creeps
+  before its first extra creep (the opening is at real minutes 120–340 on this world) and never produces again.
+- **No group forms on this world.** The raid group needs 8 creeps *and* something left to explore (D16), the escort
+  10 creeps and a cristal collector: the map is explored and the cristal gone before a team has 8–10 creeps (at
+  48 h, seed 1, all 30 of the winner's creeps gather matéria). With no raider, no creep extorts, so the D27 "pay" and
+  the D17 posture's payment never happen in these worlds (they are covered by the tests on hand-made maps).
+- **Tick cost** (§7: ≤ 1.5× F1's ~50 µs): the C1 means were 54–86 µs per world tick before the `perf(sim)` commit;
+  after it, hard × hard seed 1 runs at 48 µs (12.4 s) and the busiest world (easy × hard seed 2: one team at 30
+  creeps, ~200 battles) at ~94 µs. In that world's profile the threat pass is 2.3% of the time; the full decision
+  is 23%, three quarters of it `roadTarget` (on `main` since F2) and the rules' serialization.
+
+**The owner's decisions at C1** (2026-11-26; plan §12, C1-1..C1-3):
+
+1. The D14 defense starts only for a threat in the zone: a wanderer, or another team's creep chasing one of the
+   team's creeps.
+2. D16 keeps "while the team can still explore"; the groups are measured again at F4's C2.
+3. The tick cost is accepted; a `roadTarget` cache per `roadRevision` is parked for F4/F7.
+
+**C1 again, with C1-1** (`3591852`; same runs and seeds). The threat pass also holds only the victims it chooses for
+(loaded and free, or with a response), so an empty chased creep still takes the defense:
+
+| | easy × easy | normal × normal | hard × hard | hard × easy (both sides, 10 runs) |
+|---|---|---|---|---|
+| A team wiped (0 creeps at the end) | 0/5 | **0/5** (3/5 before) | **0/5** (4/5) | **2/10** (6/10), the easy side, real minutes 192 and 316 |
+| Creeps at the end | 23 / 20 | 29 / 28 | 30 / 30 on every seed | hard 30, easy 17 |
+| Matéria delivered | 138k / 139k | 152k / 162k | 168k / 167k | hard 174k, easy 94k; hard ahead 10/10 |
+| Battles per team per 10 real min | 0.4–2.8 | 0.4–1.8 | 0.3–1.6 | hard 0.7–1.9, easy 0.1–1.2 |
+| Help joins per team per 30 real min (target ≥ 1) | 0.2–4.7 | 0.3–7.0 | 0.7–10.7 | hard 2–10, easy 0–4 |
+| D27 per hard team: help (helpers) / pay / drop-flee / drop-fight | — | — | 73 (77) / 0 / 68 / 32 | 159 (163) / 0 / 127 / 74 |
+| Drops · pickups after a fight, per hard team | — | — | 100 · 11 | 203 · 26 |
+| Defense entries per team | — | 2 | 2 | hard 2 |
+| Followers (raid group, escort) | — | 0 | 0 | 0 |
+
+The tick cost follows the population: 65–78 µs per tick on average with both teams near the cap (hard × hard 78, at
+30 + 30 creeps), accepted at C1-3 and measured again at F4's C2.
+
+**Interpretations to validate in the playtest:**
+
+1. The team's difficulty is its first bot player's (by id); a team with no bot is hard.
+2. The defense's attack radius is measured from the defending creep (the zone's radius), not from the core.
+3. A group takes the free matéria creeps with the highest share of their DNA's HP, ties to the lower id; one raid
+   group and one escort per team.
+4. With help coming, the victim keeps its rules (its D17 posture still pays a demand up to 250‰): the plan's
+   reading, where the spec says "refuse".
+5. Drop and fight attacks within 6 cells (`RISK.fightRadius`) after dropping.
+6. The pay estimate reads the aggressor's free capacity without the upgrade (another team's view does not show it).
+7. A wanderer's power uses `wanderers.hp` as its HP.
+8. A help join is a join on a side the team already had (the help rule, a follow or the defense).
+9. `--strategist name:difficulty`, comma-separated per team; a missing difficulty is hard.
+10. C1-1's threat is another team's creep whose hostile intent targets one of the team's creeps, anywhere, while it
+    stands in the zone, or any wanderer in the zone; the defenders still attack the nearest enemy within the radius.
 
 ## F4 — The balance pass
 
@@ -213,7 +310,8 @@ more battles, from help and the bot's hard reaction, not overhead. F3/F7 should 
 - [ ] The wanderers' curve against its targets
 - [ ] The encounter windows (PA-3) and the other durations
 - [ ] The 2-hour default world in `params/default.json`; the PA-1/PA-3 test; the fixed hashes
-- [ ] **Checkpoint C2:** the targets' table per ×N candidate; the owner picks the candidates to play
+- [ ] **Checkpoint C2:** the targets' table per ×N candidate; the owner picks the candidates to play; the D16
+      groups and the tick cost measured again (R F3's C1-2, C1-3)
 
 ## F5 — The pauses, network and server
 

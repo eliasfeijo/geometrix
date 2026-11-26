@@ -55,11 +55,14 @@ describe("verify", () => {
     );
     const result = verify(7, ticks, params);
     expect(result.ok).toBe(true);
+    // The cut falls mid-battle when one is open from hour 1 on, which moves
+    // with the bots' rules (the next test pins the mid-battle case).
     expect(result.runs.map((r) => r.name)).toEqual([
       "run 1",
       "run 2",
-      // A wanderer's battle is open at hour 1 in this seed (junction F6).
-      "snapshot at tick 3863 (mid-battle) -> restore",
+      expect.stringMatching(
+        /^snapshot at tick \d+( \(mid-battle\))? -> restore$/,
+      ),
       `replay of the log (${log.length} commands)`,
     ]);
     for (const r of result.runs) expect(r.hash).toBe(stateHash(state));

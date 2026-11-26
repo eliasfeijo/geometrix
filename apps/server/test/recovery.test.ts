@@ -118,21 +118,34 @@ describe("recovery after a restart", () => {
   });
 
   test("the chronicle after a restart is the one before it (spec N-2)", () => {
+    // The crash comes 90 ticks after one of team 1's first events (births,
+    // on tick 2160 before R F3), found by search, so the event falls after
+    // the last snapshot.
+    const probe = new Store(":memory:");
+    const probed = newWorld(probe);
+    run(probed, addHuman(probe, probed), 6_000);
+    const event = probe
+      .recentChronicle(probed.id, 1, 10_000)
+      .map((e) => e.tick)
+      .find((tick) => tick % config.snapshotEveryTicks < 200);
+    if (event === undefined) throw new Error("no team 1 event to crash after");
+    const until = event + 90;
+    const snapshotTick =
+      Math.floor(until / config.snapshotEveryTicks) * config.snapshotEveryTicks;
+
     const steady = new Store(":memory:");
     const reference = newWorld(steady);
-    // The first events (births) come on tick 2160; the last snapshot before
-    // the crash is at 2100.
-    run(reference, addHuman(steady, reference), 2_250);
+    run(reference, addHuman(steady, reference), until);
 
     const file = dbFile();
     let store = new Store(file);
     const crashed = newWorld(store);
-    run(crashed, addHuman(store, crashed), 2_250);
+    run(crashed, addHuman(store, crashed), until);
     // Events after the last snapshot are stored, and get redone.
-    expect(store.latestSnapshot(crashed.id)?.tick).toBe(2_100);
+    expect(store.latestSnapshot(crashed.id)?.tick).toBe(snapshotTick);
     const tail = store
       .recentChronicle(crashed.id, 1, 1_000)
-      .filter((e) => e.tick >= 2_100);
+      .filter((e) => e.tick >= snapshotTick);
     expect(tail.length).toBeGreaterThan(0);
     const rows = store.chronicleCount(crashed.id);
     store.close();

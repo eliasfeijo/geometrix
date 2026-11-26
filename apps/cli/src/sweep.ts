@@ -11,6 +11,7 @@ import {
   parseParams,
   type MetricsSample,
   type Params,
+  type Difficulty,
   type StrategistId,
 } from "@geometrix/sim";
 import {
@@ -20,7 +21,7 @@ import {
   type Fate,
   type Role,
 } from "./encounters.ts";
-import { HOUR, hours, number, realTime, table } from "./format.ts";
+import { botsLine, HOUR, hours, number, realTime, table } from "./format.ts";
 import {
   seedTargets,
   TARGETS,
@@ -549,6 +550,8 @@ export type SweepOptions = {
   /** The recovery scenario on every run (P12), or null. */
   shock: Shock | null;
   strategists: StrategistId[];
+  /** One per team; hard by default (R spec D26). */
+  difficulties?: Difficulty[];
 };
 
 export type SweepResult = {
@@ -580,6 +583,7 @@ export function sweep(
         multiplier: options.multiplier ?? params.world.multiplier,
         shock: options.shock,
         strategists: options.strategists,
+        difficulties: options.difficulties,
       });
       const summary = summarize(result, value);
       runs.push(summary);
@@ -659,10 +663,7 @@ export function renderSweepReport({
             .map((m) => `${realTime(ticks * tickSeconds, m)} a ×${m}`)
             .join(" · ")}`,
         ],
-        [
-          "Estrategistas",
-          options.strategists.map((s, t) => `time ${t}: ${s}`).join(" · "),
-        ],
+        ["Estrategistas", botsLine(options.strategists, options.difficulties)],
         ["Parâmetros base", `\`${options.paramsSource}\``],
         ["Runs", `${runs.length} em ${number(wall, 1)} s`],
       ],

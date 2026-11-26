@@ -24,6 +24,7 @@ export * from "./serialize.ts";
 export * from "./stats.ts";
 export * from "./strategist.ts";
 export * from "./step.ts";
+export * from "./threat.ts";
 export * from "./view.ts";
 export * from "./vision.ts";
 export * from "./wanderers.ts";

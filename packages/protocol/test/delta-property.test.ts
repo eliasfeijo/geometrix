@@ -118,13 +118,14 @@ test.each([1, 42, 649])(
     // the D7 fields: a new entity is sent whole, so it has its team) and left
     // it, and each team found the enemy core (seen after ~4.5-5.3 h in these
     // seeds). Through the junction host, battles open, lock their creeps
-    // and close, creeps die and spoils drop: 10-76 battles opened and closed
-    // (12 and 14 on seeds 1 and 42 since the road builder resolves its own
-    // target, R F2: the roads come in another order, the fights move),
-    // 20-152 locked creeps sent (24 and 28 since then), 5-12 deaths and 1-8 spoils (as the two teams
-    // saw them) in these seeds. A bot's extortion is answered in the tick it
+    // and close, creeps die and spoils drop. With R F3's hard bots (the
+    // defense against threats, C1-1, and the threat pass's drops), seeds 1,
+    // 42 and 649 end with 53, 56 and 59 creeps, with 28, 36 and 14 battles
+    // opened and closed, 78-144 locked creeps sent, 15-22 deaths and 7-32
+    // spoils (as the two teams saw them; before R F3: 12-16 battles, 5-12
+    // deaths, 1-8 spoils). A bot's extortion is answered in the tick it
     // opens, so no delta carries it.
-    expect(state.creeps.length).toBeGreaterThan(12);
+    expect(state.creeps.length).toBeGreaterThan(8);
     expect(upserts).toBeGreaterThan(ticks);
     expect(explored).toBeGreaterThan(300);
     expect(sight).toBeGreaterThan(1000);
@@ -162,7 +163,9 @@ test.each([42])(
     const client = teams.map((team) => emptyView(team, cells));
     let upserts = 0;
     let removes = 0;
+    let alive = 0;
     for (;;) {
+      alive = Math.max(alive, state.wanderers.length);
       for (const team of teams) {
         const seen = view(state, team);
         const delta = JSON.parse(
@@ -184,7 +187,8 @@ test.each([42])(
       );
       stepJunction(state, host, accepted);
     }
-    expect(state.wanderers.length).toBeGreaterThan(0);
+    // The most alive at once: the hard bots may kill the last ones (R F3).
+    expect(alive).toBeGreaterThan(0);
     // 62 upserts and 31 removes in this seed.
     expect(upserts).toBeGreaterThan(30);
     expect(removes).toBeGreaterThan(10);

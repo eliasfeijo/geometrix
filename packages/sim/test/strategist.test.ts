@@ -13,27 +13,45 @@ import { mirrorCell, Terrain } from "../src/map.ts";
 import { canonicalJson, serialize } from "../src/serialize.ts";
 import { step } from "../src/step.ts";
 import { roadTarget } from "../src/roads.ts";
-import { postureRules, strategistCommands } from "../src/strategist.ts";
+import type { Difficulty } from "../src/domination.ts";
+import {
+  defenseRule,
+  followerRules,
+  postureRules,
+  standRules,
+  strategistCommands,
+  teamDifficulty,
+} from "../src/strategist.ts";
 import { view } from "../src/view.ts";
 import { createWorld, type WorldState } from "../src/world.ts";
-import { loadTestParams, revealWorld, textWorld } from "./helpers.ts";
+import {
+  addWanderer,
+  loadTestParams,
+  placeWorld,
+  revealWorld,
+  textWorld,
+  type Placed,
+} from "./helpers.ts";
 
 const params = loadTestParams();
 
 /**
- * The seed-42 world after one bot per team joined at tick 0, all revealed,
- * its materia collectors already with the bot's posture.
+ * The seed-42 world after one bot per team joined at tick 0 at `difficulty`
+ * (easy: slice D's strategist, R spec D26), all revealed, its materia
+ * collectors already with the bot's posture.
  */
-function joined(): WorldState {
+function joined(difficulty: Difficulty = "easy"): WorldState {
   const world = createWorld(42, params);
   step(world, [
-    { playerId: 1, command: { type: "join", team: 0, bot: true } },
-    { playerId: 2, command: { type: "join", team: 1, bot: true } },
+    { playerId: 1, command: { type: "join", team: 0, bot: true, difficulty } },
+    { playerId: 2, command: { type: "join", team: 1, bot: true, difficulty } },
   ]);
   revealWorld(world);
   for (const creep of world.creeps) {
+    const posture =
+      difficulty === "easy" ? postureRules(creep.dna) : standRules();
     creep.rules = withHelp(
-      [...postureRules(creep.dna), ...collectorRules("materia")],
+      [...posture, ...collectorRules("materia")],
       creep.dna,
     );
   }
@@ -44,8 +62,8 @@ function joined(): WorldState {
  * The world of joined() with one passable cell left never seen by each team,
  * mirrored: there is something to explore, so the bot keeps raiders.
  */
-function withDark(): WorldState {
-  const world = joined();
+function withDark(difficulty: Difficulty = "easy"): WorldState {
+  const world = joined(difficulty);
   const size = world.map.width * world.map.height;
   const cell = world.map.terrain.findIndex((t) => t === Terrain.jungle);
   world.memory[0]!.explored[cell] = 0;
@@ -104,7 +122,7 @@ const presetsOf = (commands: Command[]) =>
 const builders = (commands: Command[]) =>
   assignments(commands).filter((a) => a.role === "roadBuilder").length;
 
-describe("balanced", () => {
+describe("balanced at easy: slice D's strategist (R spec D26)", () => {
   test("splits 6 creeps into 2 cristal, 1 road builder, 1 raider and 2 materia, lowest ids first", () => {
     const world = withDark();
     const [a, b, c, d] = teamCreeps(world, 0);
@@ -357,5 +375,335 @@ describe("balanced", () => {
     expect(
       builders(strategistCommands("balanced", seen, world.map, world.params)),
     ).toBe(0);
+  });
+});
+
+/** The setRules a command list gives the creep, if any. */
+const rulesGiven = (commands: Command[], id: number) =>
+  commands.find(
+    (c): c is Extract<Command, { type: "setRules" }> =>
+      c.type === "setRules" && c.creepId === id,
+  )?.rules;
+
+describe("the posture at normal and hard (R spec D17, S-4)", () => {
+  test.each(["normal", "hard"] as const)(
+    "every DNA's gatherer pays a demand of at most 250‰, flees below 400‰ HP and fights otherwise (%s)",
+    (difficulty) => {
+      const world = withDark(difficulty);
+      const creeps = teamCreeps(world, 0);
+      for (const creep of creeps) {
+        creep.rules = presetRules("materiaCollector", creep.dna);
+      }
+      const commands = decide(world, 0);
+      expect(standRules()).toEqual([
+        {
+          when: { type: "demandAtMost", permille: 250 },
+          then: { type: "pay" },
+        },
+        { when: { type: "hpBelow", permille: 400 }, then: { type: "flee" } },
+        { when: { type: "always" }, then: { type: "fight" } },
+      ]);
+      const gatherers = creeps.filter((c) => rulesGiven(commands, c.id));
+      expect(new Set(gatherers.map((c) => c.dna))).toEqual(
+        new Set(["square", "triangle", "circle"]),
+      );
+      for (const creep of gatherers) {
+        const rules = rulesGiven(commands, creep.id)!;
+        expect(rules.slice(0, 3)).toEqual(standRules());
+        expect(rules[3]).toEqual(helpRule(creep.dna));
+      }
+    },
+  );
+
+  test("easy keeps slice D's posture: the triangle pays, the circle flees", () => {
+    const world = withDark("easy");
+    const triangle = teamCreeps(world, 0).find((c) => c.dna === "triangle")!;
+    triangle.rules = presetRules("materiaCollector", "triangle");
+    expect(rulesGiven(decide(world, 0), triangle.id)!.slice(0, 2)).toEqual(
+      postureRules("triangle"),
+    );
+  });
+});
+
+/**
+ * A 30-cell line, team 0's core at x 0 (its zone reaches x 8) and team 1's
+ * at x 29, with the creeps placed and both bots joined at `difficulty`.
+ */
+function line(difficulty: Difficulty, placed: readonly Placed[]) {
+  const { world, creeps } = placeWorld(
+    ["A" + ".".repeat(28) + "B"],
+    placed,
+    params,
+  );
+  step(world, [
+    { playerId: 1, command: { type: "join", team: 0, bot: true, difficulty } },
+    { playerId: 2, command: { type: "join", team: 1, bot: true, difficulty } },
+  ]);
+  return { world, creeps };
+}
+
+describe("the core zone's defense (R spec D14, S-1)", () => {
+  test.each(["normal", "hard"] as const)(
+    "while an enemy chasing one of its creeps stands in the zone, the creeps inside it attack on top of their role (%s)",
+    (difficulty) => {
+      const { world, creeps } = line(difficulty, [
+        [0, "square", 2, 0],
+        [0, "triangle", 12, 0],
+        [1, "circle", 6, 0],
+      ]);
+      const [inside, outside, enemy] = creeps;
+      // Passing or gathering in the zone, the enemy is no threat (C1-1).
+      expect(rulesGiven(decide(world, 0), inside!.id)?.[0]).not.toEqual(
+        defenseRule(world.params),
+      );
+      enemy!.order = {
+        type: "approach",
+        targetId: inside!.id,
+        intent: "attack",
+      };
+      const commands = decide(world, 0);
+      const rules = rulesGiven(commands, inside!.id)!;
+      expect(rules[0]).toEqual(defenseRule(world.params));
+      expect(defenseRule(world.params).then).toEqual({
+        type: "approach",
+        intent: "attack",
+        radius: 8,
+        minCargo: 0,
+      });
+      expect(rules.slice(1)).not.toContainEqual(defenseRule(world.params));
+      expect(rulesGiven(commands, outside!.id)?.[0]).not.toEqual(
+        defenseRule(world.params),
+      );
+      // Taken: the rules stay as they are.
+      inside!.rules = rules;
+      expect(rulesGiven(decide(world, 0), inside!.id)).toBeUndefined();
+      // No enemy left in the zone: the rule leaves, the role stays.
+      enemy!.x = 9;
+      expect(rulesGiven(decide(world, 0), inside!.id)).toEqual(rules.slice(1));
+    },
+  );
+
+  test("easy does not defend", () => {
+    const { world, creeps } = line("easy", [
+      [0, "square", 2, 0],
+      [1, "circle", 6, 0],
+    ]);
+    const rules = rulesGiven(decide(world, 0), creeps[0]!.id);
+    expect(rules?.[0]).not.toEqual(defenseRule(world.params));
+  });
+
+  test("a third team's creep in the zone is an enemy too (D18, S-5)", () => {
+    const { world, creeps } = line("hard", [
+      [0, "square", 2, 0],
+      [1, "circle", 6, 0],
+    ]);
+    creeps[1]!.team = 2;
+    creeps[1]!.order = {
+      type: "approach",
+      targetId: creeps[0]!.id,
+      intent: "extort",
+    };
+    expect(rulesGiven(decide(world, 0), creeps[0]!.id)?.[0]).toEqual(
+      defenseRule(world.params),
+    );
+  });
+
+  test("an enemy in the zone chasing one of the team's creeps outside it is a threat too", () => {
+    const { world, creeps } = line("hard", [
+      [0, "square", 2, 0],
+      [0, "triangle", 12, 0],
+      [1, "circle", 6, 0],
+    ]);
+    const [inside, outside, enemy] = creeps;
+    enemy!.order = {
+      type: "approach",
+      targetId: outside!.id,
+      intent: "attack",
+    };
+    expect(rulesGiven(decide(world, 0), inside!.id)?.[0]).toEqual(
+      defenseRule(world.params),
+    );
+  });
+
+  test("a wanderer in the zone is an enemy too", () => {
+    const { world, creeps } = line("hard", [[0, "square", 2, 0]]);
+    addWanderer(world, 7, 0);
+    expect(view(world, 0).wanderers).toHaveLength(1);
+    expect(rulesGiven(decide(world, 0), creeps[0]!.id)?.[0]).toEqual(
+      defenseRule(world.params),
+    );
+  });
+});
+
+/** Applies both bots' commands of this tick without moving the world. */
+function settle(world: WorldState): void {
+  for (const input of botInputs(world)) {
+    step(world, [input]);
+    world.tick -= 1;
+  }
+}
+
+/** Team 0 grows to `count` creeps: copies of its first ones, new ids. */
+function growTo(world: WorldState, count: number): void {
+  const mine = teamCreeps(world, 0);
+  for (let i = mine.length; i < count; i++) {
+    world.creeps.push({
+      ...structuredClone(mine[i % mine.length]!),
+      id: world.nextId++,
+    });
+  }
+}
+
+const isRaider = (c: WorldState["creeps"][number]) =>
+  canonicalJson(c.rules) === canonicalJson(withHelp(raiderRules(), c.dna));
+const followsWith = (c: WorldState["creeps"][number], leader: number) =>
+  canonicalJson(c.rules) === canonicalJson(followerRules(leader, c.dna));
+
+describe("the raid group and the escort (R spec D16, S-3)", () => {
+  test.each(["normal", "hard"] as const)(
+    "from 8 creeps, one raider and 2 followers, the healthiest first (%s)",
+    (difficulty) => {
+      const world = withDark(difficulty);
+      growTo(world, 7);
+      settle(world);
+      expect(teamCreeps(world, 0).filter(isRaider)).toEqual([]);
+      growTo(world, 8);
+      // 3 cristal collectors and the road builder are the lowest ids; the
+      // lowest-id materia creep left is wounded: the group passes it over.
+      const wounded = teamCreeps(world, 0)[4]!;
+      wounded.hp = Math.floor(wounded.hp / 2);
+      settle(world);
+      const raiders = teamCreeps(world, 0).filter(isRaider);
+      expect(raiders).toHaveLength(1);
+      const raider = raiders[0]!;
+      const followers = teamCreeps(world, 0).filter((c) =>
+        followsWith(c, raider.id),
+      );
+      expect(followers).toHaveLength(2);
+      expect([raider, ...followers]).not.toContain(wounded);
+      expect(followerRules(raider.id, "square")).toEqual([
+        ...standRules(),
+        {
+          when: { type: "always" },
+          then: { type: "follow", creepId: raider.id },
+        },
+        helpRule("square"),
+        ...collectorRules("materia"),
+      ]);
+      // Taken: nothing changes.
+      expect(
+        decide(world, 0).filter(
+          (c) => c.type === "setRules" || c.type === "applyPreset",
+        ),
+      ).toEqual([]);
+      // The raider dies: below 8 creeps, its followers gather again.
+      world.creeps = world.creeps.filter((c) => c !== raider);
+      settle(world);
+      for (const follower of followers) {
+        expect(follower.rules).toEqual(
+          withHelp(
+            [...standRules(), ...collectorRules("materia")],
+            follower.dna,
+          ),
+        );
+      }
+    },
+  );
+
+  test("a dead raider's followers are reassigned at the next decision", () => {
+    const world = withDark("hard");
+    growTo(world, 9);
+    settle(world);
+    const raider = teamCreeps(world, 0).find(isRaider)!;
+    const followers = teamCreeps(world, 0).filter((c) =>
+      followsWith(c, raider.id),
+    );
+    world.creeps = world.creeps.filter((c) => c !== raider);
+    settle(world);
+    // Still 8 creeps: a new group, and the old followers are not left
+    // following a dead creep.
+    const next = teamCreeps(world, 0).find(isRaider)!;
+    expect(next).toBeDefined();
+    for (const follower of followers) {
+      expect(followsWith(follower, raider.id)).toBe(false);
+    }
+  });
+
+  test("from 10 creeps, the lowest-id cristal collector gets one escort (hard)", () => {
+    const world = withDark("hard");
+    growTo(world, 9);
+    settle(world);
+    const collectors = () =>
+      teamCreeps(world, 0).filter(
+        (c) =>
+          canonicalJson(c.rules) ===
+          canonicalJson(
+            withHelp([...standRules(), ...collectorRules("cristal")], c.dna),
+          ),
+      );
+    const escorts = (leader: number) =>
+      teamCreeps(world, 0).filter((c) => followsWith(c, leader));
+    expect(collectors().flatMap((c) => escorts(c.id))).toEqual([]);
+    growTo(world, 10);
+    settle(world);
+    const [first, ...others] = collectors();
+    expect(escorts(first!.id)).toHaveLength(1);
+    for (const other of others) expect(escorts(other.id)).toEqual([]);
+  });
+
+  test("easy keeps slice D's raiders: one per 6 creeps, no followers", () => {
+    const world = withDark("easy");
+    growTo(world, 12);
+    settle(world);
+    expect(teamCreeps(world, 0).filter(isRaider)).toHaveLength(2);
+    expect(
+      teamCreeps(world, 0).filter((c) =>
+        c.rules.some((r) => r.then.type === "follow"),
+      ),
+    ).toEqual([]);
+  });
+});
+
+describe("production before the upgrade (R spec D15, S-2)", () => {
+  test.each(["easy", "normal", "hard"] as const)(
+    "with stock for one only, it produces and leaves the upgrade (%s)",
+    (difficulty) => {
+      const world = joined(difficulty);
+      const team = world.teams[0]!;
+      const { creep, upgrade } = world.params;
+      // Enough for the creep or for the upgrade, not both.
+      team.stock = {
+        materia: creep.cost.materia,
+        cristal: Math.max(creep.cost.cristal, upgrade.capacity.cost.cristal),
+      };
+      const types = decide(world, 0).map((c) => c.type);
+      expect(types).toContain("produce");
+      expect(types).not.toContain("buyUpgrade");
+      expect(types.indexOf("produce")).toBe(0);
+    },
+  );
+});
+
+describe("difficulty (R spec D26, S-6)", () => {
+  test("plays at its team's first bot player's difficulty, hard by default", () => {
+    const world = createWorld(42, params);
+    step(world, [
+      { playerId: 5, command: { type: "join", team: 0, bot: false } },
+      {
+        playerId: 7,
+        command: { type: "join", team: 0, bot: true, difficulty: "normal" },
+      },
+      {
+        playerId: 3,
+        command: { type: "join", team: 0, bot: true, difficulty: "easy" },
+      },
+      { playerId: 2, command: { type: "join", team: 1, bot: true } },
+    ]);
+    // Player 3 is team 0's first bot by id; the human does not count.
+    expect(teamDifficulty(view(world, 0).players, 0)).toBe("easy");
+    expect(teamDifficulty(view(world, 1).players, 1)).toBe("hard");
+    // Another team's view has no difficulty of team 0 (P8): hard, unknown.
+    expect(teamDifficulty(view(world, 1).players, 0)).toBe("hard");
+    expect(teamDifficulty([], 0)).toBe("hard");
   });
 });

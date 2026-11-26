@@ -21,6 +21,7 @@ import {
   type Bot,
   type Command,
   type Params,
+  type Difficulty,
   type StrategistId,
   type WorldState,
 } from "@geometrix/sim";
@@ -133,8 +134,9 @@ export function verify(
   ticks: number,
   params: Params,
   strategists: readonly StrategistId[] = ["balanced", "balanced"],
+  difficulties: readonly Difficulty[] = [],
 ): VerifyResult {
-  const bots = botsFor(strategists);
+  const bots = botsFor(strategists, difficulties);
   const half = Math.floor(ticks / 2);
   const events = [0, 1, 2, 3].map(() => new EventHash());
   const finished: FinishedBattle[] = [];

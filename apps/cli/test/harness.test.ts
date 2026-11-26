@@ -45,8 +45,24 @@ const teamCreeps = (world: WorldState, team: number) =>
 describe("bots", () => {
   test("join their teams at tick 0, then act on tick 1 and every minute", () => {
     expect(botCommands(createWorld(42, params), bots)).toEqual([
-      { playerId: 1, command: { type: "join", team: 0, bot: true } },
-      { playerId: 2, command: { type: "join", team: 1, bot: true } },
+      {
+        playerId: 1,
+        command: { type: "join", team: 0, bot: true, difficulty: "hard" },
+      },
+      {
+        playerId: 2,
+        command: { type: "join", team: 1, bot: true, difficulty: "hard" },
+      },
+    ]);
+    // Each bot joins at its difficulty (R spec D26).
+    expect(
+      botCommands(
+        createWorld(42, params),
+        botsFor(["balanced", "balanced"], ["easy", "normal"]),
+      ).map((c) => c.command),
+    ).toEqual([
+      { type: "join", team: 0, bot: true, difficulty: "easy" },
+      { type: "join", team: 1, bot: true, difficulty: "normal" },
     ]);
     expect(BALANCED.everyTicks).toBe(60);
     expect([0, 1, 2, 60, 61, 121].map(strategistActs)).toEqual([
@@ -81,14 +97,23 @@ describe("a bot × bot world", () => {
   const ticks = 6 * 3600;
   const { state, log } = runBots(42, params, ticks, bots);
 
-  test("grows, buys the upgrade and builds roads on both sides", () => {
-    for (const team of state.teams) {
-      expect(teamCreeps(state, team.id).length).toBeGreaterThan(6);
+  // The economy's loop with slice D's bots (easy, R spec D26): the hard
+  // bots' defense and fights decide who grows on these params (R F3: one
+  // team lost every creep in 6 h), which the C1 runs measure.
+  test("grows, buys the upgrade and builds roads on both sides (easy)", () => {
+    const easy = runBots(
+      42,
+      params,
+      ticks,
+      botsFor(["balanced", "balanced"], ["easy", "easy"]),
+    ).state;
+    for (const team of easy.teams) {
+      expect(teamCreeps(easy, team.id).length).toBeGreaterThan(6);
       expect(team.upgrades.capacity).toBe(true);
-      expect(state.stats.teams[team.id]!.roadSegments).toBeGreaterThan(0);
-      expect(state.stats.teams[team.id]!.delivered.cristal).toBeGreaterThan(0);
+      expect(easy.stats.teams[team.id]!.roadSegments).toBeGreaterThan(0);
+      expect(easy.stats.teams[team.id]!.delivered.cristal).toBeGreaterThan(0);
     }
-  });
+  }, 30_000);
 
   test("replaying the log without bots reaches the same state", () => {
     const replay = createWorld(42, params);

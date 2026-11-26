@@ -34,6 +34,21 @@ export const worldAndReal = (
   format: (seconds: number) => string = hours,
 ) => `${format(seconds)} (${realTime(seconds, multiplier)})`;
 
+/**
+ * Each team's bot as the reports name it: "time 0: balanced (hard)"; a run
+ * from before the difficulty (R F3) reads as hard, as it played.
+ */
+export const botsLine = (
+  strategists: readonly string[],
+  difficulties: readonly string[] = [],
+) =>
+  strategists
+    .map(
+      (s, t) =>
+        `time ${t}: ${s === "none" ? s : `${s} (${difficulties[t] ?? "hard"})`}`,
+    )
+    .join(" · ");
+
 export function table(header: string[], rows: string[][]): string {
   const line = (cells: string[]) => `| ${cells.join(" | ")} |`;
   return [line(header), line(header.map(() => "---")), ...rows.map(line)].join(

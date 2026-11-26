@@ -73,8 +73,9 @@ git worktree remove ../<slug> && git branch -d <branch>
 
 `scripts/merge-phase.sh <branch> <message-file> [--no-check] [--cleanup]` does the merge, the check on `main`, the
 `main..<branch>` test and the cleanup from any checkout, timing each step. A session isolated in its worktree (a
-background job) cannot touch the checkout that holds `main`: it ends with that one line for the owner (`!` runs it in
-the session).
+background job) cannot touch the checkout that holds `main`: it ends with that one line for the owner to **paste into
+their own terminal**. Not with the `!` prefix: a `!` command runs through the session's worktree guard, which refuses
+git in another checkout, and the merge fails with no visible error.
 
 Worktrees share ports (8080, 5173: use `GEO_PORT`) and the CPU, so timing-sensitive tests can skew when several run
 at once.

@@ -35,7 +35,11 @@ export type TeamBattle = {
   /** The tick it opens in: the world stands at this tick just before. */
   openedTick: number;
   battle: number;
-  /** Its lowest-id participant of team 0, and of team 1. */
+  /**
+   * Its lowest-id creep of team 0, and of team 1, among the instance's
+   * members at the opening: the opening's creeps, without the ones that
+   * joined on its tick (since R F3 the defense opens with several).
+   */
   team0: number;
   team1: number;
 };
@@ -74,11 +78,16 @@ export function firstTeamBattle(): TeamBattle {
     host.tick();
     for (const battle of host.state.battles) {
       if (battle.openedTick !== host.state.tick - 1) continue;
+      const instance = host.junction.instances.find(
+        (i) => i.battleId === battle.id,
+      );
       const of = (team: number) =>
-        battle.participants.find((p) => {
-          const side = battle.sides[p.side]!;
-          return side.kind === "team" && side.team === team;
-        })?.id;
+        instance?.members
+          .map((m) => m.creep)
+          .filter(
+            (id) => host.state.creeps.find((c) => c.id === id)?.team === team,
+          )
+          .sort((a, b) => a - b)[0];
       const team0 = of(0);
       const team1 = of(1);
       if (team0 === undefined || team1 === undefined) continue;

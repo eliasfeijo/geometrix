@@ -386,8 +386,10 @@ describe("the battle screen over the socket (junction plan section 7)", () => {
     const open = await a.next("battleOpen");
     expect(open.battleId).toBe(opening.battle);
     expect(open.arena.width).toBeGreaterThan(0);
-    expect(open.roster.members.map((m) => m.creep)).toContain(18);
-    const me = open.roster.members.find((m) => m.creep === 18)!.participant;
+    expect(open.roster.members.map((m) => m.creep)).toContain(opening.team0);
+    const me = open.roster.members.find(
+      (m) => m.creep === opening.team0,
+    )!.participant;
     // The next world tick puts it in real time; the clock steps it.
     host.tick();
     const tick = open.view.tick;
@@ -440,7 +442,7 @@ describe("the battle screen over the socket (junction plan section 7)", () => {
     a.send({ type: "battleScreen", ref: 2, battleId: opening.battle });
     await a.next("battleOpen");
     host.tick();
-    expect(host.junction.screens).toEqual([18]);
+    expect(host.junction.screens).toEqual([opening.team0]);
     a.socket.close();
     await a.closed;
     host.tick();

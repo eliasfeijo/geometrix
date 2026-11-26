@@ -1,7 +1,12 @@
+import { createHost, stepJunction } from "@geometrix/junction";
 import {
+  botCommands,
+  botsFor,
+  createWorld,
   eventsFor,
   SIM_VERSION,
   SYSTEM_PLAYER_ID,
+  validate,
   type SimEvent,
 } from "@geometrix/sim";
 import { describe, expect, test } from "vitest";
@@ -97,6 +102,29 @@ describe("WorldHost", () => {
     expect(ticks).toContain(1);
     expect(ticks.every((t) => t % 60 === 1)).toBe(true);
   });
+
+  test("hard bots also run the threat pass between the minutes, deciding as the harness's do (R plan P9)", () => {
+    const ticks = 3 * 3600;
+    const { host, store } = setup([0, 1]);
+    for (let i = 0; i < ticks; i++) host.tick();
+    // The same world with the sim's bots, through the junction host.
+    const state = createWorld(42, params);
+    const junction = createHost(testBattleParams());
+    const bots = botsFor(["balanced", "balanced"]);
+    for (let i = 0; i < ticks; i++) {
+      const accepted = botCommands(state, bots).filter(
+        ({ playerId, command }) => validate(state, command, playerId) === null,
+      );
+      stepJunction(state, junction, accepted);
+    }
+    expect(stateHash(host.state)).toBe(stateHash(state));
+    const ids = new Set(host.state.players.map((p) => p.id));
+    const between = store
+      .commandsFrom(host.id, 1)
+      .filter((c) => ids.has(c.playerId) && c.tick % 60 !== 1);
+    expect(between.length).toBeGreaterThan(0);
+    expect(between.every((c) => c.command.type === "setRules")).toBe(true);
+  }, 60_000);
 
   test("a team takes 3 humans, counting joins queued for the same tick", () => {
     const { host, store } = setup([0]);

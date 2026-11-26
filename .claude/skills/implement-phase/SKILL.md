@@ -84,8 +84,10 @@ Before the first line of code, list what the phase needs and that **neither the 
    `docs: update status dashboard for the end of F<n>`.
 4. Merge into `main` (`commit` skill), then `npm run check` on `main`. **A session isolated in a worktree** (a
    background job) cannot run git in the checkout that holds `main`: write the merge message to a file and end the
-   report with the owner's one line, `! scripts/merge-phase.sh <branch> <message-file> [--cleanup]`, which merges,
-   runs the check there and cleans up (`--no-check` for a docs-only branch).
+   report with the owner's one line, `scripts/merge-phase.sh <branch> <message-file> [--cleanup]`, which merges,
+   runs the check there and cleans up (`--no-check` for a docs-only branch). The owner **pastes it into their own
+   terminal**; never offer it with the `!` prefix, which runs it through the session's worktree guard, where git in
+   another checkout is refused and the merge fails silently.
 
 ## 5. Report to the owner
 

@@ -128,7 +128,9 @@ describe("a run's pace", () => {
         BATTLE_RESULTS.reduce((sum, r) => sum + tally.battles[r], 0),
       );
       expect(team.battlesWithJoin).toBeLessThanOrEqual(team.battles);
-      expect(team.helpJoins).toBeNull();
+      // Since R F3, the joins on a side the team already had.
+      expect(team.helpJoins).toBe(tally.helpJoins);
+      expect(team.helpJoins).toBeLessThanOrEqual(tally.joins);
     }
   });
 
