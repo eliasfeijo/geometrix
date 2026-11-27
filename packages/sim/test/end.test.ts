@@ -55,6 +55,7 @@ function playerCommands(w: WorldState): Command[] {
     { type: "buyUpgrade", upgrade: "capacity" },
     { type: "react", creepId, choice: "pay" },
     concede,
+    { type: "rejectConcede" },
   ];
 }
 
@@ -638,5 +639,146 @@ describe("three teams (E-min D7, D12, K-2)", () => {
     for (const team of w.teams) team.stock = { materia: 0, cristal: 0 };
     step(w, []);
     expect(w.result).toMatchObject({ how: "noTeam", teams: [1, 2] });
+  });
+});
+
+describe("the minimum match time before a concession (L-5, plan P14)", () => {
+  /** world(bot) that allows concessions from `seconds` of match. */
+  function after(seconds: number, bot = false): WorldState {
+    const w = world(bot);
+    w.params = {
+      ...w.params,
+      end: { ...w.params.end, concedeAfterSeconds: seconds },
+    };
+    return w;
+  }
+
+  test.each([
+    ["a human", false],
+    ["a bot", true],
+  ])("%s is refused before it and accepted at it", (_, bot) => {
+    const w = after(3, bot);
+    // Ticks 0 and 1 end 1 s and 2 s into the match; tick 2 ends the third.
+    for (let tick = 0; tick < 2; tick++) {
+      expect(validate(w, concede, 1)).toBe("tooEarly");
+      step(w, [{ playerId: 1, command: concede }]);
+      expect(w.teams[0]!.out).toBeNull();
+    }
+    expect(validate(w, concede, 1)).toBeNull();
+    step(w, [{ playerId: 1, command: concede }]);
+    expect(w.teams[0]!.out).toEqual({ tick: 2, how: "conceded", bot });
+  });
+
+  test("elimination does not wait for it", () => {
+    const w = bare([[1, "square"]]);
+    w.params = {
+      ...w.params,
+      end: { ...w.params.end, concedeAfterSeconds: 1_000 },
+    };
+    step(w, []);
+    expect(w.teams[0]!.out).toMatchObject({ how: "eliminated" });
+  });
+});
+
+describe("the team's concession vote (L-6, L-7, plan P14)", () => {
+  /**
+   * Humans 1 and 3 on team 0 and human 2 on team 1; the vote closes 3 s after
+   * it opens and a rejected one blocks the next for 5 s.
+   */
+  function voting(): WorldState {
+    const w = world();
+    join(w, 3, 0, false);
+    w.params = {
+      ...w.params,
+      end: {
+        ...w.params.end,
+        concedeVoteSeconds: 3,
+        concedeRetrySeconds: 5,
+      },
+    };
+    return w;
+  }
+  const by = (playerId: number) => ({ playerId, command: concede });
+  const no = (playerId: number) => ({
+    playerId,
+    command: { type: "rejectConcede" } as const,
+  });
+
+  test("passes when every human says yes, and only its team hears of it", () => {
+    const w = voting();
+    const opened = step(w, [by(1)]);
+    expect(w.teams[0]!.out).toBeNull();
+    expect(w.teams[0]!.vote).toEqual({ openedTick: 0, yes: [1] });
+    expect(opened.filter((e) => e.type === "concedeVoteOpened")).toMatchObject([
+      { team: 0, deadlineTick: 3, teams: [0] },
+    ]);
+    expect(validate(w, concede, 1)).toBe("alreadyVoted");
+    expect(view(w, 0).teams[0]).toMatchObject({ vote: { yes: [1] } });
+    expect(view(w, 1).teams[0]).not.toHaveProperty("vote");
+    const closed = step(w, [by(3)]);
+    expect(w.teams[0]!.vote).toBeNull();
+    expect(w.teams[0]!.out).toEqual({ tick: 1, how: "conceded", bot: false });
+    expect(closed.filter((e) => e.type === "concedeVoteClosed")).toMatchObject([
+      { outcome: "passed", teams: [0] },
+    ]);
+    expect(w.result).toMatchObject({ how: "lastTeam", winner: 1 });
+  });
+
+  test("passes at the deadline when someone does not vote", () => {
+    const w = voting();
+    step(w, [by(1)]);
+    step(w, []);
+    step(w, []);
+    expect(w.teams[0]!.out).toBeNull();
+    // Tick 3 is the deadline: the absent human counts as yes.
+    step(w, []);
+    expect(w.teams[0]!.out).toEqual({ tick: 3, how: "conceded", bot: false });
+  });
+
+  test("a no ends it, and the next one waits", () => {
+    const w = voting();
+    step(w, [by(1)]);
+    const events = step(w, [no(3)]);
+    expect(w.teams[0]!.vote).toBeNull();
+    expect(w.teams[0]!.out).toBeNull();
+    expect(events.filter((e) => e.type === "concedeVoteClosed")).toMatchObject([
+      { outcome: "rejected" },
+    ]);
+    expect(validate(w, { type: "rejectConcede" }, 3)).toBe("noVote");
+    // Rejected on tick 1: refused until tick 6.
+    for (let tick = w.tick; tick < 6; tick++) {
+      expect(validate(w, concede, 1)).toBe("voteCooldown");
+      step(w, []);
+    }
+    expect(validate(w, concede, 1)).toBeNull();
+  });
+
+  test("a team with one human has no vote", () => {
+    const w = voting();
+    expect(validate(w, { type: "rejectConcede" }, 2)).toBe("noVote");
+    step(w, [by(2)]);
+    expect(w.teams[1]!.out).toMatchObject({ how: "conceded" });
+    expect(w.teams[1]!.vote).toBeNull();
+  });
+
+  test("the minimum time holds for opening one", () => {
+    const w = voting();
+    w.params = {
+      ...w.params,
+      end: { ...w.params.end, concedeAfterSeconds: 10 },
+    };
+    expect(validate(w, concede, 1)).toBe("tooEarly");
+  });
+
+  test("an open vote is dropped when the world ends", () => {
+    const w = voting();
+    step(w, [by(1)]);
+    const events = step(w, [by(2)]);
+    expect(w.result).toMatchObject({ how: "lastTeam", winner: 0 });
+    expect(w.teams[0]!.vote).toBeNull();
+    expect(w.teams[0]!.out).toBeNull();
+    expect(events.filter((e) => e.type === "concedeVoteClosed")).toMatchObject([
+      { team: 0, outcome: "dropped" },
+    ]);
   });
 });

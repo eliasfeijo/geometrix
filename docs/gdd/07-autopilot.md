@@ -106,7 +106,7 @@
   [E-min spec](../specs/m2-minimal-end/spec.md)): when it has no chance (at most 1 creep alive, nothing in production
   and a core stock below one creep's cost; only the stock counts, not what its last creep carries), at every
   difficulty, and only in a team with no human player: where humans play, they decide
-  ([01](01-world.md)).
+  ([01](01-world.md)). It does not concede before the match's minimum time either (owner, 2026-11-27).
 - **The squad in the world** (owner, slice G's design round, 2026-11-25; slice G; the squads in
   [02](02-creeps-and-domination.md)):
   - **the squad's other creeps follow the embodied creep in formation**, the default formation by DNA above; an

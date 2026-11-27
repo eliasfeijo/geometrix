@@ -22,6 +22,18 @@ const schema = {
   end: {
     /** Main events kept for the end screen (E-min plan P6). */
     highlights: positive,
+    /**
+     * World seconds of match before anyone may concede (E-min D3, revised
+     * 2026-11-27). Provisional.
+     */
+    concedeAfterSeconds: nonNegative,
+    /**
+     * World seconds a team's other humans have to vote on a concession; who
+     * has not voted by then counts as yes (plan P14). Provisional.
+     */
+    concedeVoteSeconds: positive,
+    /** World seconds after a rejected vote before a new one. Provisional. */
+    concedeRetrySeconds: nonNegative,
   },
   world: {
     durationSeconds: positive,

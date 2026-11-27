@@ -139,6 +139,7 @@ export const clientCommand = z.discriminatedUnion("type", [
   }),
   z.object({ type: z.literal("stopRepeat") }),
   z.object({ type: z.literal("concede") }),
+  z.object({ type: z.literal("rejectConcede") }),
   z.object({ type: z.literal("buyUpgrade"), upgrade: z.enum(["capacity"]) }),
   z.object({
     type: z.literal("react"),

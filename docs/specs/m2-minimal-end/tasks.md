@@ -1,6 +1,6 @@
 # M2 tasks — The minimal end
 
-**Status:** F0 ✅ (spec and plan approved 2026-11-25) · F1 ✅ (2026-11-27); F2 next. Branches `m2/emin-f<n>-<slug>` (skill `commit`).
+**Status:** F0 ✅ (spec and plan approved 2026-11-25) · F1 ✅ (2026-11-27) · F2 ✅ (2026-11-27); F3 next. Branches `m2/emin-f<n>-<slug>` (skill `commit`).
 **Spec:** [spec.md](spec.md) · **Plan:** [plan.md](plan.md)
 
 ## F0 — Spec and plan
@@ -63,15 +63,56 @@ A whole `geo sim --seed 42` match: 5.0 s. The end's stage with 60 creeps and an 
 
 ## F2 — The bot and the harness
 
-- [ ] The strategist's concession with no human in its team; nothing after its team left (B-1, B-2)
-- [ ] `runBots` stops at the end; the End section in `geo sim`; the ends table in `geo sweep`
-- [ ] `--concede team@minute` in `geo sim` and `geo verify` (P12); `geo verify` with an end by concession and at the
+- [x] The strategist's concession with no human in its team; nothing after its team left (B-1, B-2)
+- [x] `runBots` stops at the end; the End section in `geo sim`; the ends table in `geo sweep`
+- [x] `--concede team@minute` in `geo sim` and `geo verify` (P12); `geo verify` with an end by concession and at the
       clock on its three paths
-- [ ] The bot × bot ends: `geo sim` 3 days (seed 42) and `geo sweep` (seeds 1–20), recorded here
+- [x] The minimum time and the team's vote (L-5 to L-7, P14; owner, 2026-11-27): the three `end.concede*Seconds`
+      params, `tooEarly`, `rejectConcede` and its refusals, the vote in the team and its events, the deadline in
+      `checkEnd`, the strategist waiting; `SIM_VERSION`, the fixed hashes
+- [x] The bot × bot ends: `geo sim` 3 days (seed 42) and `geo sweep` (seeds 1–20), recorded here
+
+### F2 record (2026-11-27)
+
+**What it does.** The balanced bot concedes a lost match (B-1, B-2). `geo sim`, `geo sweep` and `geo verify` stop at
+the world's end; the reports have an End section and a table of ends, both from `endSummary`; `--concede team@minute`
+logs a real `concede`; `geo verify` takes `--set` and also compares the end summary across its paths. **Added during
+the phase** (the owner's revision of the concession, 2026-11-27, relayed by the orchestrator session): the minimum
+time and the team's vote with a deadline (L-5 to L-7, P14). `SIM_VERSION` 15.
+
+**Measured.**
+
+- `geo sim --seed 42 --days 3`: ends at the clock (tick 57,599, 120 real minutes at ×8), a draw; born 19 / 19, lost
+  6 / 5, battles won/lost 30/7 and 47/4, matéria 22,179 / 22,586. Its simulation time against `main`, three runs each,
+  alternated: 5.4–5.6 s here, 5.1–5.9 s there (no regression).
+- `geo sweep` (`end.highlights=5`, seeds 1–20): **20 of 20 end at the clock**, a draw. No bot ever concedes or is
+  eliminated in bot × bot at hard.
+- `geo verify --seed 42`: deterministic, also with `--concede 1@130` (a bot's concession at tick 7,800) and with
+  `--set world.durationSeconds=7200` (the clock), the same summary on every path.
+
+**Interpretations to validate** (the agent's, besides the proposals of L-7):
+
+1. In the minimum time and the deadline the current tick counts whole, as the clock does.
+2. The minimum time is 7,200 world seconds in every `params/*.json`, so at ×6 and ×12 it is not 15 real minutes. The
+   tests' fixed params have 0.
+3. The `sim` does not stop a bot player from conceding a team that has humans; only the strategist holds back (D4).
+4. A `--concede` before the minimum time is a usage error; one after the world ended, or for a team already out, is
+   not logged.
+5. A forced concession in the harness comes from a bot player, so it reads as "the bot's concession".
+
+**Left for later phases.**
+
+- **F3:** as in the F1 record, and now reachable by the bot: `main`'s server still ends by tick count, so a bot's
+  concession on a server world makes the next tick throw. `rejectConcede`'s schema is already in the protocol (the
+  vocabulary check needs it). `geo net` steps its own loop and does not stop at the end.
+- **F4:** the vote's chronicle sentences are placeholders; the refusal texts of `tooEarly`, `voteCooldown`,
+  `alreadyVoted` and `noVote` are in `format.ts`.
 
 ## F3 — Network and server
 
 - [ ] Protocol: `concede`, `teamOut`, `result` and `summary` in the delta, `ForeignTeam.out`; `PROTOCOL_VERSION` (P13)
+- [ ] The vote through the network (L-6, L-7): `rejectConcede` (its schema is in since F2) and the refusals, the
+      team's vote in the delta, its events
 - [ ] `WorldHost` ends from `state.result`; no strategist for a team out; the real-time clock skips an ended world
 - [ ] The lobby's result; an ended world restarts ended, without its battle instances (N-1; P8)
 - [ ] The export of an ended world reaches the same result, summary and hash (N-2); the diff property green (N-3);
@@ -80,7 +121,8 @@ A whole `geo sim --seed 42` match: 5.0 s. The end's stage with 60 creeps and an 
 
 ## F4 — Client
 
-- [ ] "Desistir" and its confirmation (D3, S-5)
+- [ ] "Desistir" and its confirmation (D3, S-5), the countdown to the minimum time, the vote panel (who said yes,
+      "yes" and "no", the time left; L-5 to L-7), the vote's chronicle sentences
 - [ ] The end screen over the map and the battle screen; "Ver o mapa", "Ver o replay"; entering an ended world
       (D9, S-1, S-2; P9)
 - [ ] The spectator of a team out (D7)

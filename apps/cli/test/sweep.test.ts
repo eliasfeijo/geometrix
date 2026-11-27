@@ -189,7 +189,7 @@ describe("geo sweep", () => {
     expect(run(argv("each"), capture())).toBe(0);
     const each = readFileSync(join(out, "each", "report.md"), "utf8");
     expect(each).toContain(
-      "| Duração de cada mundo | 1,0 h de mundo; 10 min reais a ×6 · 5,0 min reais a ×12 |",
+      "| Duração de cada mundo | até 1,0 h de mundo; 10 min reais a ×6 · 5,0 min reais a ×12 |",
     );
     // A moment's row in world time, then the same in real minutes per ×N.
     const rows = each.split("\n");
@@ -205,7 +205,7 @@ describe("geo sweep", () => {
     expect(run(argv("fixed", "--mult", "3"), capture())).toBe(0);
     const fixed = readFileSync(join(out, "fixed", "report.md"), "utf8");
     expect(fixed).toContain(
-      "| Duração de cada mundo | 1,0 h de mundo; 20 min reais a ×3 |",
+      "| Duração de cada mundo | até 1,0 h de mundo; 20 min reais a ×3 |",
     );
   }, 30_000);
 

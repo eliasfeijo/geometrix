@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import {
   DIFFICULTIES,
+  mayConcede,
   parseParams,
   STRATEGISTS,
   type Difficulty,
@@ -21,10 +22,18 @@ import {
   MATRIX_FILES,
   writeMatrix,
 } from "./junction-matrix.ts";
+import { END_KIND_LABELS, endKind, resultText } from "./ending.ts";
+import { concessionTick, type Concession } from "./harness.ts";
 import { measureNet, NET_FILES, netVerdicts, writeNet } from "./net.ts";
 import { renderReport } from "./report.ts";
 import { readRun, RUN_FILES, runId, simulate, writeRun } from "./sim.ts";
-import { parseSeeds, parseSet, runSweep, SweepError } from "./sweep.ts";
+import {
+  parseSeeds,
+  parseSet,
+  runSweep,
+  SweepError,
+  withParam,
+} from "./sweep.ts";
 import { parseShock, ShockError, type Shock } from "./shock.ts";
 import { verify } from "./verify.ts";
 
@@ -46,6 +55,9 @@ commands:
            --shock <t:n@m>       the recovery scenario: team t loses n free
                                  creeps (highest HP first) at real minute m;
                                  the run is not replayable (no replay.json)
+           --concede <t@m>       team t's bot concedes at world minute m, a
+                                 command in the log (replayable); not before
+                                 end.concedeAfterSeconds
            --strategist <a[,b]>  per team: ${STRATEGISTS.join(" | ")}, the
                                  bot's difficulty after a colon
                                  (${DIFFICULTIES.join(" | ")}; default hard), e.g.
@@ -73,7 +85,10 @@ commands:
            --seed <n>      world seed (default 42)
            --ticks <n>     ticks to simulate (default 50000)
            --params <file> params JSON (default params/default.json)
+           --set <path=v>  one parameter's value, e.g. a short
+                           world.durationSeconds for an end at the clock
            --strategist <a[,b]>  as in sim (default balanced)
+           --concede <t@m> as in sim
            (refuses --shock: a shocked run does not replay)
   net      view deltas over a bot x bot world, as the server sends them:
            bytes and CPU per delta against the spec targets, and the client
@@ -210,6 +225,30 @@ function parseShockOption(raw: string | undefined): Shock | null {
   return raw === undefined ? null : parseShock(raw, TEAMS);
 }
 
+/** --concede team@minute, for a team a bot plays. */
+function parseConcede(
+  raw: string | undefined,
+  { strategists }: BotOptions,
+  params: Params,
+): Concession | null {
+  if (raw === undefined) return null;
+  const match = /^(\d+)@([1-9]\d*)$/.exec(raw);
+  const team = Number(match?.[1]);
+  if (match === null || team >= TEAMS) {
+    throw new UsageError(`--concede must look like team@minute: ${raw}`);
+  }
+  if (strategists[team] === "none") {
+    throw new UsageError(`--concede needs a bot on team ${team}`);
+  }
+  const concede = { team, minute: Number(match[2]) };
+  if (!mayConcede(concessionTick(concede, params), params)) {
+    throw new UsageError(
+      `--concede ${raw} is before end.concedeAfterSeconds (${params.end.concedeAfterSeconds} world s)`,
+    );
+  }
+  return concede;
+}
+
 /** Two teams in M1 (spec D6). */
 const TEAMS = 2;
 
@@ -223,6 +262,7 @@ function runSim(args: string[], out: Output): number {
       hours: { type: "string" },
       mult: { type: "string" },
       shock: { type: "string" },
+      concede: { type: "string" },
       strategist: { type: "string", default: "balanced" },
       out: { type: "string", default: "runs" },
       id: { type: "string" },
@@ -236,6 +276,7 @@ function runSim(args: string[], out: Output): number {
   const multiplier = parseMultiplier(values.mult) ?? params.world.multiplier;
   const shock = parseShockOption(values.shock);
   const bots = parseStrategists(values.strategist, TEAMS);
+  const concede = parseConcede(values.concede, bots, params);
   const maxSeconds =
     values["max-seconds"] === undefined
       ? null
@@ -256,6 +297,7 @@ function runSim(args: string[], out: Output): number {
       ticks,
       multiplier,
       shock,
+      concede,
       ...bots,
     },
     out.clock,
@@ -347,6 +389,8 @@ function runVerify(args: string[], out: Output): number {
       params: { type: "string" },
       strategist: { type: "string", default: "balanced" },
       shock: { type: "string" },
+      set: { type: "string" },
+      concede: { type: "string" },
     },
     strict: true,
   });
@@ -357,7 +401,14 @@ function runVerify(args: string[], out: Output): number {
   }
   const seed = parseSeed(values.seed);
   const ticks = parseUint("ticks", values.ticks, 1);
-  const params = loadParams(values.params ?? DEFAULT_PARAMS);
+  let params = loadParams(values.params ?? DEFAULT_PARAMS);
+  if (values.set !== undefined) {
+    const { path, values: settings } = parseSet(values.set);
+    if (settings.length !== 1) {
+      throw new UsageError(`geo verify --set takes one value: ${values.set}`);
+    }
+    params = withParam(params, path, settings[0]!);
+  }
   const bots = parseStrategists(values.strategist, TEAMS);
 
   const result = verify(
@@ -366,6 +417,7 @@ function runVerify(args: string[], out: Output): number {
     params,
     bots.strategists,
     bots.difficulties,
+    parseConcede(values.concede, bots, params),
   );
   out.log(`geo verify --seed ${seed} --ticks ${ticks}`);
   for (const run of result.runs) {
@@ -378,6 +430,13 @@ function runVerify(args: string[], out: Output): number {
       (battles.mismatches.length > 0
         ? `, ${battles.mismatches.length} did not: ${battles.mismatches.join(", ")}`
         : ""),
+  );
+  const { end } = result;
+  out.log(
+    end === null
+      ? "  end: none, the world was still going"
+      : `  end: ${END_KIND_LABELS[endKind(end)]}, ${resultText(end)}, tick ${end.result.tick}` +
+          (result.sameEnd ? "" : "; the summaries differ"),
   );
   out.log(result.ok ? "OK: deterministic" : "FAIL: hashes differ");
   return result.ok ? 0 : 1;

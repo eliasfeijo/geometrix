@@ -37,6 +37,8 @@ describe("createWorld", () => {
         production: null,
         repeat: null,
         out: null,
+        vote: null,
+        voteRejectedTick: null,
       },
       {
         id: 1,
@@ -46,6 +48,8 @@ describe("createWorld", () => {
         production: null,
         repeat: null,
         out: null,
+        vote: null,
+        voteRejectedTick: null,
       },
     ]);
   });

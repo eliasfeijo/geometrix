@@ -118,6 +118,16 @@ export type EventBody = (
    */
   | { type: "teamOut"; team: number; how: TeamOut["how"]; bot: boolean }
   /**
+   * A team's concession vote opened, or closed (E-min plan P14), on its
+   * core's cell. Only that team receives them.
+   */
+  | { type: "concedeVoteOpened"; team: number; deadlineTick: number }
+  | {
+      type: "concedeVoteClosed";
+      team: number;
+      outcome: "passed" | "rejected" | "dropped";
+    }
+  /**
    * The world ended (E-min D5), on the winner's core, the map's center in a
    * draw. Every team receives it.
    */
@@ -217,6 +227,8 @@ function participants(event: EventBody): CreepRef[] {
     case "died":
       return event.by === null ? [event.creep] : [event.creep, event.by];
     case "teamOut":
+    case "concedeVoteOpened":
+    case "concedeVoteClosed":
     case "worldEnded":
       return [];
   }
@@ -240,6 +252,14 @@ export function setAudience(state: WorldState, events: SimEvent[]): void {
     }
   }
   for (const event of events) {
+    // A team's vote is its own business, whoever sees its core.
+    if (
+      event.type === "concedeVoteOpened" ||
+      event.type === "concedeVoteClosed"
+    ) {
+      event.teams = [event.team];
+      continue;
+    }
     const cell = event.y * width + event.x;
     const involved = involvedTeams(event, battleTeams);
     const everyone = event.type === "teamOut" || event.type === "worldEnded";

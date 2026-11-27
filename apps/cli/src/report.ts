@@ -28,6 +28,7 @@ import {
   type Reaction,
   type TeamEncounters,
 } from "./encounters.ts";
+import { endSection } from "./ending.ts";
 import {
   botsLine,
   HOUR,
@@ -143,6 +144,14 @@ export function renderReport(run: RunData): string {
                 `o time ${meta.shock.team} perde ${meta.shock.count} creeps no minuto real ${meta.shock.minute}; o run não é reproduzível (sem replay.json)`,
               ],
             ]),
+        ...(meta.concede === undefined || meta.concede === null
+          ? []
+          : [
+              [
+                "Desistência forçada (--concede)",
+                `o time ${meta.concede.team} desiste no minuto de mundo ${meta.concede.minute}`,
+              ],
+            ]),
         ["Hash final", `\`${meta.finalHash}\``],
         [
           "Tempo de simulação",
@@ -154,6 +163,9 @@ export function renderReport(run: RunData): string {
     "",
   );
 
+  if (meta.end !== undefined) {
+    out(...endSection(meta.end, mult, meta.tickSeconds));
+  }
   if (run.pace !== null) out(...paceSection(run.pace));
 
   // Summary per team.
