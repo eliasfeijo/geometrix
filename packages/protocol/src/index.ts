@@ -284,6 +284,12 @@ export type JoinRequest = z.infer<typeof joinRequest>;
 
 export type JoinResponse = { playerId: number; team: number; token: string };
 
+/** GET /api/config: what the lobby offers for a new world. */
+export type ServerConfigResponse = {
+  /** The ×N the server's params are tuned for (R plan P1). */
+  multiplier: number;
+};
+
 export type WorldSummary = {
   id: number;
   /**

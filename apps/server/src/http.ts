@@ -11,6 +11,7 @@ import {
   joinRequest,
   type JoinResponse,
   type Replay,
+  type ServerConfigResponse,
   type WorldSummary,
 } from "@geometrix/protocol";
 import { stateHash } from "./hash.ts";
@@ -86,6 +87,12 @@ async function route(
 ): Promise<Reply> {
   const url = new URL(req.url ?? "/", "http://localhost");
   const path = url.pathname;
+  if (path === "/api/config" && req.method === "GET") {
+    const body: ServerConfigResponse = {
+      multiplier: context.worlds.defaultMultiplier,
+    };
+    return { status: 200, body };
+  }
   if (path === "/api/worlds" && req.method === "POST") {
     const request = parse(createWorldRequest, await readJson(req));
     const host = context.worlds.create(request, context.clock());

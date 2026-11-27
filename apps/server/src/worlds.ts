@@ -50,6 +50,11 @@ export class Worlds {
     return this.hosted.get(id)?.holds;
   }
 
+  /** The ×N the params of new worlds are tuned for (R plan P1). */
+  get defaultMultiplier(): number {
+    return this.params.world.multiplier;
+  }
+
   /** Creates a world and starts its clock. */
   create(request: CreateWorldRequest, createdAt: string): WorldHost {
     const host = WorldHost.create(
