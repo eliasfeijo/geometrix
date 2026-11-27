@@ -11,6 +11,7 @@ import {
   type BattleStubView,
   type Deposit,
   type EncounterView,
+  type EndSummary,
   type ForeignCreepView,
   type ForeignEncounterView,
   type ForeignPlayer,
@@ -21,6 +22,7 @@ import {
   type Team,
   type TeamView,
   type WandererView,
+  type WorldResult,
 } from "@geometrix/sim";
 
 /**
@@ -50,6 +52,9 @@ export type Delta = {
   known?: [number, number][];
   /** Cells that came into sight and that left it, increasing. */
   visible?: { add?: number[]; remove?: number[] };
+  /** The world's end, once, on the delta of the end tick (E-min K-3). */
+  result?: WorldResult;
+  summary?: EndSummary;
 };
 
 /** An entity of a view collection, as the diff sees it. */
@@ -81,6 +86,9 @@ export type Sent = {
    */
   known: number[];
   visible: number[];
+  /** Set once, when the world ends, and never mutated afterwards. */
+  result: WorldResult | null;
+  summary: EndSummary | null;
 };
 
 export function emptySent(): Sent {
@@ -99,6 +107,8 @@ export function emptySent(): Sent {
     roads: new Set(),
     known: [],
     visible: [],
+    result: null,
+    summary: null,
   };
 }
 
@@ -141,6 +151,9 @@ const KINDS = {
     stock: "value",
     upgrades: "value",
     production: "value",
+    // Replaced whole by the sim, never mutated (E-min plan P14).
+    vote: "ref",
+    out: "ref",
   },
   creeps: {
     cargo: "value",
@@ -157,7 +170,10 @@ const KINDS = {
   wanderers: { cargo: "value", hostile: "value" },
   spoils: { cargo: "value" },
 } satisfies Record<
-  keyof Omit<Sent, "roads" | "tick" | "team" | "known" | "visible">,
+  keyof Omit<
+    Sent,
+    "roads" | "tick" | "team" | "known" | "visible" | "result" | "summary"
+  >,
   FieldKinds
 >;
 
@@ -196,6 +212,13 @@ export function diffView(sent: Sent, view: TeamView): Delta {
     delta.visible = visible;
   }
   sent.visible = view.visible;
+  // The world ends once and then freezes: result and summary go together.
+  if (view.result !== null && sent.result === null) {
+    delta.result = view.result;
+    delta.summary = view.summary!;
+    sent.result = view.result;
+    sent.summary = view.summary;
+  }
   return delta;
 }
 
@@ -336,9 +359,8 @@ export function sentView(sent: Sent): TeamView {
     spoils: sent.spoils,
     known: sent.known,
     visible: sent.visible,
-    // The deltas carry them from E-min F3.
-    result: null,
-    summary: null,
+    result: sent.result,
+    summary: sent.summary,
   } as unknown as TeamView;
 }
 
@@ -360,6 +382,10 @@ export function applyDelta(previous: TeamView, delta: Delta): TeamView {
   if (delta.known !== undefined) {
     next.known = [...previous.known];
     for (const [cell, terrain] of delta.known) next.known[cell] = terrain;
+  }
+  if (delta.result !== undefined) {
+    next.result = delta.result;
+    next.summary = delta.summary!;
   }
   if (delta.visible !== undefined) {
     const removed = new Set(delta.visible.remove);

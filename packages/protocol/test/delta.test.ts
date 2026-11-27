@@ -16,6 +16,7 @@ import {
   diffView,
   emptySent,
   emptyView,
+  sentView,
   viewJson,
   type Delta,
   type Sent,
@@ -403,5 +404,55 @@ describe("diffView / applyDelta", () => {
     expect(after.creeps[1]).toBe(client.creeps[1]);
     expect(after.deposits).toBe(client.deposits);
     expect(after.teams).toBe(client.teams);
+  });
+});
+
+describe("the end and the vote in the delta (E-min)", () => {
+  /** Team 1 with two humans: players 2 and 3. */
+  function twoHumans() {
+    const base = setup();
+    step(base.world, [
+      { playerId: 3, command: { type: "join", team: 1, bot: false } },
+    ]);
+    return base;
+  }
+
+  test("the team's own vote opens and closes; a foreign team never has it", () => {
+    const { world, client } = twoHumans();
+    const own = emptySent();
+    diffView(own, view(world, 1));
+    let mine = wire(view(world, 1));
+    const send = () => {
+      const delta = wire(diffView(own, view(world, 1)));
+      mine = applyDelta(deepFreeze(mine), delta);
+      expect(viewJson(mine)).toBe(viewJson(view(world, 1)));
+      expect(view(world, 0).teams[1]).not.toHaveProperty("vote");
+      return delta.teams?.upsert?.find((t) => t.id === 1);
+    };
+    send();
+    step(world, [{ playerId: 2, command: { type: "concede" } }]);
+    expect(send()).toMatchObject({ vote: { yes: [2] } });
+    step(world, [{ playerId: 3, command: { type: "rejectConcede" } }]);
+    expect(send()).toMatchObject({ vote: null });
+    expect(client.result).toBeNull();
+  });
+
+  test("result, summary and the team out go once, on the end tick", () => {
+    const { world, sent, client, next } = setup();
+    let mine = applyDelta(client, next());
+    step(world, [{ playerId: 2, command: { type: "concede" } }]);
+    expect(world.result).toMatchObject({ how: "lastTeam", winner: 0 });
+    const delta = next();
+    expect(delta.result).toEqual(world.result);
+    expect(delta.summary?.teams).toHaveLength(2);
+    expect(delta.teams?.upsert).toContainEqual(
+      expect.objectContaining({ id: 1, out: world.teams[1]!.out }),
+    );
+    mine = expectApplies(world, mine, delta);
+    // The frozen world: nothing more to tell.
+    expect(next()).toEqual({ tick: world.tick });
+    // A welcome built from the sent record carries them too.
+    expect(viewJson(sentView(sent))).toBe(viewJson(view(world, 0)));
+    expect(mine.result).toEqual(world.result);
   });
 });

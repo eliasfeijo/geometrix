@@ -18,5 +18,7 @@ export * from "./delta.ts";
  * frames, the frames as deltas of the battle view (M2 junction F4). 8: the
  * follow and drop orders, the hostile intent in the delta, the bot's
  * difficulty on join and world creation, battlePause and battleHold (M2 R).
+ * 9: the world's result and summary in the delta, the team's vote and the
+ * teams that left it, rejectConcede and the result in the lobby (M2 E-min).
  */
-export const PROTOCOL_VERSION = 8;
+export const PROTOCOL_VERSION = 9;
