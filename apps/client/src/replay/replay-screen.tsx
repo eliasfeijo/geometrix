@@ -4,7 +4,7 @@
 
 import { parseReplay, type Replay } from "@geometrix/protocol";
 import { SIM_VERSION } from "@geometrix/sim";
-import { useEffect, useMemo, useState } from "preact/hooks";
+import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { listWorlds } from "../api.ts";
 import { narrate, plainText } from "../chronicle/narrate.ts";
 import type { Game } from "../context.ts";
@@ -262,6 +262,19 @@ function Marks({ controller }: { controller: ReplayController }) {
   const tickSeconds = replay.params.world.tickSeconds;
   const markers = controller.markers.value;
   const hidden = controller.hidden.value;
+  // The native "change" (on release): preact/compat, which the map loads,
+  // turns an onChange prop into a second "input" handler that runs first, and
+  // the thumb would stay where the pointer left it.
+  const timeline = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    const input = timeline.current!;
+    const release = () => {
+      controller.thumb.value = null;
+      controller.seekTo(Number(input.value));
+    };
+    input.addEventListener("change", release);
+    return () => input.removeEventListener("change", release);
+  }, [controller]);
   const kinds = new Map(MARKER_KINDS.map((k) => [k.kind, k]));
   return (
     <div class="replay-marks">
@@ -311,6 +324,7 @@ function Marks({ controller }: { controller: ReplayController }) {
         })}
       </div>
       <input
+        ref={timeline}
         class="timeline"
         type="range"
         min={0}
@@ -326,10 +340,6 @@ function Marks({ controller }: { controller: ReplayController }) {
         onInput={(e) =>
           (controller.thumb.value = Number(e.currentTarget.value))
         }
-        onChange={(e) => {
-          controller.thumb.value = null;
-          controller.seekTo(Number(e.currentTarget.value));
-        }}
       />
     </div>
   );
