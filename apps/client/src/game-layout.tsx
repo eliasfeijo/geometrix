@@ -19,7 +19,10 @@ import { ChroniclePanel } from "./chronicle/chronicle-panel.tsx";
 import { CreepLayer } from "./map/creep-layer.tsx";
 import { MapView } from "./map/map-view.tsx";
 import { RoadJobTimeLayer } from "./map/road-job-time-layer.tsx";
-import { RoadPreviewLayer } from "./map/road-preview-layer.tsx";
+import {
+  BuilderPlanLayer,
+  RoadPreviewLayer,
+} from "./map/road-preview-layer.tsx";
 import { StockFloatLayer } from "./map/stock-float-layer.tsx";
 import { ModeBanner } from "./mode-banner.tsx";
 import { ApproachMenu } from "./panels/approach-menu.tsx";
@@ -86,6 +89,7 @@ export function GameLayout({ game, header, orders }: Props) {
                 : undefined
             }
           >
+            <BuilderPlanLayer />
             <CreepLayer />
             <RoadJobTimeLayer />
             <StockFloatLayer />

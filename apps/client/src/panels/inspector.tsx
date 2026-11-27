@@ -14,6 +14,7 @@ import { useGame } from "../context.ts";
 import { toggleRoadMode } from "../interaction.ts";
 import { etaOf, etaText, viewMap } from "../map/destination.ts";
 import { inSight } from "../map/fog.ts";
+import { builderPlan, builderText } from "../map/road-plan.ts";
 import { cellmates } from "../map/pick.ts";
 import { creepStatus, STATUS_TEXTS, viewCapacity } from "../creep-status.ts";
 import {
@@ -94,6 +95,8 @@ function CreepInspector({ id }: { id: number }) {
   // A replay plays at its own speed: no real time to estimate there.
   const info = store.info.value;
   const known = store.map.value;
+  const builder =
+    known === null ? null : builderPlan(known, state, params, creep);
   const eta =
     battles === undefined || info === null || known === null
       ? null
@@ -150,6 +153,12 @@ function CreepInspector({ id }: { id: number }) {
             <dd title="Tempo real neste ×N; outros mudam o mundo no caminho">
               {etaText(eta)}
             </dd>
+          </>
+        )}
+        {builder !== null && (
+          <>
+            <dt>Plano</dt>
+            <dd>{builderText(builder)}</dd>
           </>
         )}
         <dt>Carga</dt>

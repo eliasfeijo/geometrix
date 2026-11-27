@@ -50,6 +50,7 @@ describe("roadPlan", () => {
     expect(plan(["Cr...."], { x: 4, y: 0 })).toEqual({
       kind: "plan",
       paid: [2, 3, 4],
+      built: [1],
       free: [],
       blockedAt: null,
       cost: { materia: 15, cristal: 0 },
