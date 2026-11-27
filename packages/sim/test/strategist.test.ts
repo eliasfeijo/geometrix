@@ -21,6 +21,7 @@ import {
   standRules,
   strategistCommands,
   teamDifficulty,
+  threatCommands,
 } from "../src/strategist.ts";
 import { view } from "../src/view.ts";
 import { createWorld, type WorldState } from "../src/world.ts";
@@ -705,5 +706,67 @@ describe("difficulty (R spec D26, S-6)", () => {
     // Another team's view has no difficulty of team 0 (P8): hard, unknown.
     expect(teamDifficulty(view(world, 1).players, 0)).toBe("hard");
     expect(teamDifficulty([], 0)).toBe("hard");
+  });
+});
+
+describe("concession (E-min D4, B-1, B-2)", () => {
+  /**
+   * Both teams with a creep or two, no stock and nothing in production: the
+   * bots' join at tick 0 and then one more player as `extra`.
+   */
+  function lost(creeps: number, extra: { bot: boolean } | null = null) {
+    const world = joined("hard");
+    if (extra !== null) {
+      step(world, [
+        { playerId: 9, command: { type: "join", team: 1, bot: extra.bot } },
+      ]);
+    }
+    const team = world.teams[1]!;
+    team.stock = { materia: 0, cristal: 0 };
+    team.production = null;
+    const kept = teamCreeps(world, 1).slice(0, creeps);
+    world.creeps = world.creeps.filter((c) => c.team !== 1 || kept.includes(c));
+    return world;
+  }
+
+  test("a bot alone with one creep, no production and no stock concedes", () => {
+    for (const creeps of [0, 1]) {
+      expect(decide(lost(creeps), 1)).toEqual([{ type: "concede" }]);
+    }
+    expect(decide(lost(1), 0)).not.toContainEqual({ type: "concede" });
+  });
+
+  test("not with two creeps, a production or a stock for one creep", () => {
+    expect(decide(lost(2), 1)).not.toContainEqual({ type: "concede" });
+    const producing = lost(1);
+    producing.teams[1]!.production = { dna: "square", remainingSeconds: 1 };
+    expect(decide(producing, 1)).not.toContainEqual({ type: "concede" });
+    const rich = lost(1);
+    rich.teams[1]!.stock = { ...rich.params.creep.cost };
+    expect(decide(rich, 1)).not.toContainEqual({ type: "concede" });
+  });
+
+  test("every difficulty concedes; a human in the team never lets it", () => {
+    for (const level of ["easy", "normal", "hard"] as const) {
+      const world = lost(1);
+      for (const player of world.players) player.difficulty = level;
+      expect(decide(world, 1)).toEqual([{ type: "concede" }]);
+    }
+    expect(decide(lost(1, { bot: false }), 1)).not.toContainEqual({
+      type: "concede",
+    });
+    expect(decide(lost(1, { bot: true }), 1)).toEqual([{ type: "concede" }]);
+  });
+
+  test("the C2 case ends the world with the other team winning; then silence", () => {
+    const world = lost(1);
+    step(
+      world,
+      decide(world, 1).map((command) => ({ playerId: 2, command })),
+    );
+    expect(world.teams[1]!.out).toMatchObject({ how: "conceded", bot: true });
+    expect(world.result).toMatchObject({ how: "lastTeam", winner: 0 });
+    expect(decide(world, 1)).toEqual([]);
+    expect(threatCommands(view(world, 1), world.map, world.params)).toEqual([]);
   });
 });

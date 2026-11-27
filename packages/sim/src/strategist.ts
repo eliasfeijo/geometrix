@@ -95,6 +95,12 @@ export const BALANCED = {
   },
   /** The hard bot's encounter choices (D27): see threat.ts. */
   risk: RISK,
+  /**
+   * With no human in its team, at most this many creeps, nothing in
+   * production and a stock below a creep's cost, the bot concedes, at every
+   * difficulty (E-min D4).
+   */
+  concedeAtCreeps: 1,
 } as const;
 
 /** One bot player per team; player ids are team + 1. */
@@ -185,7 +191,7 @@ export function threatCommands(
   size: MapSize,
   params: Params,
 ): Command[] {
-  if (difficultyOf(seen) !== "hard") return [];
+  if (ownTeam(seen).out !== null || difficultyOf(seen) !== "hard") return [];
   const threats = threatsIn(seen);
   const own = ownCreeps(seen);
   if (!threats.some((t) => isNew(t, own))) return [];
@@ -208,10 +214,28 @@ export function strategistCommands(
 ): Command[] {
   switch (id) {
     case "balanced":
+      // A team out sends nothing (E-min B-2); a lost match is conceded (B-1).
+      if (ownTeam(seen).out !== null) return [];
+      if (givesUp(seen, params)) return [{ type: "concede" }];
       return balanced(knowledge(seen, size, params));
     case "none":
       return [];
   }
+}
+
+/**
+ * Whether the match is lost for a team of bots alone (E-min D4): from the
+ * view, and only the core's stock counts, not what the last creep carries.
+ * Where a human plays, they decide.
+ */
+function givesUp(seen: TeamView, params: Params): boolean {
+  const team = ownTeam(seen);
+  return (
+    !seen.players.some((p) => p.team === seen.team && !p.bot) &&
+    team.production === null &&
+    !canAfford(team.stock, params.creep.cost) &&
+    ownCreeps(seen).length <= BALANCED.concedeAtCreeps
+  );
 }
 
 /**

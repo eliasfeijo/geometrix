@@ -63,7 +63,7 @@ A whole `geo sim --seed 42` match: 5.0 s. The end's stage with 60 creeps and an 
 
 ## F2 — The bot and the harness
 
-- [ ] The strategist's concession with no human in its team; nothing after its team left (B-1, B-2)
+- [x] The strategist's concession with no human in its team; nothing after its team left (B-1, B-2)
 - [ ] `runBots` stops at the end; the End section in `geo sim`; the ends table in `geo sweep`
 - [ ] `--concede team@minute` in `geo sim` and `geo verify` (P12); `geo verify` with an end by concession and at the
       clock on its three paths
