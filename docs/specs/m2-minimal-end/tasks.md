@@ -18,7 +18,7 @@
       dominations and drops the repeat; production refused (L-2, L-3, L-4, F-4; P3, P4)
 - [ ] `checkEnd` between regeneration and vision: elimination, the result, the clock (L-1, F-1..F-3; P1)
 - [ ] `step` and `stepJunction` refuse an ended world; the instances left as they are (F-5, X-1; P8)
-- [ ] Events: `teamOut` and `worldEnded` to every team; `died.firstBlood`; `battleEnded.entered` and `spoiled`
+- [x] Events: `teamOut` and `worldEnded` to every team; `died.firstBlood`; `battleEnded.entered` and `spoiled`
       (K-1, K-2, K-4; P5)
 - [ ] The counters (born, lost, battles won and lost) and the highlights' ranking; `endSummary` (D10; P6)
 - [ ] The view: `ForeignTeam.out`, `TeamView.result` and `summary`, in `fullView` too (K-3)

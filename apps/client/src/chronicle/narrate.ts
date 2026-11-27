@@ -108,6 +108,15 @@ function template(event: TeamEvent): {
             : { creep: event.creep, by: event.by },
         values: {},
       };
+    // Placeholders until F4 writes the voiced sentences (E-min tasks).
+    case "teamOut":
+      return {
+        text: "{team} saiu da partida.",
+        creeps: {},
+        values: { team: teamName(event.team) },
+      };
+    case "worldEnded":
+      return { text: "A partida acabou.", creeps: {}, values: {} };
     case "pickedUp":
       return {
         text: pick(event, TEMPLATES.pickedUp),

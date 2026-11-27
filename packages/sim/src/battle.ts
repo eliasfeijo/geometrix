@@ -121,13 +121,14 @@ export function fighterCapacity(state: WorldState, fighter: Fighter): number {
     : capacity(fighter, teamOf(state, fighter), state.params);
 }
 
-/** Removes a dead fighter from the state (a creep by slice A's rule). */
-export function removeFighter(state: WorldState, fighter: Fighter): void {
-  if (!isWanderer(fighter)) {
-    kill(state, fighter);
-    return;
-  }
+/**
+ * Removes a dead fighter from the state (a creep by slice A's rule). Returns
+ * whether it is the match's first blood; a wanderer's death never is.
+ */
+export function removeFighter(state: WorldState, fighter: Fighter): boolean {
+  if (!isWanderer(fighter)) return kill(state, fighter);
   state.wanderers = state.wanderers.filter((w) => w.id !== fighter.id);
+  return false;
 }
 
 /** The battle side `fighter` belongs on: its team's, or the wanderers'. */
@@ -442,12 +443,13 @@ export function applyBattleExit(
     battle.participants = battle.participants.filter((p) => p.id !== creep.id);
     const killer =
       command.by === null ? undefined : findFighter(state, command.by);
-    removeFighter(state, creep);
+    const firstBlood = removeFighter(state, creep);
     emit(log, {
       type: "died",
       creep: ref,
       by: killer === undefined ? null : creepRef(killer),
       battle: battle.id,
+      firstBlood,
       ...command.cell,
     });
     return;
@@ -550,8 +552,11 @@ export function applyBattleEnd(
     }
   }
   const spoils: number[] = [];
+  const spoiled = { materia: 0, cristal: 0 };
   for (const pile of piles) {
     if (stockTotal(pile.cargo) === 0) continue;
+    spoiled.materia += pile.cargo.materia;
+    spoiled.cristal += pile.cargo.cristal;
     const id = dropSpoil(state, pile.cell, pile.cargo);
     if (!spoils.includes(id)) spoils.push(id);
   }
@@ -583,6 +588,8 @@ export function applyBattleEnd(
     survivors: survivors.map(creepRef),
     loot,
     spoils,
+    entered: battle.entered,
+    spoiled,
     x: battle.x,
     y: battle.y,
   });
