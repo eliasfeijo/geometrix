@@ -229,6 +229,20 @@ describe("the result (E-min D5, F-1..F-5)", () => {
     expect(w.result).toMatchObject({ how: "noTeam", teams: [0, 1] });
   });
 
+  test("after the end no tick runs and every command is refused", () => {
+    const w = world();
+    step(w, [{ playerId: 1, command: concede }]);
+    const frozen = serialize(w);
+    expect(() => step(w, [])).toThrow("the world has ended");
+    for (const command of playerCommands(w)) {
+      expect(validate(w, command, 2), command.type).toBe("worldEnded");
+    }
+    expect(validate(w, { type: "join", team: 0, bot: false }, 5)).toBe(
+      "worldEnded",
+    );
+    expect(serialize(w)).toBe(frozen);
+  });
+
   const short = paramsWith((p) => {
     p.world.durationSeconds = 5;
   });

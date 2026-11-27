@@ -123,6 +123,24 @@ describe("the battles a world tick stepped (the screen's frames, F4)", () => {
   });
 });
 
+describe("the world's end (E-min X-1, plan P8)", () => {
+  test("an open battle stops where it is, and the world takes no more ticks", () => {
+    const { w, host } = duel();
+    stepJunction(w, host, []);
+    stepJunction(w, host, []);
+    join(w, 1, 0, false);
+    stepJunction(w, host, [{ playerId: 1, command: { type: "concede" } }]);
+    expect(w.result).toMatchObject({ how: "lastTeam", winner: 1 });
+    const [instance] = host.instances;
+    expect(instance).toBeDefined();
+    expect(w.battles).toHaveLength(1);
+    const battle = serializeBattle(instance!.state);
+    expect(() => stepJunction(w, host, [])).toThrow("the world has ended");
+    expect(host.instances).toEqual([instance]);
+    expect(serializeBattle(instance!.state)).toBe(battle);
+  });
+});
+
 describe("a held battle (R plan P11, D6, D28)", () => {
   /** The duel's battle, opened and stepped one world second. */
   function open() {

@@ -49,12 +49,14 @@ import type { WorldState } from "./world.ts";
  * `commands` are the tick's external commands in seq order; each is validated
  * again against the state as it is then, and a refused one is skipped.
  * Returns the tick's events with their audience (ADR-0007, plan P9); they are
- * not part of the state.
+ * not part of the state. An ended world is frozen: stepping it throws (E-min
+ * plan P8).
  */
 export function step(
   state: WorldState,
   commands: readonly CommandInput[],
 ): SimEvent[] {
+  if (state.result !== null) throw new Error("step: the world has ended");
   const log = createEventLog(state.tick);
   for (const { playerId, command } of commands) {
     if (applyCommand(state, command, playerId, log) !== null) continue;
