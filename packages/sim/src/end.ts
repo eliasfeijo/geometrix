@@ -3,9 +3,14 @@
 // here assumes how many there are.
 
 import { canAfford } from "./economy.ts";
-import { emit, type EventLog } from "./events.ts";
+import {
+  emit,
+  type EventLog,
+  type SimEvent,
+  type TeamEvent,
+} from "./events.ts";
 import type { Cell } from "./map.ts";
-import type { Team, TeamOut, WorldResult, WorldState } from "./world.ts";
+import type { Stock, Team, TeamOut, WorldResult, WorldState } from "./world.ts";
 
 /**
  * Why a concession is refused (spec F-4, plan P3): the team already left, or
@@ -104,4 +109,106 @@ export function checkEnd(state: WorldState, log: EventLog): void {
     result: { ...result, teams: [...result.teams] },
     ...endCell(state, result),
   });
+}
+
+type Candidate = Extract<
+  TeamEvent,
+  { type: "teamOut" | "died" | "battleEnded" }
+>;
+
+function isCandidate(event: TeamEvent): event is Candidate {
+  if (event.type === "died") return event.firstBlood;
+  return event.type === "teamOut" || event.type === "battleEnded";
+}
+
+const total = (stock: Stock) => stock.materia + stock.cristal;
+
+/**
+ * What ranks a main event, in order (plan P6): its kind, how many entered the
+ * battle, and the load collected in it or left as spoils.
+ */
+function rank(event: TeamEvent): [number, number, number] {
+  if (event.type === "teamOut") return [3, 0, 0];
+  if (event.type !== "battleEnded") return [2, 0, 0];
+  const loot = event.loot.reduce((sum, l) => sum + total(l.taken), 0);
+  return [1, event.entered, loot + total(event.spoiled)];
+}
+
+/** Better first; between equals, the earlier. */
+function compare(a: TeamEvent, b: TeamEvent): number {
+  const [x, y] = [rank(a), rank(b)];
+  return (
+    y[0] - x[0] ||
+    y[1] - x[1] ||
+    y[2] - x[2] ||
+    a.tick - b.tick ||
+    a.index - b.index
+  );
+}
+
+/**
+ * Stage 8, with the stats: the tick's candidates (a team leaving, the first
+ * blood, a battle ended) compete for the match's main events, of which the
+ * best `end.highlights` stay (spec D10, plan P6). Copies without the
+ * audience, so the state shares nothing with the events returned.
+ */
+export function recordHighlights(
+  state: WorldState,
+  events: readonly SimEvent[],
+): void {
+  const candidates: TeamEvent[] = [];
+  for (const event of events) {
+    if (!isCandidate(event)) continue;
+    const copy = JSON.parse(JSON.stringify(event)) as Partial<SimEvent>;
+    delete copy.teams;
+    candidates.push(copy as TeamEvent);
+  }
+  if (candidates.length === 0) return;
+  state.highlights = [...state.highlights, ...candidates]
+    .sort(compare)
+    .slice(0, state.params.end.highlights);
+}
+
+export type TeamSummary = {
+  team: number;
+  out: TeamOut | null;
+  born: number;
+  lost: number;
+  battlesWon: number;
+  battlesLost: number;
+  materiaDelivered: number;
+};
+
+/** What the end screen and the harness report show of a match (spec D9). */
+export type EndSummary = {
+  result: WorldResult;
+  /** World seconds, the end tick included. */
+  durationSeconds: number;
+  /** By team id. */
+  teams: TeamSummary[];
+  /** The main events, best first. */
+  highlights: TeamEvent[];
+};
+
+/** The ended world's summary, or null while it goes on. Pure. */
+export function endSummary(state: WorldState): EndSummary | null {
+  const { result } = state;
+  if (result === null) return null;
+  return {
+    result,
+    durationSeconds: (result.tick + 1) * state.params.world.tickSeconds,
+    teams: state.teams.map((team) => {
+      const stats = state.stats.teams[team.id]!;
+      return {
+        team: team.id,
+        out: team.out,
+        born: stats.born,
+        lost: stats.lost,
+        battlesWon: stats.battlesWon,
+        battlesLost: stats.battlesLost,
+        materiaDelivered: stats.delivered.materia,
+      };
+    }),
+    highlights: state.highlights,
+  };
 }

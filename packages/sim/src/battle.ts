@@ -576,6 +576,7 @@ export function applyBattleEnd(
   }
   const winner =
     command.winnerSide === null ? null : battle.sides[command.winnerSide]!;
+  if (winner !== null) recordOutcome(state, battle, command.winnerSide!);
   emit(log, {
     type: "battleEnded",
     battle: battle.id,
@@ -594,6 +595,23 @@ export function applyBattleEnd(
     y: battle.y,
   });
   state.battles = state.battles.filter((b) => b.id !== battle.id);
+}
+
+/**
+ * Counts the battle for each team with a side in it: won by the winner's,
+ * lost by the others (E-min plan P6). Without a winner, neither.
+ */
+function recordOutcome(
+  state: WorldState,
+  battle: Battle,
+  winnerSide: number,
+): void {
+  battle.sides.forEach((side, i) => {
+    if (side.kind !== "team") return;
+    const stats = state.stats.teams[side.team]!;
+    if (i === winnerSide) stats.battlesWon += 1;
+    else stats.battlesLost += 1;
+  });
 }
 
 /**

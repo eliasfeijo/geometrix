@@ -80,6 +80,7 @@ export function runProduction(state: WorldState, log: EventLog): void {
       production.remainingSeconds -= state.params.world.tickSeconds;
       if (production.remainingSeconds <= 0) {
         const creep = spawnCreep(state, team, production.dna);
+        state.stats.teams[team.id]!.born += 1;
         emit(log, {
           type: "born",
           creep: creepRef(creep),

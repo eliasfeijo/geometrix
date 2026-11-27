@@ -1,13 +1,16 @@
 import { describe, expect, test } from "vitest";
+import { SYSTEM_PLAYER_ID } from "../src/battle.ts";
 import { applyCommand, validate, type Command } from "../src/commands.ts";
 import { dominate, join } from "../src/domination.ts";
-import { createEventLog, type SimEvent } from "../src/events.ts";
+import { endSummary, recordHighlights } from "../src/end.ts";
+import { createEventLog, type CreepRef, type SimEvent } from "../src/events.ts";
 import { restore, serialize } from "../src/serialize.ts";
 import { productionRefusal, startProduction } from "../src/production.ts";
 import { step } from "../src/step.ts";
 import type { Dna } from "../src/params.ts";
-import type { WorldState } from "../src/world.ts";
-import { creepOf, paramsWith, textWorld } from "./helpers.ts";
+import { updateVision } from "../src/vision.ts";
+import type { Creep, Stock, WorldState } from "../src/world.ts";
+import { addWanderer, creepOf, paramsWith, textWorld } from "./helpers.ts";
 
 // 30 × 7, the cores in opposite corners.
 const MAP = [
@@ -287,5 +290,253 @@ describe("the result (E-min D5, F-1..F-5)", () => {
     }
     expect(w.result).not.toBeNull();
     expect(serialize(restored)).toBe(serialize(w));
+  });
+});
+
+const system = (command: Command) => ({ playerId: SYSTEM_PLAYER_ID, command });
+
+/** `hunter` attacks `prey` next to it, on their cells (12, 3) and (13, 3). */
+function openBattle(w: WorldState, hunter: Creep, prey: { id: number }) {
+  Object.assign(hunter, { x: 12, y: 3 });
+  Object.assign(prey, { x: 13, y: 3 });
+  updateVision(w);
+  hunter.order = { type: "approach", targetId: prey.id, intent: "attack" };
+  step(w, []);
+}
+
+/** The host's results: `dead` die, then `winner`'s side keeps the field. */
+function finish(
+  w: WorldState,
+  winner: Creep | null,
+  dead: { id: number; x: number; y: number }[],
+  reason: "won" | "idle" = "won",
+) {
+  const [battle] = w.battles;
+  const left = battle!.participants.filter(
+    (p) => !dead.some((d) => d.id === p.id),
+  );
+  const survivors = left.map((p) => {
+    const creep = [...w.creeps, ...w.wanderers].find((c) => c.id === p.id)!;
+    return {
+      creepId: p.id,
+      hp: 1,
+      cargo: { ...creep.cargo },
+      cell: { x: creep.x, y: creep.y },
+    };
+  });
+  const side = battle!.participants.find((p) => p.id === winner?.id)?.side;
+  return step(w, [
+    ...dead.map((d) =>
+      system({
+        type: "battleExit",
+        battleId: battle!.id,
+        creepId: d.id,
+        outcome: "died",
+        hp: 0,
+        cargo: { materia: 0, cristal: 0 },
+        cell: { x: d.x, y: d.y },
+        by: winner?.id ?? null,
+      }),
+    ),
+    system({
+      type: "battleEnd",
+      battleId: battle!.id,
+      winnerSide: reason === "won" ? side! : null,
+      reason,
+      survivors,
+      piles: [],
+    }),
+  ]);
+}
+
+const counters = (w: WorldState) =>
+  w.stats.teams.map((t) => [t.born, t.lost, t.battlesWon, t.battlesLost]);
+
+describe("the counters and the summary (E-min D9, D10)", () => {
+  test("born from the core only; lost; battles won and lost by team", () => {
+    const w = textWorld(MAP);
+    w.teams[1]!.production = {
+      dna: "circle",
+      remainingSeconds: w.params.world.tickSeconds,
+    };
+    step(w, []);
+    expect(counters(w)).toEqual([
+      [0, 0, 0, 0],
+      [1, 0, 0, 0],
+    ]);
+    const hunter = creepOf(w, 0, "circle");
+    const prey = creepOf(w, 1, "square");
+    openBattle(w, hunter, prey);
+    finish(w, hunter, [prey]);
+    expect(counters(w)).toEqual([
+      [0, 0, 1, 0],
+      [1, 1, 0, 1],
+    ]);
+  });
+
+  test("a battle with no winner counts for neither", () => {
+    const w = textWorld(MAP);
+    openBattle(w, creepOf(w, 0, "circle"), creepOf(w, 1, "square"));
+    finish(w, null, [], "idle");
+    expect(counters(w)).toEqual([
+      [0, 0, 0, 0],
+      [0, 0, 0, 0],
+    ]);
+  });
+
+  test("a battle the wanderers win is lost by the team in it", () => {
+    const w = textWorld(MAP);
+    const mine = creepOf(w, 0, "square");
+    const wanderer = addWanderer(w, 13, 3);
+    openBattle(w, mine, wanderer);
+    const [battle] = w.battles;
+    step(w, [
+      system({
+        type: "battleExit",
+        battleId: battle!.id,
+        creepId: mine.id,
+        outcome: "died",
+        hp: 0,
+        cargo: { materia: 0, cristal: 0 },
+        cell: { x: 12, y: 3 },
+        by: wanderer.id,
+      }),
+      system({
+        type: "battleEnd",
+        battleId: battle!.id,
+        winnerSide: 1,
+        reason: "won",
+        survivors: [
+          {
+            creepId: wanderer.id,
+            hp: 1,
+            cargo: { materia: 0, cristal: 0 },
+            cell: { x: 13, y: 3 },
+          },
+        ],
+        piles: [],
+      }),
+    ]);
+    expect(counters(w)).toEqual([
+      [0, 1, 0, 1],
+      [0, 0, 0, 0],
+    ]);
+  });
+
+  test("the summary of an ended world; null before", () => {
+    const w = world();
+    expect(endSummary(w)).toBeNull();
+    w.stats.teams[1]!.delivered.materia = 120;
+    step(w, [{ playerId: 1, command: concede }]);
+    expect(endSummary(w)).toEqual({
+      result: w.result,
+      durationSeconds: w.params.world.tickSeconds,
+      teams: [
+        {
+          team: 0,
+          out: w.teams[0]!.out,
+          born: 0,
+          lost: 0,
+          battlesWon: 0,
+          battlesLost: 0,
+          materiaDelivered: 0,
+        },
+        {
+          team: 1,
+          out: null,
+          born: 0,
+          lost: 0,
+          battlesWon: 0,
+          battlesLost: 0,
+          materiaDelivered: 120,
+        },
+      ],
+      highlights: [expect.objectContaining({ type: "teamOut", team: 0 })],
+    });
+    expect(w.highlights[0]).not.toHaveProperty("teams");
+  });
+});
+
+const who: CreepRef = { id: 1, team: 0, dna: "square", name: "A" };
+const stock = (materia: number, cristal = 0): Stock => ({ materia, cristal });
+const at = { x: 0, y: 0, teams: [0, 1] };
+
+const battleEnded = (
+  tick: number,
+  index: number,
+  entered: number,
+  loot: number,
+  spoiled = 0,
+): SimEvent => ({
+  type: "battleEnded",
+  battle: index,
+  reason: "won",
+  winner: { side: 0, team: 0 },
+  sideTeams: [0, 1],
+  survivors: [who],
+  loot: loot > 0 ? [{ creep: who, taken: stock(loot) }] : [],
+  spoils: [],
+  entered,
+  spoiled: stock(spoiled),
+  tick,
+  index,
+  ...at,
+});
+
+const died = (tick: number, firstBlood: boolean): SimEvent => ({
+  type: "died",
+  creep: who,
+  by: null,
+  battle: 1,
+  firstBlood,
+  tick,
+  index: 0,
+  ...at,
+});
+
+describe("the main events' ranking (E-min D10, plan P6)", () => {
+  const kept = (w: WorldState) => w.highlights.map((e) => [e.tick, e.index]);
+
+  test("a team leaving, the first blood, then battles by size, load and age", () => {
+    const w = textWorld(MAP);
+    recordHighlights(w, [
+      battleEnded(1, 0, 2, 5),
+      battleEnded(1, 1, 3, 0),
+      died(1, true),
+    ]);
+    recordHighlights(w, [
+      battleEnded(2, 0, 2, 3, 4), // load 7: over the load 5
+      died(2, false), // not a candidate
+      battleEnded(2, 2, 2, 5), // ties tick 1's load: the later one
+    ]);
+    expect(kept(w)).toEqual([
+      [1, 0], // first blood (index 0 of tick 1)
+      [1, 1], // three entered
+      [2, 0], // load 7
+      [1, 0], // load 5, the earlier
+      [2, 2],
+    ]);
+    expect(w.highlights.map((e) => e.type)).toEqual([
+      "died",
+      "battleEnded",
+      "battleEnded",
+      "battleEnded",
+      "battleEnded",
+    ]);
+    recordHighlights(w, [
+      {
+        type: "teamOut",
+        team: 1,
+        how: "eliminated",
+        bot: false,
+        tick: 3,
+        index: 0,
+        ...at,
+      },
+    ]);
+    expect(w.highlights).toHaveLength(w.params.end.highlights);
+    expect(w.highlights[0]!.type).toBe("teamOut");
+    // The weakest fell off.
+    expect(kept(w)).not.toContainEqual([2, 2]);
   });
 });
