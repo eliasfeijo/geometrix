@@ -95,3 +95,18 @@ not to touch, the measurements to report, the branch's commit scopes.
   question with the owner's words; the spec stays as it is until the owner decides.
 - Two lanes collide on the dashboard's Now: that is why the orchestrator owns it.
 - The owner's playtest times come from the game's clock (world time): divide by ×N for real minutes.
+- **The owner changes a design while a lane implements it** (wave 4: the concession became LoL-style during E-min
+  F2). First `SendMessage` the lane to hold that task and do the rest, then the design round here (cold analysis, a
+  recommendation, `AskUserQuestion`), then relay the decision with its split by phase (what this phase does, what the
+  next ones do). The lane records it on its branch (`gdd-decision`) and builds on its own commits; it may have
+  committed the task already. Alternatives the owner asks about get a short comparison first, not a new plan.
+- **The owner's answers to open items found in review** (agent proposals, interpretations, numbers) go into a `docs`
+  commit on the branch about to merge (params too, then `npm run check:fast`; the merge's full check covers the rest),
+  so they never wait for a branch of their own.
+- **Phase notes come from the previous lane's report:** its "points of attention" for the next phase go into the next
+  prompt word for word (F3 → F4 → F5 in wave 4). The dashboard's "What the next front needs to know" keeps them too.
+- **Usage limits** can stop the orchestrator and a lane mid-wave (wave 4, both at once). Nothing is lost (commits per
+  task); when the owner says it is back, read the lane's last message and `git log main..<branch>` before acting.
+- **Handing the orchestrator to a new session:** the lane prompts name the orchestrator session, so finish or stop
+  the running lanes first (or `SendMessage` them the new name). The handoff lives in the dashboard's Now (what is
+  merged, what is dispatched, the next lane's notes), never only in the old session's `tmp/`.
