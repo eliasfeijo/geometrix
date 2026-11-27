@@ -314,6 +314,15 @@ apps/client/src/
   threat pass 2.3% of it). A cache of `roadTarget` per `roadRevision` is parked for F4/F7, if the 2-hour world's
   cost passes 1.5× F1's.
 
+**At F4's checkpoint C2** (owner, 2026-11-27; the numbers in the F4 record of the tasks):
+
+- **C2-1** The ×6, ×8 (default) and ×12 candidates all go to the playtest; their near misses are accepted, and the ×N
+  is chosen at C3.
+- **C2-2** The recovery target fails (0 of 20 seeds) and is accepted: no new rule (D4); the playtest judges it and F8
+  measures it again.
+- **C2-3** A road segment costs 10 matéria (provisional), so that the opening happens between real minute 8 and 15.
+- **C2-4** The tick cost (65–103 µs per tick against ~75) is accepted.
+
 ## 13. Implementation order
 
 | Phase | Content | Checkpoint |

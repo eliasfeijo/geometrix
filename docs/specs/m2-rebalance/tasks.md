@@ -310,7 +310,7 @@ The tick cost follows the population: 65–78 µs per tick on average with both 
 - [x] The wanderers' curve against its targets
 - [x] The encounter windows (PA-3) and the other durations
 - [x] The 2-hour default world in `params/default.json`; the PA-1/PA-3 test; the fixed hashes
-- [ ] **Checkpoint C2:** the targets' table per ×N candidate; the owner picks the candidates to play; the D16
+- [x] **Checkpoint C2:** the targets' table per ×N candidate; the owner picks the candidates to play; the D16
       groups and the tick cost measured again (R F3's C1-2, C1-3)
 
 ### F4 record
@@ -386,6 +386,15 @@ taking the world down (2 of 216 sweep runs). Pre-existing since slice D; no resu
 
 **Unchanged on purpose:** `SIM_VERSION` 13 and the fixed hashes (plan §4 expected a rebuild in F4, but they use
 `test/params.json`, and a stored world keeps its own params).
+
+**The owner's decisions at C2** (2026-11-27; plan §12, C2-1..C2-4):
+
+1. **All three candidates** go to the playtest (×8 the default); the near misses (17–18 of 20 seeds) are accepted, and
+   the ×N is chosen at C3.
+2. **The failed recovery target is accepted:** no new rule (D4); the playtest says whether losing 4 creeps hurts too
+   much. F8 measures it again with the kits.
+3. **Road segments at 10 matéria** are accepted for now (provisional, judged in the playtest).
+4. **The tick cost is accepted** (no optimization now).
 
 **Interpretations to validate in the playtest:**
 
