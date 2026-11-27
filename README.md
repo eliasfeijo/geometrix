@@ -4,7 +4,8 @@
 a fogged jungle for days, even while you sleep. On the way, someone may stop them and ask for a toll, and the fight
 that follows is played in real time.
 
-[Current status](docs/dashboard/current-status.md) · [Roadmap](docs/ROADMAP.md)
+[Overview](docs/OVERVIEW.md) ([pt-br](docs/OVERVIEW.pt-br.md)) · [Current status](docs/dashboard/current-status.md) ·
+[Roadmap](docs/ROADMAP.md)
 
 ![A world on day 3: the blue team's roads, creeps and core, with the river and its fords in the middle](docs/img/world-day3.png)
 
@@ -96,6 +97,7 @@ AI agents (Claude Code, opencode, Kilo), see the [harness guide](docs/HARNESS.md
 
 | To… | Read |
 |---|---|
+| Get the big picture, with no prior knowledge | [Overview](docs/OVERVIEW.md) ([pt-br](docs/OVERVIEW.pt-br.md)) |
 | Understand the game | [Pillars](docs/PILLARS.md) → [GDD](docs/gdd/README.md) → [Glossary](docs/GLOSSARY.md) |
 | See where the project is | [Status dashboard](docs/dashboard/current-status.md) |
 | Understand the technical decisions | [ADRs](docs/adr/README.md) |

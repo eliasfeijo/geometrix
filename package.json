@@ -12,7 +12,7 @@
     "node": "^26"
   },
   "scripts": {
-    "typecheck": "npm run typecheck --workspaces",
+    "typecheck": "npm run typecheck --workspaces && tsc -p scripts/capture",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -25,12 +25,14 @@
     "soak": "node apps/server/src/soak-main.ts",
     "client": "npm run dev -w @geometrix/client",
     "lab": "npm run dev -w @geometrix/client -- --open /lab.html",
-    "build": "npm run build -w @geometrix/client"
+    "build": "npm run build -w @geometrix/client",
+    "capture": "node scripts/capture/capture.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/node": "^26.6.6",
     "eslint": "^10.15.0",
+    "playwright": "^1.65.1",
     "prettier": "^3.10.1",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.72.2",
