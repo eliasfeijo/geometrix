@@ -256,3 +256,13 @@ visível". **Fixed at the owner's request:** the vote is a strip of its own unde
 battle screen, covering nothing (replaces F4's interpretation 10). Movable panels, which the owner mentioned, were
 not asked for.
 
+
+**E4, the clock's draw** (two tabs, a world of 5 real minutes): "tudo ok...".
+
+**E5, the marks of a whole match** (`geo sim --seed 42 --days 3`, the replay file): "tudo ok, exceto que quando eu
+clico num evento específico, a tela de baixo muda aparentemente para aquele momento, mas a linha do tempo (progress
+bar) não acompanha a tela de baixo que toca a partir do evento que eu cliquei, a não ser que eu mova a barra
+manualmente". **Fixed** (reproduced headless first): `preact/compat`, which the map's layers load, turns an
+`onChange` prop on a range input into a second `input` handler that runs before `onInput`, so after a release the
+thumb (and the clock) stayed at the pointer's last value. The slider now listens to the native `change`. No client
+test runs a DOM, so the fix is checked headless only.
