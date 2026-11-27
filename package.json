@@ -13,7 +13,7 @@
   },
   "scripts": {
     "typecheck": "npm run typecheck --workspaces && tsc -p scripts/capture --incremental --tsBuildInfoFile node_modules/.cache/tsc/capture.tsbuildinfo",
-    "lint": "eslint .",
+    "lint": "eslint . --cache --cache-location node_modules/.cache/eslint/",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest run",
