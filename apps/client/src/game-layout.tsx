@@ -94,6 +94,7 @@ export function GameLayout({ game, header, orders, onReplay }: Props) {
     <GameContext.Provider value={game}>
       <div class="game">
         {header}
+        {live && <ConcedeVotePanel />}
         <div class="game-body">
           <MapView
             cursor={cursor}
@@ -124,7 +125,6 @@ export function GameLayout({ game, header, orders, onReplay }: Props) {
           {live && <ReactionPanel />}
           {live && <BattleReturn />}
           {live && <BattleAlert />}
-          {live && <ConcedeVotePanel />}
           {store.shownBattle.value !== null && game.battles !== undefined && (
             <BattleScreen key={store.shownBattle.value} />
           )}

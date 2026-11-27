@@ -1,10 +1,20 @@
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { canonicalJson, eventsFor, type SimEvent } from "@geometrix/sim";
+import {
+  canonicalJson,
+  createWorld,
+  endSummary,
+  eventsFor,
+  step,
+  type EndSummary,
+  type SimEvent,
+} from "@geometrix/sim";
 import { describe, expect, test } from "vitest";
 import {
   checkBattles,
+  checkEnd,
+  describeEnd,
   interruptions,
   parseSoakArgs,
   rebuild,
@@ -221,6 +231,90 @@ describe("checkBattles (junction spec section 7)", () => {
     expect(checkBattles(state, open, ticksOf, log).open).toEqual([battle]);
     store.close();
   }, 60_000);
+});
+
+describe("checkEnd (E-min plan section 8)", () => {
+  /** A world whose clock runs out after 20 ticks: a draw. */
+  function ended() {
+    const base = testParams();
+    const params = {
+      ...base,
+      world: { ...base.world, durationSeconds: 20 * base.world.tickSeconds },
+    };
+    const state = createWorld(42, params);
+    while (state.result === null) step(state, []);
+    return state;
+  }
+
+  test("the lobby and the clients agree with the replay's end", () => {
+    const state = ended();
+    const end = endSummary(state)!;
+    const listed = {
+      how: end.result.how,
+      winner: end.result.winner,
+      teams: end.result.teams,
+    };
+    expect(checkEnd(state, listed, [end, end])).toEqual({
+      end,
+      lobbyOk: true,
+      clientsOk: true,
+      ok: true,
+    });
+    expect(checkEnd(state, null, [end]).lobbyOk).toBe(false);
+    expect(checkEnd(state, { ...listed, winner: 0 }, [end]).lobbyOk).toBe(
+      false,
+    );
+    expect(checkEnd(state, listed, [end, null]).clientsOk).toBe(false);
+    const other = { ...end, durationSeconds: end.durationSeconds + 1 };
+    expect(checkEnd(state, listed, [other]).ok).toBe(false);
+  });
+
+  test("a replay that never reaches an end fails", () => {
+    const state = createWorld(42, testParams());
+    expect(checkEnd(state, null, []).ok).toBe(false);
+  });
+
+  test("says when and how: the clock's draw, a bot's concession", () => {
+    const clock: EndSummary = {
+      result: {
+        tick: 57_599,
+        how: "clock",
+        winner: null,
+        teams: [0, 1],
+      },
+      durationSeconds: 57_600,
+      teams: [],
+      highlights: [],
+    };
+    expect(describeEnd(clock, 8)).toBe(
+      "tick 57599 (world 16 h 0 min, 120.0 real min at ×8): " +
+        "the clock ran out; a draw between teams 0 and 1",
+    );
+    const team = {
+      born: 0,
+      lost: 0,
+      battlesWon: 0,
+      battlesLost: 0,
+      materiaDelivered: 0,
+    };
+    const conceded: EndSummary = {
+      result: { tick: 7199, how: "lastTeam", winner: 0, teams: [0] },
+      durationSeconds: 7200,
+      teams: [
+        { team: 0, out: null, ...team },
+        {
+          team: 1,
+          out: { tick: 7199, how: "conceded", bot: true },
+          ...team,
+        },
+      ],
+      highlights: [],
+    };
+    expect(describeEnd(conceded, 8)).toBe(
+      "tick 7199 (world 2 h 0 min, 15.0 real min at ×8): " +
+        "team 1 conceded (its bot) at tick 7199; team 0 won",
+    );
+  });
 });
 
 describe("summarize", () => {

@@ -109,7 +109,7 @@ function ConfirmConcede(props: {
   );
 }
 
-/** The team's open vote, over the map and the battle screen (S-5). */
+/** The team's open vote, in a strip above the map and the battle screen (S-5). */
 export function ConcedeVotePanel() {
   const { store, viewer, send } = useGame();
   const status = useConcession();

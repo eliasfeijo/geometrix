@@ -1,6 +1,6 @@
 # M2 tasks — The minimal end
 
-**Status:** F0 ✅ (spec and plan approved 2026-11-25) · F1 ✅ (2026-11-27) · F2 ✅ (2026-11-27) · F3 ✅ (2026-11-27) · F4 ✅ (2026-11-27); F5 next. Branches `m2/emin-f<n>-<slug>` (skill `commit`).
+**Status:** F0 ✅ (spec and plan approved 2026-11-25) · F1 ✅ (2026-11-27) · F2 ✅ (2026-11-27) · F3 ✅ (2026-11-27) · F4 ✅ (2026-11-27) · F5 ✅ (2026-11-27, checkpoint C1). Branches `m2/emin-f<n>-<slug>` (skill `commit`).
 **Spec:** [spec.md](spec.md) · **Plan:** [plan.md](plan.md)
 
 ## F0 — Spec and plan
@@ -199,7 +199,94 @@ for C1: whether the main events need more detail (5), and the tone (11).
 
 ## F5 — Soak and playtest
 
-- [ ] The soak checks the end against the export and reports when and how the world ended
-- [ ] The PLAYTEST E-min group (spec §8), with the `--set` overrides for short sessions
-- [ ] **Checkpoint C1:** the owner's sessions (against the bot until it concedes, a concession between two tabs, the
+- [x] The soak checks the end against the export and reports when and how the world ended
+- [x] The PLAYTEST E-min group (spec §8), with the `--set` overrides for short sessions
+- [x] **Checkpoint C1:** the owner's sessions (against the bot until it concedes, a concession between two tabs, the
       clock's draw, the replay's marks), the hypothesis questions and the tone of the sentences
+
+### F5 record (2026-11-27)
+
+**What it does.** The soak checks the end: the lobby's result and every client's summary against the state the
+exported replay reaches, and its report says when and how the world ended. A planned interruption the end came before
+is listed, not failed (it fails only when the clock ran its whole time, which leaves room for all of them); a battle
+the end stopped open is replayed to its last stored tick (plan §5), and a battle a crash cut through must have gone on
+after the restart. PLAYTEST has the groups E1–E5 and the checkpoint questions.
+
+**Measured** (`npm run soak`, one run, alone on the machine, 2.8 min): OK. The world ended at tick 57,599 (120 real
+minutes at ×8) by the clock, a draw; the lobby and the 4 clients show the replay's end; 6/6 interruptions before the
+end, 5 kills through a battle; 46 battles, 45 ended and 1 stopped open by the end; loop speed median 100%, slowest
+95%; server memory up to 220 MB.
+
+**Interpretations** (the agent's):
+
+1. The bots' world only ends at the clock (F2), so the early end's paths of the soak (missed interruptions) are not
+   exercised by the run; `checkEnd` and `describeEnd` are tested.
+2. The PLAYTEST group's E1 puts the creep's cost out of reach (`creep.cost.materia=99999`), so the bot's concession
+   comes in one session; the default cost is not played there.
+
+
+### C1 sessions (2026-11-27)
+
+**E1, against the easy bot until it concedes** (seed 42, ×8, `creep.cost.materia=99999`, concession from the start).
+The bot conceded at world 01:29 (about 11 real minutes). In the owner's words:
+
+- Did the match end when it felt over? "Sim."
+- "uns 10 min, depois que eu juntei a tropa de 2 circulos e 1 triangulo no núcleo inimigo, foi rápido". The first try
+  stalled: the owner did not know "Seguir" existed (the script did not mention it).
+- The end screen's moments: "realmente não tem muita história pra contar em 10 min de jogo que deveria durar 2h,
+  talvez o bot estrategista esteja muito passivo durante meu posicionamento agressivo me aproximando dos depósitos
+  perto do núcleo dele, com os creeps dele me vendo aproximar com a tropa de 3 e continuou farmando passivamente como
+  se fosse um dia lindo para coletar materia". The five were: the bot's concession (01:29), first blood (01:15), and
+  battles "O time Azul fica com o campo." (01:20, 01:15) and "A batalha termina com a vitória do time Laranja."
+  (00:39).
+- "Ver o mapa" / "Ver o resultado": "normal". The replay's marks led to the moments that mattered: "sim".
+- "eu só fui construir estradas no segundo terço da partida, e mesmo assim minha economia ultrapassou a do laranja".
+
+Caveats on E1 (the agent's): the script chose the **easy** bot, which by R's D26 has no defense, groups or escort, so
+the passivity says nothing about the default (hard) bot; and nobody could produce, which distorts the economy. The
+moments are listed by rank, not by time.
+
+**E2, a concession between two tabs** (seed 42, ×8, concession from the start; the script's steps include conceding
+with a battle open in the other tab): "tudo ok e confirmado" (one answer for the group, no itemized points).
+
+**E3, the team's vote** (three tabs, two on Blue): "tudo ok, exceto o painel de desistência que disputa o mesmo
+espaço do topo do painel do creep na camada inferior, o que não seria se eu pudesso mover os paineis, mas pra
+facilitar podemos apenas encontrar um local apropriado para o painel novo sem disputar com nada na tela e se manter
+visível". **Fixed at the owner's request:** the vote is a strip of its own under the top bar, above the map and the
+battle screen, covering nothing (replaces F4's interpretation 10). Movable panels, which the owner mentioned, were
+not asked for.
+
+
+**E4, the clock's draw** (two tabs, a world of 5 real minutes): "tudo ok...".
+
+**E5, the marks of a whole match** (`geo sim --seed 42 --days 3`, the replay file): "tudo ok, exceto que quando eu
+clico num evento específico, a tela de baixo muda aparentemente para aquele momento, mas a linha do tempo (progress
+bar) não acompanha a tela de baixo que toca a partir do evento que eu cliquei, a não ser que eu mova a barra
+manualmente". **Fixed** (reproduced headless first): `preact/compat`, which the map's layers load, turns an
+`onChange` prop on a range input into a second `input` handler that runs before `onInput`, so after a release the
+thumb (and the clock) stayed at the pointer's last value. The slider now listens to the native `change`. No client
+test runs a DOM, so the fix is checked headless only.
+
+**The last questions.** In the owner's words:
+
+- Should a battle among the end's moments say its size and load? "Sim, recheio de info interessante é sempre bem
+  vinda". **Decided** (GDD 01), **not built**: a client change left to a later session.
+- The moments ordered by importance, so out of time order? "Se ficar claro que é um highlight dos melhores momentos,
+  podemos manter a função esperada da tela de 'melhores momentos'". The heading became "Melhores momentos".
+- The tone of the new sentences (F4's interpretation 11): "Ok".
+- E1 again against the hard bot? "Se eu tiver que jogar de novo no C3, então não faz sentido jogar agora, a não ser
+  que queira meu feedback de "sou pior/melhor no micro contra o bot" pq eu não vou jogar uma partida a sério
+  contra bot e vou fazer um ataque 6vsN perto do núcleo dele já no começo". Not replayed.
+
+**Not answered:** whether the replay's timeline now follows (fixed and reproduced headless; the owner did not say).
+
+**For R's F7 and checkpoint C3** (C3 plays with the end):
+
+- Play the end against the **hard** bot at the default costs: E1 used easy, which has no defense.
+- The owner does not play a match against the bot "seriously": expect an early attack with all 6 creeps near its
+  core. How the strategist answers that rush is worth watching; what feedback to ask is about the micro against it.
+- The script has to say how to bring creeps along ("Seguir…"): E1's first try stalled without it.
+- The owner's E1 observations: a 10-minute match has little story; the (easy) bot kept farming while three creeps
+  approached; Blue's economy passed Orange's although roads came only in the second third (nobody could produce).
+- The bot × bot world only ends at the clock (F2), so the soak does not exercise an early end.
+

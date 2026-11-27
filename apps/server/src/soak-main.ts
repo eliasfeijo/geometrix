@@ -23,6 +23,8 @@ import { Store } from "./persistence.ts";
 import { SOAK_CHRONICLE_KEEP, SoakClient } from "./soak-client.ts";
 import {
   checkBattles,
+  checkEnd,
+  describeEnd,
   interruptions,
   parseSoakArgs,
   rebuild,
@@ -74,6 +76,8 @@ type Event = Interruption & {
   restartSeconds: number;
   /** Battles open in the tables when the process died (kills only). */
   openBattles: number[];
+  /** The tick each of them had reached, in the same order. */
+  openReached: number[];
 };
 
 let server: ChildProcess | null = null;
@@ -123,9 +127,11 @@ while (!ended) {
   ended = now.status === "ended";
   const next = plan[events.length];
   if (!ended && next !== undefined && now.tick >= next.tick) {
-    events.push(await interrupt(next, now.tick));
+    const event = await interrupt(next, now.tick);
+    if (event !== null) events.push(event);
   }
 }
+const listed = (await world()).result;
 
 for (const stop of dropTimers) stop();
 const replay = parseReplay(await get(`/api/worlds/${worldId}/replay`));
@@ -161,11 +167,30 @@ const battles = checkBattles(
   (battleId) => store.battleTicks(worldId, battleId),
   replay.commands,
 );
-const killedInBattle = events.filter((e) => e.openBattles.length > 0);
-// Every battle a crash cut through ended later and was checked.
-const cutEnded = killedInBattle
-  .flatMap((e) => e.openBattles)
-  .every((b) => !battles.open.includes(b));
+// An interruption landed before the end if the restart found the world still
+// running: the rest could not happen (reported, and failed only when the
+// clock ran its whole time, which leaves room for all of them).
+const landed = events.filter((e) => e.recoveredTick < replay.ticks);
+const missed = plan.slice(landed.length);
+const killedInBattle = landed.filter((e) => e.openBattles.length > 0);
+// Every battle a crash cut through went on after the restart: it ended, or
+// the world's end stopped it further on.
+const reachedAtEnd = new Map(
+  store.battles(worldId).map((b) => [b.battleId, b.reachedTick]),
+);
+const cutEnded = killedInBattle.every((e) =>
+  e.openBattles.every(
+    (b, i) =>
+      !battles.open.includes(b) || reachedAtEnd.get(b)! > e.openReached[i]!,
+  ),
+);
+const endCheck = checkEnd(
+  final,
+  listed,
+  clients.map((c) => c.view?.summary ?? null),
+);
+const interruptionsOk =
+  endCheck.end?.result.how === "clock" ? missed.length === 0 : true;
 const chronicleRows = store.chronicleCount(worldId);
 const chronicleBytes = store.chronicleBytes(worldId);
 const expectedRows = [0, 1].reduce(
@@ -201,7 +226,8 @@ const ok =
   hashOk &&
   recoveredOk &&
   battlesOk &&
-  events.length === plan.length &&
+  interruptionsOk &&
+  endCheck.ok &&
   clientsOk &&
   chronicleOk;
 writeFileSync(join(outDir, "samples.csv"), samplesCsv(samples));
@@ -223,8 +249,21 @@ function report(): string {
     `- Replay rebuilt in Node: ${hashOk ? "same hash" : "DIFFERENT hash"} ` +
       `(server ${replay.finalHash.slice(0, 16)}…, Node ${rebuilt.slice(0, 16)}…), ` +
       `${replay.commands.length} logged commands`,
-    `- Interruptions (${events.length}/${plan.length}):`,
-    ...events.map(
+    `- End: ${
+      endCheck.end === null
+        ? "THE REPLAY NEVER REACHES ONE"
+        : describeEnd(endCheck.end, replay.params.world.multiplier)
+    }`,
+    `- End against the export: lobby result ${
+      endCheck.lobbyOk ? "the same" : "DIFFERENT"
+    }, clients' summaries ${endCheck.clientsOk ? "the same" : "DIFFERENT"}`,
+    `- Interruptions (${landed.length}/${plan.length} before the end):`,
+    ...missed.map(
+      (p) =>
+        `  - not before the end: ${p.kind === "kill" ? "kill -9" : "SIGTERM"} ` +
+        `planned at tick ${p.tick}`,
+    ),
+    ...landed.map(
       (e) =>
         `  - ${e.kind === "kill" ? "kill -9" : "SIGTERM"} at tick ${e.seenTick} ` +
         `(exit ${e.exitCode}), back at tick ${e.recoveredTick} ` +
@@ -236,9 +275,9 @@ function report(): string {
           : ""),
     ),
     `- Battles: ${battles.battles} in the tables, ${battles.ended} ended, ` +
-      `${battles.open.length} open at the world's end; ` +
+      `${battles.open.length} stopped open by the world's end; ` +
       `${killedInBattle.length} kills cut through a battle ` +
-      `(${cutEnded ? "each ended after the restart" : "ONE NEVER ENDED"})`,
+      `(${cutEnded ? "each went on after the restart" : "ONE NEVER WENT ON"})`,
     `- Battle logs replayed: ${
       battles.hashMismatches.length === 0
         ? "every final hash the same"
@@ -324,14 +363,22 @@ async function startClients(): Promise<SoakClient[]> {
   return started;
 }
 
-async function interrupt(step: Interruption, seenTick: number): Promise<Event> {
-  if (step.kind === "kill") await battleOpen();
+/** Null when the world ended while the kill waited for a battle. */
+async function interrupt(
+  step: Interruption,
+  seenTick: number,
+): Promise<Event | null> {
+  if (step.kind === "kill") {
+    await battleOpen();
+    if ((await world()).status === "ended") return null;
+  }
   const stopped = Date.now();
   const old = server!;
   old.kill(step.kind === "kill" ? "SIGKILL" : "SIGTERM");
   const exitCode = await exited(old);
   // What recovery will rebuild: the battles the last commit left open.
-  const openBattles = step.kind === "kill" ? openInTables() : [];
+  const open = step.kind === "kill" ? openInTables() : [];
+  const openBattles = open.map((b) => b.id);
   server = await startServer();
   const recoveredTick = (await world()).tick;
   const event = {
@@ -341,6 +388,7 @@ async function interrupt(step: Interruption, seenTick: number): Promise<Event> {
     exitCode,
     restartSeconds: (Date.now() - stopped) / 1000,
     openBattles,
+    openReached: open.map((b) => b.reached),
   };
   log(
     `${step.kind} at tick ${seenTick}: back at ${recoveredTick} ` +
@@ -361,16 +409,16 @@ async function battleOpen(): Promise<void> {
 }
 
 /** The world's battles with no end in the tables (a read-only look). */
-function openInTables(): number[] {
+function openInTables(): { id: number; reached: number }[] {
   const reader = new Database(db, { readonly: true, fileMustExist: true });
   try {
     const rows = reader
       .prepare(
-        `SELECT battle_id FROM battles
+        `SELECT battle_id, reached_tick FROM battles
          WHERE world_id = ? AND ended_tick IS NULL ORDER BY battle_id`,
       )
-      .all(worldId) as { battle_id: number }[];
-    return rows.map((r) => r.battle_id);
+      .all(worldId) as { battle_id: number; reached_tick: number }[];
+    return rows.map((r) => ({ id: r.battle_id, reached: r.reached_tick }));
   } finally {
     reader.close();
   }
