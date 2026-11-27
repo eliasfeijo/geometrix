@@ -6,7 +6,6 @@
 import {
   isOwnCreep,
   type Cell,
-  type CreepView,
   type ForeignTeam,
   type Params,
   type Team,
@@ -20,6 +19,7 @@ import { creepStatus, viewCapacity, type Creep } from "../creep-status.ts";
 import type { GameStore } from "../store.ts";
 import { COLORS, teamColor, teamTextColor } from "./colors.ts";
 import { DnaShape } from "./creep-shape.tsx";
+import { DestinationLayer } from "./destination-layer.tsx";
 import { BattleBubbles, BattleSigns, InBattleMark } from "./battle-layer.tsx";
 import { EncounterLayer } from "./encounter-layer.tsx";
 import { HostileLayer } from "./hostile-layer.tsx";
@@ -169,7 +169,11 @@ export function CreepLayer() {
       {selected !== undefined &&
         isOwnCreep(selected) &&
         selectedMarker !== undefined && (
-          <OrderLine creep={selected} from={selectedMarker} state={state} />
+          <DestinationLayer
+            creep={selected}
+            from={selectedMarker}
+            state={state}
+          />
         )}
       {markers.map((m) =>
         m.kind === "creep" ? (
@@ -339,54 +343,6 @@ function CellSelection({ cell, size }: { cell?: Cell; size: number }) {
       stroke-width="0.08"
       stroke-dasharray="0.25 0.12"
     />
-  );
-}
-
-/** The cell an order heads to, or null for stop. */
-export function orderTarget(creep: CreepView, state: TeamView): Cell | null {
-  const { order } = creep;
-  switch (order.type) {
-    case "stop":
-      return null;
-    case "moveTo":
-    case "explore":
-    case "buildRoad":
-      return { x: order.x, y: order.y };
-    case "gather":
-      return state.deposits.find((d) => d.id === order.depositId) ?? null;
-    case "deliver":
-    case "flee":
-      return state.teams[creep.team]?.core ?? null;
-    case "approach":
-    case "follow":
-      return state.creeps.find((c) => c.id === order.targetId) ?? null;
-    case "pickup":
-    case "drop":
-      return null;
-  }
-}
-
-/** Dashed line from the selected creep to where its order takes it. */
-function OrderLine(props: { creep: CreepView; from: Point; state: TeamView }) {
-  const target = orderTarget(props.creep, props.state);
-  if (target === null) return null;
-  const x2 = target.x + 0.5;
-  const y2 = target.y + 0.5;
-  if (Math.hypot(x2 - props.from.x, y2 - props.from.y) < 0.5) return null;
-  return (
-    <g class="order-line">
-      <line
-        x1={props.from.x}
-        y1={props.from.y}
-        x2={x2}
-        y2={y2}
-        stroke={COLORS.selection}
-        stroke-opacity="0.8"
-        stroke-width="0.06"
-        stroke-dasharray="0.2 0.15"
-      />
-      <circle cx={x2} cy={y2} r="0.12" fill={COLORS.selection} />
-    </g>
   );
 }
 

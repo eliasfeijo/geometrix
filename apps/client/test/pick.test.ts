@@ -1,11 +1,6 @@
-import {
-  collectorRules,
-  roadBuilderRules,
-  type CreepView,
-} from "@geometrix/sim";
+import { collectorRules, roadBuilderRules } from "@geometrix/sim";
 import { describe, expect, it } from "vitest";
 import { orderText, ruleText } from "../src/format.ts";
-import { orderTarget } from "../src/map/creep-layer.tsx";
 import type { Marker } from "../src/map/layout.ts";
 import { actorLine } from "../src/panels/actor-list.tsx";
 import {
@@ -134,28 +129,18 @@ describe("texts and targets", () => {
     );
   });
 
-  it("describes and locates orders", () => {
+  it("describes orders", () => {
     const state = viewOf(testWorld());
-    // The team's own creep: whole in its view.
-    const c = structuredClone(state.creeps[0]!) as CreepView;
     const deposit = state.deposits[0]!;
-    expect(orderTarget(c, state)).toBeNull();
-    expect(orderText(c.order, state.deposits)).toBe("nenhuma");
-
-    c.order = { type: "gather", depositId: deposit.id };
-    expect(orderTarget(c, state)).toBe(deposit);
-    expect(orderText(c.order, state.deposits)).toBe(
+    expect(orderText({ type: "stop" }, state.deposits)).toBe("nenhuma");
+    expect(
+      orderText({ type: "gather", depositId: deposit.id }, state.deposits),
+    ).toBe(
       `coletar ${deposit.kind === "materia" ? "matéria" : "cristal"} em (${deposit.x}, ${deposit.y})`,
     );
-
-    c.order = { type: "deliver" };
-    expect(orderTarget(c, state)).toEqual(state.teams[c.team]!.core);
-
-    c.order = { type: "buildRoad", x: 3, y: 2, segment: -1 };
-    expect(orderTarget(c, state)).toEqual({ x: 3, y: 2 });
-    expect(orderText(c.order, state.deposits)).toBe(
-      "construir estrada até (3, 2)",
-    );
+    expect(
+      orderText({ type: "buildRoad", x: 3, y: 2, segment: -1 }, state.deposits),
+    ).toBe("construir estrada até (3, 2)");
   });
 });
 

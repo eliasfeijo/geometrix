@@ -12,6 +12,7 @@ import {
 } from "@geometrix/sim";
 import { useGame } from "../context.ts";
 import { toggleRoadMode } from "../interaction.ts";
+import { etaOf, etaText, viewMap } from "../map/destination.ts";
 import { inSight } from "../map/fog.ts";
 import { cellmates } from "../map/pick.ts";
 import { creepStatus, STATUS_TEXTS, viewCapacity } from "../creep-status.ts";
@@ -59,7 +60,7 @@ export function Inspector() {
 }
 
 function CreepInspector({ id }: { id: number }) {
-  const { store, viewer, send } = useGame();
+  const { store, viewer, send, battles } = useGame();
   const state = store.current.value?.state;
   const params = store.info.value?.params;
   const creep = state?.creeps.find((c) => c.id === id);
@@ -85,6 +86,19 @@ function CreepInspector({ id }: { id: number }) {
   const status = creepStatus(creep, state.deposits) ?? "idle";
   const roadMode = store.mode.value.type === "road";
   const engagement = engagementText(state, creep);
+  // A replay plays at its own speed: no real time to estimate there.
+  const info = store.info.value;
+  const known = store.map.value;
+  const eta =
+    battles === undefined || info === null || known === null
+      ? null
+      : etaOf(
+          creep,
+          state,
+          params,
+          viewMap(known, state.roads),
+          info.multiplier,
+        );
   const safeConduct = safeConductLeft(creep.safeConduct, state.tick, params);
   return (
     <div class={`inspector team-${creep.team}`}>
@@ -125,6 +139,14 @@ function CreepInspector({ id }: { id: number }) {
         </dd>
         <dt>Ordem</dt>
         <dd>{orderText(creep.order, state.deposits)}</dd>
+        {eta !== null && (
+          <>
+            <dt>Previsão</dt>
+            <dd title="Tempo real neste ×N; outros mudam o mundo no caminho">
+              {etaText(eta)}
+            </dd>
+          </>
+        )}
         <dt>Carga</dt>
         <dd>
           <CargoBar
