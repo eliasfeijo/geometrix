@@ -1,8 +1,8 @@
 {
   "world": {
-    "durationSeconds": 259200,
+    "durationSeconds": 57600,
     "tickSeconds": 1,
-    "multiplier": 6
+    "multiplier": 8
   },
   "map": {
     "width": 64,
@@ -41,15 +41,15 @@
   "dna": {
     "square": {
       "capacity": 30,
-      "cellsPerMinute": 2
+      "cellsPerMinute": 3
     },
     "triangle": {
       "capacity": 20,
-      "cellsPerMinute": 3
+      "cellsPerMinute": 4
     },
     "circle": {
       "capacity": 10,
-      "cellsPerMinute": 5
+      "cellsPerMinute": 7
     }
   },
   "movementPermille": {
@@ -62,7 +62,7 @@
     "materia": {
       "amount": 500,
       "regen": {
-        "amount": 8,
+        "amount": 5,
         "everySeconds": 60
       },
       "perSide": 6,
@@ -90,14 +90,14 @@
   },
   "creep": {
     "cost": {
-      "materia": 3000,
-      "cristal": 10
+      "materia": 1100,
+      "cristal": 5
     },
-    "productionSeconds": 600
+    "productionSeconds": 300
   },
   "road": {
     "cost": {
-      "materia": 150,
+      "materia": 10,
       "cristal": 0
     },
     "buildSeconds": 120
@@ -166,7 +166,7 @@
   },
   "encounter": {
     "radius": 1,
-    "reactionSeconds": 60
+    "reactionSeconds": 80
   },
   "safeConduct": {
     "seconds": 600,
@@ -176,10 +176,10 @@
     "hp": 60,
     "damage": 12,
     "bandRows": 8,
-    "firstSeconds": 3600,
+    "firstSeconds": 2400,
     "intervalSeconds": {
-      "start": 3600,
-      "end": 900
+      "start": 1200,
+      "end": 600
     },
     "cap": 4,
     "spareSeconds": 600

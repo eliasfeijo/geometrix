@@ -305,11 +305,11 @@ The tick cost follows the population: 65–78 µs per tick on average with both 
 
 ## F4 — The balance pass
 
-- [ ] Speeds and map size against crossing and exploring, per ×N candidate (6, 8, 12)
-- [ ] Costs and production against the opening, population and recovery
-- [ ] The wanderers' curve against its targets
-- [ ] The encounter windows (PA-3) and the other durations
-- [ ] The 2-hour default world in `params/default.json`; the PA-1/PA-3 test; the fixed hashes
+- [x] Speeds and map size against crossing and exploring, per ×N candidate (6, 8, 12)
+- [x] Costs and production against the opening, population and recovery
+- [x] The wanderers' curve against its targets
+- [x] The encounter windows (PA-3) and the other durations
+- [x] The 2-hour default world in `params/default.json`; the PA-1/PA-3 test; the fixed hashes
 - [ ] **Checkpoint C2:** the targets' table per ×N candidate; the owner picks the candidates to play; the D16
       groups and the tick cost measured again (R F3's C1-2, C1-3)
 

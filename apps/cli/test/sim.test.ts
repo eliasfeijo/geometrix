@@ -128,8 +128,8 @@ describe("runs/<id>/", () => {
     );
     expect(rows).toHaveLength(1 + 2 * result.samples.length);
     for (const row of rows) expect(row.split(",")).toHaveLength(header.length);
-    // 2 h 30 s of world at ×6 (params/default.json) are 20.08 real minutes.
-    expect(rows.at(-1)!.startsWith(`${ticks},2.008,20.08,`)).toBe(true);
+    // 2 h 30 s of world at ×8 (params/default.json) are 15.06 real minutes.
+    expect(rows.at(-1)!.startsWith(`${ticks},2.008,15.06,`)).toBe(true);
   });
 
   test("samples.jsonl and run.json read back into the same report", () => {
@@ -216,9 +216,9 @@ describe("runs/<id>/", () => {
   test("report.md gives every moment in real time at the run's ×N (M2 R PA-2)", () => {
     expect(result.meta.multiplier).toBe(params.world.multiplier);
     const report = file(RUN_FILES.report);
-    expect(report).toContain("| Multiplicador de tempo | ×6:");
+    expect(report).toContain("| Multiplicador de tempo | ×8:");
     expect(report).toContain(
-      "2,0 h de mundo (7.230 ticks de 1 s); 20 min reais a ×6",
+      "2,0 h de mundo (7.230 ticks de 1 s); 15 min reais a ×8",
     );
     expect(report).toContain("| Horas | Min reais | Creeps |");
     // The first delivery, in world minutes and real minutes.
@@ -256,7 +256,7 @@ describe("geo sim / geo report", () => {
       ),
     ).toBe(0);
     expect(io.lines[0]).toBe(
-      "geo sim --seed 3: 3600 ticks at ×6, balanced:easy x none",
+      "geo sim --seed 3: 3600 ticks at ×8, balanced:easy x none",
     );
     const meta = JSON.parse(
       readFileSync(join(out, "one", RUN_FILES.meta), "utf8"),
