@@ -3,7 +3,7 @@
 How to run a geometrix playtest session. The earlier sessions (M1 readability, the M1.5 fog, the M2 encounter, the
 lab groups 1–6 and 8) are done; their scripts are summarized below, and their findings live in each slice's
 `tasks.md`. The junction groups J1–J5 were played freely at slice D's checkpoint C2 (2026-11-25; J6 left to P).
-**Pending:** the minimal end's groups E1–E5 (checkpoint C1) and lab group 7 (the movement options).
+**Pending:** lab group 7 (the movement options).
 **Next:** the friends' playtest (slice P, [ROADMAP](ROADMAP.md)), whose script is written in P's spec.
 
 The game's interface is in Portuguese; the labels below are quoted as they appear on screen, with a gloss.
@@ -198,7 +198,7 @@ C2-1 The hypothesis (spec §1): does the battle pay off the risk, change the cou
 C2-2 The order of E (siege and repair) against P (the friends' playtest): E first, P first, or P with E's minimum?
 ```
 
-## The minimal end (checkpoint C1) — pending
+## The minimal end (checkpoint C1) — played 2026-11-27
 
 Slice E-min's sessions ([spec §8](specs/m2-minimal-end/spec.md)): does the match end when it feels over, is the end
 readable, can the story be found again? Short worlds through `--set` (world params of the session only), at the
@@ -211,10 +211,12 @@ after a rejected vote 3 min. One group at a time; stop the server (Ctrl+C) betwe
 npm run dev:multi -- --clients 1 --bot --bot-difficulty easy --seed 42 --set creep.cost.materia=99999 --set end.concedeAfterSeconds=0
 ```
 
-Nobody can produce (the creep's cost is out of reach), so a death is final.
+Nobody can produce (the creep's cost is out of reach), so a death is final. To bring others along, select a Blue
+creep that is not dominated, **"Seguir…"** in its rules, and click the leader (or, dominating one, right click an
+ally, "Seguir"): the followers join its fights.
 
 1. Dominate and hunt the Orange creeps ("Atacar") until the bot is left with one: it concedes on its next decision.
-2. On the end screen, read the result, how it ended, the table and "Momentos da partida" (the match's moments).
+2. On the end screen, read the result, how it ended, the table and "Melhores momentos" (the best moments).
 3. **"Ver o mapa"**: the frozen world; try to command a creep. **"Ver o resultado"** brings the end screen back.
 4. **"Ver o replay"**: let the marks load, then hover and click a few.
 

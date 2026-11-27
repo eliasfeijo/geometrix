@@ -1,6 +1,6 @@
 # M2 tasks — The minimal end
 
-**Status:** F0 ✅ (spec and plan approved 2026-11-25) · F1 ✅ (2026-11-27) · F2 ✅ (2026-11-27) · F3 ✅ (2026-11-27) · F4 ✅ (2026-11-27); F5 next. Branches `m2/emin-f<n>-<slug>` (skill `commit`).
+**Status:** F0 ✅ (spec and plan approved 2026-11-25) · F1 ✅ (2026-11-27) · F2 ✅ (2026-11-27) · F3 ✅ (2026-11-27) · F4 ✅ (2026-11-27) · F5 ✅ (2026-11-27, checkpoint C1). Branches `m2/emin-f<n>-<slug>` (skill `commit`).
 **Spec:** [spec.md](spec.md) · **Plan:** [plan.md](plan.md)
 
 ## F0 — Spec and plan
@@ -201,7 +201,7 @@ for C1: whether the main events need more detail (5), and the tone (11).
 
 - [x] The soak checks the end against the export and reports when and how the world ended
 - [x] The PLAYTEST E-min group (spec §8), with the `--set` overrides for short sessions
-- [ ] **Checkpoint C1:** the owner's sessions (against the bot until it concedes, a concession between two tabs, the
+- [x] **Checkpoint C1:** the owner's sessions (against the bot until it concedes, a concession between two tabs, the
       clock's draw, the replay's marks), the hypothesis questions and the tone of the sentences
 
 ### F5 record (2026-11-27)
@@ -266,3 +266,27 @@ manualmente". **Fixed** (reproduced headless first): `preact/compat`, which the 
 `onChange` prop on a range input into a second `input` handler that runs before `onInput`, so after a release the
 thumb (and the clock) stayed at the pointer's last value. The slider now listens to the native `change`. No client
 test runs a DOM, so the fix is checked headless only.
+
+**The last questions.** In the owner's words:
+
+- Should a battle among the end's moments say its size and load? "Sim, recheio de info interessante é sempre bem
+  vinda". **Decided** (GDD 01), **not built**: a client change left to a later session.
+- The moments ordered by importance, so out of time order? "Se ficar claro que é um highlight dos melhores momentos,
+  podemos manter a função esperada da tela de 'melhores momentos'". The heading became "Melhores momentos".
+- The tone of the new sentences (F4's interpretation 11): "Ok".
+- E1 again against the hard bot? "Se eu tiver que jogar de novo no C3, então não faz sentido jogar agora, a não ser
+  que queira meu feedback de "sou pior/melhor no micro contra o bot" pq eu não vou jogar uma partida a sério
+  contra bot e vou fazer um ataque 6vsN perto do núcleo dele já no começo". Not replayed.
+
+**Not answered:** whether the replay's timeline now follows (fixed and reproduced headless; the owner did not say).
+
+**For R's F7 and checkpoint C3** (C3 plays with the end):
+
+- Play the end against the **hard** bot at the default costs: E1 used easy, which has no defense.
+- The owner does not play a match against the bot "seriously": expect an early attack with all 6 creeps near its
+  core. How the strategist answers that rush is worth watching; what feedback to ask is about the micro against it.
+- The script has to say how to bring creeps along ("Seguir…"): E1's first try stalled without it.
+- The owner's E1 observations: a 10-minute match has little story; the (easy) bot kept farming while three creeps
+  approached; Blue's economy passed Orange's although roads came only in the second third (nobody could produce).
+- The bot × bot world only ends at the clock (F2), so the soak does not exercise an early end.
+

@@ -24,7 +24,8 @@
 - **M2 slice E-min, the minimal end** (owner, 2026-11-25, with the [E-min spec](../specs/m2-minimal-end/spec.md)): the
   chronicle gains a team leaving the match (eliminated or conceded), the world's end, and the **first blood** (the
   first death of a team's creep in the match) with its own sentence. The end screen shows the match's five main
-  events as their chronicle sentences. **Replay markers:** battles opened and ended, deaths, births, wanderers born, a
+  events as their chronicle sentences, ordered by importance and headed as the best moments; a battle among them is
+  to say its size and load too (owner, 2026-11-27, [01](01-world.md)). **Replay markers:** battles opened and ended, deaths, births, wanderers born, a
   team leaving and the end, each kind with a toggle, its sentence on hover and a jump on click.
 
 Chat, console and macros were slice C of M2, which left the milestone (2026-11-20): they wait for a milestone.

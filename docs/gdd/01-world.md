@@ -70,6 +70,9 @@
   - **First blood** (owner, at the E-min spec's approval, 2026-11-25): the first death of a team's creep in the match,
     by anyone, gets its own chronicle sentence and is always among the end's five main events
     ([08](08-chronicle-chat-and-console.md)).
+  - **The moments on the end screen** (owner, 2026-11-27, E-min checkpoint C1): a battle among them says more than
+    who won, such as its size and load ("recheio de info interessante é sempre bem vinda"; not built yet). They stay
+    ordered by importance, not by time, shown clearly as the match's **best moments**.
 - **The pace of the friends' playtest** (owner, R and E-min design round, 2026-11-25; slice R): a match lasts **about
   2 real hours**, from the start to the clock. It gets there with a **shorter world at a moderate ×N** (around ×6 to
   ×12), not with a higher ×N on the 72-hour world: the duration, costs, production, regeneration and the wanderers
