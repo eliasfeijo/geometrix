@@ -13,6 +13,7 @@ import {
   serverConfig,
 } from "./api.ts";
 import { REJECT_TEXTS, teamName } from "./format.ts";
+import { lobbyResult } from "./match-end.ts";
 import { loadName, loadSession, saveName, saveSession } from "./session.ts";
 
 const REFRESH_MS = 5000;
@@ -136,6 +137,17 @@ export function Lobby(props: Props) {
                 <span class={`status status-${world.status}`}>
                   {world.status === "running" ? "rodando" : "encerrado"}
                 </span>
+                {world.result !== null && (
+                  <strong
+                    class={
+                      world.result.winner === null
+                        ? ""
+                        : `team-name team-${world.result.winner}`
+                    }
+                  >
+                    {lobbyResult(world.result)}
+                  </strong>
+                )}
               </div>
               <div class="world-teams">
                 {TEAMS.map((team) => (

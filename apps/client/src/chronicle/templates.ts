@@ -11,7 +11,8 @@
 //
 // Placeholders, filled by narrate.ts: creeps as {aggressor}, {victim},
 // {creep}, {from}, {to}, {first}, {second}, {by} (clickable names); amounts
-// as {demand}, {amount}, {taken}; {team} as the team's name.
+// as {demand}, {amount}, {taken}; {team} as the team's name and {teams} as a
+// list of them.
 
 import type { Dna } from "@geometrix/sim";
 
@@ -217,6 +218,82 @@ export const TEMPLATES = {
     ],
     alone: ["{creep} morreu.", "{creep} não resistiu."],
   },
+  /**
+   * The match's first death of a team's creep (E-min D15), in the voice of
+   * {by}, the killer; `alone` when nobody killed.
+   */
+  firstBlood: {
+    square: [
+      'Primeiro sangue: {by} derruba {creep}. "O primeiro."',
+      "Primeiro sangue: {by} põe {creep} no chão, sem uma palavra.",
+      'Primeiro sangue: {by} olha para {creep}. "Não levanta."',
+    ],
+    triangle: [
+      'Primeiro sangue: {by} abate {creep}. "Primeira baixa. Anotado."',
+      'Primeiro sangue: {by} derruba {creep}. "A conta abriu."',
+      'Primeiro sangue: {by} sobre {creep}: "Alguém tinha que ser o primeiro."',
+    ],
+    circle: [
+      'Primeiro sangue: {by} acerta {creep}! "Fui eu primeiro!"',
+      'Primeiro sangue: {by} salta sobre {creep}: "Anota aí!"',
+      'Primeiro sangue: {by} ri: "Um já foi, {creep}!"',
+    ],
+    alone: [
+      "Primeiro sangue: {creep} cai, o primeiro da partida.",
+      "Primeiro sangue: {creep} não resistiu.",
+    ],
+  },
+  /** A team out of the match (E-min D8); {team} its name. */
+  teamOut: {
+    eliminated: [
+      "O time {team} não tem como voltar: está fora da partida.",
+      "O time {team} ficou sem ninguém e sem como repor. Eliminado.",
+      "Acabou para o time {team}: eliminado.",
+    ],
+    conceded: [
+      "O time {team} desistiu.",
+      "O time {team} entrega a partida.",
+      "O time {team} baixa as armas e desiste.",
+    ],
+    bot: [
+      "O bot do time {team} desistiu.",
+      "O bot do time {team} reconhece a derrota e desiste.",
+    ],
+  },
+  /** The team's own concession vote (E-min L-6, L-7); {team} its name. */
+  concedeVoteOpened: [
+    "O time {team} abriu uma votação para desistir.",
+    "Alguém propõe desistir: o time {team} vota.",
+  ],
+  concedeVoteClosed: {
+    passed: [
+      "A votação passou: o time {team} vai desistir.",
+      "Está decidido: o time {team} desiste.",
+    ],
+    rejected: [
+      "Um voto não: a votação para desistir caiu.",
+      "O time {team} segue jogando: a votação foi rejeitada.",
+    ],
+    dropped: ["A votação para desistir foi descartada."],
+  },
+  /**
+   * The world ended (E-min D5): {team} the winner; {teams} the teams of a
+   * draw, at the clock or after the last ones left together.
+   */
+  worldEnded: {
+    won: [
+      "O time {team} venceu a partida.",
+      "Fim: a partida é do time {team}.",
+    ],
+    noTeam: [
+      "Os últimos times saíram juntos: empate entre {teams}.",
+      "Ninguém ficou: empate entre {teams}.",
+    ],
+    clock: [
+      "O tempo acabou: empate entre {teams}.",
+      "Fim do relógio, sem vencedor: empate entre {teams}.",
+    ],
+  },
   /** {creep} picked up {taken} from a spoil (S-1). */
   pickedUp: [
     "{creep} cata {taken} de um despojo.",
@@ -263,6 +340,14 @@ export const TEMPLATES = {
     readonly string[]
   >;
   died: Record<"killed" | "alone", readonly string[]>;
+  firstBlood: Voiced & { alone: readonly string[] };
+  teamOut: Record<"eliminated" | "conceded" | "bot", readonly string[]>;
+  concedeVoteOpened: readonly string[];
+  concedeVoteClosed: Record<
+    "passed" | "rejected" | "dropped",
+    readonly string[]
+  >;
+  worldEnded: Record<"won" | "noTeam" | "clock", readonly string[]>;
   pickedUp: readonly string[];
   dropped: readonly string[];
   born: Voiced;

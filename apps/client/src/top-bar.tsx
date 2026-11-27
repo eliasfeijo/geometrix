@@ -1,4 +1,5 @@
 import { useEffect } from "preact/hooks";
+import { ConcedeButton } from "./concede.tsx";
 import { useGame } from "./context.ts";
 import { durationWords, teamName, worldClock } from "./format.ts";
 import type { Session } from "./session.ts";
@@ -42,7 +43,13 @@ export function TopBar({
       {store.status.value === "ended" && (
         <span class="status status-ended">encerrado · só leitura</span>
       )}
+      {store.status.value !== "ended" && store.teamOut.value && (
+        <span class="status status-ended">
+          seu time saiu da partida · só leitura
+        </span>
+      )}
       <span class="spacer" />
+      <ConcedeButton />
       <span class={`player team-${session.team}`}>
         {session.name} · {teamName(session.team)}
         {state !== undefined && store.me.value === null && (

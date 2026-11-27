@@ -1,6 +1,6 @@
 # M2 tasks — The minimal end
 
-**Status:** F0 ✅ (spec and plan approved 2026-11-25) · F1 ✅ (2026-11-27) · F2 ✅ (2026-11-27) · F3 ✅ (2026-11-27); F4 next. Branches `m2/emin-f<n>-<slug>` (skill `commit`).
+**Status:** F0 ✅ (spec and plan approved 2026-11-25) · F1 ✅ (2026-11-27) · F2 ✅ (2026-11-27) · F3 ✅ (2026-11-27) · F4 ✅ (2026-11-27); F5 next. Branches `m2/emin-f<n>-<slug>` (skill `commit`).
 **Spec:** [spec.md](spec.md) · **Plan:** [plan.md](plan.md)
 
 ## F0 — Spec and plan
@@ -150,15 +150,52 @@ result, summary and hash, and the restart keeps it.
 
 ## F4 — Client
 
-- [ ] "Desistir" and its confirmation (D3, S-5), the countdown to the minimum time, the vote panel (who said yes,
+- [x] "Desistir" and its confirmation (D3, S-5), the countdown to the minimum time, the vote panel (who said yes,
       "yes" and "no", the time left; L-5 to L-7), the vote's chronicle sentences
-- [ ] The end screen over the map and the battle screen; "Ver o mapa", "Ver o replay"; entering an ended world
+- [x] The end screen over the map and the battle screen; "Ver o mapa", "Ver o replay"; entering an ended world
       (D9, S-1, S-2; P9)
-- [ ] The spectator of a team out (D7)
-- [ ] The chronicle sentences: a team leaving, the world's end, the first blood (D8, D15)
-- [ ] The result in the lobby (S-4)
-- [ ] The replay markers: the scan pass, the marks, the toggles, the hover, the jump; the end screen at the last tick
+- [x] The spectator of a team out (D7)
+- [x] The chronicle sentences: a team leaving, the world's end, the first blood (D8, D15)
+- [x] The result in the lobby (S-4)
+- [x] The replay markers: the scan pass, the marks, the toggles, the hover, the jump; the end screen at the last tick
       (D11, S-3; P10)
+
+### F4 record (2026-11-27)
+
+**What it does.** The client shows the end: "Desistir" in the top bar with its countdown and confirmation, the team's
+vote panel (who said yes, the time left, "Sim"/"Não"), the end screen over the map and the battle screen ("Ver o
+mapa", "Ver o resultado" back, "Ver o replay"), a team out as a read-only spectator, an ended world whose battle
+screens close and do not reopen, the chronicle sentences of the first blood, a team leaving, the vote and the world's
+end, the result in the lobby, and the replay's marks with a scan pass, toggles, hover and jump. No change to `sim`,
+`junction`, `battle` or the protocol. Pure logic in `match-end.ts` and `replay/markers.ts`.
+
+**Measured** (headless Chromium on the WSL machine). The replay of `geo sim --seed 42 --days 3` (the whole 2-hour
+world, 57,600 ticks): from choosing the file to the scan done 2.6 s (target 10 s, spec §7; the owner's machine is
+measured at C1), the hash matches, 329 marks; a click on the end mark opens the end screen in 83 ms, with the F2
+record's numbers. In the browser, with `dev:multi`: a concession seen by both tabs, the replay and the lobby; a vote
+between two humans on Blue ended by a "Não", then the retry wait. **Not seen in a browser:** a team out as a spectator
+(needs 3 teams: only tests) and a battle screen open when the world ends (only tests).
+
+**Interpretations to validate** (the agent's):
+
+1. Real times divide world times by the world's actual ×N (the welcome's multiplier), the same as the params'
+   `world.multiplier` unless the world was created with another. The replay of a server world takes its ×N from the
+   lobby list; a file, from its params.
+2. Who said yes sees "Retirar o meu sim", which ends the vote for the whole team (L-7).
+3. Only "Desistir" asks for a confirmation; the vote's "Sim" does not.
+4. Before the minimum time and in the retry wait, "Desistir" is disabled and counts down; during a vote it is hidden.
+5. The end screen's main events are the chronicle sentences alone: battles read alike ("o time Azul vence"), with no
+   size or load.
+6. A replay reaching its last tick opens the end screen by itself, without "Ver o replay".
+7. A click on a mark shows the tick after the event, so what it did is on the map and in the chronicle.
+8. Births and deaths start hidden past 120 of those marks together (seed 42's match has 109).
+9. During the scan the play button and the slider are disabled; each frame spends up to 40 ms on it.
+10. The vote panel sits over the top right of the map, over the inspector while it is open.
+11. The sentences are the agent's: the owner reviews the tone at C1.
+
+**Left for F5.** The PLAYTEST E-min group needs `--set end.concedeAfterSeconds=0` (or a small number) in its short
+sessions: the default is 15 real minutes. A vote between humans takes `dev:multi --clients 3` (two on Blue). Questions
+for C1: whether the main events need more detail (5), and the tone (11).
 
 ## F5 — Soak and playtest
 

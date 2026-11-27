@@ -95,6 +95,7 @@ export function App() {
         key={`${session.worldId}:${session.token}`}
         session={session}
         onLeave={() => go(null)}
+        onReplay={() => watch(session.worldId)}
         onInvalid={(text) => {
           clearSession(window.localStorage, session.worldId, where.slot);
           setMessage(text);

@@ -97,12 +97,30 @@ function bodies(dna: Dna): EventBody[] {
     })),
     { type: "died", creep: b, by: a, battle: 20, firstBlood: false, ...at },
     { type: "died", creep: b, by: null, battle: 20, firstBlood: false, ...at },
+    { type: "died", creep: b, by: a, battle: 20, firstBlood: true, ...at },
+    { type: "died", creep: b, by: null, battle: 20, firstBlood: true, ...at },
+    { type: "teamOut", team: 1, how: "eliminated", bot: false, ...at },
     { type: "teamOut", team: 1, how: "conceded", bot: false, ...at },
+    { type: "teamOut", team: 1, how: "conceded", bot: true, ...at },
+    { type: "concedeVoteOpened", team: 1, deadlineTick: 12, ...at },
+    ...(["passed", "rejected", "dropped"] as const).map(
+      (outcome): EventBody => ({
+        type: "concedeVoteClosed",
+        team: 1,
+        outcome,
+        ...at,
+      }),
+    ),
     {
       type: "worldEnded",
       result: { tick: 9, how: "lastTeam", winner: 0, teams: [0] },
       ...at,
     },
+    ...(["noTeam", "clock"] as const).map((how): EventBody => ({
+      type: "worldEnded",
+      result: { tick: 9, how, winner: null, teams: [0, 1] },
+      ...at,
+    })),
     { type: "pickedUp", creep: a, spoil: 77, taken: stock(2, 0), ...at },
     // The wanderers (junction F6): no team, no dialogue.
     { type: "wandererBorn", wanderer, ...at },

@@ -6,6 +6,7 @@
 
 import type { CreepRef, Stock, TeamEvent } from "@geometrix/sim";
 import { stockText, teamName } from "../format.ts";
+import { teamList } from "../match-end.ts";
 import { TEMPLATES } from "./templates.ts";
 
 /** A piece of a sentence: plain text, or a creep to name (and click). */
@@ -100,7 +101,11 @@ function template(event: TeamEvent): {
       return {
         text: pick(
           event,
-          event.by === null ? TEMPLATES.died.alone : TEMPLATES.died.killed,
+          event.firstBlood
+            ? TEMPLATES.firstBlood[event.by === null ? "alone" : event.by.dna]
+            : event.by === null
+              ? TEMPLATES.died.alone
+              : TEMPLATES.died.killed,
         ),
         creeps:
           event.by === null
@@ -108,27 +113,42 @@ function template(event: TeamEvent): {
             : { creep: event.creep, by: event.by },
         values: {},
       };
-    // Placeholders until F4 writes the voiced sentences (E-min tasks).
     case "teamOut":
       return {
-        text: "{team} saiu da partida.",
+        text: pick(
+          event,
+          event.how === "eliminated"
+            ? TEMPLATES.teamOut.eliminated
+            : event.bot
+              ? TEMPLATES.teamOut.bot
+              : TEMPLATES.teamOut.conceded,
+        ),
         creeps: {},
         values: { team: teamName(event.team) },
       };
     case "concedeVoteOpened":
       return {
-        text: "Votação para desistir aberta.",
+        text: pick(event, TEMPLATES.concedeVoteOpened),
         creeps: {},
-        values: {},
+        values: { team: teamName(event.team) },
       };
     case "concedeVoteClosed":
       return {
-        text: "Votação para desistir encerrada.",
+        text: pick(event, TEMPLATES.concedeVoteClosed[event.outcome]),
         creeps: {},
-        values: {},
+        values: { team: teamName(event.team) },
       };
-    case "worldEnded":
-      return { text: "A partida acabou.", creeps: {}, values: {} };
+    case "worldEnded": {
+      const { how, winner, teams } = event.result;
+      return {
+        text: pick(
+          event,
+          TEMPLATES.worldEnded[how === "lastTeam" ? "won" : how],
+        ),
+        creeps: {},
+        values: { team: teamName(winner), teams: teamList(teams) },
+      };
+    }
     case "pickedUp":
       return {
         text: pick(event, TEMPLATES.pickedUp),
