@@ -15,6 +15,7 @@ import {
   isOwnCreep,
   type Cell,
   type CreepView,
+  type OrderInput,
   type TeamEvent,
   type TeamView,
 } from "@geometrix/sim";
@@ -33,6 +34,13 @@ import type { Point, Size, View } from "./map/view.ts";
 export type Mode =
   | { type: "select" }
   | { type: "pickCell"; prompt: string; pick(cell: Cell): void }
+  /** Picking a creep of the team other than `exclude` ("Seguir…", D9). */
+  | {
+      type: "pickAlly";
+      prompt: string;
+      exclude: number;
+      pick(creepId: number): void;
+    }
   | { type: "road" };
 
 /** A view of the team and when it arrived (performance.now(), ms). */
@@ -74,14 +82,24 @@ export class GameStore {
   readonly selection = signal<Selection | null>(null);
   /**
    * The list of the actors under a click (R spec D23), opened at a pixel of
-   * the map.
+   * the map. With `pick`, choosing a line calls it instead of selecting.
    */
-  readonly list = signal<{ actors: Selection[]; at: Point } | null>(null);
+  readonly list = signal<{
+    actors: Selection[];
+    at: Point;
+    pick?(actor: Selection): void;
+  } | null>(null);
   /**
-   * The right-click menu over enemies in sight (M2 encontro C-6): their ids,
-   * opened at a pixel of the map.
+   * The right-click menu over creeps: the enemies in sight to attack or
+   * extort (M2 encontro C-6) and the allies to follow, with the order the
+   * click would give on that cell (R spec D8), opened at a pixel of the map.
    */
-  readonly approach = signal<{ ids: number[]; at: Point } | null>(null);
+  readonly approach = signal<{
+    ids: number[];
+    allies: number[];
+    cell: { cell: Cell; order: OrderInput } | null;
+    at: Point;
+  } | null>(null);
   /** Creep or wanderer under the pointer in the list, ringed on the map. */
   readonly hovered = signal<number | null>(null);
   readonly mode = signal<Mode>({ type: "select" });

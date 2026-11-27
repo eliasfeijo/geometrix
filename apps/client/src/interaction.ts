@@ -7,16 +7,18 @@ import type { ClientCommand } from "@geometrix/protocol";
 import { CURSORS, cursorKind, type CursorKind } from "./map/cursor.ts";
 import {
   actorsAt,
+  alliesIn,
   creepsUnder,
   enemiesIn,
   orderAt,
   signAt,
   wanderersAt,
   type Scene,
+  type Selection,
 } from "./map/pick.ts";
 import { roadPreview } from "./map/road-plan.ts";
 import { cellAt, centerOn, type Point } from "./map/view.ts";
-import type { GameStore } from "./store.ts";
+import type { GameStore, Mode } from "./store.ts";
 
 export function select(
   store: GameStore,
@@ -30,12 +32,17 @@ export function select(
     mode.pick(cellAt(point));
     return;
   }
-  if (store.current.value === null) return;
+  const state = store.current.value?.state;
+  if (state === undefined) return;
   const actors = actorsAt(
     point,
     sceneNow(store, now),
     store.view.value?.scale ?? 1,
   );
+  if (mode.type === "pickAlly") {
+    pickAlly(store, mode, actors, px, now);
+    return;
+  }
   store.approach.value = null;
   store.hovered.value = null;
   if (actors.length > 1) {
@@ -44,6 +51,40 @@ export function select(
   }
   store.list.value = null;
   store.selection.value = actors[0] ?? null;
+}
+
+/**
+ * "Seguir…" (R spec D9): the click picks a creep of the team; with several
+ * in reach, the list asks which.
+ */
+function pickAlly(
+  store: GameStore,
+  mode: Extract<Mode, { type: "pickAlly" }>,
+  actors: readonly Selection[],
+  px: Point,
+  now: number,
+): void {
+  const team = store.info.value?.team;
+  const creeps = store.current.value?.state.creeps ?? [];
+  const allies = actors.filter(
+    (a) =>
+      a.kind === "creep" &&
+      a.id !== mode.exclude &&
+      creeps.some((c) => c.id === a.id && c.team === team),
+  );
+  const choose = (actor: Selection) => {
+    if (actor.kind !== "creep") return;
+    store.mode.value = { type: "select" };
+    mode.pick(actor.id);
+  };
+  store.list.value = null;
+  if (allies.length === 0) {
+    store.notify("Clique num outro creep do seu time.", now);
+  } else if (allies.length === 1) {
+    choose(allies[0]!);
+  } else {
+    store.list.value = { actors: allies, at: px, pick: choose };
+  }
 }
 
 /** What the map shows now, as the click's pick reads it. */
@@ -153,9 +194,19 @@ export function order(
       ...enemiesIn(ids, state.creeps, me.team),
       ...wanderersAt(point, state.wanderers),
     ];
-    if (enemies.length > 0) {
+    const allies = alliesIn(ids, state.creeps, me.team, creep.id);
+    if (enemies.length > 0 || allies.length > 0) {
+      const core = state.teams[me.team]?.core;
+      // An ally hides no order: the menu also offers the cell's (D8).
+      const cell =
+        allies.length > 0 && core !== undefined && core !== null
+          ? {
+              cell: cellAt(point),
+              order: orderAt(point, state.deposits, state.spoils, core, false),
+            }
+          : null;
       store.list.value = null;
-      store.approach.value = { ids: enemies, at: px };
+      store.approach.value = { ids: enemies, allies, cell, at: px };
       return;
     }
   }

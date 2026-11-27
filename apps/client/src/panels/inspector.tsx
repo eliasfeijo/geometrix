@@ -22,6 +22,7 @@ import {
   DNA_NAMES,
   duration,
   durationWords,
+  namesOf,
   orderText,
   RESOURCE_NAMES,
   stockText,
@@ -138,7 +139,7 @@ function CreepInspector({ id }: { id: number }) {
             : `contra o ${teamName(safeConduct.team)} por mais ${duration(safeConduct.seconds)}`}
         </dd>
         <dt>Ordem</dt>
-        <dd>{orderText(creep.order, state.deposits)}</dd>
+        <dd>{orderText(creep.order, state.deposits, namesOf(state.creeps))}</dd>
         {eta !== null && (
           <>
             <dt>Previsão</dt>

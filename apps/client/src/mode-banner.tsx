@@ -6,7 +6,7 @@ export function ModeBanner() {
   const mode = store.mode.value;
   if (mode.type === "select") return null;
   const text =
-    mode.type === "pickCell"
+    mode.type === "pickCell" || mode.type === "pickAlly"
       ? mode.prompt
       : "Modo estrada: botão direito constrói estrada até a célula.";
   return (

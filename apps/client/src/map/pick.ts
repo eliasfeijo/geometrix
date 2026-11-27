@@ -162,6 +162,18 @@ export function enemiesIn(
   });
 }
 
+/** Of the creeps under a click, the team's own other than `except` (D8). */
+export function alliesIn(
+  ids: readonly number[],
+  creeps: readonly { id: number; team: number }[],
+  team: number,
+  except: number,
+): number[] {
+  return ids.filter(
+    (id) => id !== except && creeps.some((c) => c.id === id && c.team === team),
+  );
+}
+
 export const sameSelection = (a: Selection | null, b: Selection | null) =>
   JSON.stringify(a) === JSON.stringify(b);
 

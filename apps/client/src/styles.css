@@ -895,6 +895,7 @@ h3 {
 }
 
 .map.mode-pickCell,
+.map.mode-pickAlly,
 .map.mode-road {
   cursor: crosshair;
 }
@@ -1298,4 +1299,12 @@ button.danger {
 
 .engaged-action {
   margin-left: 8px;
+}
+
+/* M2 R F6: the cell's order under the allies of the right-click menu. */
+.approach-cell {
+  display: flex;
+  justify-content: flex-end;
+  border-top: 1px solid var(--line);
+  padding-top: 6px;
 }

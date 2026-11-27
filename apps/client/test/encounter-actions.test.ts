@@ -51,7 +51,12 @@ describe("the right-click menu over an enemy (spec C-6)", () => {
     const { store, enemy, sent, send } = facing();
     order(store, { x: enemy.x + 0.5, y: enemy.y + 0.5 }, send, 1, PX);
     expect(sent).toEqual([]);
-    expect(store.approach.value).toEqual({ ids: [enemy.id], at: PX });
+    expect(store.approach.value).toEqual({
+      ids: [enemy.id],
+      allies: [],
+      cell: null,
+      at: PX,
+    });
     const key = { key: "Escape", target: null } as unknown as KeyboardEvent;
     expect(handleKey(store, 0, key)).toBe(true);
     expect(store.approach.value).toBeNull();
@@ -129,7 +134,12 @@ describe("the right-click menu over a wanderer (junction W-4)", () => {
     const { world, store, mine, wanderer, sent, send } = withWanderer();
     order(store, { x: wanderer.x + 0.5, y: wanderer.y + 0.4 }, send, 3, PX);
     expect(sent).toEqual([]);
-    expect(store.approach.value).toEqual({ ids: [wanderer.id], at: PX });
+    expect(store.approach.value).toEqual({
+      ids: [wanderer.id],
+      allies: [],
+      cell: null,
+      at: PX,
+    });
     const options = approachOptions(
       store.current.value!.state,
       world.params,

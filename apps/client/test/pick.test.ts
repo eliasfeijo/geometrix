@@ -118,13 +118,13 @@ describe("cellmates", () => {
 
 describe("texts and targets", () => {
   it("describes the presets' rules", () => {
-    expect(collectorRules("materia").map(ruleText)).toEqual([
+    expect(collectorRules("materia").map((r) => ruleText(r))).toEqual([
       "carga cheia → entregar no Núcleo",
       "sempre → coletar matéria",
       "não conhece depósito de matéria → explorar",
       "sempre → entregar no Núcleo",
     ]);
-    expect(roadBuilderRules().map(ruleText)).toContain(
+    expect(roadBuilderRules().map((r) => ruleText(r))).toContain(
       "sempre → construir estrada até a jazida mais perto sem estrada",
     );
   });

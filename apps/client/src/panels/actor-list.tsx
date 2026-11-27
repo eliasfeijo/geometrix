@@ -161,8 +161,9 @@ export function ActorList() {
                     : null)
               }
               onClick={() => {
-                store.selection.value = actor;
                 close();
+                if (list.pick !== undefined) list.pick(actor);
+                else store.selection.value = actor;
               }}
             >
               <ActorIcon actor={actor} state={state} />

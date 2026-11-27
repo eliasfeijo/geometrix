@@ -191,6 +191,20 @@ export function actionOf(
   }
 }
 
+/**
+ * "Seguir…" (R spec D9): a rule to follow `creepId` on top of the others,
+ * after the leading reaction rules.
+ */
+export function withFollow(rules: readonly Rule[], creepId: number): Rule[] {
+  let at = 0;
+  while (at < rules.length && isReaction(rules[at]!.then)) at++;
+  const follow: Rule = {
+    when: { type: "always" },
+    then: { type: "follow", creepId },
+  };
+  return [...rules.slice(0, at), follow, ...rules.slice(at)];
+}
+
 /** A new rule of the group; editor defaults only, changed right there. */
 export function newRule(group: RuleGroup = "plain"): Rule {
   return group === "plain"

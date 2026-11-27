@@ -486,7 +486,7 @@ socket was down (or with a server restart) sends nothing, so the client drops it
 - [x] The actors' list on a click; a wanderer selectable (D21, D23, U-3, U-5)
 - [x] The hostile layer: the signs and the line to the team's target (HS-2)
 - [x] The destination layer and the ETA in the inspector (D19, D20, U-1, U-2)
-- [ ] "Seguir" in the right-click menu, "Seguir…" in the rules editor, the new rules' text (D8, D9)
+- [x] "Seguir" in the right-click menu, "Seguir…" in the rules editor, the new rules' text (D8, D9)
 - [ ] "Largar carga" in the panel and in the extortion's reply (D24)
 - [ ] The road builder without a cell and its plan with the cost line (D12, D13, RB-3)
 - [ ] The battle alert with "Entrar" (D6, D7, OC-3); P on the battle screen and the countdowns (D28)
