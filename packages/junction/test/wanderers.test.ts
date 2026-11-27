@@ -120,3 +120,39 @@ describe("the wanderers in a battle instance (junction D14, W-3)", () => {
     expect(replayResults(w, finished[0]!)).toEqual(finished[0]!.results);
   });
 });
+
+describe("a wanderer that leaves and rejoins on one tick (R F4)", () => {
+  test("is not read as a refused exit", () => {
+    // The wanderer attacks the triangle: battle on (15, 3).
+    const { w, prey, wanderers, host } = ambush([14, 3]);
+    const wanderer = wanderers[0]!;
+    stepJunction(w, host, []);
+    const battle = w.battles[0]!;
+    // A loaded teammate of nobody in the battle, on its way to attack.
+    const newcomer = creepOf(w, 0, "square");
+    Object.assign(newcomer, { x: 17, y: 3, cargo: { materia: 5, cristal: 0 } });
+    newcomer.order = { type: "approach", targetId: prey.id, intent: "attack" };
+    updateVision(w);
+    // The wanderer escapes this tick, near the newcomer (which it did not
+    // fight, so it is not spared): it goes for it, the newcomer joins the
+    // battle and the wanderer follows it back in.
+    host.results.push({
+      type: "battleExit",
+      battleId: battle.id,
+      creepId: wanderer.id,
+      outcome: "escaped",
+      by: null,
+      hp: w.params.wanderers.hp,
+      cargo: { materia: 0, cristal: 0 },
+      cell: { x: 19, y: 3 },
+    });
+    const { events } = stepJunction(w, host, []);
+    const of = (type: string) =>
+      events
+        .filter((e) => e.type === type)
+        .map((e) => ("creep" in e ? e.creep.id : null));
+    expect(of("battleLeft")).toContain(wanderer.id);
+    expect(of("battleJoined")).toEqual([newcomer.id, wanderer.id]);
+    expect(wanderer.battle).toBe(battle.id);
+  });
+});

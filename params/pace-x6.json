@@ -1,0 +1,187 @@
+{
+  "world": {
+    "durationSeconds": 43200,
+    "tickSeconds": 1,
+    "multiplier": 6
+  },
+  "map": {
+    "width": 64,
+    "height": 64,
+    "riverRows": 2,
+    "crossings": 3,
+    "crossingWidth": 2,
+    "core": {
+      "minRow": 4,
+      "maxRow": 12,
+      "minCol": 16,
+      "maxCol": 47
+    },
+    "rocks": {
+      "clustersPerSide": 8,
+      "minCells": 3,
+      "maxCells": 10,
+      "coreClearance": 2
+    }
+  },
+  "population": {
+    "initial": {
+      "square": 2,
+      "triangle": 2,
+      "circle": 2
+    },
+    "cap": 30
+  },
+  "teams": {
+    "initialStock": {
+      "materia": 0,
+      "cristal": 0
+    },
+    "maxHumans": 3
+  },
+  "dna": {
+    "square": {
+      "capacity": 30,
+      "cellsPerMinute": 4
+    },
+    "triangle": {
+      "capacity": 20,
+      "cellsPerMinute": 6
+    },
+    "circle": {
+      "capacity": 10,
+      "cellsPerMinute": 10
+    }
+  },
+  "movementPermille": {
+    "road": 2000,
+    "jungle": 1000,
+    "crossing": 500,
+    "loaded": 800
+  },
+  "deposits": {
+    "materia": {
+      "amount": 500,
+      "regen": {
+        "amount": 5,
+        "everySeconds": 45
+      },
+      "perSide": 6,
+      "minCoreDistance": 3,
+      "maxCoreDistance": 20
+    },
+    "cristal": {
+      "amount": 300,
+      "perSide": 3,
+      "minCoreDistance": 12,
+      "contested": 2,
+      "contestedMaxCrossingDistance": 4,
+      "contestedMaxRiverDistance": 3
+    }
+  },
+  "gather": {
+    "materia": {
+      "units": 1,
+      "everySeconds": 1
+    },
+    "cristal": {
+      "units": 1,
+      "everySeconds": 5
+    }
+  },
+  "creep": {
+    "cost": {
+      "materia": 1000,
+      "cristal": 5
+    },
+    "productionSeconds": 225
+  },
+  "road": {
+    "cost": {
+      "materia": 10,
+      "cristal": 0
+    },
+    "buildSeconds": 90
+  },
+  "upgrade": {
+    "capacity": {
+      "cost": {
+        "materia": 0,
+        "cristal": 150
+      },
+      "bonusPermille": 500
+    }
+  },
+  "autopilot": {
+    "maxRules": 10,
+    "followCells": 2
+  },
+  "domination": {
+    "cost": {
+      "materia": 0,
+      "cristal": 0
+    },
+    "cooldownSeconds": 0,
+    "maxDistanceCells": 0
+  },
+  "vision": {
+    "core": 8,
+    "dna": {
+      "square": 3,
+      "triangle": 4,
+      "circle": 6
+    }
+  },
+  "hp": {
+    "dna": {
+      "square": {
+        "max": 300
+      },
+      "triangle": {
+        "max": 200
+      },
+      "circle": {
+        "max": 120
+      }
+    },
+    "regenPermillePerMinute": {
+      "map": 13,
+      "coreZone": 133
+    },
+    "coreZoneRadius": 8
+  },
+  "flee": {
+    "speedPermille": 1500,
+    "seconds": 45
+  },
+  "battle": {
+    "window": {
+      "width": 9,
+      "height": 5,
+      "cellBlock": 5
+    },
+    "sideCap": 5,
+    "maxSides": 4,
+    "zone": { "depth": 3, "breadth": 5, "insetPermille": 750 },
+    "hold": { "openingMs": 5000, "countdownMs": 3000 }
+  },
+  "encounter": {
+    "radius": 1,
+    "reactionSeconds": 60
+  },
+  "safeConduct": {
+    "seconds": 450,
+    "blockSeconds": 1350
+  },
+  "wanderers": {
+    "hp": 60,
+    "damage": 12,
+    "bandRows": 8,
+    "firstSeconds": 1800,
+    "intervalSeconds": {
+      "start": 900,
+      "end": 450
+    },
+    "cap": 4,
+    "spareSeconds": 450
+  }
+}

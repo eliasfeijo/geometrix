@@ -3,6 +3,11 @@ import { describe, expect, test } from "vitest";
 import { ParamsError, parseParams, type Params } from "../src/params.ts";
 import { readDefaultParamsJson, readTestParamsJson } from "./helpers.ts";
 
+const readParamsFile = (name: string): unknown =>
+  JSON.parse(
+    readFileSync(new URL(`../../../params/${name}`, import.meta.url), "utf8"),
+  );
+
 function issuesOf(input: unknown): readonly string[] {
   try {
     parseParams(input);
@@ -28,18 +33,38 @@ function withLeaf(path: string, value: unknown): unknown {
 describe("parseParams", () => {
   test("accepts params/default.json", () => {
     const params: Params = parseParams(readDefaultParamsJson());
-    expect(params.world.durationSeconds).toBe(3 * 24 * 60 * 60);
+    expect(params.world.multiplier).toBe(8);
   });
 
+  // The 2-hour worlds, one per ×N candidate (M2 R F4; D1).
+  const candidates: [file: string, json: () => unknown][] = [
+    ["default.json", readDefaultParamsJson],
+    ["pace-x6.json", () => readParamsFile("pace-x6.json")],
+    ["pace-x12.json", () => readParamsFile("pace-x12.json")],
+  ];
+
+  test.each(candidates)(
+    "%s lasts 2 real hours ± 5 minutes at its ×N (PA-1)",
+    (_, json) => {
+      const { world } = parseParams(json());
+      const minutes = world.durationSeconds / world.multiplier / 60;
+      expect(minutes).toBeGreaterThanOrEqual(115);
+      expect(minutes).toBeLessThanOrEqual(125);
+    },
+  );
+
+  test.each(candidates)(
+    "%s gives at least 10 real seconds to answer an extortion (PA-3)",
+    (_, json) => {
+      const { encounter, world } = parseParams(json());
+      expect(
+        encounter.reactionSeconds / world.multiplier,
+      ).toBeGreaterThanOrEqual(10);
+    },
+  );
+
   test("accepts params/world-72h.json: the 72-hour world at ×6 (M2 R P2)", () => {
-    const params: Params = parseParams(
-      JSON.parse(
-        readFileSync(
-          new URL("../../../params/world-72h.json", import.meta.url),
-          "utf8",
-        ),
-      ),
-    );
+    const params: Params = parseParams(readParamsFile("world-72h.json"));
     expect(params.world.durationSeconds).toBe(3 * 24 * 60 * 60);
     expect(params.world.multiplier).toBe(6);
   });

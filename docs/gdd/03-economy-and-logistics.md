@@ -34,6 +34,12 @@
   could not replace them (a creep costs 3,000 matéria, and a team's first extra creep comes at about world hour 3).
   Slice R tries **only the rescale of the pace**, with no new rule: a creep then costs less of a session. The sweeps
   measure whether it is enough.
+  - **Measured at R's checkpoint C2** (2026-11-27): a team that loses 4 creeps takes 33 to 39 real minutes to be back,
+    against a target of 15. The owner **accepts it for the playtest, with no new rule**; the playtest says whether it
+    hurts too much.
+- **Road segments are cheap** (owner, R's checkpoint C2, 2026-11-27, provisional): a segment costs **10 matéria**
+  (150 before), so the builder's spending does not delay a team's first extra creep; the road costs mostly the
+  builder's time.
 - **Dropping the load in the world** (owner, slice R's spec review, 2026-11-25): a creep can **drop its load** on the
   map (a world order for a dominated creep and an autopilot action), which leaves it as spoils on its cell. It opens
   new behaviors for the bots' strategist, which reacts to each encounter by its difficulty and the estimated risk

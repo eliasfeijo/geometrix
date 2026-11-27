@@ -349,8 +349,17 @@ function openInstance(
   host.instances.sort((a, b) => a.battleId - b.battleId);
 }
 
-/** Checks that the world applied every result sent (a bug otherwise). */
-function checkApplied(world: WorldState, results: readonly Command[]): void {
+/**
+ * Checks that the world applied every result sent (a bug otherwise). A
+ * fighter may leave a battle and join it again on the same tick (a wanderer
+ * that goes back for a creep it did not fight, W-7), which the tick's events
+ * show: it is in the battle again, not refused.
+ */
+function checkApplied(
+  world: WorldState,
+  results: readonly Command[],
+  events: readonly SimEvent[],
+): void {
   for (const command of results) {
     if (command.type === "battleEnd") {
       if (world.battles.some((b) => b.id === command.battleId)) {
@@ -358,7 +367,13 @@ function checkApplied(world: WorldState, results: readonly Command[]): void {
       }
     } else if (command.type === "battleExit") {
       const creep = findFighter(world, command.creepId);
-      if (creep !== undefined && creep.battle === command.battleId) {
+      const rejoined = events.some(
+        (e) =>
+          e.type === "battleJoined" &&
+          e.battle === command.battleId &&
+          e.creep.id === command.creepId,
+      );
+      if (creep?.battle === command.battleId && !rejoined) {
         throw new JunctionError(
           `battle ${command.battleId}: exit of ${command.creepId} refused`,
         );
@@ -401,6 +416,7 @@ export function stepJunction(
   checkApplied(
     world,
     results.map((r) => r.command),
+    events,
   );
   for (const event of events) {
     if (event.type === "battleOpened") {

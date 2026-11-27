@@ -77,6 +77,9 @@
   **default params become the 2-hour world** and the 72-hour world stays as a params file for the 3-day hypothesis;
   the lobby and `dev:multi` default to the chosen ×N; a window meant for a human's reaction (the extortion answer)
   keeps **at least 10 real seconds** at that ×N; the targets of the balance pass are written in real minutes (spec §7).
+- **The balance pass's candidates** (owner, R's checkpoint C2, 2026-11-27): the 2-hour world at **×6, ×8 (the
+  default) and ×12** all go to the playtest sessions, which choose the ×N (numbers provisional; R's F4 record in the
+  [tasks](../specs/m2-rebalance/tasks.md)).
 
 ## Proposal
 
