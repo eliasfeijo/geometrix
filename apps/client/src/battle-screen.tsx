@@ -8,9 +8,10 @@
 
 import type { ViewParticipant } from "@geometrix/battle";
 import { isOwnCreep, type CreepView, type TeamView } from "@geometrix/sim";
-import { useEffect, useMemo, useRef } from "preact/hooks";
+import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import {
   creepOfParticipant,
+  holdText,
   playedParticipant,
   realTime,
   worldSides,
@@ -30,6 +31,7 @@ import { ChroniclePanel } from "./chronicle/chronicle-panel.tsx";
 import { useGame } from "./context.ts";
 import { teamName } from "./format.ts";
 import { teamColor } from "./map/colors.ts";
+import type { Hold } from "./store.ts";
 
 /**
  * Where the keys stay with the page's own controls: a text or number field,
@@ -121,10 +123,16 @@ export function BattleScreen() {
     }
     const { played: id } = live.current;
     const key: KeyLike = event;
+    // P pauses and resumes, for who plays a participant (R spec D28, BP-3).
+    if (down && event.code === "KeyP") {
+      event.preventDefault();
+      if (!event.repeat && live.current.played !== null) battles?.pause();
+      return;
+    }
     const result = down
       ? input.current.down(key, id)
       : input.current.up(key, id);
-    // Tab, 0, R and P are the lab's: nothing to do in the world.
+    // Tab, 0 and R are the lab's: nothing to do in the world.
     if (result.handled) event.preventDefault();
     for (const command of result.commands) battles?.input(command);
     holdPrediction();
@@ -134,7 +142,14 @@ export function BattleScreen() {
   const holdPrediction = () => {
     const { played: id, screen: s } = live.current;
     const you = s?.current.participants.find((p) => p.id === id);
-    if (store.motion.value !== "predict" || you === undefined || s === null) {
+    // A held battle stands still: nothing to predict.
+    const held = shown === null ? undefined : store.holds.value.get(shown);
+    if (
+      store.motion.value !== "predict" ||
+      you === undefined ||
+      s === null ||
+      (held !== undefined && held.state !== "pausing")
+    ) {
       predictor.current.reset();
       return;
     }
@@ -210,6 +225,7 @@ export function BattleScreen() {
   const state = store.current.value?.state;
   const running = current.ended === null;
   const you = current.participants.find((p) => p.id === played);
+  const hold = running ? store.holds.value.get(screen.battleId) : undefined;
 
   return (
     <div
@@ -236,13 +252,17 @@ export function BattleScreen() {
             class="muted"
             title="Em tempo real enquanto alguém joga um participante com a tela aberta; senão, no relógio do mundo (D13)"
           >
-            {realTime(current) ? "tempo real" : "relógio do mundo"}
+            {hold?.state === "paused" || hold?.state === "resuming"
+              ? "pausada"
+              : realTime(current)
+                ? "tempo real"
+                : "relógio do mundo"}
           </span>
           <span class="battle-bar-end">{back}</span>
         </div>
         <p class="battle-hint battle-who">
           {you !== undefined
-            ? `Você joga com ${you.name}. Setas ou WASD andam · Shift + seta vira · espaço ataca · Q larga a bolsa · E cata · Esc volta ao mapa.`
+            ? `Você joga com ${you.name}. Setas ou WASD andam · Shift + seta vira · espaço ataca · Q larga a bolsa · E cata · P pausa para todos · Esc volta ao mapa.`
             : running
               ? "Assistindo. Esc volta ao mapa."
               : "A batalha acabou. Esc volta ao mapa."}
@@ -253,6 +273,7 @@ export function BattleScreen() {
             !idleWarning(current, params) &&
             `sem dano há ${(current.idleTicks / tps).toFixed(0)} s · todos fogem em ${idleSecondsLeft(current, params)} s`}
         </p>
+        {hold !== undefined && <HoldBanner hold={hold} />}
         <div class="battle-stage">
           <ArenaView
             arena={arena}
@@ -312,6 +333,27 @@ export function BattleScreen() {
       </aside>
     </div>
   );
+}
+
+/** The countdown of a hold, ticking while it has one. */
+function HoldBanner({ hold }: { hold: Hold }) {
+  const now = useNow(hold.endsAt !== null);
+  return (
+    <p class="battle-hold" role="status">
+      {holdText(hold, now)}
+    </p>
+  );
+}
+
+/** performance.now(), again every 200 ms while `ticking`. */
+export function useNow(ticking: boolean): number {
+  const [, setCount] = useState(0);
+  useEffect(() => {
+    if (!ticking) return;
+    const timer = window.setInterval(() => setCount((n) => n + 1), 200);
+    return () => window.clearInterval(timer);
+  }, [ticking]);
+  return performance.now();
 }
 
 /**

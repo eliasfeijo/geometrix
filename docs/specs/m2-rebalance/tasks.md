@@ -489,7 +489,7 @@ socket was down (or with a server restart) sends nothing, so the client drops it
 - [x] "Seguir" in the right-click menu, "Seguir…" in the rules editor, the new rules' text (D8, D9)
 - [x] "Largar carga" in the panel and in the extortion's reply (D24)
 - [x] The road builder without a cell and its plan with the cost line (D12, D13, RB-3)
-- [ ] The battle alert with "Entrar" (D6, D7, OC-3); P on the battle screen and the countdowns (D28)
+- [x] The battle alert with "Entrar" (D6, D7, OC-3); P on the battle screen and the countdowns (D28)
 - [ ] The lobby: the default ×N and the bot's difficulty
 
 ## F7 — Soak and playtest

@@ -5,6 +5,7 @@
 import { effect, useComputed } from "@preact/signals";
 import type { ComponentChildren } from "preact";
 import { useEffect } from "preact/hooks";
+import { BattleAlert } from "./battle-alert.tsx";
 import { BattleReturn, BattleScreen } from "./battle-screen.tsx";
 import { GameContext, type Game } from "./context.ts";
 import {
@@ -105,6 +106,7 @@ export function GameLayout({ game, header, orders }: Props) {
           {orders && <ApproachMenu />}
           {orders && <ReactionPanel />}
           {orders && <BattleReturn />}
+          {orders && <BattleAlert />}
           {store.shownBattle.value !== null && game.battles !== undefined && (
             <BattleScreen key={store.shownBattle.value} />
           )}

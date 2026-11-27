@@ -18,11 +18,12 @@ import type {
   BattleRoster,
 } from "@geometrix/protocol";
 import { applyBattleDelta } from "@geometrix/protocol/stream";
-import { sideTeam } from "@geometrix/sim";
+import { isOwnCreep, sideTeam, type TeamView } from "@geometrix/sim";
 import type { SideStyle } from "./battle/arena-view.tsx";
 import { effectsOf, liveEffects, type Effect } from "./battle/effects.ts";
 import { teamName } from "./format.ts";
 import { teamColor } from "./map/colors.ts";
+import type { Hold } from "./store.ts";
 
 export type EndedEvent = Extract<BattleEvent, { type: "ended" }>;
 
@@ -170,4 +171,47 @@ export function autoOpen(
 /** Whether the battle runs in real time: someone plays it (D13). */
 export function realTime(view: BattleView): boolean {
   return view.participants.some((p) => p.controller === "human");
+}
+
+/**
+ * "Entrar" (R spec D7): which creep to dominate to get into the battle, or
+ * null when the player already dominates one of its participants, or every
+ * one of the team is dominated by others (then only watching). Undefined
+ * while the view does not have the battle yet.
+ */
+export function entrarCreep(
+  state: TeamView,
+  playerId: number,
+  team: number,
+  battleId: number,
+): number | null | undefined {
+  const battle = state.battles.find((b) => b.id === battleId);
+  if (battle === undefined) return undefined;
+  const own = battle.participants.flatMap((p) => {
+    const creep = state.creeps.find((c) => c.id === p.id);
+    return creep !== undefined && isOwnCreep(creep) && creep.team === team
+      ? [creep]
+      : [];
+  });
+  if (own.some((c) => c.dominatedBy === playerId)) return null;
+  const free = own.filter((c) => c.dominatedBy === null);
+  return free.length === 0 ? null : Math.min(...free.map((c) => c.id));
+}
+
+/** A hold as its countdown reads (R spec D6, D28); `now` in the hold's ms. */
+export function holdText(hold: Hold, now: number): string {
+  const seconds =
+    hold.endsAt === null
+      ? 0
+      : Math.max(1, Math.ceil((hold.endsAt - now) / 1000));
+  switch (hold.state) {
+    case "opening":
+      return `A batalha começa em ${seconds} s`;
+    case "pausing":
+      return `Pausando em ${seconds} s`;
+    case "paused":
+      return "Pausada · P retoma";
+    case "resuming":
+      return `Retomando em ${seconds} s`;
+  }
 }

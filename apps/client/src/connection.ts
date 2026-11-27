@@ -8,6 +8,7 @@
 import { NetStats, type WelcomeCause } from "./net-stats.ts";
 import type {
   BattleFrameMessage,
+  BattleHoldMessage,
   BattleInputCommand,
   BattleOpenMessage,
   ClientCommand,
@@ -38,12 +39,13 @@ export type WorldMessage = Extract<
   { type: "welcome" | "delta" }
 >;
 
-/** What the battle screen gets (junction plan section 7). */
-export type BattleMessage = BattleOpenMessage | BattleFrameMessage;
+/** What the battles send (junction plan section 7, R plan section 6). */
+export type BattleMessage =
+  BattleOpenMessage | BattleFrameMessage | BattleHoldMessage;
 
 export type ConnectionEvents = {
   message(message: WorldMessage): void;
-  /** A battle screen's opening or frame (junction N-2). */
+  /** A battle screen's opening or frame (junction N-2), or a hold. */
   battle?(message: BattleMessage): void;
   status(status: ConnectionStatus): void;
   fatal(reason: FatalReason): void;
@@ -134,6 +136,11 @@ export class Connection {
       battleId,
       command,
     }));
+  }
+
+  /** P on a battle screen (R spec D28): pause it, or resume it. */
+  battlePause(battleId: number): Promise<CommandResult> {
+    return this.request((ref) => ({ type: "battlePause", ref, battleId }));
   }
 
   /** Sends a message with the next ref; resolves with its ack or reject. */
@@ -243,6 +250,7 @@ export class Connection {
         break;
       case "battleOpen":
       case "battleFrame":
+      case "battleHold":
         this.events.battle?.(message);
         break;
       case "ack":

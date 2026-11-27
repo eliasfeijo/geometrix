@@ -4,7 +4,11 @@
 // (selection, notices).
 
 import { computed, signal } from "@preact/signals";
-import type { WelcomeMessage, WorldStatus } from "@geometrix/protocol";
+import type {
+  BattleHoldState,
+  WelcomeMessage,
+  WorldStatus,
+} from "@geometrix/protocol";
 import { applyDelta } from "@geometrix/protocol/stream";
 import type {
   ConnectionStatus,
@@ -51,6 +55,8 @@ export type WorldInfo = Omit<
   WelcomeMessage,
   "type" | "protocol" | "stream" | "seq" | "view" | "status" | "chronicle"
 >;
+
+export type Hold = { state: BattleHoldState; endsAt: number | null };
 
 export type Notice = { id: number; text: string; at: number };
 
@@ -116,6 +122,12 @@ export class GameStore {
   readonly shownBattle = signal<number | null>(null);
   /** That battle as its opening and frames built it, once they came. */
   readonly battleScreen = signal<BattleScreen | null>(null);
+  /**
+   * What holds the team's battles now (R spec D6, D28), by battle id: the
+   * opening pause, a human's pause and their countdowns. `endsAt` is in
+   * performance.now() ms, null while paused.
+   */
+  readonly holds = signal<ReadonlyMap<number, Hold>>(new Map());
   /** How the battle screen draws the creeps moving (junction D19). */
   readonly motion = signal<MotionMode>("tick");
 
