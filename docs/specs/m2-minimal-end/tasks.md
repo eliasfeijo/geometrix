@@ -224,3 +224,35 @@ end, 5 kills through a battle; 46 battles, 45 ended and 1 stopped open by the en
 2. The PLAYTEST group's E1 puts the creep's cost out of reach (`creep.cost.materia=99999`), so the bot's concession
    comes in one session; the default cost is not played there.
 
+
+### C1 sessions (2026-11-27)
+
+**E1, against the easy bot until it concedes** (seed 42, ×8, `creep.cost.materia=99999`, concession from the start).
+The bot conceded at world 01:29 (about 11 real minutes). In the owner's words:
+
+- Did the match end when it felt over? "Sim."
+- "uns 10 min, depois que eu juntei a tropa de 2 circulos e 1 triangulo no núcleo inimigo, foi rápido". The first try
+  stalled: the owner did not know "Seguir" existed (the script did not mention it).
+- The end screen's moments: "realmente não tem muita história pra contar em 10 min de jogo que deveria durar 2h,
+  talvez o bot estrategista esteja muito passivo durante meu posicionamento agressivo me aproximando dos depósitos
+  perto do núcleo dele, com os creeps dele me vendo aproximar com a tropa de 3 e continuou farmando passivamente como
+  se fosse um dia lindo para coletar materia". The five were: the bot's concession (01:29), first blood (01:15), and
+  battles "O time Azul fica com o campo." (01:20, 01:15) and "A batalha termina com a vitória do time Laranja."
+  (00:39).
+- "Ver o mapa" / "Ver o resultado": "normal". The replay's marks led to the moments that mattered: "sim".
+- "eu só fui construir estradas no segundo terço da partida, e mesmo assim minha economia ultrapassou a do laranja".
+
+Caveats on E1 (the agent's): the script chose the **easy** bot, which by R's D26 has no defense, groups or escort, so
+the passivity says nothing about the default (hard) bot; and nobody could produce, which distorts the economy. The
+moments are listed by rank, not by time.
+
+**E2, a concession between two tabs** (seed 42, ×8, concession from the start; the script's steps include conceding
+with a battle open in the other tab): "tudo ok e confirmado" (one answer for the group, no itemized points).
+
+**E3, the team's vote** (three tabs, two on Blue): "tudo ok, exceto o painel de desistência que disputa o mesmo
+espaço do topo do painel do creep na camada inferior, o que não seria se eu pudesso mover os paineis, mas pra
+facilitar podemos apenas encontrar um local apropriado para o painel novo sem disputar com nada na tela e se manter
+visível". **Fixed at the owner's request:** the vote is a strip of its own under the top bar, above the map and the
+battle screen, covering nothing (replaces F4's interpretation 10). Movable panels, which the owner mentioned, were
+not asked for.
+
