@@ -5,7 +5,7 @@
 // run in parallel and print in order; the tests run only when they pass.
 //
 // `node scripts/check.ts --fast` is `npm run check:fast`, the loop before each
-// task commit: typecheck, lint, then the tests related to the uncommitted
+// task commit: typecheck, lint, format:check, then the tests related to the uncommitted
 // changes, with GEO_FAST=1 (the slow protocol worlds are skipped; the full
 // check and CI run them).
 //
@@ -38,6 +38,7 @@ const TEST_STEP: Step = { name: "tests", command: "npm test" };
 const FAST_STEPS: Step[] = [
   { name: "typecheck", command: "npm run typecheck" },
   { name: "lint", command: "npm run lint" },
+  { name: "format:check", command: "npm run format:check" },
   {
     name: "tests (changed)",
     command: "npx vitest run --changed",
