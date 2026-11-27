@@ -8,6 +8,12 @@ import { signal } from "@preact/signals";
 import { fullView, SIM_VERSION } from "@geometrix/sim";
 import { GameStore } from "../store.ts";
 import { stateHash } from "./hash.ts";
+import {
+  initialHidden,
+  markersOf,
+  type Marker,
+  type MarkerKind,
+} from "./markers.ts";
 import { ReplayPlayer } from "./player.ts";
 import {
   dueTicks,
@@ -15,6 +21,9 @@ import {
   RateMeter,
   type Speed,
 } from "./playback.ts";
+
+/** Real time a frame spends on the opening scan: a loading screen, not play. */
+export const SCAN_BUDGET_MS = 40;
 
 /** A spectator has no player id: no creep is "mine", no command goes out. */
 export const SPECTATOR_ID = -1;
@@ -36,6 +45,13 @@ export class ReplayController {
   readonly seeking = signal<number | null>(null);
   /** The hash check, done every time the replay reaches its last tick. */
   readonly hash = signal<HashCheck>({ status: "waiting" });
+  /** Where the timeline's thumb is while dragged, else null. */
+  readonly thumb = signal<number | null>(null);
+  /** The scan pass is running: the marks are not all there yet (P10). */
+  readonly scanning = signal(false);
+  /** The timeline's marks (D11), growing while the scan goes. */
+  readonly markers = signal<readonly Marker[]>([]);
+  readonly hidden = signal<ReadonlySet<MarkerKind>>(new Set());
   /** Ticks per real second while playing. */
   readonly rate = signal<number | null>(null);
   private readonly clock: () => number;
@@ -69,7 +85,25 @@ export class ReplayController {
     return this.replay.simVersion !== SIM_VERSION;
   }
 
+  /**
+   * The scan pass (E-min D11, plan P10): runs to the last tick in chunks,
+   * which takes every checkpoint, keeps every event and checks the hash, then
+   * goes back to tick 0 with the marks ready.
+   */
+  startScan(): void {
+    if (this.replay.ticks === 0) return;
+    this.pause();
+    this.scanning.value = true;
+  }
+
+  toggle(kind: MarkerKind): void {
+    const hidden = new Set(this.hidden.value);
+    if (!hidden.delete(kind)) hidden.add(kind);
+    this.hidden.value = hidden;
+  }
+
   play(): void {
+    if (this.scanning.value) return;
     if (this.player.ended) this.seekTo(0);
     this.playing.value = true;
     this.meter.reset();
@@ -89,6 +123,7 @@ export class ReplayController {
 
   /** Jumps to `tick`: restores a checkpoint and simulates the rest in frames. */
   seekTo(tick: number): void {
+    if (this.scanning.value) return;
     const target = Math.max(0, Math.min(tick, this.replay.ticks));
     this.generation++;
     if (this.hash.value.status !== "waiting") {
@@ -108,6 +143,10 @@ export class ReplayController {
   frame(now: number): void {
     const elapsed = this.lastFrame === null ? 0 : now - this.lastFrame;
     this.lastFrame = now;
+    if (this.scanning.value) {
+      this.scan(now);
+      return;
+    }
     const deadline = now + FRAME_BUDGET_MS;
     const inBudget = () => this.clock() < deadline;
     const target = this.seeking.value;
@@ -139,6 +178,23 @@ export class ReplayController {
       this.playing.value = false;
       this.checkHash();
     }
+  }
+
+  /** One frame of the scan pass. */
+  private scan(now: number): void {
+    const deadline = now + SCAN_BUDGET_MS;
+    this.player.runTo(this.replay.ticks, () => this.clock() < deadline);
+    const events = this.player.eventsBetween(0, this.player.tick);
+    this.markers.value = markersOf(events);
+    this.tick.value = this.player.tick;
+    if (!this.player.ended) return;
+    // The hash of the last tick, before going back.
+    this.checkHash();
+    this.hidden.value = initialHidden(this.markers.value);
+    this.scanning.value = false;
+    this.player.seek(0);
+    this.tick.value = 0;
+    this.arrived(now);
   }
 
   private arrived(now: number): void {

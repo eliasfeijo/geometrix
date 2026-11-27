@@ -320,9 +320,10 @@ h3 {
   gap: 2px;
 }
 
-.replay-bar .timeline {
-  flex: 1 1 160px;
-  min-width: 120px;
+.replay-marks .timeline {
+  display: block;
+  width: 100%;
+  margin: 0;
   padding: 0;
   border: 0;
   background: transparent;
@@ -1424,4 +1425,50 @@ button.danger {
   left: 50%;
   transform: translateX(-50%);
   z-index: 6;
+}
+
+/* The replay's marks (D11): toggles, then three lanes of marks. */
+.replay-header {
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+}
+
+.replay-header .replay-bar {
+  border-bottom: 0;
+}
+
+.replay-marks {
+  padding: 0 10px 4px;
+}
+
+.marks-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 8px;
+}
+
+.mark-toggle {
+  font-size: 12px;
+  padding: 1px 6px;
+}
+
+.mark-toggle.off {
+  opacity: 0.45;
+}
+
+.marks-track {
+  position: relative;
+  height: 44px;
+  margin: 2px 8px 0;
+}
+
+.mark {
+  position: absolute;
+  transform: translateX(-50%);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-size: 9px;
+  line-height: 11px;
 }

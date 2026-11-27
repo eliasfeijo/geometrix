@@ -1,5 +1,6 @@
 // "Desistir" and the result as the client reads them (E-min S-1, S-4, S-5;
-// L-5 to L-7), and the read-only store of an ended world and of a team out.
+// L-5 to L-7), the read-only store of an ended world and of a team out, and
+// the replay's marks and scan pass (D11, plan P10).
 
 import {
   endSummary,
@@ -21,8 +22,16 @@ import {
   resultHeadline,
   teamList,
 } from "../src/match-end.ts";
+import { ReplayController } from "../src/replay/controller.ts";
+import {
+  DENSE_MARKS,
+  initialHidden,
+  markersOf,
+  type Marker,
+} from "../src/replay/markers.ts";
 import { GameStore } from "../src/store.ts";
-import { testWorld, viewOf, welcomeOf } from "./helpers.ts";
+import { sha256Hex } from "../src/hash.ts";
+import { botReplay, testWorld, viewOf, welcomeOf } from "./helpers.ts";
 
 /** Concession after 100 world s, a 40 s vote, 60 s of wait; ×10. */
 const timed = () => {
@@ -215,4 +224,64 @@ describe("an ended world and a team out are read-only (D6, D7)", () => {
     expect(link.calls).toEqual([7, null]);
     expect(store.notices.value).toHaveLength(1);
   });
+});
+
+describe("the replay's marks (D11, P10)", () => {
+  test("marks the D11 events, team creeps and wanderers apart", () => {
+    const at = { tick: 3, index: 0, x: 0, y: 0 };
+    const creep = (team: number | null) => ({
+      id: 1,
+      team,
+      dna: "square" as const,
+      name: "N",
+    });
+    const events = [
+      { type: "born" as const, creep: creep(0), ...at },
+      ...[0, null].map((team) => ({
+        type: "died" as const,
+        creep: creep(team),
+        by: null,
+        battle: 1,
+        firstBlood: false,
+        ...at,
+      })),
+      { type: "concedeVoteOpened" as const, team: 0, deadlineTick: 9, ...at },
+    ];
+    expect(markersOf(events).map((m) => m.kind)).toEqual([
+      "born",
+      "death",
+      "wandererDeath",
+    ]);
+  });
+
+  test("hides births and deaths only when they are dense", () => {
+    const born = (n: number): Marker[] =>
+      Array.from({ length: n }, () => ({ kind: "born" }) as Marker);
+    expect(initialHidden(born(DENSE_MARKS)).size).toBe(0);
+    expect([...initialHidden(born(DENSE_MARKS + 1))]).toEqual([
+      "born",
+      "death",
+      "wandererDeath",
+    ]);
+  });
+
+  test("the scan marks the whole replay, checks the hash and goes back", async () => {
+    const run = botReplay(3000);
+    const controller = new ReplayController(
+      { ...run.replay, finalHash: await sha256Hex(run.finalJson) },
+      0,
+      () => 0,
+    );
+    controller.startScan();
+    // A seek or play waits for the scan.
+    controller.seekTo(100);
+    controller.play();
+    expect(controller.playing.value).toBe(false);
+    controller.frame(0);
+    expect(controller.scanning.value).toBe(false);
+    expect(controller.tick.value).toBe(0);
+    expect(controller.store.chronicle.value).toEqual([]);
+    expect(controller.markers.value.map((m) => m.kind)).toContain("born");
+    await expect.poll(() => controller.hash.value.status).toBe("match");
+  }, 30_000);
 });

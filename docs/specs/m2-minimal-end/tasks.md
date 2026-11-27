@@ -157,7 +157,7 @@ result, summary and hash, and the restart keeps it.
 - [x] The spectator of a team out (D7)
 - [x] The chronicle sentences: a team leaving, the world's end, the first blood (D8, D15)
 - [x] The result in the lobby (S-4)
-- [ ] The replay markers: the scan pass, the marks, the toggles, the hover, the jump; the end screen at the last tick
+- [x] The replay markers: the scan pass, the marks, the toggles, the hover, the jump; the end screen at the last tick
       (D11, S-3; P10)
 
 ## F5 — Soak and playtest
