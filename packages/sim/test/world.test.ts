@@ -36,6 +36,7 @@ describe("createWorld", () => {
         upgrades: { capacity: false },
         production: null,
         repeat: null,
+        out: null,
       },
       {
         id: 1,
@@ -44,6 +45,7 @@ describe("createWorld", () => {
         upgrades: { capacity: false },
         production: null,
         repeat: null,
+        out: null,
       },
     ]);
   });

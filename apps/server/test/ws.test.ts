@@ -90,7 +90,7 @@ describe("WebSocket", () => {
     expect(welcome).not.toHaveProperty("cores");
     expect(JSON.stringify(welcome)).not.toMatch(/seed/i);
     expect(welcome.view.known).toContain(-1);
-    expect(welcome.view.teams[1]).toEqual({ id: 1, core: null });
+    expect(welcome.view.teams[1]).toEqual({ id: 1, core: null, out: null });
     expect(welcome.view.tick).toBe(1);
     expect(welcome.view.team).toBe(0);
     expect(welcome.view.creeps[0]).not.toHaveProperty("path");

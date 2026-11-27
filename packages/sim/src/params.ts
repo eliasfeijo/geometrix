@@ -19,6 +19,10 @@ const dna = { capacity: positive, cellsPerMinute: positive } as const;
 const hpDna = { max: positive } as const;
 
 const schema = {
+  end: {
+    /** Main events kept for the end screen (E-min plan P6). */
+    highlights: positive,
+  },
   world: {
     durationSeconds: positive,
     tickSeconds: positive,

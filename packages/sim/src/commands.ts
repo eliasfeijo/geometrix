@@ -40,6 +40,7 @@ import {
   type UpgradeId,
   type UpgradeRefusal,
 } from "./economy.ts";
+import { concedeRefusal, leaveMatch, type EndRefusal } from "./end.ts";
 import type { Cell } from "./map.ts";
 import { DNAS, type Dna } from "./params.ts";
 import type { PresetId } from "./presets.ts";
@@ -72,6 +73,8 @@ export type Command =
   | { type: "buyUpgrade"; upgrade: UpgradeId }
   /** The dominating player answers its creep's extortion (M2 encontro). */
   | { type: "react"; creepId: number; choice: Reply }
+  /** The player's team gives up the match (E-min spec D3). */
+  | { type: "concede" }
   /**
    * System commands of the junction host (plan P2), logged with player id 0:
    * a participant left a battle; a battle ended.
@@ -90,6 +93,7 @@ export const COMMAND_TYPES = [
   "stopRepeat",
   "buyUpgrade",
   "react",
+  "concede",
   "battleExit",
   "battleEnd",
 ] as const satisfies readonly Command["type"][];
@@ -106,6 +110,7 @@ export type Refusal =
   | RulesRefusal
   | ProductionRefusal
   | UpgradeRefusal
+  | EndRefusal
   | "unknownCommand"
   | "invalidDna"
   | "invalidUpgrade";
@@ -116,6 +121,8 @@ export function validate(
   command: Command,
   playerId: number,
 ): Refusal | null {
+  const gone = endRefusal(state, command, playerId);
+  if (gone !== null) return gone;
   switch (command.type) {
     case "join":
       return joinRefusal(
@@ -146,6 +153,7 @@ export function validate(
     case "produce":
     case "stopRepeat":
     case "buyUpgrade":
+    case "concede":
       return teamCommandRefusal(state, command, playerId);
     case "battleExit":
       return battleExitRefusal(state, command, playerId);
@@ -156,9 +164,29 @@ export function validate(
   }
 }
 
+/**
+ * What the end refuses before anything else (E-min spec F-4, L-3): every
+ * command of an ended world, and every command of a player whose team left
+ * the match. The system commands (join, the host's results) are no player's.
+ */
+function endRefusal(
+  state: WorldState,
+  command: Command,
+  playerId: number,
+): EndRefusal | null {
+  if (state.result !== null) return "worldEnded";
+  if (command.type === "join") return null;
+  const player = findPlayer(state, playerId);
+  if (player === undefined) return null;
+  return state.teams[player.team]!.out === null ? null : "teamOut";
+}
+
 function teamCommandRefusal(
   state: WorldState,
-  command: Extract<Command, { type: "produce" | "stopRepeat" | "buyUpgrade" }>,
+  command: Extract<
+    Command,
+    { type: "produce" | "stopRepeat" | "buyUpgrade" | "concede" }
+  >,
   playerId: number,
 ): Refusal | null {
   const player = findPlayer(state, playerId);
@@ -170,6 +198,8 @@ function teamCommandRefusal(
       return productionRefusal(state, team);
     case "stopRepeat":
       return null;
+    case "concede":
+      return concedeRefusal(state, team);
     case "buyUpgrade":
       if (!UPGRADES.includes(command.upgrade)) return "invalidUpgrade";
       return upgradeRefusal(state, team.id, command.upgrade);
@@ -210,6 +240,17 @@ export function applyCommand(
     case "react":
       react(state, command.creepId, command.choice);
       break;
+    case "concede": {
+      const player = findPlayer(state, playerId)!;
+      leaveMatch(
+        state,
+        log ?? createEventLog(state.tick),
+        state.teams[player.team]!,
+        "conceded",
+        player.bot,
+      );
+      break;
+    }
     case "battleExit":
       applyBattleExit(state, log ?? createEventLog(state.tick), command);
       break;

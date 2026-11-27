@@ -4,6 +4,7 @@ import { parseBattleParams, type BattleParams } from "@geometrix/battle";
 import { readFileSync } from "node:fs";
 
 export {
+  addTeam,
   creepOf,
   loadTestParams,
   paramsWith,

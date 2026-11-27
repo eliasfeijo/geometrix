@@ -13,7 +13,7 @@ import { step } from "../src/step.ts";
 import { view } from "../src/view.ts";
 import { updateVision } from "../src/vision.ts";
 import type { Creep, WorldState } from "../src/world.ts";
-import { paramsWith, textWorld } from "./helpers.ts";
+import { addWanderer, paramsWith, textWorld } from "./helpers.ts";
 
 // 30 × 7, the cores in opposite corners; a rock at (14, 3).
 const MAP = [
@@ -97,6 +97,7 @@ describe("the battle opens (junction O-1, O-5, D5)", () => {
         { id: prey.id, side: 1, stance: "fight" },
       ],
       openedTick: w.tick - 1,
+      entered: 2,
       x: 13,
       y: 3,
     });
@@ -266,8 +267,10 @@ describe("battleExit (junction X-1, X-2, D7)", () => {
         x: 13,
         y: 3,
         teams: [0, 1],
+        firstBlood: true,
       },
     ]);
+    expect(w.stats.teams.map((t) => t.lost)).toEqual([0, 1]);
   });
 
   test("an escape comes back on its cell with its HP and load, running home with the bonus", () => {
@@ -359,6 +362,8 @@ describe("battleEnd (junction X-3, X-4, D8)", () => {
         { creep: { id: mate.id }, taken: { materia: room, cristal: 0 } },
       ],
       spoils: [w.spoils[0]!.id],
+      entered: 3,
+      spoiled: { materia: 19 - room, cristal: 0 },
       teams: [0, 1],
     });
   });
@@ -401,7 +406,7 @@ describe("battleEnd (junction X-3, X-4, D8)", () => {
     const [hunter, prey] = creeps as [Creep, Creep];
     attack(w, hunter, prey);
     const battleId = hunter.battle!;
-    step(w, [
+    const events = step(w, [
       system(exit(w, hunter, { outcome: "died", hp: 0, by: prey.id })),
       system(exit(w, prey, { outcome: "died", hp: 0, by: hunter.id })),
       system({
@@ -417,6 +422,28 @@ describe("battleEnd (junction X-3, X-4, D8)", () => {
     expect(w.creeps).not.toContain(prey);
     expect(w.battles).toEqual([]);
     expect(w.spoils).toMatchObject([{ cargo: { materia: 4, cristal: 0 } }]);
+    // The match's first death of a team's creep, and no other (E-min D15).
+    expect(
+      events.filter((e) => e.type === "died").map((e) => e.firstBlood),
+    ).toEqual([true, false]);
+    expect(events.find((e) => e.type === "battleEnded")).toMatchObject({
+      entered: 2,
+      spoiled: { materia: 4, cristal: 0 },
+    });
+  });
+
+  test("a wanderer's death is never first blood", () => {
+    const { w, creeps } = world([[0, "square", 12, 3]]);
+    const [mine] = creeps as [Creep];
+    const wanderer = addWanderer(w, 13, 3);
+    updateVision(w);
+    mine.order = { type: "approach", targetId: wanderer.id, intent: "attack" };
+    step(w, []);
+    const events = step(w, [
+      system(exit(w, mine, { creepId: wanderer.id, outcome: "died", hp: 0 })),
+    ]);
+    expect(events).toMatchObject([{ type: "died", firstBlood: false }]);
+    expect(w.stats.teams.map((t) => t.lost)).toEqual([0, 0]);
   });
 });
 

@@ -8,7 +8,7 @@ import { creepRef, emit, type EventLog } from "./events.ts";
 import type { Dna, Params } from "./params.ts";
 import { spawnCreep, type Team, type WorldState } from "./world.ts";
 
-export type ProductionRefusal = "busy" | "populationCap" | "stock";
+export type ProductionRefusal = "teamOut" | "busy" | "populationCap" | "stock";
 
 /**
  * The part of the state that production checks read. The client passes the
@@ -49,6 +49,7 @@ export function productionRefusal(
   team: Team,
 ): ProductionRefusal | null {
   const { params } = state;
+  if (team.out !== null) return "teamOut";
   if (team.production !== null) return "busy";
   if (population(state, team) >= params.population.cap) return "populationCap";
   if (!canAfford(team.stock, params.creep.cost)) return "stock";
@@ -79,6 +80,7 @@ export function runProduction(state: WorldState, log: EventLog): void {
       production.remainingSeconds -= state.params.world.tickSeconds;
       if (production.remainingSeconds <= 0) {
         const creep = spawnCreep(state, team, production.dna);
+        state.stats.teams[team.id]!.born += 1;
         emit(log, {
           type: "born",
           creep: creepRef(creep),

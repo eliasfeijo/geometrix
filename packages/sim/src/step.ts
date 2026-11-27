@@ -16,14 +16,16 @@
 //   6. materia and HP regeneration (the wanderers' too); nobody in a
 //      battle heals
 //                                                    (F3; M2 encontro P1)
+//  6b. the end: eliminations and the result          (E-min plan P1)
 //   7. vision and team memory; the events' audience  (M1.5 fog, N10;
 //      ADR-0007 rule 3)
-//   8. stats accumulators; tick++                              (F5)
+//   8. stats accumulators and the main events; tick++          (F5)
 
 import { runAutopilot } from "./autopilot.ts";
 import { SYSTEM_PLAYER_ID } from "./battle.ts";
 import { applyCommand, type CommandInput } from "./commands.ts";
 import { findPlayer } from "./domination.ts";
+import { checkEnd, recordHighlights } from "./end.ts";
 import { runEncounters } from "./encounter.ts";
 import { createEventLog, setAudience, type SimEvent } from "./events.ts";
 import { regenerate } from "./economy.ts";
@@ -47,12 +49,14 @@ import type { WorldState } from "./world.ts";
  * `commands` are the tick's external commands in seq order; each is validated
  * again against the state as it is then, and a refused one is skipped.
  * Returns the tick's events with their audience (ADR-0007, plan P9); they are
- * not part of the state.
+ * not part of the state. An ended world is frozen: stepping it throws (E-min
+ * plan P8).
  */
 export function step(
   state: WorldState,
   commands: readonly CommandInput[],
 ): SimEvent[] {
+  if (state.result !== null) throw new Error("step: the world has ended");
   const log = createEventLog(state.tick);
   for (const { playerId, command } of commands) {
     if (applyCommand(state, command, playerId, log) !== null) continue;
@@ -76,9 +80,11 @@ export function step(
   regenerate(state);
   regenerateHp(state);
   regenerateWanderers(state);
+  checkEnd(state, log);
   updateVision(state);
   setAudience(state, log.events);
   accumulateStats(state);
+  recordHighlights(state, log.events);
   state.tick += 1;
   return log.events;
 }

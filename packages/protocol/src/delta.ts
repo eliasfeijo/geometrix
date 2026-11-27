@@ -123,6 +123,8 @@ export function emptyView(team: number, cells: number): TeamView {
     spoils: [],
     known: new Array<number>(cells).fill(-1),
     visible: [],
+    result: null,
+    summary: null,
   };
 }
 
@@ -334,6 +336,9 @@ export function sentView(sent: Sent): TeamView {
     spoils: sent.spoils,
     known: sent.known,
     visible: sent.visible,
+    // The deltas carry them from E-min F3.
+    result: null,
+    summary: null,
   } as unknown as TeamView;
 }
 

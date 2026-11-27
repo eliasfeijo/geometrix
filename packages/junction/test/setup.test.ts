@@ -97,6 +97,7 @@ describe("the setups (junction O-3, D2, D9, D10)", () => {
         { id: b.id, side: 1, stance: "flee" as const },
       ].sort((p, q) => p.id - q.id),
       openedTick: 0,
+      entered: 2,
       x: 13,
       y: 3,
     };

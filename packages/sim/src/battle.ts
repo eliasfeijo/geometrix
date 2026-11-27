@@ -121,13 +121,14 @@ export function fighterCapacity(state: WorldState, fighter: Fighter): number {
     : capacity(fighter, teamOf(state, fighter), state.params);
 }
 
-/** Removes a dead fighter from the state (a creep by slice A's rule). */
-export function removeFighter(state: WorldState, fighter: Fighter): void {
-  if (!isWanderer(fighter)) {
-    kill(state, fighter);
-    return;
-  }
+/**
+ * Removes a dead fighter from the state (a creep by slice A's rule). Returns
+ * whether it is the match's first blood; a wanderer's death never is.
+ */
+export function removeFighter(state: WorldState, fighter: Fighter): boolean {
+  if (!isWanderer(fighter)) return kill(state, fighter);
   state.wanderers = state.wanderers.filter((w) => w.id !== fighter.id);
+  return false;
 }
 
 /** The battle side `fighter` belongs on: its team's, or the wanderers'. */
@@ -194,6 +195,7 @@ export function openBattle(
       { id: victim.id, side: 1, stance: victimStance },
     ].sort((a, b) => a.id - b.id),
     openedTick: state.tick,
+    entered: 2,
     ...cell,
   };
   state.battles.push(battle);
@@ -308,6 +310,7 @@ export function runJoins(state: WorldState, log: EventLog): void {
       ...battle.participants,
       { id: fighter.id, side, stance: "fight" as Stance },
     ].sort((a, b) => a.id - b.id);
+    battle.entered += 1;
     // Approaching someone ends one's own safe conduct (E-8).
     if (!isWanderer(fighter)) fighter.safeConduct = null;
     lock(fighter, battle);
@@ -440,12 +443,13 @@ export function applyBattleExit(
     battle.participants = battle.participants.filter((p) => p.id !== creep.id);
     const killer =
       command.by === null ? undefined : findFighter(state, command.by);
-    removeFighter(state, creep);
+    const firstBlood = removeFighter(state, creep);
     emit(log, {
       type: "died",
       creep: ref,
       by: killer === undefined ? null : creepRef(killer),
       battle: battle.id,
+      firstBlood,
       ...command.cell,
     });
     return;
@@ -548,8 +552,11 @@ export function applyBattleEnd(
     }
   }
   const spoils: number[] = [];
+  const spoiled = { materia: 0, cristal: 0 };
   for (const pile of piles) {
     if (stockTotal(pile.cargo) === 0) continue;
+    spoiled.materia += pile.cargo.materia;
+    spoiled.cristal += pile.cargo.cristal;
     const id = dropSpoil(state, pile.cell, pile.cargo);
     if (!spoils.includes(id)) spoils.push(id);
   }
@@ -569,6 +576,7 @@ export function applyBattleEnd(
   }
   const winner =
     command.winnerSide === null ? null : battle.sides[command.winnerSide]!;
+  if (winner !== null) recordOutcome(state, battle, command.winnerSide!);
   emit(log, {
     type: "battleEnded",
     battle: battle.id,
@@ -581,10 +589,29 @@ export function applyBattleEnd(
     survivors: survivors.map(creepRef),
     loot,
     spoils,
+    entered: battle.entered,
+    spoiled,
     x: battle.x,
     y: battle.y,
   });
   state.battles = state.battles.filter((b) => b.id !== battle.id);
+}
+
+/**
+ * Counts the battle for each team with a side in it: won by the winner's,
+ * lost by the others (E-min plan P6). Without a winner, neither.
+ */
+function recordOutcome(
+  state: WorldState,
+  battle: Battle,
+  winnerSide: number,
+): void {
+  battle.sides.forEach((side, i) => {
+    if (side.kind !== "team") return;
+    const stats = state.stats.teams[side.team]!;
+    if (i === winnerSide) stats.battlesWon += 1;
+    else stats.battlesLost += 1;
+  });
 }
 
 /**

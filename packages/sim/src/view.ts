@@ -7,6 +7,7 @@
 // team's memory.
 
 import type { Player } from "./domination.ts";
+import { endSummary, type EndSummary } from "./end.ts";
 import type { Cell } from "./map.ts";
 import type { Order } from "./orders.ts";
 import type {
@@ -19,6 +20,7 @@ import type {
   Team,
   Wanderer,
   WandererOrder,
+  WorldResult,
   WorldState,
 } from "./world.ts";
 
@@ -77,7 +79,7 @@ export type ForeignEncounterView = Pick<
  * sides and who is locked in it. How each enters (its stance) and the fight
  * itself stay out.
  */
-export type BattleStubView = Omit<Battle, "participants"> & {
+export type BattleStubView = Omit<Battle, "participants" | "entered"> & {
   participants: { id: number; side: number }[];
 };
 
@@ -90,8 +92,15 @@ export type WandererView = Pick<
   "id" | "dna" | "name" | "hp" | "battle" | "x" | "y" | "cargo"
 > & { hostile: HostileView | null };
 
-/** Another team: its id and, once seen, where its core is (spec D7). */
-export type ForeignTeam = { id: number; core: Cell | null };
+/**
+ * Another team: its id, once seen where its core is (spec D7), and whether it
+ * left the match, which is public (E-min D8).
+ */
+export type ForeignTeam = {
+  id: number;
+  core: Cell | null;
+  out: Team["out"];
+};
 
 /** Another team's player (spec D8): who plays, not when they dominated. */
 /** Another team's player: not its cooldown, nor its bot's difficulty (P8). */
@@ -130,6 +139,10 @@ export type TeamView = {
   known: number[];
   /** Cell indices in sight at the end of the tick, increasing. */
   visible: number[];
+  /** The world's result once it ended, else null (E-min K-3). */
+  result: WorldResult | null;
+  /** The ended world's summary, the same for every team, else null. */
+  summary: EndSummary | null;
 };
 
 /** Whether the view has the creep whole: the team's own, or any in fullView. */
@@ -242,6 +255,7 @@ export function view(state: WorldState, team: number): TeamView {
       return {
         id: t.id,
         core: core === undefined ? null : { x: core.x, y: core.y },
+        out: t.out,
       };
     }),
     creeps,
@@ -257,6 +271,8 @@ export function view(state: WorldState, team: number): TeamView {
     spoils: memory.spoils.map((s) => ({ ...s })),
     known,
     visible: seen,
+    result: state.result,
+    summary: endSummary(state),
   };
 }
 
@@ -286,6 +302,8 @@ export function fullView(state: WorldState): TeamView {
     spoils: state.spoils.map((s) => ({ ...s, cargo: { ...s.cargo } })),
     known: [...map.terrain],
     visible: map.terrain.map((_, i) => i),
+    result: state.result,
+    summary: endSummary(state),
   };
 }
 

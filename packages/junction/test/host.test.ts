@@ -28,7 +28,7 @@ import {
   type JunctionHost,
 } from "../src/host.ts";
 import { replayResults } from "../src/replay.ts";
-import { loadBattleParams, textWorld } from "./helpers.ts";
+import { addTeam, loadBattleParams, textWorld } from "./helpers.ts";
 
 // 30 × 7, the cores in opposite corners.
 const MAP = [
@@ -120,6 +120,47 @@ describe("the battles a world tick stepped (the screen's frames, F4)", () => {
     dominate(w, 5, hunter.id);
     setScreen(host, hunter.id, true);
     expect(stepJunction(w, host, []).stepped).toEqual([]);
+  });
+});
+
+describe("the world's end (E-min X-1, plan P8)", () => {
+  test("an open battle stops where it is, and the world takes no more ticks", () => {
+    const { w, host } = duel();
+    stepJunction(w, host, []);
+    stepJunction(w, host, []);
+    join(w, 1, 0, false);
+    stepJunction(w, host, [{ playerId: 1, command: { type: "concede" } }]);
+    expect(w.result).toMatchObject({ how: "lastTeam", winner: 1 });
+    const [instance] = host.instances;
+    expect(instance).toBeDefined();
+    expect(w.battles).toHaveLength(1);
+    const battle = serializeBattle(instance!.state);
+    expect(() => stepJunction(w, host, [])).toThrow("the world has ended");
+    expect(host.instances).toEqual([instance]);
+    expect(serializeBattle(instance!.state)).toBe(battle);
+  });
+
+  test("a team leaving a world that goes on takes its hands off its battle (X-2)", () => {
+    const { w, hunter, host } = duel();
+    addTeam(w, { x: 15, y: 0 });
+    join(w, 5, 0, false);
+    stepJunction(w, host, []);
+    dominate(w, 5, hunter.id);
+    setScreen(host, hunter.id, true);
+    stepJunction(w, host, []);
+    const instance = host.instances[0]!;
+    expect(instance.pace).toBe("real");
+    stepRealtime(w, host, instance.battleId, []);
+    const controllers = () =>
+      instance.state.participants.map((p) => p.controller);
+    expect(controllers()).toContain("human");
+    stepJunction(w, host, [{ playerId: 5, command: { type: "concede" } }]);
+    expect(w.result).toBeNull();
+    const tick = instance.state.tick;
+    stepJunction(w, host, []);
+    expect(instance.pace).toBe("world");
+    expect(instance.state.tick).toBeGreaterThan(tick);
+    expect(controllers()).not.toContain("human");
   });
 });
 

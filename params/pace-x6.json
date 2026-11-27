@@ -1,4 +1,7 @@
 {
+  "end": {
+    "highlights": 5
+  },
   "world": {
     "durationSeconds": 43200,
     "tickSeconds": 1,

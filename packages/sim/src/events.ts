@@ -13,6 +13,8 @@ import {
   sideTeam,
   type Fighter,
   type Stock,
+  type TeamOut,
+  type WorldResult,
   type WorldState,
 } from "./world.ts";
 
@@ -94,9 +96,32 @@ export type EventBody = (
       survivors: CreepRef[];
       loot: { creep: CreepRef; taken: Stock }[];
       spoils: number[];
+      /** Participants that ever entered the battle (E-min plan P7). */
+      entered: number;
+      /** What the battle left as spoils on the map, both resources. */
+      spoiled: Stock;
     }
-  /** A death; `battle` is the battle it happened in (junction X-1). */
-  | { type: "died"; creep: CreepRef; by: CreepRef | null; battle: number }
+  /**
+   * A death; `battle` is the battle it happened in (junction X-1).
+   * `firstBlood`: the match's first death of a team's creep (E-min D15).
+   */
+  | {
+      type: "died";
+      creep: CreepRef;
+      by: CreepRef | null;
+      battle: number;
+      firstBlood: boolean;
+    }
+  /**
+   * A team left the match, on its core's cell; `bot`: a bot player conceded.
+   * Every team receives it (E-min D8).
+   */
+  | { type: "teamOut"; team: number; how: TeamOut["how"]; bot: boolean }
+  /**
+   * The world ended (E-min D5), on the winner's core, the map's center in a
+   * draw. Every team receives it.
+   */
+  | { type: "worldEnded"; result: WorldResult }
   | { type: "pickedUp"; creep: CreepRef; spoil: number; taken: Stock }
   /** A creep dropped its whole load as spoils on its cell (R spec D24). */
   | { type: "dropped"; creep: CreepRef; spoil: number; cargo: Stock }
@@ -191,6 +216,9 @@ function participants(event: EventBody): CreepRef[] {
       return event.survivors;
     case "died":
       return event.by === null ? [event.creep] : [event.creep, event.by];
+    case "teamOut":
+    case "worldEnded":
+      return [];
   }
 }
 
@@ -198,6 +226,7 @@ function participants(event: EventBody): CreepRef[] {
  * Sets each event's audience (ADR-0007 rule 3), after the vision of the tick
  * is updated: the participants' teams (for a battle's events, the teams of
  * its sides) and the teams with the event's cell in sight, in team id order.
+ * A team leaving the match and the world's end reach every team (E-min D8).
  */
 export function setAudience(state: WorldState, events: SimEvent[]): void {
   const { width } = state.map;
@@ -213,10 +242,11 @@ export function setAudience(state: WorldState, events: SimEvent[]): void {
   for (const event of events) {
     const cell = event.y * width + event.x;
     const involved = involvedTeams(event, battleTeams);
+    const everyone = event.type === "teamOut" || event.type === "worldEnded";
     const teams: number[] = [];
     for (const memory of state.memory) {
       const team = memory.team;
-      if (memory.visible[cell] === 1 || involved.includes(team)) {
+      if (everyone || memory.visible[cell] === 1 || involved.includes(team)) {
         teams.push(team);
       }
     }

@@ -57,6 +57,13 @@ export type TeamStats = {
   trips: number;
   tripSeconds: number;
   tripCells: number;
+  /** Creeps born from the core; the initial population is not born here. */
+  born: number;
+  /** The team's creeps that died. */
+  lost: number;
+  /** Battles with a side of the team that ended with a winner. */
+  battlesWon: number;
+  battlesLost: number;
   /** Road segments finished on jobs this team paid for. */
   roadSegments: number;
   /** Creep-seconds spent dominated by a player. */
@@ -92,6 +99,10 @@ export function createStats(teams: Team[], deposits: Deposit[]): Stats {
       trips: 0,
       tripSeconds: 0,
       tripCells: 0,
+      born: 0,
+      lost: 0,
+      battlesWon: 0,
+      battlesLost: 0,
       roadSegments: 0,
       dominatedSeconds: 0,
       commands: countBy(COMMAND_TYPES),

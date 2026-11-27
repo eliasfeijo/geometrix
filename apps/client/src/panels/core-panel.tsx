@@ -18,6 +18,7 @@ import { COLORS } from "../map/colors.ts";
 import { DnaIcon } from "./dna-icon.tsx";
 
 const BLOCK_TEXTS = {
+  teamOut: "Seu time saiu da partida.",
   busy: "O Núcleo está produzindo.",
   populationCap: "Teto de população atingido.",
   stock: "Estoque insuficiente.",

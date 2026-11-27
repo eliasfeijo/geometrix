@@ -43,13 +43,17 @@ export function regenerateHp(state: WorldState): void {
 }
 
 /**
- * Removes a dead creep from the state (spec H-3, D4). A domination over it
- * ends with it, like a release and with no cooldown: it lives on the creep.
- * Its id is never reused (nextId only grows). What happens to its cargo is
- * the caller's (loot and spoil, F2).
+ * Removes a dead creep from the state (spec H-3, D4) and counts it as lost. A
+ * domination over it ends with it, like a release and with no cooldown: it
+ * lives on the creep. Its id is never reused (nextId only grows). What happens
+ * to its cargo is the caller's (loot and spoil, F2). Returns whether it is
+ * the match's first blood (E-min D15): no team had lost a creep before.
  */
-export function kill(state: WorldState, creep: Creep): void {
+export function kill(state: WorldState, creep: Creep): boolean {
   const at = state.creeps.indexOf(creep);
   if (at < 0) throw new Error(`kill: creep ${creep.id} is not in the world`);
   state.creeps.splice(at, 1);
+  const firstBlood = state.stats.teams.every((team) => team.lost === 0);
+  state.stats.teams[creep.team]!.lost += 1;
+  return firstBlood;
 }

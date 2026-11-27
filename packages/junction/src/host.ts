@@ -386,13 +386,15 @@ function checkApplied(
  * One world tick through the host (T-1, X-0, P5): the world-paced battles
  * advance one world second, in id order; then the world steps with
  * `commands` and every result waiting; then the host follows what the world
- * did (new battles, joins).
+ * did (new battles, joins). An ended world is refused before anything moves:
+ * its open battles stay as they are, with no result (E-min X-1, plan P8).
  */
 export function stepJunction(
   world: WorldState,
   host: JunctionHost,
   commands: readonly CommandInput[],
 ): JunctionStep {
+  if (world.result !== null) throw new JunctionError("the world has ended");
   const finished: FinishedBattle[] = [];
   const stepped: SteppedBattle[] = [];
   const ticks = battleTicksPerWorldTick(world, host);
