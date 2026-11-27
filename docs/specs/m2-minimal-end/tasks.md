@@ -1,6 +1,6 @@
 # M2 tasks — The minimal end
 
-**Status:** F0 ✅ (spec and plan approved 2026-11-25) · F1 ✅ (2026-11-27) · F2 ✅ (2026-11-27); F3 next. Branches `m2/emin-f<n>-<slug>` (skill `commit`).
+**Status:** F0 ✅ (spec and plan approved 2026-11-25) · F1 ✅ (2026-11-27) · F2 ✅ (2026-11-27) · F3 ✅ (2026-11-27); F4 next. Branches `m2/emin-f<n>-<slug>` (skill `commit`).
 **Spec:** [spec.md](spec.md) · **Plan:** [plan.md](plan.md)
 
 ## F0 — Spec and plan
@@ -118,6 +118,33 @@ time and the team's vote with a deadline (L-5 to L-7, P14). `SIM_VERSION` 15.
 - [x] The export of an ended world reaches the same result, summary and hash (N-2); the diff property green (N-3);
       `geo net` within the targets
 - [x] `dev:multi --set path=value` (P11)
+
+### F3 record (2026-11-27)
+
+**What it does.** The server ends a world from `state.result` (an elimination or a concession before the clock no longer
+makes the next tick throw), and does not ask the strategist of a team out. The delta carries `result` and `summary`
+once, on the end tick; the vote and `out` already travelled with the team entities (now listed as compared by
+reference). `PROTOCOL_VERSION` 9; `SIM_VERSION` stays 15. The lobby list has `result` (`how`, `winner`, `teams`); an
+ended world restarts ended, without battle instances. `geo net` stops at the end and says so. `dev:multi --set
+path=n` (repeatable). The client only compiles and keeps the new fields in its store.
+
+**Measured.** `geo net --seed 42` over the whole world (57,600 ticks, ended at the clock): 202 B/delta (peak 3,990 B),
+141 µs per send (target 250), watcher frames 5.5 KB/s in the worst battle, 0 divergences. The diff property covers the
+end tick, by concession and by the clock. A world ended by a concession with a battle open: the export reaches the same
+result, summary and hash, and the restart keeps it.
+
+**Interpretations to validate** (the plan's most literal reading):
+
+1. `--set` takes one non-negative integer per flag and checks the whole params file; the spawned server reads a
+   temporary copy (`GEO_PARAMS`), and the world keeps its params as always.
+2. An ended world refuses nothing new: the server's `worldEnded` already covered commands and battle inputs.
+
+**Left for later phases.**
+
+- **F4:** the store has `view.result` and `view.summary`, `WorldSummary.result` is not drawn yet. Until a restart, an
+  ended world's open battles stay in memory (X-1), so a battle screen can still open on a frozen one; after a restart
+  it is refused with `unknownBattle`. The end screen goes over both.
+- **F5:** the soak still places its kills over the world's whole duration and does not report how the world ended.
 
 ## F4 — Client
 
