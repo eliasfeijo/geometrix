@@ -313,6 +313,87 @@ The tick cost follows the population: 65–78 µs per tick on average with both 
 - [ ] **Checkpoint C2:** the targets' table per ×N candidate; the owner picks the candidates to play; the D16
       groups and the tick cost measured again (R F3's C1-2, C1-3)
 
+### F4 record
+
+**Chosen sets** (`params/default.json` is ×8, provisional until C2; `params/pace-x6.json` and `pace-x12.json` are the
+other candidates, played with `GEO_PARAMS`). Each match is 2 real hours at its ×N; the map stays 64 × 64.
+
+| Param | 72 h (before) | ×6 | ×8 (default) | ×12 |
+|---|---|---|---|---|
+| `world.durationSeconds` | 259,200 | 43,200 | 57,600 | 86,400 |
+| Speed ■ ▲ ● (cells per world min) | 2 · 3 · 5 | 4 · 6 · 10 | 3 · 4 · 7 | 2 · 3 · 5 |
+| Creep cost (matéria + cristal) | 3,000 + 10 | 1,000 + 5 | 1,100 + 5 | 1,100 + 5 |
+| `creep.productionSeconds` | 600 | 225 | 300 | 450 |
+| Road segment (cost · build s) | 150 · 120 | 10 · 90 | 10 · 120 | 10 · 180 |
+| Matéria regen (amount / s) | 8 / 60 | 5 / 45 | 5 / 60 | 5 / 90 |
+| HP regen ‰ per world min (map · core) | 10 · 100 | 13 · 133 | 10 · 100 | 7 · 67 |
+| Extortion answer · flee · safe-conduct · block | 60 · 60 · 600 · 1,800 | 60 · 45 · 450 · 1,350 | 80 · 60 · 600 · 1,800 | 120 · 90 · 900 · 2,700 |
+| Wanderers: first · interval · spare | 3,600 · 3,600→900 · 600 | 1,800 · 900→450 · 450 | 2,400 · 1,200→600 · 600 | 3,600 · 1,800→900 · 900 |
+
+Capacities, gather rates, the upgrade, the wanderer cap and the map are unchanged. At each ×N the durations keep the
+×8 real time.
+
+**How they were chosen** (scratch runs, not versioned; seeds 1–8 for the grids, 1–20 for the finalists): the first
+guess of spec §6 missed the opening by far (first extra creep at real minute 49–109 at ×8) because the bot's road builder
+spent the stock on segments (150 each, ~60 per team) before a creep could be paid; a grid of creep cost × road cost ×
+matéria regen found the three sets, which agree (road 10, regen 5). A 48 × 48 map was swept and rejected (the same
+crossing ceiling, first extra creep up to real minute 65). Production time, build time, the encounter windows, HP
+regen, the cristal and upgrade costs and the wanderer cap moved no target beyond seed noise (12 seeds).
+
+**The §7 targets** (`geo sweep --set world.multiplier=N --seeds 1-20 --params <file> --keep-runs`, full match,
+bot × bot at hard; recovery with `--shock 0:4@30`; "seeds" is how many of 20 meet it):
+
+| Criterion | ×6 | ×8 | ×12 |
+|---|---|---|---|
+| Length, extortion window (PA-1, PA-3) | ✅ | ✅ | ✅ |
+| Crossing 1.5–2.5 min | 17 (mean 1.8) ❌ | 17 (2.0) ❌ | 17 (1.8) ❌ |
+| First extra creep, min 8–15 | 18 (mean 10.6, 7.1–14.3) ❌ | 17 (11.6, 7.6–17.6) ❌ | 17 (10.4, 5.9–16.8) ❌ |
+| 80% of the map, min 20–60 | 20 (40) ✅ | 20 (40) ✅ | 20 (38) ✅ |
+| First wanderer min 4–6; at most 4 alive | ✅ (5.0) | ✅ | ✅ |
+| A wanderer alive ≥ 70% of the time after it | 16 (mean 78%) ❌ | 18 (81%) ❌ | 14 (75%) ❌ |
+| Help joins ≥ 1 per team per 30 min | 20 ✅ | 20 ✅ | 20 ✅ |
+| Battles per team per 10 min | 4.0 | 3.9 | 3.9 |
+| Both teams with creeps and delivering at the end | 19 ❌ | 20 ✅ | 20 ✅ |
+| Creep gap at the end, median ≤ 3 | 3 ✅ | 3.5 ❌ | 2 ✅ |
+| 10–24 creeps at the end; cap not before min 90 | 16 · 20 | 17 · 20 | 18 · 20 |
+| **Recovery** within 15 min on ≥ 18 seeds | **0** (mean 39 min) ❌ | **0** (36) ❌ | **0** (33, 5 never) ❌ |
+| Extortions against the bot paid ≤ 30% | 22% ✅ | 8% ✅ | 17% ✅ |
+| Loaded participants out by the border ≤ 50% | 1% ✅ | 2% ✅ | 1% ✅ |
+| Hard vs easy ≥ 15/20 (both sides, 40 runs: more creeps and matéria) | 40 ✅ | 40 ✅ | 40 ✅ |
+| Hard vs normal (reported, 40 runs) | 38 | 36 | 36 |
+| Tick cost ≤ 1.5 × F1 (~75 µs; see below) | 89–103 ❌ | 86–100 ❌ | 65–71 ✅ |
+
+- **The crossing cannot pass on every seed on a 64 × 64 map:** core-to-core paths range from 46 to 84
+  cell-equivalents, wider than the target's window. 17/20 is the ceiling at the best triangle speed.
+- **Recovery and the other targets pull against each other.** With no sink, a team's population is about its income
+  over the creep cost. Creeps at 300 brought the shocked team back within 15 min on 5–7 of 8 seeds, but then the
+  first extra creep came at minute 4–6 on every seed and the populations hit the cap of 30. No set tried passes both.
+- **Bot per team per match** (×6 · ×8 · ×12): D27 help 35 · 39 · 40, drop and flee 40 · 45 · 46, drop and fight
+  19 · 27 · 32, pay 0.3 · 0.1 · 0.5; drops 59 · 72 · 78, pickups after a fight 9 · 12 · 13; defense 0.8 · 0.5 · 0.4;
+  deaths 8 · 9 · 9. About 85 battles per match, ~60–70% opened by wanderers; extortion is rare (24–32 extortions in
+  20 matches). The easy side was wiped in 9–14 of 40 hard-vs-easy runs (easy is measured, not tuned).
+- **D16 groups (C1-2):** they form on the 2-hour world: followers on 20/20 seeds, 3.6–4.5 per team per match (none on
+  the 72-hour world).
+- **Tick cost (C1-3),** measured alone, `geo sim` seeds 42 and 1, twice: ×6 89–103 µs, ×8 86–100, ×12 65–71; the
+  72-hour world on today's code 84–90 (30 + 30 creeps; F1's 48–51 was 15 / 10). A whole match simulates in 4–6 s, and
+  a server at ×8 runs 8 ticks a second (< 0.1% of a core). In a ×8 profile `roadTarget` is 1.4% (the parked C1-3 cache
+  would not help); the strategist's rule comparisons by serialization are ~12%.
+- **Junction matrix** with the new default: identical to the 72-hour world's (no battle number moved).
+
+**A bug found and fixed** (`fix(junction)`): a wanderer that left a battle by the border could join it again on the
+same tick, for a creep that joined and that it did not spare; the host read that as a refused `battleExit` and threw,
+taking the world down (2 of 216 sweep runs). Pre-existing since slice D; no result or hash changes.
+
+**Unchanged on purpose:** `SIM_VERSION` 13 and the fixed hashes (plan §4 expected a rebuild in F4, but they use
+`test/params.json`, and a stored world keeps its own params).
+
+**Interpretations to validate in the playtest:**
+
+1. The candidates scale every other duration and the HP regen to the same real time as ×8 (rounded to integers).
+2. Roads are almost free (10 matéria a segment): their cost is now the builder's time. At 30 a segment, with a creep
+   cost and regen that keep the population in range, the first extra creep came at real minute 17–55 (900 + 4/60).
+3. The lobby's default ×N is F6's; until then it offers its old default, while the params say ×8.
+
 ## F5 — The pauses, network and server
 
 - [x] The held pace in the host (`holds`, `paceOf`), skipped by the battle clock (P11)
