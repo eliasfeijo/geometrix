@@ -7,7 +7,8 @@
 (view deltas), [0007](../../adr/0007-sim-events.md) (`sim` events),
 [0010](../../adr/0010-world-side-of-the-battle-contract.md) (the junction host)
 
-The decisions the owner approved with the plan (2026-11-25) are marked **(P*n*)** and listed in §11.
+The decisions the owner approved with the plan (2026-11-25) are marked **(P*n*)** and listed in §11; P14 was added
+on 2026-11-27 with the owner's revision of the concession.
 
 ## 1. What the code does today and what changes
 
@@ -108,7 +109,8 @@ is left to finish (only an eliminated team has none).
 ### Commands (P3, P4)
 
 - `concede` (no fields), from any player of the team. Refusals: `teamOut` (the team already left), `worldEnded` (at most
-  one team is still in the match, so the world ends on this tick: F-4). Applied at stage 1 in seq order, so two
+  one team is still in the match, so the world ends on this tick: F-4), `tooEarly` (L-5), `alreadyVoted` and
+  `voteCooldown` (L-7). Applied at stage 1 in seq order, so two
   concessions on one tick follow the log.
 - In `applyCommand`, a command of a player whose team is out is refused with `teamOut`, before its own checks; the
   system commands (`join`, the host's results) are not players' and pass.
@@ -149,6 +151,23 @@ In `strategistCommands`, before anything else: with its team out, nothing (B-2).
 `production` and the stock unable to pay `creep.cost`, the strategist sends `concede` and nothing else (B-1). It reads
 only its view; the difficulty (R's D26) does not enter the test. With R merged, the threshold sits in R's settings
 next to the difficulty's.
+
+### The minimum time and the team's vote (P14, 2026-11-27)
+
+- **State:** `Team.vote: { openedTick, yes } | null` (`yes` by player id; replaced whole, since the delta compares it by
+  reference) and `Team.voteRejectedTick`. No "no" list: one "no" ends the vote.
+- **Commands:** `concede` leaves at once for a bot or a team's only human, else opens the vote or says yes;
+  `rejectConcede` (no fields) ends it, refused with `noVote` without one.
+- **Deadline:** first in `checkEnd`, before the eliminations, in team id order: a vote whose
+  `openedTick + ceil(concedeVoteSeconds / tickSeconds)` is this tick passes, unless its team is the last in the match
+  (F-4). Votes still open when the world ends are dropped there.
+- **Events:** `concedeVoteOpened { team, deadlineTick }` and `concedeVoteClosed { team, outcome }` (`passed`,
+  `rejected`, `dropped`), to that team alone, whoever sees its core. The view carries the vote in the team's own
+  entry; `ForeignTeam` does not have it.
+- **Bot:** the strategist concedes only from `end.concedeAfterSeconds` on, playing on until then, so no bot command is
+  refused; the harness refuses a `--concede` before it as a usage error.
+- **Presence is left out on purpose:** it lives only in the server (`PresenceTracker`); with the deadline, an offline
+  human needs no special case and the replay of the log gives the same result.
 
 ## 5. The junction host and the frozen world (P8)
 
@@ -252,6 +271,7 @@ next to the difficulty's.
 | P11 | **`dev:multi --set path=value`** (the junction matrix's syntax) for the owner's short sessions, the overrides written in the PLAYTEST group; **revises spec §6's "short params file"** | A full params file (a copy of the default that drifts from R's 2-hour world) |
 | P12 | **`--concede team@minute`** in the harness: a real, replayable `concede` in the log | Ends covered only by `sim` tests |
 | P13 | **One version bump per slice** for `SIM_VERSION` and `PROTOCOL_VERSION`, the next free number at merge time | One bump per phase |
+| P14 | **The minimum time and the team's vote in the `sim`** (§4), the deadline in `checkEnd`, with presence left out on purpose. Added 2026-11-27 for the owner's revision of D3 | The vote in the server, which would need presence and would keep it out of the log |
 
 ## 12. Implementation order
 

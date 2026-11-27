@@ -31,7 +31,7 @@ A summary; the source is [GDD 01](../../gdd/01-world.md), "The minimal end" and 
 | Topic | Decision |
 |---|---|
 | Elimination in fact | A team with no creep alive, nothing in production and a stock below one creep's cost can no longer come back, and loses |
-| Concession | Any human of a team may concede, with a confirmation |
+| Concession | Any human of a team may concede, with a confirmation. Revised 2026-11-27: from a minimum time of match on, and by a vote with a deadline with two or more humans (D3) |
 | The bot concedes | When it has no chance: at most 1 creep, nothing in production and a stock below one creep's cost |
 | The clock | When it runs out with no core brought down, a draw among the teams still in the match (provisional) |
 | The world's end | The world ends when one team remains, and freezes, read-only, with its replay |
@@ -50,8 +50,8 @@ others were the **agent's proposal**, **accepted by the owner with the spec** (2
 |---|---|---|---|
 | D1 | The end lives in the world **(agent)** | The `sim` decides and keeps the end in the state: each team's **standing** (in the match, eliminated, conceded, with the tick) and the world's **result** (who won, or a draw among which teams, and how it ended). **The clock's end moves from the server into the `sim` too**: today the server marks a world `ended` when its tick reaches `world.durationSeconds`, and the CLI only stops there | One source for the server, the CLI, the bots, the replay and the end screen; the replay of the log reaches the same end on its own (ADR-0003, ADR-0004) |
 | D2 | Elimination in fact **(gameplay; owner, details by the agent)** | Checked at the end of each tick, after the battle results and production: a team in the match with **no creep alive** (a creep locked in a battle is alive), **nothing in production** and a stock that **cannot pay `creep.cost`** is eliminated on that tick. An armed "repeat" does not count as production (it waits for stock). Spoils on the map and loads do not count (with no creep, nobody carries them) | The owner's rule, read literally; checking after production lets a creep born on the tick save the team |
-| D3 | Concession **(gameplay; owner, details by the agent)** | A new `concede` command, which any player of the team may send (a human, or the team's bot, D4). It applies on the next tick like any command, and the team leaves the match on that tick. In the client, a **"Desistir"** button in the top bar opens a confirmation dialog that says what happens ("o time perde a partida"); only the confirmation sends the command. With several humans in a team, one concedes for all (owner: "any human") | ADR-0002: conceding is an action like any other, logged and replayed |
-| D4 | The bot concedes **(gameplay; owner, details by the agent)** | The balanced strategist sends `concede` when its team's view shows **at most 1 creep alive, nothing in production and a stock that cannot pay `creep.cost`**. **Only the core's stock counts**, not what the last creep carries (owner, 2026-11-25). At **every difficulty** of R's D26 (easy, normal, hard). Only in a team **with no human player**: where humans play, they decide. It decides from its view, like every strategist decision (fog spec B-1) | The C2 session: the bot kept 1 creep and no way to replace it. The threshold goes with the strategist's settings (§6) |
+| D3 | Concession **(gameplay; owner, details by the agent)** | A new `concede` command, which any player of the team may send (a human, or the team's bot, D4). It applies on the next tick like any command, and the team leaves the match on that tick. In the client, a **"Desistir"** button in the top bar opens a confirmation dialog that says what happens ("o time perde a partida"); only the confirmation sends the command. With several humans in a team, one concedes for all (owner: "any human") **Revised (owner, 2026-11-27),** in the owner's words "anyone can use it from a certain point of the match on, like in LoL": nobody may concede before a minimum time of match; in a team with two or more humans, "one concedes for all" gives way to a **vote with a deadline**, in which who has not voted when it passes counts as yes (details in L-5 to L-7). | ADR-0002: conceding is an action like any other, logged and replayed |
+| D4 | The bot concedes **(gameplay; owner, details by the agent)** | The balanced strategist sends `concede` when its team's view shows **at most 1 creep alive, nothing in production and a stock that cannot pay `creep.cost`**. **Only the core's stock counts**, not what the last creep carries (owner, 2026-11-25). At **every difficulty** of R's D26 (easy, normal, hard). Only in a team **with no human player**: where humans play, they decide. It decides from its view, like every strategist decision (fog spec B-1) **Revised (owner, 2026-11-27):** the bot does not concede before D3's minimum time (it plays on until then). | The C2 session: the bot kept 1 creep and no way to replace it. The threshold goes with the strategist's settings (§6) |
 | D5 | Who wins, and when **(gameplay; owner, details by the agent)** | After the checks of a tick: **one team left** in the match wins, and the world ends on that tick; **no team left** (the last ones left on the same tick) is a **draw among the teams that left on that tick**; on the **clock's last tick**, a **draw among the teams still in the match**. Concessions apply in the log's order: the one that leaves a single team ends the world, and the later ones of that tick are refused (`worldEnded`). The wanderers are not a team and never count | A rule for every case, deterministic by the log's order, with no two-team assumption |
 | D6 | The frozen world **(gameplay; owner, details by the agent)** | On the end tick the world stops: no tick after it, every command refused with `worldEnded` (as today at the clock), read-only. **Open battles stop where they are, with no result**, paused or not (R's D6 and D28): their logs stay and replay up to their last tick; nobody comes back to the map. Battle screens close. The replay can be exported from the end tick on (as today), and the lobby shows the result | The owner: "freezes, read-only, with its replay". Ending the battles by a rule would invent an outcome |
 | D7 | A team out in a world that goes on **(gameplay; agent; only with 3 or more teams, slice T revises)** | Its humans become **spectators**: they keep their team's view, their commands are refused with a new `teamOut`, and their dominations are released. Its creeps (after a concession) stay on the map with the autopilot rules they had and no player; its core and stock stay, and it can produce no more. A team out never comes back into the match. **With two teams this never happens** (the world ends). Spectators of the whole world come with P's spectators | The owner asked for spectators and left "what an eliminated team does while the world goes on" to T's round (GDD 01 proposal). This is the smallest rule that runs with N teams and changes nothing with two |
@@ -101,6 +101,18 @@ Format: *When [trigger], the system shall [response].*
   dominations shall end on that tick (D7).
 - **L-4** The creeps of a team out shall stay with the rules they had and no player; its core shall produce no more
   and its armed repeat shall drop (D7).
+- **L-5** While the match has run less than `end.concedeAfterSeconds` (world seconds, the current tick included), a
+  `concede` shall be refused with `tooEarly`, a human's and a bot's alike; a strategist shall not send it. Elimination
+  does not wait (D3, owner 2026-11-27).
+- **L-6** In a team with two or more humans, a human's `concede` shall open the team's vote, counting as their yes, or
+  add their yes to the open one. The team shall leave the match when all its humans have said yes, or at the end of the
+  tick `end.concedeVoteSeconds` after the opening, who has not voted counting as yes (owner, 2026-11-27). A bot's
+  `concede`, and that of a team's only human, shall apply at once.
+- **L-7** Agent proposals, open to the owner's change: a `rejectConcede` shall end the open vote at once, rejected (a
+  yes may be taken back this way); for `end.concedeRetrySeconds` after it, a `concede` that would open a new vote
+  shall be refused with `voteCooldown`; a second yes is refused with `alreadyVoted`, a `rejectConcede` with no vote
+  open with `noVote`; an open vote is dropped when the team leaves otherwise or the world ends; only the team receives
+  the vote and its events. Presence is not part of the rule: an offline human is one who has not voted.
 
 ### The world's end (`sim`)
 - **F-1** When, after a tick's checks, exactly one team remains in the match, it shall win and the world shall end
@@ -141,7 +153,8 @@ Format: *When [trigger], the system shall [response].*
   click; at the replay's last tick, the end screen shall be reachable as in S-2.
 - **S-4** The lobby shall show each ended world's result.
 - **S-5** "Desistir" shall send `concede` only after its confirmation; it shall not show for spectators or after the
-  end.
+  end. It shall count down while the minimum time has not passed, and an open vote shall show who said yes, the time
+  left and, to the others, "yes" and "no" (L-5 to L-7).
 
 ### Persistence and recovery (server)
 - **N-1** The world's end shall be stored in the end tick's transaction (status, snapshot); a restart shall find the
@@ -169,6 +182,9 @@ flowchart TD
 | Item | Guess | Where |
 |---|---|---|
 | The bot's concession threshold (D4) | at most 1 creep alive | the strategist's settings |
+| Minimum time of match before a concession (L-5) | 7200 world seconds (15 real minutes at ×8) | `sim` params (`end.concedeAfterSeconds`) |
+| Time to vote on a concession (L-6) | 480 world seconds (60 real seconds at ×8) | `sim` params (`end.concedeVoteSeconds`) |
+| Wait after a rejected vote (L-7) | 1440 world seconds (3 real minutes at ×8) | `sim` params (`end.concedeRetrySeconds`) |
 | Elimination (D2) | 0 creeps; the stock compared with `creep.cost` (no new number) | the rule |
 | Main events in the summary (D10) | 5 | `sim` params |
 | The ranking of main events (D10) | first, a team leaving the match; then the first blood (D15); then battles ended, by participants (joins included), then by the load collected or left as spoils, then the earliest. Every other event is a mark in the replay, not a main event | the `sim`; the owner reviews at the checkpoint |

@@ -67,11 +67,16 @@ A whole `geo sim --seed 42` match: 5.0 s. The end's stage with 60 creeps and an 
 - [x] `runBots` stops at the end; the End section in `geo sim`; the ends table in `geo sweep`
 - [x] `--concede team@minute` in `geo sim` and `geo verify` (P12); `geo verify` with an end by concession and at the
       clock on its three paths
+- [ ] The minimum time and the team's vote (L-5 to L-7, P14; owner, 2026-11-27): the three `end.concede*Seconds`
+      params, `tooEarly`, `rejectConcede` and its refusals, the vote in the team and its events, the deadline in
+      `checkEnd`, the strategist waiting; `SIM_VERSION`, the fixed hashes
 - [ ] The bot × bot ends: `geo sim` 3 days (seed 42) and `geo sweep` (seeds 1–20), recorded here
 
 ## F3 — Network and server
 
 - [ ] Protocol: `concede`, `teamOut`, `result` and `summary` in the delta, `ForeignTeam.out`; `PROTOCOL_VERSION` (P13)
+- [ ] The vote through the network (L-6, L-7): `rejectConcede` (its schema is in since F2) and the refusals, the
+      team's vote in the delta, its events
 - [ ] `WorldHost` ends from `state.result`; no strategist for a team out; the real-time clock skips an ended world
 - [ ] The lobby's result; an ended world restarts ended, without its battle instances (N-1; P8)
 - [ ] The export of an ended world reaches the same result, summary and hash (N-2); the diff property green (N-3);
@@ -80,7 +85,8 @@ A whole `geo sim --seed 42` match: 5.0 s. The end's stage with 60 creeps and an 
 
 ## F4 — Client
 
-- [ ] "Desistir" and its confirmation (D3, S-5)
+- [ ] "Desistir" and its confirmation (D3, S-5), the countdown to the minimum time, the vote panel (who said yes,
+      "yes" and "no", the time left; L-5 to L-7), the vote's chronicle sentences
 - [ ] The end screen over the map and the battle screen; "Ver o mapa", "Ver o replay"; entering an ended world
       (D9, S-1, S-2; P9)
 - [ ] The spectator of a team out (D7)

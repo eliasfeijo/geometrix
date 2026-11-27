@@ -42,9 +42,15 @@
   playtest). The core only gets HP in slice E, after P, so until then a match ends otherwise:
   - **defeat by elimination in fact:** a team with no creep alive, nothing in production and a stock below one
     creep's cost can no longer come back, and loses;
-  - **concession:** any human of a team may concede, with a confirmation;
+  - **concession** (owner, 2026-11-27, revising "any human of a team may concede, with a confirmation"): "anyone can
+    use it from a certain point of the match on, like in LoL". Nobody may concede before a minimum time of match; in
+    a team with two or more humans, a concession is a **vote with a deadline**, and who has not voted when it passes
+    counts as yes. The details the agent proposed, open to change: one "no" ends the vote at once; a new vote waits a
+    while after a rejected one; a team with one human concedes at once, with the confirmation. The numbers are
+    provisional parameters (15 real minutes of minimum, 60 real seconds to vote and 3 real minutes between votes,
+    at ×8);
   - **the bot concedes when it has no chance:** at most 1 creep, nothing in production and a stock below one creep's
-    cost;
+    cost, and not before the minimum time either (owner, 2026-11-27);
   - **the clock:** a draw among the teams still in the match;
   - **the world ends when one team remains** and freezes, read-only, with its replay (agent, approved);
   - **the end screen** (agent, approved): the result, the duration and, per team, creeps born and lost, battles won
