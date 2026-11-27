@@ -72,14 +72,17 @@ export class GameStore {
   readonly view = signal<View | null>(null);
   readonly mapSize = signal<Size>({ width: 0, height: 0 });
   readonly selection = signal<Selection | null>(null);
-  /** The list of a clicked stack, opened at a pixel of the map. */
-  readonly stack = signal<{ ids: number[]; at: Point } | null>(null);
+  /**
+   * The list of the actors under a click (R spec D23), opened at a pixel of
+   * the map.
+   */
+  readonly list = signal<{ actors: Selection[]; at: Point } | null>(null);
   /**
    * The right-click menu over enemies in sight (M2 encontro C-6): their ids,
    * opened at a pixel of the map.
    */
   readonly approach = signal<{ ids: number[]; at: Point } | null>(null);
-  /** Creep under the pointer in the stack list, highlighted on the map. */
+  /** Creep or wanderer under the pointer in the list, ringed on the map. */
   readonly hovered = signal<number | null>(null);
   readonly mode = signal<Mode>({ type: "select" });
   /** Cell under the pointer, while it is over the map and not dragging. */

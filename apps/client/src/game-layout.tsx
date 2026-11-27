@@ -26,7 +26,7 @@ import { ApproachMenu } from "./panels/approach-menu.tsx";
 import { CoreDock } from "./panels/core-panel.tsx";
 import { Inspector } from "./panels/inspector.tsx";
 import { ReactionPanel } from "./panels/reaction-panel.tsx";
-import { StackList } from "./panels/stack-list.tsx";
+import { ActorList } from "./panels/actor-list.tsx";
 import { Notices } from "./top-bar.tsx";
 
 type Props = {
@@ -97,7 +97,7 @@ export function GameLayout({ game, header, orders }: Props) {
             <ChroniclePanel />
           </div>
           <ModeBanner />
-          <StackList />
+          <ActorList />
           {orders && <ApproachMenu />}
           {orders && <ReactionPanel />}
           {orders && <BattleReturn />}

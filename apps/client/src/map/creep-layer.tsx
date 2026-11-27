@@ -27,7 +27,7 @@ import { nameFontSize } from "./labels.ts";
 import { layoutCreeps, markerOf, type Marker } from "./layout.ts";
 import { hpBand, hpShare } from "./combat-marks.ts";
 import { arcDash } from "./shapes.ts";
-import type { Point } from "./view.ts";
+import { markerScale, type Point } from "./view.ts";
 
 const SHAPE_RADIUS = 0.3;
 const CARGO_RADIUS = 0.43;
@@ -118,15 +118,21 @@ export function CreepLayer() {
   const selectedMarker =
     selected === undefined ? undefined : markerOf(markers, selected.id);
   const hovered = store.hovered.value;
+  const viewScale = store.view.value?.scale ?? 1;
   const hoveredMarker =
-    hovered === null ? undefined : markerOf(markers, hovered);
+    hovered === null
+      ? undefined
+      : (markerOf(markers, hovered) ?? wandererRing(state, hovered, viewScale));
+  const selectedWanderer =
+    selection?.kind === "wanderer"
+      ? wandererRing(state, selection.id, viewScale)
+      : undefined;
   // Creeps per cell, for the room their names have.
   const inCell = new Map<string, number>();
   for (const c of state.creeps) {
     const key = `${c.x},${c.y}`;
     inCell.set(key, (inCell.get(key) ?? 0) + 1);
   }
-  const viewScale = store.view.value?.scale ?? 1;
   const named = (creep: Creep, center: Point & { scale: number }) => (
     <CreepName
       creep={creep}
@@ -194,22 +200,37 @@ export function CreepLayer() {
       {selectedMarker !== undefined && (
         <SelectionRing center={selectedMarker} />
       )}
+      {selectedWanderer !== undefined && (
+        <SelectionRing center={selectedWanderer} />
+      )}
       {store.ping.value !== null && (
         <Ping key={store.ping.value.id} cell={store.ping.value.cell} />
       )}
       {selection !== null &&
-        (selection.kind === "core" || selection.kind === "deposit") && (
+        (selection.kind === "core" ||
+          selection.kind === "deposit" ||
+          selection.kind === "spoil") && (
           <CellSelection
             cell={
               selection.kind === "core"
                 ? (state.teams[selection.team]?.core ?? undefined)
-                : state.deposits.find((d) => d.id === selection.id)
+                : selection.kind === "deposit"
+                  ? state.deposits.find((d) => d.id === selection.id)
+                  : state.spoils.find((s) => s.id === selection.id)
             }
             size={selection.kind === "core" ? 2.6 : 1.1}
           />
         )}
     </g>
   );
+}
+
+/** Where the rings go around a wanderer, which has no marker. */
+function wandererRing(state: TeamView, id: number, viewScale: number) {
+  const w = state.wanderers.find((w) => w.id === id);
+  return w === undefined
+    ? undefined
+    : { x: w.x + 0.5, y: w.y + 0.5, scale: markerScale(viewScale) };
 }
 
 /** Several creeps of a cell: copies behind the lead, and how many there are. */

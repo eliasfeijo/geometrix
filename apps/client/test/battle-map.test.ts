@@ -2,7 +2,7 @@ import type { BattleStubView } from "@geometrix/sim";
 import { describe, expect, test } from "vitest";
 import { battleSign, BATTLE_SIGN_PX } from "../src/map/combat-marks.ts";
 import type { Marker } from "../src/map/layout.ts";
-import { pickAt } from "../src/map/pick.ts";
+import { actorsAt } from "../src/map/pick.ts";
 import {
   battleAge,
   participantName,
@@ -33,23 +33,24 @@ describe("the battle on the map (junction D16)", () => {
     expect(far.r * 6).toBeCloseTo(BATTLE_SIGN_PX);
   });
 
-  test("a click on the sign selects the battle, before the creep under it", () => {
+  test("a click on the sign lists the battle, with what is under it", () => {
     const battle = stub(7, 10, 20);
-    const sign = battleSign(battle, 20);
+    const sign = battleSign(battle, 100);
     const markers: Marker[] = [
       { kind: "creep", id: 3, x: sign.x, y: sign.y, scale: 1 },
     ];
+    const point = { x: sign.x, y: sign.y };
+    expect(actorsAt(point, { markers: [], battles: [battle] }, 100)).toEqual([
+      { kind: "battle", id: 7 },
+    ]);
+    expect(actorsAt(point, { markers, battles: [battle] }, 100)).toEqual([
+      { kind: "battle", id: 7 },
+      { kind: "creep", id: 3 },
+    ]);
+    // Away from the sign, no battle.
     expect(
-      pickAt({ x: sign.x, y: sign.y }, markers, [], [], 20, [battle]),
-    ).toEqual({ kind: "battle", id: 7 });
-    // Away from the sign, the creep is picked as before.
-    expect(pickAt({ x: sign.x, y: sign.y }, markers, [], [], 20)).toEqual({
-      kind: "creep",
-      id: 3,
-    });
-    expect(
-      pickAt({ x: 10.5, y: 20.5 + 3 }, [], [], [], 20, [battle]),
-    ).toBeNull();
+      actorsAt({ x: 10.5, y: 23.5 }, { markers: [], battles: [battle] }, 20),
+    ).toEqual([]);
   });
 
   test("the inspector names who the team sees, and the battle's age", () => {

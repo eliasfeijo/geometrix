@@ -7,9 +7,7 @@ import {
   isOwnTeam,
   maxHp,
   type Deposit,
-  type Dna,
   type ForeignCreepView,
-  type Params,
   type TeamView,
 } from "@geometrix/sim";
 import { useGame } from "../context.ts";
@@ -25,6 +23,7 @@ import {
   durationWords,
   orderText,
   RESOURCE_NAMES,
+  stockText,
   teamName,
 } from "../format.ts";
 import { COLORS } from "../map/colors.ts";
@@ -53,6 +52,8 @@ export function Inspector() {
       {selection.kind === "deposit" && <DepositInspector id={selection.id} />}
       {selection.kind === "core" && <CorePanel team={selection.team} />}
       {selection.kind === "battle" && <BattleInspector id={selection.id} />}
+      {selection.kind === "wanderer" && <WandererInspector id={selection.id} />}
+      {selection.kind === "spoil" && <SpoilInspector id={selection.id} />}
     </aside>
   );
 }
@@ -101,7 +102,7 @@ function CreepInspector({ id }: { id: number }) {
       <dl class="facts">
         <dt>HP</dt>
         <dd>
-          <HpBar hp={creep.hp} dna={creep.dna} params={params} />
+          <HpBar hp={creep.hp} full={maxHp(params, creep.dna)} />
         </dd>
         <dt>Estado</dt>
         <dd class={status === "waiting" ? "waiting" : undefined}>
@@ -244,7 +245,7 @@ function ForeignCreepInspector({ creep }: { creep: ForeignCreepView }) {
       <dl class="facts">
         <dt>HP</dt>
         <dd>
-          <HpBar hp={creep.hp} dna={creep.dna} params={params} />
+          <HpBar hp={creep.hp} full={maxHp(params, creep.dna)} />
         </dd>
         {engagement !== null && (
           <>
@@ -277,6 +278,93 @@ function ForeignCreepInspector({ creep }: { creep: ForeignCreepView }) {
   );
 }
 
+/**
+ * A wanderer (R spec D21): what any enemy creep shows, its destination hidden
+ * like an enemy's.
+ */
+function WandererInspector({ id }: { id: number }) {
+  const { store } = useGame();
+  const state = store.current.value?.state;
+  const params = store.info.value?.params;
+  const wanderer = state?.wanderers.find((w) => w.id === id);
+  if (state === undefined || params === undefined || wanderer === undefined) {
+    return <p class="muted">Esse andarilho morreu ou saiu da visão.</p>;
+  }
+  return (
+    <div class="inspector">
+      <h2 class="title creep-title">
+        <DnaIcon dna={wanderer.dna} team={null} />
+        <span>
+          {wanderer.name}
+          <span class="subtitle muted">
+            {DNA_NAMES[wanderer.dna]} · #{wanderer.id}
+          </span>
+        </span>
+        <span class="team-name">andarilho</span>
+      </h2>
+      <dl class="facts">
+        <dt>HP</dt>
+        <dd>
+          <HpBar hp={wanderer.hp} full={params.wanderers.hp * 1000} />
+        </dd>
+        {wanderer.battle !== null && (
+          <>
+            <dt>Encontro</dt>
+            <dd class="engaged">
+              em batalha
+              <BattleOf state={state} id={wanderer.battle} />
+            </dd>
+          </>
+        )}
+        <dt>Carga</dt>
+        <dd>
+          <CargoBar
+            materia={wanderer.cargo.materia}
+            cristal={wanderer.cargo.cristal}
+            max={params.dna.circle.capacity}
+          />
+        </dd>
+        <dt>Posição</dt>
+        <dd>
+          ({wanderer.x}, {wanderer.y})
+        </dd>
+      </dl>
+      <p class="hint muted">
+        {store.myCreep.value !== null && "Botão direito nele: atacar."}
+      </p>
+    </div>
+  );
+}
+
+/** A spoil the team knows, with what it last saw in it. */
+function SpoilInspector({ id }: { id: number }) {
+  const { store } = useGame();
+  const state = store.current.value?.state;
+  const spoil = state?.spoils.find((s) => s.id === id);
+  if (state === undefined || spoil === undefined) {
+    return <p class="muted">Esse despojo não existe mais.</p>;
+  }
+  const width = store.info.value?.map.width ?? 0;
+  return (
+    <div class="inspector">
+      <h2 class="title">Despojo #{spoil.id}</h2>
+      <dl class="facts">
+        <dt>Conteúdo</dt>
+        <dd>
+          {stockText(spoil.cargo)}
+          {!inSight(state, spoil, width) && (
+            <span class="muted"> · último valor visto</span>
+          )}
+        </dd>
+        <dt>Posição</dt>
+        <dd>
+          ({spoil.x}, {spoil.y})
+        </dd>
+      </dl>
+    </div>
+  );
+}
+
 /** Other creeps on the same cell: step through them without the map. */
 function Cellmates({ id }: { id: number }) {
   const { store } = useGame();
@@ -304,9 +392,9 @@ function Cellmates({ id }: { id: number }) {
   );
 }
 
-/** HP in whole points over the DNA's maximum, as a bar (spec C-7). */
-function HpBar(props: { hp: number; dna: Dna; params: Params }) {
-  const full = maxHp(props.params, props.dna);
+/** HP in whole points over the maximum, as a bar (spec C-7). */
+function HpBar(props: { hp: number; full: number }) {
+  const { full } = props;
   const share = Math.max(0, props.hp) / full;
   return (
     <span class="cargo hp">

@@ -7,7 +7,14 @@ import { describe, expect, it } from "vitest";
 import { orderText, ruleText } from "../src/format.ts";
 import { orderTarget } from "../src/map/creep-layer.tsx";
 import type { Marker } from "../src/map/layout.ts";
-import { cellmates, pickAt } from "../src/map/pick.ts";
+import { actorLine } from "../src/panels/actor-list.tsx";
+import {
+  actorsAt,
+  cellmates,
+  creepsUnder,
+  type Scene,
+  type Selection,
+} from "../src/map/pick.ts";
 import { viewOf, testWorld } from "./helpers.ts";
 
 const creep = (id: number, x: number, y: number, scale = 1): Marker => ({
@@ -18,101 +25,86 @@ const creep = (id: number, x: number, y: number, scale = 1): Marker => ({
   scale,
 });
 
-describe("pickAt", () => {
+describe("actorsAt (R spec D23)", () => {
   const deposits = [{ id: 9, kind: "materia" as const, amount: 5, x: 3, y: 4 }];
   const cores = [
     { x: 10, y: 10 },
     { x: 20, y: 20 },
   ];
+  const at = (x: number, y: number, scene: Partial<Scene>, scale = 100) =>
+    actorsAt({ x, y }, { markers: [], deposits, cores, ...scene }, scale);
 
-  it("picks the creep under the pointer, before what is on the cell", () => {
-    const markers = [creep(1, 3.5, 4.5), creep(2, 6.5, 6.5)];
-    expect(pickAt({ x: 3.6, y: 4.4 }, markers, deposits, cores, 100)).toEqual({
-      kind: "creep",
-      id: 1,
-    });
-    expect(pickAt({ x: 3.1, y: 4.9 }, [], deposits, cores, 100)).toEqual({
-      kind: "deposit",
-      id: 9,
-    });
-    expect(pickAt({ x: 21.2, y: 19.9 }, markers, deposits, cores, 100)).toEqual(
-      {
-        kind: "core",
-        team: 1,
-      },
-    );
-    expect(pickAt({ x: 30, y: 30 }, markers, deposits, cores, 100)).toBeNull();
+  it("gives one actor alone, whatever it is", () => {
+    const markers = [creep(1, 6.5, 6.5)];
+    expect(at(6.6, 6.4, { markers })).toEqual([{ kind: "creep", id: 1 }]);
+    expect(at(3.1, 4.9, {})).toEqual([{ kind: "deposit", id: 9 }]);
+    expect(at(21.2, 19.9, {})).toEqual([{ kind: "core", team: 1 }]);
+    expect(at(30, 30, {})).toEqual([]);
+  });
+
+  it("lists a creep on a deposit with the deposit under it", () => {
+    const markers = [creep(1, 3.5, 4.5)];
+    expect(at(3.5, 4.5, { markers })).toEqual([
+      { kind: "creep", id: 1 },
+      { kind: "deposit", id: 9 },
+    ]);
+  });
+
+  it("lists wanderers and spoils too", () => {
+    const wanderers = [{ id: 50, x: 3, y: 4 }];
+    const spoils = [{ id: 70, x: 3, y: 4, cargo: { materia: 1, cristal: 0 } }];
+    expect(at(3.5, 4.5, { wanderers, spoils })).toEqual([
+      { kind: "wanderer", id: 50 },
+      { kind: "spoil", id: 70 },
+      { kind: "deposit", id: 9 },
+    ]);
+    expect(at(30.5, 30.5, { wanderers: [{ id: 50, x: 30, y: 30 }] })).toEqual([
+      { kind: "wanderer", id: 50 },
+    ]);
   });
 
   it("keeps the team of a core when the other core is unknown", () => {
     const fog = [null, { x: 20, y: 20 }];
-    expect(pickAt({ x: 20.5, y: 20.5 }, [], [], fog, 100)).toEqual({
-      kind: "core",
-      team: 1,
-    });
-    expect(pickAt({ x: 10.5, y: 10.5 }, [], [], fog, 100)).toBeNull();
+    expect(at(20.5, 20.5, { cores: fog })).toEqual([{ kind: "core", team: 1 }]);
+    expect(at(10.5, 10.5, { cores: fog })).toEqual([]);
   });
 
-  it("tells side-by-side creeps apart by where the click lands", () => {
+  it("lists side-by-side creeps within reach, even on a clear click", () => {
     const markers = [creep(3, 5.25, 5.5, 0.5), creep(7, 5.75, 5.5, 0.5)];
-    expect(pickAt({ x: 5.2, y: 5.5 }, markers, [], [], 100)).toEqual({
-      kind: "creep",
-      id: 3,
-    });
-    expect(pickAt({ x: 5.8, y: 5.6 }, markers, [], [], 100)).toEqual({
-      kind: "creep",
-      id: 7,
-    });
+    // 100 px per cell: the reach is 0.25 of a cell, only one is hit.
+    expect(at(5.25, 5.5, { markers, deposits: [] })).toEqual([
+      { kind: "creep", id: 3 },
+    ]);
+    // 30 px per cell: both are in reach, also right on the first.
+    expect(at(5.25, 5.5, { markers, deposits: [] }, 30)).toEqual([
+      { kind: "creep", id: 3 },
+      { kind: "creep", id: 7 },
+    ]);
   });
 
-  it("returns a stack's creeps to choose from", () => {
+  it("flattens a stack, with what else is in reach when zoomed out", () => {
     const stack: Marker = {
       kind: "stack",
       ids: [4, 8],
       lead: 4,
-      x: 2.5,
-      y: 2.5,
+      x: 3.5,
+      y: 4.5,
       scale: 2,
     };
-    expect(pickAt({ x: 3, y: 3 }, [stack], [], [], 100)).toEqual({
-      kind: "stack",
-      ids: [4, 8],
-    });
+    expect(at(4, 4.5, { markers: [stack] }, 10)).toEqual([
+      { kind: "creep", id: 4 },
+      { kind: "creep", id: 8 },
+      { kind: "deposit", id: 9 },
+    ]);
   });
 });
 
-describe("pickAt zoomed out (fog F6, E3)", () => {
-  // 10 px per cell: markers twice a cell wide, hits at least 2 cells.
-  it("lists the creeps of overlapping markers on different cells", () => {
-    const markers = [creep(5, 1.5, 1.5, 2), creep(3, 2.5, 1.5, 2)];
-    expect(pickAt({ x: 2, y: 1.6 }, markers, [], [], 10)).toEqual({
-      kind: "stack",
-      ids: [3, 5],
-    });
-  });
-
-  it("selects a lone creep near the click", () => {
-    const markers = [creep(5, 1.5, 1.5, 2)];
-    expect(pickAt({ x: 3, y: 1.5 }, markers, [], [], 10)).toEqual({
-      kind: "creep",
-      id: 5,
-    });
-  });
-
-  it("flattens a stack hit with another marker", () => {
-    const stack: Marker = {
-      kind: "stack",
-      ids: [4, 8],
-      lead: 4,
-      x: 1.5,
-      y: 1.5,
-      scale: 2,
-    };
-    const markers = [stack, creep(6, 2.5, 1.5, 2)];
-    expect(pickAt({ x: 2, y: 1.5 }, markers, [], [], 10)).toEqual({
-      kind: "stack",
-      ids: [4, 6, 8],
-    });
+describe("creepsUnder (right click, fog F6 E3)", () => {
+  it("takes the creep clearly under the pointer, else all of them", () => {
+    const markers = [creep(3, 5.25, 5.5, 0.5), creep(7, 5.75, 5.5, 0.5)];
+    expect(creepsUnder({ x: 5.25, y: 5.5 }, markers, 30)).toEqual([3]);
+    expect(creepsUnder({ x: 5.5, y: 5.5 }, markers, 30)).toEqual([3, 7]);
+    expect(creepsUnder({ x: 9, y: 9 }, markers, 30)).toEqual([]);
   });
 });
 
@@ -164,5 +156,26 @@ describe("texts and targets", () => {
     expect(orderText(c.order, state.deposits)).toBe(
       "construir estrada até (3, 2)",
     );
+  });
+});
+
+describe("the list's lines (D23)", () => {
+  it("reads each kind of actor", () => {
+    const world = testWorld();
+    const state = viewOf(world);
+    const viewer = { playerId: 1, team: 0 };
+    const width = world.map.width;
+    const line = (actor: Selection) =>
+      actorLine(actor, state, world.params, viewer, width);
+    const own = state.creeps[0]!;
+    expect(line({ kind: "creep", id: own.id })?.reading).toMatch(
+      /HP \d+ · carga 0\//,
+    );
+    expect(line({ kind: "core", team: 0 })?.reading).toMatch(/^estoque /);
+    const deposit = state.deposits[0]!;
+    expect(line({ kind: "deposit", id: deposit.id })?.reading).toMatch(
+      /^restam /,
+    );
+    expect(line({ kind: "wanderer", id: 999 })).toBeNull();
   });
 });
