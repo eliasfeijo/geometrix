@@ -14,6 +14,7 @@ human, real gameplay to test). Siege and repair (the rest of E) come after P. Se
 | What | Where |
 |---|---|
 | **Where we are and next steps** | `docs/dashboard/current-status.md` (read first) |
+| The project for newcomers, with screenshots | `docs/OVERVIEW.md` (and `OVERVIEW.pt-br.md`, the one Portuguese doc, at the owner's request) |
 | What the game is and is not | `docs/PILLARS.md` |
 | Vocabulary | `docs/GLOSSARY.md` |
 | Design per system | `docs/gdd/` (one file per system) |
@@ -45,6 +46,7 @@ Node 26 (`.nvmrc`). Node runs `.ts` directly; only the client has a build (Vite)
 | `npm run lab` | The battle lab (`lab.html`, Vite): the battle in a worker, simulated network, blind sessions |
 | `npm run server` | Server at `http://localhost:8080` (`GEO_PORT`, `GEO_DB`, `GEO_PARAMS`, `GEO_BATTLE_PARAMS`); serves the client build |
 | `npm run build` | Client build (Vite) into `apps/client/dist`, which the server serves |
+| `npm run capture` | Screenshots of the real game and lab for the docs (Playwright, headless): builds, starts a private server on `--port` (8097), drives two bot worlds; `--only <scenes>`. Output in `runs/capture-<id>/`; copy the keepers to `docs/img/` |
 | `npm run client` | Vite dev server (port 5173) proxying `/api` and `/ws` to the server on `GEO_PORT` |
 | `npm run dev:multi -- --clients 3` | Build + server + a world with K players (Blue/Orange alternating), one tab per player (`--seed`, `--mult` (default `world.multiplier`), `--no-build`, `--no-open`, `--net` for the `?net=1` network panel, `--bot` for the bot on Orange with everyone on Blue, `--bot-difficulty easy|normal|hard`) |
 | `npm run soak` | Endurance test: a whole bot × bot world (×360, ~12 min) with `kill -9` and restart, and 2 WebSocket clients per team following the deltas; the exported replay must give the server's hash and each client the server's view. Report in `runs/soak-<id>/` |

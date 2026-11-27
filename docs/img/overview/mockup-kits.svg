@@ -1,0 +1,124 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 400" width="960" height="400" font-family="ui-sans-serif, system-ui, sans-serif">
+  <!-- Mock-up of slice K, the DNA kits (planned, not in the game yet). Colors from apps/client/src/map/colors.ts. -->
+  <defs>
+    <pattern id="cells" width="24" height="24" patternUnits="userSpaceOnUse">
+      <rect width="24" height="24" fill="#0f1115"/>
+      <path d="M24 0H0V24" fill="none" stroke="#1f232b" stroke-width="1"/>
+    </pattern>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <marker id="tip" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0 0L10 5L0 10z" fill="#e6e8ec"/>
+    </marker>
+  </defs>
+  <rect width="960" height="400" fill="#111317"/>
+  <rect x="16" y="10" width="86" height="22" rx="11" fill="#ffd166"/>
+  <text x="59" y="25.5" text-anchor="middle" font-size="12" font-weight="700" fill="#111317" letter-spacing="1">MOCK-UP</text>
+
+  <!-- 1. The square: charged strike and charge -->
+  <g>
+    <rect x="16" y="44" width="224" height="342" rx="8" fill="#1a1d23" stroke="#333844"/>
+    <text x="28" y="76" font-size="22" fill="#4ea8ff">■</text>
+    <rect x="24" y="96" width="216" height="216" fill="url(#cells)"/>
+    <!-- trail of the charge -->
+    <rect x="52" y="196" width="16" height="16" fill="#4ea8ff" opacity="0.15"/>
+    <rect x="76" y="196" width="16" height="16" fill="#4ea8ff" opacity="0.3"/>
+    <rect x="100" y="196" width="16" height="16" fill="#4ea8ff" opacity="0.5"/>
+    <path d="M40 198H66M44 204H90M40 210H66" stroke="#4ea8ff" stroke-width="1.5" opacity="0.6"/>
+    <rect x="124" y="196" width="16" height="16" fill="#4ea8ff" stroke="#0d0f12" stroke-width="1.5"/>
+    <!-- bar, three quarters full -->
+    <rect x="116" y="182" width="32" height="5" rx="2" fill="#333844"/>
+    <rect x="116" y="182" width="24" height="5" rx="2" fill="#ffd166"/>
+    <!-- impact -->
+    <path d="M152 194L154.5 200.5L161 199L156 204L161 209L154.5 207.5L152 214L149.5 207.5L143 209L148 204L143 199L149.5 200.5z" fill="#ffd166"/>
+    <circle cx="172" cy="204" r="8" fill="#ff8c42" stroke="#0d0f12" stroke-width="1.5"/>
+    <!-- stun -->
+    <g fill="#ffd166"><circle cx="164" cy="187" r="2"/><circle cx="172" cy="183" r="2"/><circle cx="180" cy="187" r="2"/></g>
+    <path d="M162 185Q172 176 182 185" fill="none" stroke="#ffd166" stroke-width="1" stroke-dasharray="2 2"/>
+    <text x="172" y="232" text-anchor="middle" font-size="12" font-weight="700" fill="#ffd166">−48</text>
+    <!-- key -->
+    <rect x="40" y="330" width="96" height="30" rx="5" fill="#22262e" stroke="#4a4e57"/>
+    <text x="88" y="350" text-anchor="middle" font-size="15" fill="#e6e8ec">␣</text>
+    <path d="M144 345H164" stroke="#8b92a1" stroke-width="1.5" marker-end="url(#tip)"/>
+    <rect x="172" y="340" width="48" height="10" rx="3" fill="#333844"/>
+    <rect x="172" y="340" width="36" height="10" rx="3" fill="#ffd166"/>
+  </g>
+
+  <!-- 2. The triangle: frontal guard -->
+  <g>
+    <rect x="252" y="44" width="224" height="342" rx="8" fill="#1a1d23" stroke="#333844"/>
+    <text x="264" y="76" font-size="22" fill="#4ea8ff">▲</text>
+    <rect x="260" y="96" width="216" height="216" fill="url(#cells)"/>
+    <!-- allies sheltered behind -->
+    <circle cx="320" cy="204" r="8" fill="#4ea8ff" stroke="#0d0f12" stroke-width="1.5"/>
+    <rect x="312" y="172" width="16" height="16" fill="#4ea8ff" stroke="#0d0f12" stroke-width="1.5"/>
+    <!-- the guarding triangle, facing right -->
+    <path d="M378 204L359 194L359 214z" fill="#4ea8ff" stroke="#0d0f12" stroke-width="1.5"/>
+    <path d="M386 186A20 20 0 0 1 386 222" fill="none" stroke="#9fd0ff" stroke-width="4" stroke-linecap="round" filter="url(#glow)"/>
+    <rect x="352" y="224" width="32" height="5" rx="2" fill="#333844"/>
+    <rect x="352" y="224" width="14" height="5" rx="2" fill="#9fd0ff"/>
+    <!-- incoming shots, blocked at the face -->
+    <path d="M396 204L392 198M396 204L402 199M396 204L401 210M396 204L391 210" stroke="#ffd166" stroke-width="2" stroke-linecap="round"/>
+    <path d="M440 204H412" stroke="#ff8c42" stroke-width="1.5" stroke-dasharray="3 3" opacity="0.6"/>
+    <circle cx="412" cy="204" r="3.5" fill="#ff8c42"/>
+    <circle cx="464" cy="204" r="8" fill="#ff8c42" stroke="#0d0f12" stroke-width="1.5"/>
+    <rect x="416" y="148" width="16" height="16" fill="#ff8c42" stroke="#0d0f12" stroke-width="1.5"/>
+    <!-- key -->
+    <rect x="276" y="330" width="96" height="30" rx="5" fill="#22262e" stroke="#4a4e57"/>
+    <text x="324" y="350" text-anchor="middle" font-size="15" fill="#e6e8ec">␣</text>
+    <path d="M380 345H400" stroke="#8b92a1" stroke-width="1.5" marker-end="url(#tip)"/>
+    <path d="M422 334A14 14 0 0 1 422 356" fill="none" stroke="#9fd0ff" stroke-width="3" stroke-linecap="round"/>
+    <path d="M440 345L430 339L430 351z" fill="#4ea8ff"/>
+  </g>
+
+  <!-- 3. The circle: the fan -->
+  <g>
+    <rect x="488" y="44" width="224" height="342" rx="8" fill="#1a1d23" stroke="#333844"/>
+    <text x="500" y="76" font-size="22" fill="#4ea8ff">●</text>
+    <rect x="496" y="96" width="216" height="216" fill="url(#cells)"/>
+    <!-- the fan's reach, which grows with the bar -->
+    <rect x="544" y="168" width="144" height="72" fill="#4ea8ff" opacity="0.07"/>
+    <circle cx="532" cy="204" r="8" fill="#4ea8ff" stroke="#0d0f12" stroke-width="1.5"/>
+    <path d="M542 204L548 204" stroke="#e6e8ec" stroke-width="2"/>
+    <rect x="516" y="182" width="32" height="5" rx="2" fill="#333844"/>
+    <rect x="516" y="182" width="32" height="5" rx="2" fill="#ffd166"/>
+    <g fill="none" stroke="#4ea8ff" stroke-width="1.5" stroke-dasharray="3 3" opacity="0.7">
+      <path d="M548 204H600"/><path d="M548 198L556 180H600"/><path d="M548 210L556 228H600"/>
+    </g>
+    <g fill="#9fd0ff"><circle cx="604" cy="180" r="3.5"/><circle cx="604" cy="204" r="3.5"/><circle cx="604" cy="228" r="3.5"/></g>
+    <rect x="644" y="172" width="16" height="16" fill="#ff8c42" stroke="#0d0f12" stroke-width="1.5"/>
+    <path d="M676 228L657 218L657 238z" transform="rotate(180 666 228)" fill="#ff8c42" stroke="#0d0f12" stroke-width="1.5"/>
+    <!-- key -->
+    <rect x="512" y="330" width="96" height="30" rx="5" fill="#22262e" stroke="#4a4e57"/>
+    <text x="560" y="350" text-anchor="middle" font-size="15" fill="#e6e8ec">␣</text>
+    <path d="M616 345H636" stroke="#8b92a1" stroke-width="1.5" marker-end="url(#tip)"/>
+    <g fill="#9fd0ff"><circle cx="660" cy="337" r="3"/><circle cx="660" cy="345" r="3"/><circle cx="660" cy="353" r="3"/></g>
+    <path d="M666 337H690M666 345H690M666 353H690" stroke="#4ea8ff" stroke-width="1.5" stroke-dasharray="3 3"/>
+  </g>
+
+  <!-- 4. Every DNA: the dodge -->
+  <g>
+    <rect x="724" y="44" width="224" height="342" rx="8" fill="#1a1d23" stroke="#333844"/>
+    <text x="736" y="76" font-size="18" fill="#4ea8ff">■ ▲ ●</text>
+    <rect x="732" y="96" width="216" height="216" fill="url(#cells)"/>
+    <!-- a shot that crosses the dash and hits nothing -->
+    <path d="M816 108V292" stroke="#ff8c42" stroke-width="1.5" stroke-dasharray="3 3" opacity="0.6"/>
+    <circle cx="816" cy="258" r="3.5" fill="#ff8c42"/>
+    <circle cx="816" cy="120" r="8" fill="#ff8c42" stroke="#0d0f12" stroke-width="1.5"/>
+    <!-- the dash: two cells, untouchable -->
+    <path d="M802 204L783 194L783 214z" fill="none" stroke="#4ea8ff" stroke-width="1.5" stroke-dasharray="2 2" opacity="0.5"/>
+    <path d="M826 204L807 194L807 214z" fill="#4ea8ff" opacity="0.25"/>
+    <path d="M786 199H836M786 209H836" stroke="#4ea8ff" stroke-width="1.5" opacity="0.5"/>
+    <path d="M850 204L831 194L831 214z" fill="#4ea8ff" stroke="#0d0f12" stroke-width="1.5"/>
+    <!-- keys: a double tap -->
+    <rect x="760" y="330" width="30" height="30" rx="5" fill="#22262e" stroke="#4a4e57"/>
+    <text x="775" y="350" text-anchor="middle" font-size="15" fill="#e6e8ec">→</text>
+    <rect x="798" y="330" width="30" height="30" rx="5" fill="#22262e" stroke="#4a4e57"/>
+    <text x="813" y="350" text-anchor="middle" font-size="15" fill="#e6e8ec">→</text>
+    <path d="M840 345H860" stroke="#8b92a1" stroke-width="1.5" marker-end="url(#tip)"/>
+    <path d="M876 345H904" stroke="#4ea8ff" stroke-width="2" opacity="0.5"/>
+    <path d="M916 345L904 338L904 352z" fill="#4ea8ff"/>
+  </g>
+</svg>
