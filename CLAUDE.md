@@ -32,7 +32,8 @@ Node 26 (`.nvmrc`). Node runs `.ts` directly; only the client has a build (Vite)
 | Command | What |
 |---|---|
 | `npm install` | Installs every workspace's dependencies |
-| `npm run check` | Everything CI runs: typecheck, lint, format:check and tests. **Green before finishing a task.** |
+| `npm run check` | Everything CI runs: typecheck, lint, format:check and tests (the static checks in parallel, then the tests). **Green at the phase's close and before a merge.** |
+| `npm run check:fast` | Typecheck, lint, format:check and the tests related to the uncommitted changes (`GEO_FAST=1` skips the protocol's three 6 h worlds). **Green before each task commit**; `npm run check` once at the phase's close and before a merge. |
 | `npm run typecheck` | `tsc` in each workspace |
 | `npm run lint` | ESLint, including the `sim`, `battle` and `junction` determinism rules |
 | `npm run format` | Prettier (does not touch Markdown) |

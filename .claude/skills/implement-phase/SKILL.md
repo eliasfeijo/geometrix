@@ -44,7 +44,7 @@ Before the first line of code, list what the phase needs and that **neither the 
    `npx vitest run packages/sim/test/serialize.test.ts -u`, then `npx prettier --write packages/sim`. Only that test
    gets `-u`; any other snapshot failure is a bug until proven otherwise. The battle package has the same rule for its
    fixed hash and `BATTLE_VERSION`.
-4. `npm run check` green.
+4. `npm run check:fast` green; the full `npm run check` at the phase's closing (§4).
 5. Mark `[x]` in the `tasks.md` and commit (`commit` skill) with the task and the `[x]` together.
 
 - **Order:** if a task depends on one listed later, do the dependency first. Each keeps its own commit and `[x]`.
@@ -107,10 +107,14 @@ Short, in the language of the conversation:
   moves whenever a rule shifts the bot world (R F2 broke ten server tests that way). Find the moment by searching
   (`firstTeamBattle` in `apps/server/test/helpers.ts`), and give coverage floors (battles in the delta property)
   room, with the measured values in a comment.
-- **Know what a check costs** (R F2, 2026-11-25, WSL worktree): `npm run check` ~125–130 s (typecheck ~21 s, lint
-  ~5 s, tests ~95 s, of which the protocol's two 6 h delta-property worlds ~48 s); one workspace's tests: `sim`
-  ~16 s, `server` ~21 s. Lint fails in ~27 s, before the tests. Iterate with `npx vitest run <files>` and
-  `npm run typecheck`; run the full check once per task, before its commit.
+- **Know what a check costs** (2026-11-27, WSL worktree): cold `npm run typecheck` ~21 s, the incremental cache
+  ~37 s the first time and ~14 s warm; `npm run check:fast` after a one-file `sim` change ~78 s (typecheck ~20 s,
+  lint ~1 s, the related tests ~56 s over 65 files); `npm run check` ~150 s (static checks in parallel ~23 s, tests
+  ~126 s over 128 files; the same run was ~220 s before the fast loop, under other sessions' load). The protocol's
+  three 6 h delta worlds are most of the test time: `check:fast` skips them. Iterate with `npx vitest run <files>`
+  and `npm run typecheck`; `check:fast` before each task commit, the full check at the phase's close.
+- **Long runs go in the background.** A sweep (`npm run geo -- battle sweep`, ~45 s), `geo net` or the soak (~12 min):
+  start them with `run_in_background` and write the phase record while they run, instead of waiting on them.
 
 - **"Green" is `npm run check`'s exit code, not filtered output.** In `npm run check | grep ... && git commit`, the
   `grep` decides the `&&`: a red typecheck or lint passes, because `grep` finds lines. Run

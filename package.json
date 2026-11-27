@@ -12,13 +12,14 @@
     "node": "^26"
   },
   "scripts": {
-    "typecheck": "npm run typecheck --workspaces && tsc -p scripts/capture",
-    "lint": "eslint .",
+    "typecheck": "npm run typecheck --workspaces && tsc -p scripts/capture --incremental --tsBuildInfoFile node_modules/.cache/tsc/capture.tsbuildinfo",
+    "lint": "eslint . --cache --cache-location node_modules/.cache/eslint/",
     "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "format:check": "prettier --check . --cache --cache-location node_modules/.cache/prettier/.prettier-cache",
     "test": "vitest run",
     "test:watch": "vitest",
-    "check": "npm run typecheck && npm run lint && npm run format:check && npm test",
+    "check": "node scripts/check.ts",
+    "check:fast": "node scripts/check.ts --fast",
     "geo": "node apps/cli/src/main.ts",
     "server": "node apps/server/src/main.ts",
     "dev:multi": "node apps/server/src/dev-multi-main.ts",
