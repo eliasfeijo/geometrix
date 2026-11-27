@@ -193,6 +193,15 @@ async function clickCenter(page: Page, selector: string): Promise<boolean> {
   return true;
 }
 
+/**
+ * With several actors under the click, the map lists them (R spec D23):
+ * picks the first line that matches.
+ */
+async function choose(page: Page, line: RegExp): Promise<void> {
+  const row = page.locator(".stack-row").filter({ hasText: line });
+  if ((await row.count()) > 0) await row.first().click();
+}
+
 async function waitUntil(
   check: () => Promise<boolean>,
   timeoutMs: number,
@@ -243,6 +252,7 @@ async function worldStart(
   await sleep(6000);
   if (scenes.has("world-start")) await capture.shot(page, "world-start");
   if (scenes.has("inspector") && (await clickCenter(page, "g.creep"))) {
+    await choose(page, /carga/);
     await page.getByText("Piloto automático").first().waitFor();
     await sleep(500);
     await capture.shot(page, "inspector");
@@ -259,6 +269,7 @@ async function battle(page: Page, capture: Capture): Promise<void> {
   const found = await waitUntil(async () => {
     if ((await page.locator("g.battle-signs > *").count()) === 0) return false;
     if (!(await clickCenter(page, "g.battle-signs > *"))) return false;
+    await choose(page, /^Batalha/);
     const watch = page.getByRole("button", { name: /Assistir|Voltar à/ });
     if ((await watch.count()) === 0) return false;
     await watch.first().click();
