@@ -1,7 +1,6 @@
 // The end of the world (E-min spec, plan section 3): a team leaving the match,
 // by concession (voted when it has two or more humans) or elimination, and the
-// result. Teams in id order; nothing
-// here assumes how many there are.
+// result. Teams in id order; nothing here assumes how many there are.
 
 import type { Player } from "./domination.ts";
 import { canAfford } from "./economy.ts";
@@ -212,7 +211,8 @@ function endCell(state: WorldState, result: WorldResult): Cell {
 
 /**
  * The end's stage of the tick (plan P1): the votes whose deadline passed,
- * then the eliminations, each in team id order, then the result. Setting it ends the world: this is its last tick.
+ * then the eliminations, each in team id order, then the result. Setting it
+ * ends the world: this is its last tick.
  */
 export function checkEnd(state: WorldState, log: EventLog): void {
   for (const team of teamsInMatch(state)) {
