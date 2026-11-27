@@ -16,6 +16,7 @@
 //   6. materia and HP regeneration (the wanderers' too); nobody in a
 //      battle heals
 //                                                    (F3; M2 encontro P1)
+//  6b. the end: eliminations and the result          (E-min plan P1)
 //   7. vision and team memory; the events' audience  (M1.5 fog, N10;
 //      ADR-0007 rule 3)
 //   8. stats accumulators; tick++                              (F5)
@@ -24,6 +25,7 @@ import { runAutopilot } from "./autopilot.ts";
 import { SYSTEM_PLAYER_ID } from "./battle.ts";
 import { applyCommand, type CommandInput } from "./commands.ts";
 import { findPlayer } from "./domination.ts";
+import { checkEnd } from "./end.ts";
 import { runEncounters } from "./encounter.ts";
 import { createEventLog, setAudience, type SimEvent } from "./events.ts";
 import { regenerate } from "./economy.ts";
@@ -76,6 +78,7 @@ export function step(
   regenerate(state);
   regenerateHp(state);
   regenerateWanderers(state);
+  checkEnd(state, log);
   updateVision(state);
   setAudience(state, log.events);
   accumulateStats(state);

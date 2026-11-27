@@ -2,8 +2,10 @@
 // by concession or elimination, and the result. Teams in id order; nothing
 // here assumes how many there are.
 
+import { canAfford } from "./economy.ts";
 import { emit, type EventLog } from "./events.ts";
-import type { Team, TeamOut, WorldState } from "./world.ts";
+import type { Cell } from "./map.ts";
+import type { Team, TeamOut, WorldResult, WorldState } from "./world.ts";
 
 /**
  * Why a concession is refused (spec F-4, plan P3): the team already left, or
@@ -41,4 +43,65 @@ export function leaveMatch(
   }
   team.repeat = null;
   emit(log, { type: "teamOut", team: team.id, how, bot, ...team.core });
+}
+
+/**
+ * No creep alive (a creep in a battle is), nothing in production and a stock
+ * below one creep's cost: the team cannot come back (spec D2, L-1). An armed
+ * repeat is not production, and spoils and loads do not count.
+ */
+function cannotComeBack(state: WorldState, team: Team): boolean {
+  return (
+    team.production === null &&
+    !canAfford(team.stock, state.params.creep.cost) &&
+    !state.creeps.some((creep) => creep.team === team.id)
+  );
+}
+
+/** The result of the tick, or null while the world goes on (spec D5). */
+function resultOf(state: WorldState): WorldResult | null {
+  const { tick } = state;
+  const { durationSeconds, tickSeconds } = state.params.world;
+  const left = teamsInMatch(state).map((team) => team.id);
+  if (left.length === 1) {
+    return { tick, how: "lastTeam", winner: left[0]!, teams: left };
+  }
+  if (left.length === 0) {
+    const together = state.teams.filter((team) => team.out!.tick === tick);
+    return {
+      tick,
+      how: "noTeam",
+      winner: null,
+      teams: together.map((team) => team.id),
+    };
+  }
+  if ((tick + 1) * tickSeconds < durationSeconds) return null;
+  return { tick, how: "clock", winner: null, teams: left };
+}
+
+/** Where the end is told: the winner's core, the map's center in a draw. */
+function endCell(state: WorldState, result: WorldResult): Cell {
+  if (result.winner !== null) return { ...state.teams[result.winner]!.core };
+  const { width, height } = state.map;
+  return { x: Math.floor(width / 2), y: Math.floor(height / 2) };
+}
+
+/**
+ * The end's stage of the tick (plan P1): eliminations, in team id order, then
+ * the result. Setting it ends the world: this is its last tick.
+ */
+export function checkEnd(state: WorldState, log: EventLog): void {
+  for (const team of teamsInMatch(state)) {
+    if (cannotComeBack(state, team)) {
+      leaveMatch(state, log, team, "eliminated", false);
+    }
+  }
+  const result = resultOf(state);
+  if (result === null) return;
+  state.result = result;
+  emit(log, {
+    type: "worldEnded",
+    result: { ...result, teams: [...result.teams] },
+    ...endCell(state, result),
+  });
 }

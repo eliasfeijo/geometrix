@@ -1,11 +1,13 @@
 import { describe, expect, test } from "vitest";
 import { applyCommand, validate, type Command } from "../src/commands.ts";
 import { dominate, join } from "../src/domination.ts";
-import { createEventLog } from "../src/events.ts";
+import { createEventLog, type SimEvent } from "../src/events.ts";
+import { restore, serialize } from "../src/serialize.ts";
 import { productionRefusal, startProduction } from "../src/production.ts";
 import { step } from "../src/step.ts";
+import type { Dna } from "../src/params.ts";
 import type { WorldState } from "../src/world.ts";
-import { creepOf, textWorld } from "./helpers.ts";
+import { creepOf, paramsWith, textWorld } from "./helpers.ts";
 
 // 30 × 7, the cores in opposite corners.
 const MAP = [
@@ -113,5 +115,163 @@ describe("concede (E-min D3, L-2..L-4)", () => {
 
   test("a player who never joined cannot concede", () => {
     expect(validate(world(), concede, 9)).toBe("unknownPlayer");
+  });
+});
+
+/** A world whose teams hold no stock and keep only the creeps named. */
+function bare(
+  keep: [team: number, dna: Dna][],
+  params = textWorld(MAP).params,
+) {
+  const w = textWorld(MAP, params);
+  w.creeps = keep.map(([team, dna]) => creepOf(w, team, dna));
+  return w;
+}
+
+const types = (events: SimEvent[]) => events.map((e) => e.type);
+
+describe("elimination (E-min D2, L-1)", () => {
+  test("no creep, no production and no stock for one: out on that tick, the other wins", () => {
+    const w = bare([[1, "square"]]);
+    const events = step(w, []);
+    expect(w.teams[0]!.out).toEqual({ tick: 0, how: "eliminated", bot: false });
+    expect(w.result).toEqual({
+      tick: 0,
+      how: "lastTeam",
+      winner: 1,
+      teams: [1],
+    });
+    expect(types(events)).toEqual(["teamOut", "worldEnded"]);
+    expect(events[1]).toMatchObject(w.teams[1]!.core);
+    // Both teams receive both, whatever they see (D8).
+    expect(events.map((e) => e.teams)).toEqual([
+      [0, 1],
+      [0, 1],
+    ]);
+    expect(w.tick).toBe(1);
+  });
+
+  test("a creep, a stock of one creep's cost or a production keeps the team in", () => {
+    const alive = bare([
+      [0, "square"],
+      [1, "square"],
+    ]);
+    step(alive, []);
+    expect(alive.result).toBeNull();
+
+    const rich = bare([[1, "square"]]);
+    rich.teams[0]!.stock = { ...rich.params.creep.cost };
+    step(rich, []);
+    expect(rich.teams[0]!.out).toBeNull();
+
+    const short = bare([[1, "square"]]);
+    short.teams[0]!.stock = { ...short.params.creep.cost };
+    short.teams[0]!.stock.materia -= 1;
+    step(short, []);
+    expect(short.teams[0]!.out).not.toBeNull();
+
+    const producing = bare([[1, "square"]]);
+    producing.teams[0]!.production = { dna: "circle", remainingSeconds: 5 };
+    step(producing, []);
+    expect(producing.teams[0]!.out).toBeNull();
+  });
+
+  test("a creep born on the tick saves its team", () => {
+    const w = bare([[1, "square"]]);
+    w.teams[0]!.production = {
+      dna: "circle",
+      remainingSeconds: w.params.world.tickSeconds,
+    };
+    expect(types(step(w, []))).toEqual(["born"]);
+    expect(w.teams[0]!.out).toBeNull();
+    expect(w.result).toBeNull();
+  });
+
+  test("an armed repeat is not production; loads and spoils do not count", () => {
+    const w = bare([[1, "square"]]);
+    w.teams[0]!.repeat = "circle";
+    w.spoils = [
+      { id: w.nextId++, cargo: { materia: 999, cristal: 999 }, x: 1, y: 1 },
+    ];
+    creepOf(w, 1, "square").cargo = { materia: 5, cristal: 0 };
+    step(w, []);
+    expect(w.teams[0]!.out).toMatchObject({ how: "eliminated" });
+    expect(w.teams[0]!.repeat).toBeNull();
+  });
+});
+
+describe("the result (E-min D5, F-1..F-5)", () => {
+  test("no team left on one tick: a draw among those that left on it", () => {
+    const w = bare([]);
+    const events = step(w, []);
+    expect(w.result).toEqual({
+      tick: 0,
+      how: "noTeam",
+      winner: null,
+      teams: [0, 1],
+    });
+    expect(types(events)).toEqual(["teamOut", "teamOut", "worldEnded"]);
+    expect(events[2]).toMatchObject({ x: 15, y: 3 });
+  });
+
+  test("a concession that leaves one team wins it that tick", () => {
+    const w = world();
+    step(w, [{ playerId: 1, command: concede }]);
+    expect(w.result).toMatchObject({ how: "lastTeam", winner: 1, teams: [1] });
+    expect(w.teams[0]!.out).toMatchObject({ how: "conceded" });
+  });
+
+  test("a concession and the other team's elimination on one tick: a draw", () => {
+    const w = bare([]);
+    join(w, 1, 0, false);
+    w.teams[0]!.stock = { ...w.params.creep.cost };
+    step(w, [{ playerId: 1, command: concede }]);
+    expect(w.result).toMatchObject({ how: "noTeam", teams: [0, 1] });
+  });
+
+  const short = paramsWith((p) => {
+    p.world.durationSeconds = 5;
+  });
+
+  test("the clock's last tick is a draw among the teams still in", () => {
+    const w = textWorld(MAP, short);
+    for (let i = 0; i < 4; i++) step(w, []);
+    expect(w.result).toBeNull();
+    const events = step(w, []);
+    expect(w.result).toEqual({
+      tick: 4,
+      how: "clock",
+      winner: null,
+      teams: [0, 1],
+    });
+    expect(types(events)).toContain("worldEnded");
+    expect(w.teams.map((t) => t.out)).toEqual([null, null]);
+    expect(w.tick).toBe(5);
+  });
+
+  test("an elimination on the clock's last tick wins, no draw", () => {
+    const w = bare(
+      [
+        [0, "square"],
+        [1, "square"],
+      ],
+      short,
+    );
+    for (let i = 0; i < 4; i++) step(w, []);
+    w.creeps = w.creeps.filter((c) => c.team === 1);
+    step(w, []);
+    expect(w.result).toMatchObject({ how: "lastTeam", winner: 1 });
+  });
+
+  test("a snapshot restored before the end reaches the same end", () => {
+    const w = textWorld(MAP, short);
+    for (let i = 0; i < 3; i++) step(w, []);
+    const restored = restore(serialize(w));
+    for (let i = 0; i < 2; i++) {
+      step(w, []);
+      step(restored, []);
+    }
+    expect(w.result).not.toBeNull();
+    expect(serialize(restored)).toBe(serialize(w));
   });
 });
