@@ -122,6 +122,7 @@ function listWorlds(context: HttpContext): WorldSummary[] {
     const host = context.worlds.get(row.id);
     const { durationSeconds, tickSeconds } = row.params.world;
     const status = host?.status ?? row.status;
+    const result = host?.state.result ?? null;
     return {
       id: row.id,
       seed: status === "ended" ? row.seed : null,
@@ -132,6 +133,14 @@ function listWorlds(context: HttpContext): WorldSummary[] {
       players: context.store
         .players(row.id)
         .map(({ id, team, name, bot }) => ({ id, team, name, bot })),
+      result:
+        result === null
+          ? null
+          : {
+              how: result.how,
+              winner: result.winner,
+              teams: result.teams,
+            },
     };
   });
 }

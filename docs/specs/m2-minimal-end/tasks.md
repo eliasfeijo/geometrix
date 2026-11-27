@@ -111,10 +111,10 @@ time and the team's vote with a deadline (L-5 to L-7, P14). `SIM_VERSION` 15.
 ## F3 — Network and server
 
 - [x] Protocol: `concede`, `teamOut`, `result` and `summary` in the delta, `ForeignTeam.out`; `PROTOCOL_VERSION` (P13)
-- [ ] The vote through the network (L-6, L-7): `rejectConcede` (its schema is in since F2) and the refusals, the
+- [x] The vote through the network (L-6, L-7): `rejectConcede` (its schema is in since F2) and the refusals, the
       team's vote in the delta, its events
-- [ ] `WorldHost` ends from `state.result`; no strategist for a team out; the real-time clock skips an ended world
-- [ ] The lobby's result; an ended world restarts ended, without its battle instances (N-1; P8)
+- [x] `WorldHost` ends from `state.result`; no strategist for a team out; the real-time clock skips an ended world
+- [x] The lobby's result; an ended world restarts ended, without its battle instances (N-1; P8)
 - [ ] The export of an ended world reaches the same result, summary and hash (N-2); the diff property green (N-3);
       `geo net` within the targets
 - [ ] `dev:multi --set path=value` (P11)

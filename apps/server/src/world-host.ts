@@ -233,7 +233,10 @@ export class WorldHost {
     });
     const junction = createHost(row.battleParams ?? serverBattleParams);
     const storedTicks = new Map<number, number>();
-    const instances = state.battles.map((stub) => {
+    // An ended world restores without them: nothing would step them (E-min
+    // plan P8).
+    const open = state.result === null ? state.battles : [];
+    const instances = open.map((stub) => {
       const battle = store.battle(row.id, stub.id);
       if (battle === undefined) {
         throw new RecoveryError(
@@ -355,6 +358,8 @@ export class WorldHost {
     const acts = strategistActs(state.tick);
     for (const bot of this.bots) {
       if (findPlayer(state, bot.playerId) === undefined) continue;
+      // A team out sends nothing (E-min B-2), so it is not asked.
+      if (state.teams[bot.team]!.out !== null) continue;
       const commands = acts
         ? strategistCommands(
             "balanced",
@@ -383,7 +388,9 @@ export class WorldHost {
     const { events } = done;
 
     const { snapshotEveryTicks, metricsEveryTicks } = this.context.config;
-    const ended = state.tick >= this.durationTicks;
+    // The sim ends the world: elimination, a concession or the clock (E-min
+    // plan P1). An ended world is frozen and steps no more.
+    const ended = state.result !== null;
     const { store } = this.context;
     const gone = [
       ...this.ended,

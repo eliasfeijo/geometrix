@@ -22,6 +22,7 @@ import type {
   Refusal,
   TeamEvent,
   TeamView,
+  WorldResult,
   WorldState,
 } from "@geometrix/sim";
 import { z } from "zod";
@@ -304,6 +305,8 @@ export type WorldSummary = {
   tick: number;
   durationTicks: number;
   players: { id: number; team: number; name: string; bot: boolean }[];
+  /** How an ended world ended, null while it runs (E-min S-4). */
+  result: Pick<WorldResult, "how" | "winner" | "teams"> | null;
 };
 
 /**
