@@ -20,6 +20,10 @@ merge, until done or until a checkpoint that needs the owner's judgment (section
    (behavior, params, pipeline). Read the code the phase will extend.
 3. The branch the `tasks.md` gives the phase. If it does not exist, create it from `main` (`commit` skill). If it
    exists (it may have docs/harness commits between phases), continue on it. Run `npm ci` in a fresh checkout.
+4. **Dispatched as a lane** by an orchestrator session (the prompt says so; the `run-wave` skill): the prompt's lane
+   rules come first. Message the orchestrator before asking the owner anything, leave the dashboard's Now to it, and
+   do not merge: §4's dashboard and merge steps become the "For the dashboard" paragraph and the merge message in
+   the final message to the orchestrator.
 
 ## 2. Gaps before coding
 

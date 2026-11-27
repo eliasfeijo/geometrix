@@ -22,7 +22,8 @@ flowchart LR
 
 - **Sources of truth:** the table at the top of `CLAUDE.md`. Start from `docs/dashboard/current-status.md`.
 - **Skills** (in `.claude/skills/`): `spec-slice` (spec → plan → tasks), `implement-phase` (a phase, from opening to
-  merge), `commit` (commit style, branches, merges), `gdd-decision` (recording the owner's decisions), `adr`.
+  merge), `commit` (commit style, branches, merges), `gdd-decision` (recording the owner's decisions), `adr`, `run-wave` (an orchestrator managing a wave of
+  phase sessions, below).
 - **Fresh sessions.** A session starts with a minimal prompt (e.g. `/implement-phase M2 D F1`) and resumes from the
   repository: the dashboard's Now section, the slice's `tasks.md` and `CLAUDE.md`. Anything the next session needs is
   written there before stopping, not left in a conversation.
@@ -31,6 +32,49 @@ flowchart LR
 - **Branches.** One branch per phase (`m<milestone>/<slice>-f<phase>-<slug>`), merged into `main` with
   `git merge --no-ff`, so `git log --first-parent main` shows one line per phase. Agents push only when the owner
   asks.
+
+## Running a wave: the orchestrator session
+
+When a slice's phases are planned in waves (e.g. R's `tasks.md`, "Running the phases"), one **orchestrator session**
+manages the wave: it plans the lanes and models from the owner's `/usage`, dispatches each phase as a background
+Claude session in its own worktree, tells the owner when a lane needs them, reviews each branch and merges it into
+`main`. It writes no phase code; each phase is still one `implement-phase` session. The procedure is the
+[`run-wave`](../.claude/skills/run-wave/SKILL.md) skill; it was first done in R's wave 3 (2026-11-26/27).
+
+```mermaid
+sequenceDiagram
+  participant O as Owner
+  participant M as Orchestrator (main checkout)
+  participant L as Lane session (worktree)
+  O->>M: /usage, decisions
+  M->>L: scripts/lane.sh (worktree, npm ci, claude --bg)
+  L-->>M: SendMessage "needs the owner"
+  M-->>O: notification: claude attach <id>
+  O->>L: answers in the lane
+  L-->>M: SendMessage report + merge message
+  M->>M: review, dashboard Now, scripts/merge-phase.sh
+  M-->>O: git push origin main (owner runs it)
+```
+
+- **Lanes and models.** At most two implementation sessions at once. Lane A (Opus) for the deep phases (`sim` rules,
+  the strategist, battle mechanics, determinism), lane B (Sonnet) for server, client, balance runs and soak. Haiku
+  runs mechanical, fully specified tooling tasks the orchestrator reviews (`build/fast-check` in wave 3). Free models
+  through opencode or Kilo only for well-planned mechanical or read-only work, never `sim`, `battle` or `junction`
+  code: a determinism mistake costs a hash rebuild and a re-sweep.
+- **`/usage` decides parallel or sequential:** two lanes only with the session below ~50% and the week below ~70%.
+  Waiting on processes costs wall time but no tokens, so CPU-bound phases (sweeps, tick-cost readings) gain more from
+  a quiet machine than from a second lane.
+- **The owner answers in the lane.** A lane messages the orchestrator before it asks anything; the orchestrator
+  watches each lane's state (`scripts/watch-lane.sh`, `claude agents --json`: `working`, `blocked`, `done`) and sends
+  one notification with `claude attach <id>`.
+- **The orchestrator owns the dashboard's Now while lanes run** (two lanes rewriting it collide on every merge). A lane
+  writes its phase record in the `tasks.md` and ends with a "For the dashboard" paragraph and its merge message.
+- **Review is cheap and targeted:** the report, the commit list, the diff stat, and the diff of what is risky for the
+  phase only. Small fixes are the orchestrator's commits on the branch; larger ones go back to the lane.
+- **A playtest of a phase** (the owner's) runs from the phase's worktree before its merge; findings go into the repo
+  (the phase record, the GDD, the waves table), not into code.
+- **Where it runs:** the orchestrator sits in the integration checkout, where `merge-phase.sh` runs; lanes in their
+  worktrees. Which directories those are is machine-specific (`CLAUDE.local.md`).
 
 ## Your machine: `CLAUDE.local.md`
 
