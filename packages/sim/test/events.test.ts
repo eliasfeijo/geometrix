@@ -97,6 +97,6 @@ describe("sim events (ADR-0007, plan section 7)", () => {
     const world = textWorld(FAR);
     producing(world, [0]);
     run(world, 1500);
-    expect(JSON.stringify(world)).not.toContain("born");
+    expect(JSON.stringify(world)).not.toContain('"type":"born"');
   });
 });

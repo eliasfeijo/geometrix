@@ -194,6 +194,7 @@ export function openBattle(
       { id: victim.id, side: 1, stance: victimStance },
     ].sort((a, b) => a.id - b.id),
     openedTick: state.tick,
+    entered: 2,
     ...cell,
   };
   state.battles.push(battle);
@@ -308,6 +309,7 @@ export function runJoins(state: WorldState, log: EventLog): void {
       ...battle.participants,
       { id: fighter.id, side, stance: "fight" as Stance },
     ].sort((a, b) => a.id - b.id);
+    battle.entered += 1;
     // Approaching someone ends one's own safe conduct (E-8).
     if (!isWanderer(fighter)) fighter.safeConduct = null;
     lock(fighter, battle);

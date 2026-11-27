@@ -77,7 +77,7 @@ export type ForeignEncounterView = Pick<
  * sides and who is locked in it. How each enters (its stance) and the fight
  * itself stay out.
  */
-export type BattleStubView = Omit<Battle, "participants"> & {
+export type BattleStubView = Omit<Battle, "participants" | "entered"> & {
   participants: { id: number; side: number }[];
 };
 

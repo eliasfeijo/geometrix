@@ -319,6 +319,7 @@ function battleOf(world: WorldState, a: Creep, b: Creep): Battle {
       { id: b.id, side: 1, stance: "flee" as const },
     ].sort((p, q) => p.id - q.id),
     openedTick: world.tick,
+    entered: 2,
     x: b.x,
     y: b.y,
   };
@@ -331,10 +332,15 @@ function battleOf(world: WorldState, a: Creep, b: Creep): Battle {
 }
 
 describe("battles in the view (junction D16, K-3)", () => {
-  const stub = (battle: Battle) => ({
-    ...battle,
-    participants: battle.participants.map(({ id, side }) => ({ id, side })),
-  });
+  /** The battle as a view has it: no stances, no `entered`. */
+  const stub = (battle: Battle) => {
+    const seen: Partial<Battle> = {
+      ...battle,
+      participants: battle.participants.map(({ id, side }) => ({ id, side })),
+    } as Partial<Battle>;
+    delete seen.entered;
+    return seen;
+  };
 
   test("a battle of the team is in its view wherever it is, without the stances", () => {
     const { world, enemy } = leakyWorld();

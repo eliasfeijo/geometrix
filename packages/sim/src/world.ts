@@ -3,6 +3,7 @@
 
 import type { Rule } from "./autopilot.ts";
 import type { Player } from "./domination.ts";
+import type { TeamEvent } from "./events.ts";
 import type { UpgradeId } from "./economy.ts";
 import { presetRules } from "./presets.ts";
 import { generateMap, type Cell, type GameMap } from "./map.ts";
@@ -54,6 +55,29 @@ export type Team = {
    * waits, armed, while the stock or the population cap does not allow it.
    */
   repeat: Dna | null;
+  /**
+   * How and when the team left the match, or null while it is in it (E-min
+   * plan P2). A team out never comes back.
+   */
+  out: TeamOut | null;
+};
+
+export type TeamOut = {
+  tick: number;
+  how: "eliminated" | "conceded";
+  /** A bot player conceded. */
+  bot: boolean;
+};
+
+/** How the world ended (E-min spec D5). */
+export type WorldResult = {
+  /** The end tick. */
+  tick: number;
+  how: "lastTeam" | "noTeam" | "clock";
+  /** The winning team, when how is lastTeam. */
+  winner: number | null;
+  /** The winner, or the teams of the draw, by id. */
+  teams: number[];
 };
 
 export type Production = { dna: Dna; remainingSeconds: number };
@@ -211,6 +235,8 @@ export type Battle = {
   /** The locked creeps, by id. */
   participants: BattleParticipant[];
   openedTick: number;
+  /** Participants that ever entered: the opening plus the joins (P7). */
+  entered: number;
 } & Cell;
 
 /** A pile of resources on a cell that any creep can pick up (spec D11). */
@@ -264,6 +290,13 @@ export type WorldState = {
   births: number;
   /** Accumulators behind the metrics (spec section 7). */
   stats: Stats;
+  /** The end, once it happened; the world is then frozen (E-min plan P8). */
+  result: WorldResult | null;
+  /**
+   * The match's main events so far, best first, at most
+   * params.end.highlights of them (E-min plan P6).
+   */
+  highlights: TeamEvent[];
 };
 
 export function createWorld(seed: number, params: Params): WorldState {
@@ -289,6 +322,7 @@ export function createWorld(seed: number, params: Params): WorldState {
     upgrades: { capacity: false },
     production: null,
     repeat: null,
+    out: null,
   }));
 
   const creeps: Creep[] = [];
@@ -322,6 +356,8 @@ export function createWorld(seed: number, params: Params): WorldState {
     nextId,
     births,
     stats: createStats(teams, deposits),
+    result: null,
+    highlights: [],
   };
   // The vision of tick 0 (fog plan N10).
   updateVision(state);

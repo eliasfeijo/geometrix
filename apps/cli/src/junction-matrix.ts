@@ -148,6 +148,7 @@ export function resolveCase(
       { id: victim.id, side: 1, stance: matrixCase.stance },
     ].sort((a, b) => a.id - b.id),
     openedTick: world.tick,
+    entered: 2,
     ...cell,
   };
   const { setup, placed } = battleSetup(world, battle);

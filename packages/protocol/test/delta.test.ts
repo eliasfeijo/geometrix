@@ -264,15 +264,19 @@ describe("diffView / applyDelta", () => {
       ],
       participants: [{ id: a!.id, side: 0, stance: "fight" as Stance }],
       openedTick: world.tick,
+      entered: 2,
       x: a!.x,
       y: a!.y,
     };
     world.battles.push(battle);
     a!.battle = battle.id;
     const opened = next();
+    // How many ever entered stays in the world (E-min plan P7).
+    const { entered, ...stub } = battle;
+    expect(entered).toBe(2);
     expect(opened.battles?.upsert).toEqual([
       {
-        ...battle,
+        ...stub,
         participants: [{ id: a!.id, side: 0 }],
       },
     ]);

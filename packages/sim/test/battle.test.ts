@@ -97,6 +97,7 @@ describe("the battle opens (junction O-1, O-5, D5)", () => {
         { id: prey.id, side: 1, stance: "fight" },
       ],
       openedTick: w.tick - 1,
+      entered: 2,
       x: 13,
       y: 3,
     });
