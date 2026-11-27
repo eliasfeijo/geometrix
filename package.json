@@ -15,7 +15,7 @@
     "typecheck": "npm run typecheck --workspaces && tsc -p scripts/capture --incremental --tsBuildInfoFile node_modules/.cache/tsc/capture.tsbuildinfo",
     "lint": "eslint . --cache --cache-location node_modules/.cache/eslint/",
     "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "format:check": "prettier --check . --cache --cache-location node_modules/.cache/prettier/.prettier-cache",
     "test": "vitest run",
     "test:watch": "vitest",
     "check": "node scripts/check.ts",
