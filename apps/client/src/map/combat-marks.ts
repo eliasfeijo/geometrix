@@ -119,3 +119,31 @@ export function battleSign(
   const r = Math.max(BATTLE_SIGN_PX / viewScale, 0.35);
   return { x: battle.x + 0.5, y: battle.y + 0.05 - r, r };
 }
+
+/**
+ * A creep or wanderer chasing someone with a hostile approach (R spec D25,
+ * HS-2): a red sign over it, and a red line to its target when that is a
+ * creep of the viewing team (any creep, in a replay).
+ */
+export type HostileMark = {
+  from: number;
+  intent: "attack" | "extort";
+  to: number | null;
+};
+
+export function hostileMarks(state: TeamView): HostileMark[] {
+  const marks: HostileMark[] = [];
+  for (const actor of [...state.creeps, ...state.wanderers]) {
+    const { hostile } = actor;
+    if (hostile === null) continue;
+    const target = state.creeps.find((c) => c.id === hostile.target);
+    const own =
+      target !== undefined && (state.team < 0 || target.team === state.team);
+    marks.push({
+      from: actor.id,
+      intent: hostile.intent,
+      to: own ? target.id : null,
+    });
+  }
+  return marks;
+}

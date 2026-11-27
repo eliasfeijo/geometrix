@@ -22,6 +22,7 @@ import { COLORS, teamColor, teamTextColor } from "./colors.ts";
 import { DnaShape } from "./creep-shape.tsx";
 import { BattleBubbles, BattleSigns, InBattleMark } from "./battle-layer.tsx";
 import { EncounterLayer } from "./encounter-layer.tsx";
+import { HostileLayer } from "./hostile-layer.tsx";
 import { creepPositions, glideProgress } from "./interpolate.ts";
 import { nameFontSize } from "./labels.ts";
 import { layoutCreeps, markerOf, type Marker } from "./layout.ts";
@@ -191,6 +192,7 @@ export function CreepLayer() {
           ) : null,
         )}
       </g>
+      <HostileLayer state={state} markers={markers} viewScale={viewScale} />
       <BattleSigns
         battles={state.battles}
         viewScale={viewScale}

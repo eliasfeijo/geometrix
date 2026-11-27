@@ -484,7 +484,7 @@ socket was down (or with a server restart) sends nothing, so the client drops it
 ## F6 — Client
 
 - [x] The actors' list on a click; a wanderer selectable (D21, D23, U-3, U-5)
-- [ ] The hostile layer: the signs and the line to the team's target (HS-2)
+- [x] The hostile layer: the signs and the line to the team's target (HS-2)
 - [ ] The destination layer and the ETA in the inspector (D19, D20, U-1, U-2)
 - [ ] "Seguir" in the right-click menu, "Seguir…" in the rules editor, the new rules' text (D8, D9)
 - [ ] "Largar carga" in the panel and in the extortion's reply (D24)
