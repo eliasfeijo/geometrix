@@ -21,7 +21,7 @@
 - [x] Events: `teamOut` and `worldEnded` to every team; `died.firstBlood`; `battleEnded.entered` and `spoiled`
       (K-1, K-2, K-4; P5)
 - [x] The counters (born, lost, battles won and lost) and the highlights' ranking; `endSummary` (D10; P6)
-- [ ] The view: `ForeignTeam.out`, `TeamView.result` and `summary`, in `fullView` too (K-3)
+- [x] The view: `ForeignTeam.out`, `TeamView.result` and `summary`, in `fullView` too (K-3)
 - [ ] A hand-built three-team world: one concedes, the world goes on (D7, X-2), then ends; nothing leaks
 - [ ] `SIM_VERSION` (P13), the fixed hashes; the protocol and the client compile against the new types
 

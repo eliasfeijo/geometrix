@@ -154,12 +154,16 @@ describe("view", () => {
     expect(seen.deposits).toEqual([]);
     // The road at x = 23 is out of sight: not in the view.
     expect(seen.roads).toEqual([]);
-    expect(seen.teams[1]).toEqual({ id: 1, core: null });
+    expect(seen.teams[1]).toEqual({ id: 1, core: null, out: null });
     memory.cores.push({ team: 1, x: 39, y: 1 });
     memory.road[WIDTH + 23] = 1;
     memory.deposits.push({ ...world.deposits[0]!, amount: 3 });
     const later = view(world, 0);
-    expect(later.teams[1]).toEqual({ id: 1, core: { x: 39, y: 1 } });
+    expect(later.teams[1]).toEqual({
+      id: 1,
+      core: { x: 39, y: 1 },
+      out: null,
+    });
     expect(later.roads).toEqual([WIDTH + 23]);
     expect(later.deposits).toEqual([{ ...world.deposits[0]!, amount: 3 }]);
   });
@@ -201,7 +205,7 @@ describe("view", () => {
     ]);
     expect(seen.creeps.map((c) => c.id)).not.toContain(hidden.id);
     expect(JSON.stringify(seen)).not.toContain(`"${hidden.name}"`);
-    expect(seen.teams[1]).toEqual({ id: 1, core: null });
+    expect(seen.teams[1]).toEqual({ id: 1, core: null, out: null });
     expect(seen.players).toEqual([
       world.players[0],
       { id: world.players[1]!.id, team: 1, bot: false },
@@ -233,7 +237,11 @@ describe("view", () => {
     // And the enemy's own view does not show team 0's.
     const theirs = view(world, 1);
     // Their creep next to core A has seen it: its position, nothing else.
-    expect(theirs.teams[0]).toEqual({ id: 0, core: { x: 0, y: 1 } });
+    expect(theirs.teams[0]).toEqual({
+      id: 0,
+      core: { x: 0, y: 1 },
+      out: null,
+    });
     expect(theirs.creeps.every((c) => c.team === 1 || !isOwnCreep(c))).toBe(
       true,
     );

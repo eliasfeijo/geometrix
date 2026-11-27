@@ -305,7 +305,7 @@ describe("diffView / applyDelta", () => {
 
   test("the enemy core goes from unknown to known", () => {
     const { world, client, next } = setup();
-    expect(client.teams[1]).toEqual({ id: 1, core: null });
+    expect(client.teams[1]).toEqual({ id: 1, core: null, out: null });
     world.memory[0]!.cores.push({ team: 1, ...world.teams[1]!.core });
     const delta = next();
     expect(delta.teams?.upsert).toEqual([

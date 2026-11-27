@@ -8,6 +8,7 @@ import { restore, serialize } from "../src/serialize.ts";
 import { productionRefusal, startProduction } from "../src/production.ts";
 import { step } from "../src/step.ts";
 import type { Dna } from "../src/params.ts";
+import { fullView, view } from "../src/view.ts";
 import { updateVision } from "../src/vision.ts";
 import type { Creep, Stock, WorldState } from "../src/world.ts";
 import { addWanderer, creepOf, paramsWith, textWorld } from "./helpers.ts";
@@ -538,5 +539,30 @@ describe("the main events' ranking (E-min D10, plan P6)", () => {
     expect(w.highlights[0]!.type).toBe("teamOut");
     // The weakest fell off.
     expect(kept(w)).not.toContainEqual([2, 2]);
+  });
+});
+
+describe("the view of the end (E-min K-3)", () => {
+  test("no result or summary while the world goes on", () => {
+    const w = world();
+    for (const seen of [view(w, 0), fullView(w)]) {
+      expect([seen.result, seen.summary]).toEqual([null, null]);
+    }
+  });
+
+  test("every team and the full view get the same result and summary", () => {
+    const w = world();
+    step(w, [{ playerId: 1, command: concede }]);
+    const summary = endSummary(w);
+    for (const seen of [view(w, 0), view(w, 1), fullView(w)]) {
+      expect(seen.result).toEqual(w.result);
+      expect(seen.summary).toEqual(summary);
+    }
+    // The other team learns only that it left (D8), the core still fogged.
+    expect(view(w, 1).teams[0]).toEqual({
+      id: 0,
+      core: null,
+      out: w.teams[0]!.out,
+    });
   });
 });
