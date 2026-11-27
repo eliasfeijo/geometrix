@@ -49,7 +49,7 @@ Node 26 (`.nvmrc`). Node runs `.ts` directly; only the client has a build (Vite)
 | `npm run build` | Client build (Vite) into `apps/client/dist`, which the server serves |
 | `npm run capture` | Screenshots of the real game and lab for the docs (Playwright, headless): builds, starts a private server on `--port` (8097), drives two bot worlds; `--only <scenes>`. Output in `runs/capture-<id>/`; copy the keepers to `docs/img/` |
 | `npm run client` | Vite dev server (port 5173) proxying `/api` and `/ws` to the server on `GEO_PORT` |
-| `npm run dev:multi -- --clients 3` | Build + server + a world with K players (Blue/Orange alternating), one tab per player (`--seed`, `--mult` (default `world.multiplier`), `--no-build`, `--no-open`, `--net` for the `?net=1` network panel, `--bot` for the bot on Orange with everyone on Blue, `--bot-difficulty easy|normal|hard`) |
+| `npm run dev:multi -- --clients 3` | Build + server + a world with K players (Blue/Orange alternating), one tab per player (`--seed`, `--mult` (default `world.multiplier`), `--no-build`, `--no-open`, `--net` for the `?net=1` network panel, `--bot` for the bot on Orange with everyone on Blue, `--bot-difficulty easy|normal|hard`, `--set path=n` (repeatable) to override a world param for the session) |
 | `npm run soak` | Endurance test: a whole bot × bot world (×360, ~12 min) with `kill -9` and restart, and 2 WebSocket clients per team following the deltas; the exported replay must give the server's hash and each client the server's view. Report in `runs/soak-<id>/` |
 
 ## `sim` and `battle` conventions

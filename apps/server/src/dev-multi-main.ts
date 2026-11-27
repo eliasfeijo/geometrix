@@ -3,7 +3,9 @@
 // with K local players, each in its own browser tab. Development only.
 
 import { spawn, spawnSync, type ChildProcess } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import type { JoinResponse } from "@geometrix/protocol";
 import { parseParams } from "@geometrix/sim";
 import { loadConfig } from "./config.ts";
@@ -15,6 +17,7 @@ import {
   parseDevMultiArgs,
   playerOf,
   tabUrl,
+  withOverrides,
   type DevMultiOptions,
 } from "./dev-multi.ts";
 
@@ -35,12 +38,27 @@ try {
 
 const config = loadConfig(process.env);
 const port = config.port;
-// The same params file the server below reads, relative to the same root.
+// The same params file the server below reads, relative to the same root;
+// with --set, a copy with the overrides that only this session uses.
+let paramsFile = config.paramsFile;
+let rawParams: unknown = JSON.parse(
+  readFileSync(new URL(paramsFile, ROOT), "utf8"),
+);
+if (options.set.length > 0) {
+  try {
+    rawParams = withOverrides(rawParams, options.set);
+  } catch (error) {
+    if (!(error instanceof DevMultiError)) throw error;
+    fail(error.message);
+  }
+  paramsFile = join(
+    mkdtempSync(join(tmpdir(), "geo-dev-multi-")),
+    "params.json",
+  );
+  writeFileSync(paramsFile, JSON.stringify(rawParams));
+}
 const multiplier =
-  options.multiplier ??
-  parseParams(
-    JSON.parse(readFileSync(new URL(config.paramsFile, ROOT), "utf8")),
-  ).world.multiplier;
+  options.multiplier ?? parseParams(rawParams).world.multiplier;
 const base = `http://localhost:${port}`;
 
 if (await answers(`${base}/api/worlds`)) {
@@ -58,6 +76,7 @@ if (options.build) {
 const server = spawn(process.execPath, ["apps/server/src/main.ts"], {
   cwd: ROOT,
   stdio: "inherit",
+  env: { ...process.env, GEO_PARAMS: paramsFile },
 });
 const stop = (signal: NodeJS.Signals) => {
   if (server.exitCode === null) server.kill(signal);

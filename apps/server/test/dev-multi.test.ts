@@ -6,7 +6,31 @@ import {
   parseDevMultiArgs,
   playerOf,
   tabUrl,
+  withOverrides,
 } from "../src/dev-multi.ts";
+import { testParams } from "./helpers.ts";
+
+describe("--set overrides (E-min P11)", () => {
+  const raw = testParams();
+
+  test("changes the leaf of a copy, validated", () => {
+    const changed = withOverrides(raw, [
+      { path: "end.concedeAfterSeconds", value: 0 },
+      { path: "world.durationSeconds", value: 600 },
+    ]) as typeof raw;
+    expect(changed.world.durationSeconds).toBe(600);
+    expect(raw.world.durationSeconds).not.toBe(600);
+  });
+
+  test.each([
+    { path: "world.nothing", value: 1 },
+    { path: "nothing.durationSeconds", value: 1 },
+    { path: "world", value: 1 },
+    { path: "world.durationSeconds", value: 0 },
+  ])("refuses $path=$value", (one) => {
+    expect(() => withOverrides(raw, [one])).toThrow(DevMultiError);
+  });
+});
 
 describe("parseDevMultiArgs", () => {
   test("defaults: 2 clients, the params' ×N, server-picked seed, build and open", () => {
@@ -19,6 +43,7 @@ describe("parseDevMultiArgs", () => {
       net: false,
       bot: false,
       botDifficulty: undefined,
+      set: [],
     });
   });
 
@@ -37,6 +62,10 @@ describe("parseDevMultiArgs", () => {
         "--bot",
         "--bot-difficulty",
         "easy",
+        "--set",
+        "end.concedeAfterSeconds=0",
+        "--set",
+        "world.durationSeconds=600",
       ]),
     ).toEqual({
       clients: 4,
@@ -47,6 +76,10 @@ describe("parseDevMultiArgs", () => {
       net: true,
       bot: true,
       botDifficulty: "easy",
+      set: [
+        { path: "end.concedeAfterSeconds", value: 0 },
+        { path: "world.durationSeconds", value: 600 },
+      ],
     });
   });
 
@@ -58,6 +91,8 @@ describe("parseDevMultiArgs", () => {
     [["--teams", "3"]],
     [["--bot", "--bot-difficulty", "insane"]],
     [["--bot-difficulty", "easy"]],
+    [["--set", "world.durationSeconds"]],
+    [["--set", "world.durationSeconds=1,2"]],
   ])("refuses %j", (args) => {
     expect(() => parseDevMultiArgs(args)).toThrow(DevMultiError);
   });

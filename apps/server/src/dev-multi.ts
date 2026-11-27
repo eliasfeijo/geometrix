@@ -3,7 +3,7 @@
 // dev-multi-main.ts. Development only.
 
 import { parseArgs } from "node:util";
-import type { Difficulty } from "@geometrix/sim";
+import { parseParams, type Difficulty } from "@geometrix/sim";
 
 export const DEV_MULTI_USAGE = `usage: npm run dev:multi -- [options]
 
@@ -21,6 +21,8 @@ one browser tab per player. Ctrl+C stops the server.
                   session against the bot, M2 encontro spec section 8)
   --bot-difficulty <easy|normal|hard>
                   the bot's difficulty, with --bot (default hard)
+  --set <path=n>  override a world param for this session, e.g.
+                  --set end.concedeAfterSeconds=0 (repeatable)
 `;
 
 export type DevMultiOptions = {
@@ -35,12 +37,51 @@ export type DevMultiOptions = {
   /** A bot on Orange, the players on Blue. */
   bot: boolean;
   botDifficulty: Difficulty | undefined;
+  /** World params overridden for the session (E-min plan P11). */
+  set: ParamOverride[];
 };
+
+export type ParamOverride = { path: string; value: number };
 
 export class DevMultiError extends Error {}
 
 function isDifficulty(raw: string): raw is Difficulty {
   return raw === "easy" || raw === "normal" || raw === "hard";
+}
+
+function override(raw: string): ParamOverride {
+  const match = /^([A-Za-z]+(?:\.[A-Za-z]+)*)=(\d+)$/.exec(raw);
+  if (match === null) {
+    throw new DevMultiError(`--set must look like a.b.c=1: ${raw}`);
+  }
+  return { path: match[1]!, value: Number(match[2]) };
+}
+
+/**
+ * The params file's JSON with the overrides applied, validated as the server
+ * will read it; `raw` is left untouched.
+ */
+export function withOverrides(
+  raw: unknown,
+  overrides: readonly ParamOverride[],
+): unknown {
+  const copy = JSON.parse(JSON.stringify(raw)) as Record<string, unknown>;
+  for (const { path, value } of overrides) {
+    const keys = path.split(".");
+    const leaf = keys.pop()!;
+    let node: unknown = copy;
+    for (const key of keys) node = (node as Record<string, unknown>)?.[key];
+    if (typeof (node as Record<string, unknown>)?.[leaf] !== "number") {
+      throw new DevMultiError(`--set: unknown parameter ${path}`);
+    }
+    (node as Record<string, unknown>)[leaf] = value;
+  }
+  try {
+    parseParams(copy);
+  } catch (error) {
+    throw new DevMultiError(`--set: ${(error as Error).message}`);
+  }
+  return copy;
 }
 
 function integer(name: string, raw: string, min: number, max: number): number {
@@ -65,6 +106,7 @@ export function parseDevMultiArgs(args: readonly string[]): DevMultiOptions {
         net: { type: "boolean" },
         bot: { type: "boolean" },
         "bot-difficulty": { type: "string" },
+        set: { type: "string", multiple: true },
       },
       strict: true,
     }));
@@ -98,6 +140,7 @@ export function parseDevMultiArgs(args: readonly string[]): DevMultiOptions {
     net: values.net === true,
     bot: values.bot === true,
     botDifficulty: difficulty,
+    set: (values.set ?? []).map(override),
   };
 }
 
