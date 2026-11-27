@@ -93,8 +93,10 @@ time and the team's vote with a deadline (L-5 to L-7, P14). `SIM_VERSION` 15.
 **Interpretations to validate** (the agent's, besides the proposals of L-7):
 
 1. In the minimum time and the deadline the current tick counts whole, as the clock does.
-2. The minimum time is 7,200 world seconds in every `params/*.json`, so at ×6 and ×12 it is not 15 real minutes. The
-   tests' fixed params have 0.
+2. ~~The minimum time is 7,200 world seconds in every `params/*.json`~~ Answered by the owner (2026-11-27): the
+   times count in real minutes at any ×N, so each params file converts them by its `world.multiplier` (×6: 5400, 360,
+   1080; ×8: 7200, 480, 1440; ×12: 10800, 720, 2160). The owner also approved L-7's details and that a yes may be
+   taken back; the other interpretations wait for the playtest. The tests' fixed params have 0.
 3. The `sim` does not stop a bot player from conceding a team that has humans; only the strategist holds back (D4).
 4. A `--concede` before the minimum time is a usage error; one after the world ended, or for a team already out, is
    not logged.

@@ -1,9 +1,9 @@
 {
   "end": {
     "highlights": 5,
-    "concedeAfterSeconds": 7200,
-    "concedeVoteSeconds": 480,
-    "concedeRetrySeconds": 1440
+    "concedeAfterSeconds": 5400,
+    "concedeVoteSeconds": 360,
+    "concedeRetrySeconds": 1080
   },
   "world": {
     "durationSeconds": 43200,
