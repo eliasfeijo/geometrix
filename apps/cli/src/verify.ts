@@ -15,16 +15,26 @@ import {
   botsFor,
   canonicalJson,
   createWorld,
+  endSummary,
   restore,
   serialize,
   step,
   type Bot,
   type Command,
+  type EndSummary,
   type Params,
   type Difficulty,
   type StrategistId,
   type WorldState,
 } from "@geometrix/sim";
+import {
+  defaultBattleParams,
+  logCursor,
+  runBots,
+  stepWithBots,
+  type Concession,
+  type LoggedCommand,
+} from "./harness.ts";
 import {
   replayResults,
   restoreHost,
@@ -32,12 +42,6 @@ import {
   type FinishedBattle,
   type JunctionHost,
 } from "@geometrix/junction";
-import {
-  logCursor,
-  runBots,
-  stepWithBots,
-  type LoggedCommand,
-} from "./harness.ts";
 import { EventHash, stateHash } from "./hash.ts";
 
 /** A way of reaching the end: its state hash and the hash of its events. */
@@ -57,6 +61,10 @@ export type VerifyResult = {
   ok: boolean;
   runs: VerifyRun[];
   battles: VerifyBattles;
+  /** Run 1's end, or null when the world was still going. */
+  end: EndSummary | null;
+  /** Whether every path gave run 1's end summary. */
+  sameEnd: boolean;
 };
 
 function withBots(
@@ -65,8 +73,17 @@ function withBots(
   ticks: number,
   bots: readonly Bot[],
   events: EventHash,
+  concede: Concession | null,
 ) {
-  return runBots(seed, params, ticks, bots, (_, tick) => events.add(tick));
+  return runBots(
+    seed,
+    params,
+    ticks,
+    bots,
+    (_, tick) => events.add(tick),
+    defaultBattleParams(),
+    concede,
+  );
 }
 
 function continueWithBots(
@@ -75,10 +92,11 @@ function continueWithBots(
   ticks: number,
   bots: readonly Bot[],
   events: EventHash,
+  concede: Concession | null,
 ): WorldState {
   const log: LoggedCommand[] = [];
-  for (let i = 0; i < ticks; i++) {
-    events.add(stepWithBots(state, host, bots, log).events);
+  for (let i = 0; i < ticks && state.result === null; i++) {
+    events.add(stepWithBots(state, host, bots, log, concede).events);
   }
   return state;
 }
@@ -123,7 +141,7 @@ function replay(
 ): WorldState {
   const state = createWorld(seed, params);
   const commandsAt = logCursor(log);
-  for (let i = 0; i < ticks; i++) {
+  for (let i = 0; i < ticks && state.result === null; i++) {
     events.add(step(state, commandsAt(state.tick)));
   }
   return state;
@@ -135,30 +153,41 @@ export function verify(
   params: Params,
   strategists: readonly StrategistId[] = ["balanced", "balanced"],
   difficulties: readonly Difficulty[] = [],
+  concede: Concession | null = null,
 ): VerifyResult {
   const bots = botsFor(strategists, difficulties);
-  const half = Math.floor(ticks / 2);
   const events = [0, 1, 2, 3].map(() => new EventHash());
   const finished: FinishedBattle[] = [];
   // The snapshot falls in the middle of a battle when one is open from the
-  // halfway tick on (junction plan section 4), else at the halfway tick.
-  let at = -1;
-  const first = runBots(seed, params, ticks, bots, (state, tick, done) => {
-    events[0]!.add(tick);
-    finished.push(...done);
-    if (at < 0 && state.tick >= half && state.tick < ticks) {
-      if (state.battles.length > 0) at = state.tick;
-    }
-  });
+  // halfway tick on (junction plan section 4), else at the halfway tick; the
+  // halves are of the world's own run, which an end may cut short (E-min).
+  const openTicks: number[] = [];
+  const first = runBots(
+    seed,
+    params,
+    ticks,
+    bots,
+    (state, tick, done) => {
+      events[0]!.add(tick);
+      finished.push(...done);
+      if (state.battles.length > 0) openTicks.push(state.tick);
+    },
+    defaultBattleParams(),
+    concede,
+  );
+  const length = first.state.tick;
+  const half = Math.floor(length / 2);
+  const at = openTicks.find((t) => t >= half && t < length) ?? -1;
   const cutTick = at < 0 ? half : at;
-  const second = withBots(seed, params, ticks, bots, events[1]!);
-  const cut = withBots(seed, params, cutTick, bots, events[2]!);
+  const second = withBots(seed, params, ticks, bots, events[1]!, concede);
+  const cut = withBots(seed, params, cutTick, bots, events[2]!, concede);
   const restored = continueWithBots(
     restore(serialize(cut.state)),
     restoreHost(serializeHost(cut.host)),
     ticks - cutTick,
     bots,
     events[2]!,
+    concede,
   );
   const log = JSON.parse(canonicalJson(first.log)) as LoggedCommand[];
   const ends: [string, WorldState][] = [
@@ -181,12 +210,20 @@ export function verify(
   }));
   const [base] = runs;
   const battles = verifyBattles(first.state, finished, first.log);
+  const end = endSummary(first.state);
+  const sameEnd = ends.every(
+    ([, state]) => canonicalJson(endSummary(state)) === canonicalJson(end),
+  );
   return {
     ok:
       runs.every(
         (r) => r.hash === base!.hash && r.eventsHash === base!.eventsHash,
-      ) && battles.mismatches.length === 0,
+      ) &&
+      battles.mismatches.length === 0 &&
+      sameEnd,
     runs,
     battles,
+    end,
+    sameEnd,
   };
 }

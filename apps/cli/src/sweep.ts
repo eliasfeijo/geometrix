@@ -21,6 +21,12 @@ import {
   type Fate,
   type Role,
 } from "./encounters.ts";
+import {
+  END_KIND_LABELS,
+  endKind,
+  resultText,
+  type EndKind,
+} from "./ending.ts";
 import { botsLine, HOUR, hours, number, realTime, table } from "./format.ts";
 import {
   seedTargets,
@@ -174,6 +180,10 @@ export type RunSummary = {
   wandererAlivePercent: number | null;
   battlesByTeam: number[];
   tickMicros: number;
+  /** How the world ended (E-min D13); null when the run stopped first. */
+  endKind: EndKind | null;
+  endResult: string | null;
+  endRealMinutes: number | null;
 };
 
 const mean = (values: number[]) =>
@@ -314,6 +324,19 @@ export function summarize(result: SimResult, value: number): RunSummary {
     encountersByTeam: asAggressor,
     deathsByTeam,
     ...paceColumns(result.pace),
+    ...endColumns(meta),
+  };
+}
+
+/** The end's CSV columns of a run, at its ×N. */
+function endColumns({ end, multiplier }: SimResult["meta"]) {
+  if (end === undefined || end === null) {
+    return { endKind: null, endResult: null, endRealMinutes: null };
+  }
+  return {
+    endKind: endKind(end),
+    endResult: resultText(end),
+    endRealMinutes: end.durationSeconds / multiplier / 60,
   };
 }
 
@@ -594,6 +617,48 @@ export function sweep(
   return { options, runs, paces };
 }
 
+/** The ends per run and, per value, how many runs ended each way (spec §7). */
+function endsSection(
+  values: readonly number[],
+  path: string,
+  runs: readonly RunSummary[],
+): string[] {
+  const count = (value: number, kind: EndKind | null) =>
+    String(runs.filter((r) => r.value === value && r.endKind === kind).length);
+  const kinds: (EndKind | null)[] = [
+    "elimination",
+    "concession",
+    "botConcession",
+    "clock",
+    "mixed",
+    null,
+  ];
+  const label = (kind: EndKind | null) =>
+    kind === null ? "não terminou" : END_KIND_LABELS[kind];
+  return [
+    "## Fins (spec E-min §7)",
+    "",
+    table(
+      ["Como", ...values.map((v) => `${path}=${v}`)],
+      kinds
+        .filter((kind) => runs.some((r) => r.endKind === kind))
+        .map((kind) => [label(kind), ...values.map((v) => count(v, kind))]),
+    ),
+    "",
+    table(
+      ["Valor", "Seed", "Como", "Quando (min reais)", "Resultado"],
+      runs.map((r) => [
+        String(r.value),
+        String(r.seed),
+        label(r.endKind),
+        r.endRealMinutes === null ? "—" : number(r.endRealMinutes, 1),
+        r.endResult ?? "—",
+      ]),
+    ),
+    "",
+  ];
+}
+
 const VERDICT_MARKS = { true: " ✅", false: " ❌", null: "" } as const;
 
 /**
@@ -659,7 +724,7 @@ export function renderSweepReport({
             ]),
         [
           "Duração de cada mundo",
-          `${hours(ticks * tickSeconds)} de mundo; ${multipliers
+          `até ${hours(ticks * tickSeconds)} de mundo; ${multipliers
             .map((m) => `${realTime(ticks * tickSeconds, m)} a ×${m}`)
             .join(" · ")}`,
         ],
@@ -669,6 +734,7 @@ export function renderSweepReport({
       ],
     ),
     "",
+    ...endsSection(values, path, runs),
     ...paceTargets(values, path, runs, paces),
     "## Comparação",
     "",

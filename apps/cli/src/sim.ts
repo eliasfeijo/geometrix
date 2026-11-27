@@ -8,8 +8,10 @@ import {
   botsFor,
   BALANCED,
   canonicalJson,
+  endSummary,
   sampleMetrics,
   SIM_VERSION,
+  type EndSummary,
   type MetricsSample,
   type Cell,
   type Difficulty,
@@ -20,7 +22,12 @@ import {
 } from "@geometrix/sim";
 import { strategistChoices } from "./choices.ts";
 import { EncounterTracker, type EncounterTally } from "./encounters.ts";
-import { runBots, type LoggedCommand } from "./harness.ts";
+import {
+  defaultBattleParams,
+  runBots,
+  type Concession,
+  type LoggedCommand,
+} from "./harness.ts";
 import { PaceTracker, type PaceFacts } from "./pace.ts";
 import { applyShock, shockTick, teamCreeps, type Shock } from "./shock.ts";
 import { stateHash } from "./hash.ts";
@@ -34,6 +41,7 @@ export type RunMeta = {
   simVersion: number;
   seed: number;
   mapSeed: number;
+  /** The ticks run: fewer than asked when the world ended first. */
   ticks: number;
   tickSeconds: number;
   /**
@@ -46,6 +54,8 @@ export type RunMeta = {
    * replayable: it writes no replay.json.
    */
   shock: Shock | null;
+  /** The forced concession (--concede, E-min P12); absent or null for none. */
+  concede?: Concession | null;
   /** One per team. */
   strategists: StrategistId[];
   /** One per team (R spec D26); absent in runs from before R F3 (hard). */
@@ -56,6 +66,11 @@ export type RunMeta = {
   /** Wall-clock seconds the simulation took. */
   wallSeconds: number;
   commands: number;
+  /**
+   * The ended world's summary, or null when the run stopped first; absent in
+   * runs written before E-min F2.
+   */
+  end?: EndSummary | null;
   /** Where cores and deposits are, for the report. */
   map: { cores: Cell[]; deposits: (Cell & { id: number; kind: Resource })[] };
 };
@@ -81,6 +96,8 @@ export type SimOptions = {
   multiplier?: number;
   /** The recovery scenario (P12); none by default. */
   shock?: Shock | null;
+  /** The forced concession (P12); none by default. */
+  concede?: Concession | null;
   strategists: StrategistId[];
   /** One per team; hard by default (R spec D26). */
   difficulties?: Difficulty[];
@@ -112,17 +129,20 @@ export function simulate(
       pace ??= new PaceTracker(s, multiplier);
       tracker.record(s, events, finished);
       pace.record(s, events);
-      if (s.tick % SAMPLE_EVERY_TICKS === 0 || s.tick === ticks) {
+      const last = s.tick === ticks || s.result !== null;
+      if (s.tick % SAMPLE_EVERY_TICKS === 0 || last) {
         samples.push(sampleMetrics(s));
         tracker.mark(s);
         pace.sample(s);
       }
       // Between this tick and the next, after the tick's metrics.
-      if (shock !== null && s.tick === shockAt) {
+      if (shock !== null && s.tick === shockAt && s.result === null) {
         const before = teamCreeps(s, shock.team);
         pace.shocked(s, shock, before, applyShock(s, shock).length);
       }
     },
+    defaultBattleParams(),
+    options.concede ?? null,
   );
   const wallSeconds = (clock() - started) / 1000;
   const encounters = tracker.finish(state);
@@ -138,10 +158,11 @@ export function simulate(
       simVersion: SIM_VERSION,
       seed,
       mapSeed: state.mapSeed,
-      ticks,
+      ticks: state.tick,
       tickSeconds: params.world.tickSeconds,
       multiplier,
       shock,
+      concede: options.concede ?? null,
       strategists,
       difficulties,
       balanced: BALANCED,
@@ -149,6 +170,7 @@ export function simulate(
       finalHash: stateHash(state),
       wallSeconds,
       commands: log.length,
+      end: endSummary(state),
       map: {
         cores: state.teams.map((t) => ({ ...t.core })),
         deposits: state.deposits.map(({ id, kind, x, y }) => ({

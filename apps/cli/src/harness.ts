@@ -41,6 +41,33 @@ export function defaultBattleParams(): BattleParams {
   return parseBattleParams(JSON.parse(readFileSync(BATTLE_PARAMS, "utf8")));
 }
 
+/** A concession forced into a run (--concede, E-min plan P12). */
+export type Concession = { team: number; minute: number };
+
+/** The tick of its world minute. */
+export const concessionTick = (c: Concession, params: Params) =>
+  Math.floor((c.minute * 60) / params.world.tickSeconds);
+
+/**
+ * The forced concession on its tick: a real `concede` from the team's bot
+ * player, validated and logged like any of its commands.
+ */
+function forced(
+  state: WorldState,
+  bots: readonly Bot[],
+  concede: Concession | null,
+): CommandInput[] {
+  if (
+    concede === null ||
+    state.tick !== concessionTick(concede, state.params)
+  ) {
+    return [];
+  }
+  return bots
+    .filter((bot) => bot.team === concede.team)
+    .map(({ playerId }) => ({ playerId, command: { type: "concede" } }));
+}
+
 /**
  * Steps one tick through the host with the bots' accepted commands, appending
  * them and then the battles' results to `log`. Returns the tick's events
@@ -51,9 +78,13 @@ export function stepWithBots(
   host: JunctionHost,
   bots: readonly Bot[],
   log: LoggedCommand[],
+  concede: Concession | null = null,
 ): JunctionStep {
   const tick = state.tick;
-  const accepted = botCommands(state, bots).filter(
+  const accepted = [
+    ...botCommands(state, bots),
+    ...forced(state, bots, concede),
+  ].filter(
     ({ playerId, command }) => validate(state, command, playerId) === null,
   );
   const done = stepJunction(state, host, accepted);
@@ -84,7 +115,8 @@ export type BotRun = {
 };
 
 /**
- * Creates a world and its host and runs `ticks` ticks with the bots. `onTick`
+ * Creates a world and its host and runs `ticks` ticks with the bots, or up to
+ * the world's end (E-min D13). `onTick`
  * sees the new world (tick 0, no events) and the state after each tick with
  * the tick's events and the battles that ended, for metric samples.
  */
@@ -99,13 +131,14 @@ export function runBots(
     finished: readonly FinishedBattle[],
   ) => void = () => {},
   battleParams: BattleParams = defaultBattleParams(),
+  concede: Concession | null = null,
 ): BotRun {
   const state = createWorld(seed, params);
   const host = createHost(battleParams);
   const log: LoggedCommand[] = [];
   onTick(state, [], []);
-  for (let i = 0; i < ticks; i++) {
-    const done = stepWithBots(state, host, bots, log);
+  for (let i = 0; i < ticks && state.result === null; i++) {
+    const done = stepWithBots(state, host, bots, log, concede);
     onTick(state, done.events, done.finished);
   }
   return { state, host, log };
