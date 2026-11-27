@@ -23,7 +23,7 @@
 - [x] The counters (born, lost, battles won and lost) and the highlights' ranking; `endSummary` (D10; P6)
 - [x] The view: `ForeignTeam.out`, `TeamView.result` and `summary`, in `fullView` too (K-3)
 - [x] A hand-built three-team world: one concedes, the world goes on (D7, X-2), then ends; nothing leaks
-- [ ] `SIM_VERSION` (P13), the fixed hashes; the protocol and the client compile against the new types
+- [x] `SIM_VERSION` (P13), the fixed hashes; the protocol and the client compile against the new types
 
 ## F2 — The bot and the harness
 

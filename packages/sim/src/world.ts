@@ -35,9 +35,10 @@ import { nameAt } from "./names.ts";
  * the R vocabulary: follow, help, drop, the road builder with its own target,
  * the hostile intent and the bot's difficulty (M2 R F2). 13: the params hold
  * the battle pause times, so a stored world of 12 has not enough params (M2 R
- * F5).
+ * F5). 14: the world's end (concede, elimination, the clock, the result),
+ * first blood, the match's counters and main events (M2 E-min F1).
  */
-export const SIM_VERSION = 13;
+export const SIM_VERSION = 14;
 
 export type Stock = Record<Resource, number>;
 
