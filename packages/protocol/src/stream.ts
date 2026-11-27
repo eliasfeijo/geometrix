@@ -15,6 +15,8 @@ export * from "./delta.ts";
  * 5: the battle stubs in the view and the delta, react with pay or refuse
  * only, the battle events (M2 junction). 6: the wanderers in the view and
  * the delta (M2 junction F6). 7: the battle screen, its inputs, opening and
- * frames, the frames as deltas of the battle view (M2 junction F4).
+ * frames, the frames as deltas of the battle view (M2 junction F4). 8: the
+ * follow and drop orders, the hostile intent in the delta, the bot's
+ * difficulty on join and world creation, battlePause and battleHold (M2 R).
  */
-export const PROTOCOL_VERSION = 7;
+export const PROTOCOL_VERSION = 8;

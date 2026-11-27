@@ -3,6 +3,7 @@
 // dev-multi-main.ts. Development only.
 
 import { parseArgs } from "node:util";
+import type { Difficulty } from "@geometrix/sim";
 
 export const DEV_MULTI_USAGE = `usage: npm run dev:multi -- [options]
 
@@ -12,27 +13,35 @@ one browser tab per player. Ctrl+C stops the server.
 
   --clients <k>   players (default 2)
   --seed <n>      world seed (default: the server picks one)
-  --mult <n>      time multiplier (default 36)
+  --mult <n>      time multiplier (default: the params' world.multiplier)
   --no-build      serve the client build already in apps/client/dist
   --no-open       only print the URLs
   --net           open the tabs with the network panel (?net=1)
   --bot           a bot plays Orange; every player joins Blue (the
                   session against the bot, M2 encontro spec section 8)
+  --bot-difficulty <easy|normal|hard>
+                  the bot's difficulty, with --bot (default hard)
 `;
 
 export type DevMultiOptions = {
   clients: number;
   seed: number | undefined;
-  multiplier: number;
+  /** Undefined: the params' world.multiplier (R plan P1). */
+  multiplier: number | undefined;
   build: boolean;
   open: boolean;
   /** Tabs with ?net=1, the network panel (M1.5 spec D8). */
   net: boolean;
   /** A bot on Orange, the players on Blue. */
   bot: boolean;
+  botDifficulty: Difficulty | undefined;
 };
 
 export class DevMultiError extends Error {}
+
+function isDifficulty(raw: string): raw is Difficulty {
+  return raw === "easy" || raw === "normal" || raw === "hard";
+}
 
 function integer(name: string, raw: string, min: number, max: number): number {
   const value = Number(raw);
@@ -55,11 +64,21 @@ export function parseDevMultiArgs(args: readonly string[]): DevMultiOptions {
         "no-open": { type: "boolean" },
         net: { type: "boolean" },
         bot: { type: "boolean" },
+        "bot-difficulty": { type: "string" },
       },
       strict: true,
     }));
   } catch (error) {
     throw new DevMultiError((error as Error).message);
+  }
+  const difficulty = values["bot-difficulty"];
+  if (difficulty !== undefined) {
+    if (!isDifficulty(difficulty)) {
+      throw new DevMultiError("--bot-difficulty must be easy, normal or hard");
+    }
+    if (values.bot !== true) {
+      throw new DevMultiError("--bot-difficulty needs --bot");
+    }
   }
   return {
     clients:
@@ -71,11 +90,14 @@ export function parseDevMultiArgs(args: readonly string[]): DevMultiOptions {
         ? undefined
         : integer("seed", values.seed, 0, 2 ** 32 - 1),
     multiplier:
-      values.mult === undefined ? 36 : integer("mult", values.mult, 1, 10_000),
+      values.mult === undefined
+        ? undefined
+        : integer("mult", values.mult, 1, 10_000),
     build: values["no-build"] !== true,
     open: values["no-open"] !== true,
     net: values.net === true,
     bot: values.bot === true,
+    botDifficulty: difficulty,
   };
 }
 

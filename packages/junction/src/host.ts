@@ -35,9 +35,11 @@ import { battleHp, battleSetup, participantSetup } from "./setup.ts";
 
 /**
  * How a battle advances (D4, D13): on the world clock, one world second per
- * world tick, or in real time, stepped by the server every battle tick.
+ * world tick, or in real time, stepped by the server every battle tick. A
+ * held battle advances on neither (the opening pause and the humans' pause,
+ * R plan P11).
  */
-export type Pace = "world" | "real";
+export type Pace = "world" | "real" | "held";
 
 /** A creep the world joined that the battle has not placed yet (J-3). */
 export type PendingJoin = { creep: number; side: number };
@@ -74,6 +76,12 @@ export type JunctionHost = {
    * on with the world clock until a human is back, N-3).
    */
   screens: number[];
+  /**
+   * The battles held, by id (R plan P11): set by the server like `screens`
+   * and never in a snapshot, so after a restart a held battle goes on with
+   * the world clock (OC-6, BP-4).
+   */
+  holds: number[];
 };
 
 /** A battle that left the host, with what replays it (geo verify). */
@@ -115,7 +123,7 @@ export class JunctionError extends Error {
 }
 
 export function createHost(battleParams: BattleParams): JunctionHost {
-  return { battleParams, instances: [], results: [], screens: [] };
+  return { battleParams, instances: [], results: [], screens: [], holds: [] };
 }
 
 /** Battle ticks in one world tick (T-1): 20 per world second. */
@@ -146,21 +154,56 @@ function wantedController(
     : "gambits";
 }
 
+/** Whether some participant of `instance` is in a human's hands (D13). */
+function inHumanHands(
+  world: WorldState,
+  host: JunctionHost,
+  instance: Instance,
+): boolean {
+  return instance.state.participants.some((p) => {
+    const member = instance.members.find((m) => m.participant === p.id)!;
+    return wantedController(world, host, member.creep) === "human";
+  });
+}
+
 /**
- * Real time while a participant is in a human's hands on the screen; the
- * world clock otherwise (D13).
+ * Held while the server holds it (R plan P11); otherwise real time while a
+ * participant is in a human's hands on the screen, the world clock if none
+ * (D13).
  */
 function paceOf(
   world: WorldState,
   host: JunctionHost,
   instance: Instance,
 ): Pace {
-  return instance.state.participants.some((p) => {
-    const member = instance.members.find((m) => m.participant === p.id)!;
-    return wantedController(world, host, member.creep) === "human";
-  })
-    ? "real"
-    : "world";
+  if (host.holds.includes(instance.battleId)) return "held";
+  return inHumanHands(world, host, instance) ? "real" : "world";
+}
+
+/** Whether a human controls a participant of the battle on its screen. */
+export function humanControls(
+  world: WorldState,
+  host: JunctionHost,
+  battleId: number,
+): boolean {
+  const instance = host.instances.find((i) => i.battleId === battleId);
+  return instance !== undefined && inHumanHands(world, host, instance);
+}
+
+/**
+ * Holds or releases a battle (R plan P11), its pace changed at once so the
+ * battle clock follows before the next world tick.
+ */
+export function setHold(
+  world: WorldState,
+  host: JunctionHost,
+  battleId: number,
+  held: boolean,
+): void {
+  const without = host.holds.filter((id) => id !== battleId);
+  host.holds = held ? [...without, battleId].sort((a, b) => a - b) : without;
+  const instance = host.instances.find((i) => i.battleId === battleId);
+  if (instance !== undefined) instance.pace = paceOf(world, host, instance);
 }
 
 /** The host's commands for the next battle tick: control changes, then a join. */
@@ -256,6 +299,7 @@ function stepInstance(
   instance.sent.push(...results);
   if (ended) {
     host.instances = host.instances.filter((i) => i !== instance);
+    host.holds = host.holds.filter((id) => id !== instance.battleId);
     finished.push({
       battleId: instance.battleId,
       window: instance.window,
@@ -474,7 +518,7 @@ export function setScreen(
   host.screens = open ? [...without, creepId].sort((a, b) => a - b) : without;
 }
 
-/** The host as canonical JSON, without the screens (N-3). */
+/** The host as canonical JSON, without the screens and the holds (N-3). */
 export function serializeHost(host: JunctionHost): string {
   return canonicalJson(
     {
@@ -487,7 +531,7 @@ export function serializeHost(host: JunctionHost): string {
 }
 
 export function restoreHost(json: string): JunctionHost {
-  const data = JSON.parse(json) as Omit<JunctionHost, "screens">;
+  const data = JSON.parse(json) as Omit<JunctionHost, "screens" | "holds">;
   for (const instance of data.instances) {
     if (instance.state.battleVersion !== BATTLE_VERSION) {
       throw new JunctionError(
@@ -495,5 +539,5 @@ export function restoreHost(json: string): JunctionHost {
       );
     }
   }
-  return { ...data, screens: [] };
+  return { ...data, screens: [], holds: [] };
 }

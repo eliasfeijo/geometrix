@@ -200,6 +200,7 @@ export class SoakClient {
         }
         break;
       }
+      case "battleHold":
       case "ack":
       case "reject":
         break;

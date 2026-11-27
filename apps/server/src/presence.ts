@@ -48,6 +48,11 @@ export class PresenceTracker implements Presence {
     return seen;
   }
 
+  /** Whether the player has a socket open now. */
+  isConnected(playerId: number): boolean {
+    return (this.players.get(playerId)?.sockets ?? 0) > 0;
+  }
+
   connected(player: PlayerRow): void {
     const seen = this.seen(player.id);
     seen.sockets += 1;

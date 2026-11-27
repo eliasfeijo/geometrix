@@ -6,6 +6,7 @@ import type { CreateWorldRequest } from "@geometrix/protocol";
 import type { Params } from "@geometrix/sim";
 import type { ServerConfig } from "./config.ts";
 import { BattleClock } from "./battle-clock.ts";
+import { Holds } from "./holds.ts";
 import { TickLoop, type Timers } from "./loop.ts";
 import type { Store } from "./persistence.ts";
 import type { PresenceTracker } from "./presence.ts";
@@ -20,7 +21,7 @@ export class Worlds {
   private readonly presence: PresenceTracker;
   private readonly hosted = new Map<
     number,
-    { host: WorldHost; loop: TickLoop; clock: BattleClock }
+    { host: WorldHost; loop: TickLoop; clock: BattleClock; holds: Holds }
   >();
 
   /** `params` and `battleParams` are the ones new worlds start with. */
@@ -44,6 +45,11 @@ export class Worlds {
     return this.hosted.get(id)?.host;
   }
 
+  /** A hosted world's battle holds (R plan P11). */
+  holds(id: number): Holds | undefined {
+    return this.hosted.get(id)?.holds;
+  }
+
   /** Creates a world and starts its clock. */
   create(request: CreateWorldRequest, createdAt: string): WorldHost {
     const host = WorldHost.create(
@@ -54,6 +60,7 @@ export class Worlds {
         battleParams: this.battleParams,
         multiplier: request.multiplier ?? 1,
         botTeams: request.botTeams ?? [],
+        botDifficulty: request.botDifficulty,
         createdAt,
       },
     );
@@ -103,16 +110,20 @@ export class Worlds {
       1000 / ticksPerSecond,
       this.config.maxCatchUpBattleTicks,
     );
-    this.hosted.set(host.id, { host, loop, clock });
+    const holds = new Holds(host, this.timers, (playerId) =>
+      this.presence.isConnected(playerId),
+    );
+    this.hosted.set(host.id, { host, loop, clock, holds });
     loop.start();
     clock.start();
   }
 
   /** Stops every loop and snapshots the running worlds (clean shutdown). */
   stopAll(): void {
-    for (const { host, loop, clock } of this.hosted.values()) {
+    for (const { host, loop, clock, holds } of this.hosted.values()) {
       loop.stop();
       clock.stop();
+      holds.stop();
       if (host.status === "running") host.snapshot();
     }
   }

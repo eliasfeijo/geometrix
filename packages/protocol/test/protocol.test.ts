@@ -118,6 +118,10 @@ describe("parseClientMessage", () => {
       "a battle screen without a ref",
       JSON.stringify({ type: "battleScreen", battleId: 3 }),
     ],
+    [
+      "a pause of no battle",
+      JSON.stringify({ type: "battlePause", ref: 2, battleId: null }),
+    ],
   ])("rejects %s", (_, raw) => {
     expect(parseClientMessage(raw)).toBeNull();
   });
@@ -143,6 +147,23 @@ describe("parseClientMessage", () => {
     const screen = { type: "battleScreen", ref: 5, battleId };
     expect(parseClientMessage(JSON.stringify(screen))).toEqual(screen);
   });
+
+  test("accepts a pause of a battle", () => {
+    const pause = { type: "battlePause", ref: 6, battleId: 9 };
+    expect(parseClientMessage(JSON.stringify(pause))).toEqual(pause);
+  });
+
+  test.each([{ type: "follow", targetId: 7 }, { type: "drop" }])(
+    "accepts the $type order",
+    (order) => {
+      const command = { type: "order", creepId: 3, order };
+      expect(parseClientMessage(message(command))).toEqual({
+        type: "command",
+        ref: expect.any(Number),
+        command,
+      });
+    },
+  );
 
   test("accepts a resync request", () => {
     const resync = { type: "resync", reason: "seqGap", seq: 12 };

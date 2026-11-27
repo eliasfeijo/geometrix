@@ -204,6 +204,16 @@ export const clientMessage = z.discriminatedUnion("type", [
     ref: z.number().int().nonnegative(),
     battleId: id.nullable(),
   }),
+  /**
+   * P on a battle screen (R spec D28): pause a battle in real time, or
+   * resume a paused one, each after a countdown. Only for a player who
+   * controls a participant of it.
+   */
+  z.object({
+    type: z.literal("battlePause"),
+    ref: z.number().int().nonnegative(),
+    battleId: id,
+  }),
 ]);
 
 export type ClientMessage = z.infer<typeof clientMessage>;
@@ -216,6 +226,10 @@ export type BattleInputMessage = Extract<
 export type BattleScreenMessage = Extract<
   ClientMessage,
   { type: "battleScreen" }
+>;
+export type BattlePauseMessage = Extract<
+  ClientMessage,
+  { type: "battlePause" }
 >;
 
 /** The parsed message, or null when it is not a valid client message. */
@@ -230,18 +244,33 @@ export function parseClientMessage(raw: string): ClientMessage | null {
   return result.success ? result.data : null;
 }
 
+const difficulty = z.enum(["easy", "normal", "hard"]);
+
 /** POST /api/worlds. Without a seed the server picks one (it is stored). */
-export const createWorldRequest = z.object({
-  seed: z
-    .number()
-    .int()
-    .nonnegative()
-    .max(2 ** 32 - 1)
-    .optional(),
-  multiplier: z.number().int().positive().max(10_000).optional(),
-  /** Teams that get a balanced bot (spec section 5, F6 details). */
-  botTeams: z.array(z.number().int().nonnegative()).max(8).optional(),
-});
+export const createWorldRequest = z
+  .object({
+    seed: z
+      .number()
+      .int()
+      .nonnegative()
+      .max(2 ** 32 - 1)
+      .optional(),
+    multiplier: z.number().int().positive().max(10_000).optional(),
+    /** Teams that get a balanced bot (spec section 5, F6 details). */
+    botTeams: z.array(z.number().int().nonnegative()).max(8).optional(),
+    /**
+     * A bot team's difficulty, by team id (R spec D26); a team left out plays
+     * hard.
+     */
+    botDifficulty: z.record(z.string().regex(/^\d+$/), difficulty).optional(),
+  })
+  .refine(
+    ({ botTeams, botDifficulty }) =>
+      Object.keys(botDifficulty ?? {}).every((team) =>
+        (botTeams ?? []).includes(Number(team)),
+      ),
+    { message: "botDifficulty: only for teams in botTeams" },
+  );
 
 export type CreateWorldRequest = z.infer<typeof createWorldRequest>;
 
@@ -371,11 +400,33 @@ export type BattleFrameMessage = {
   roster?: BattleRoster;
 };
 
+/**
+ * What holds a battle (R plan P11): the opening pause (D6), the countdown to
+ * a human's pause, the pause itself and the countdown out of it (D28). The
+ * battle does not advance while opening, paused or resuming.
+ */
+export type BattleHoldState = "opening" | "pausing" | "paused" | "resuming";
+
+/**
+ * Server -> client: a battle's hold changed, to every socket of a team with
+ * a side in it (and again to a socket that connects while one lasts). State
+ * null: nothing holds it any more. `remainingMs` is the countdown left when
+ * sent, in real time (null while paused, with no end, and with state null);
+ * relative, so the clocks of server and client need not agree.
+ */
+export type BattleHoldMessage = {
+  type: "battleHold";
+  battleId: number;
+  state: BattleHoldState | null;
+  remainingMs: number | null;
+};
+
 export type ServerMessage =
   | WelcomeMessage
   | DeltaMessage
   | BattleOpenMessage
   | BattleFrameMessage
+  | BattleHoldMessage
   | { type: "ack"; ref: number; tick: number }
   | { type: "reject"; ref: number; reason: RejectReason };
 
@@ -383,14 +434,18 @@ export type ServerMessage =
  * A sim refusal, or one from the server before the sim sees the command. A
  * battle screen of a battle the team has no side in is `notYourBattle`; a
  * battle input for a participant the player does not dominate is
- * `notYourParticipant` (C-2).
+ * `notYourParticipant` (C-2). A pause from a player who controls no
+ * participant of the battle is `notControlling`, one during a countdown
+ * `countingDown` (R spec BP-3).
  */
 export type RejectReason =
   | Refusal
   | "invalidMessage"
   | "worldEnded"
   | "notYourBattle"
-  | "notYourParticipant";
+  | "notYourParticipant"
+  | "notControlling"
+  | "countingDown";
 
 // Compile-time check that the client vocabulary matches the sim's commands,
 // less the system ones: the server's join and the junction host's battle
@@ -455,7 +510,7 @@ const loggedCommand = z.object({
       type: z.literal("join"),
       team: count,
       bot: z.boolean(),
-      difficulty: z.enum(["easy", "normal", "hard"]).optional(),
+      difficulty: difficulty.optional(),
     }),
     z.object({
       type: z.literal("battleExit"),

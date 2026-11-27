@@ -1,6 +1,6 @@
 # M2 tasks — Rebalance and pace
 
-**Status:** F0, F1 and F2 done (2026-11-25); next wave 2, F3 and F5 (see "Running the phases"). Branches `m2/rebalance-f<n>-<slug>` (skill `commit`).
+**Status:** F0, F1 and F2 done (2026-11-25), F3 and F5 done (2026-11-26); next wave 3, F4 then F6 (see "Running the phases"). Branches `m2/rebalance-f<n>-<slug>` (skill `commit`).
 **Spec:** [spec.md](spec.md) · **Plan:** [plan.md](plan.md)
 
 ## Running the phases: waves, lanes and models
@@ -315,12 +315,61 @@ The tick cost follows the population: 65–78 µs per tick on average with both 
 
 ## F5 — The pauses, network and server
 
-- [ ] The held pace in the host (`holds`, `paceOf`), skipped by the battle clock (P11)
-- [ ] `holds.ts`: the opening hold, pausing, paused, resuming, released by absence (OC-1..OC-6, BP-1..BP-4)
-- [ ] `battlePause` and `battleHold`; the follow and drop orders; the hostile intent in the delta;
+- [x] The held pace in the host (`holds`, `paceOf`), skipped by the battle clock (P11)
+- [x] `holds.ts`: the opening hold, pausing, paused, resuming, released by absence (OC-1..OC-6, BP-1..BP-4)
+- [x] `battlePause` and `battleHold`; the follow and drop orders; the hostile intent in the delta;
       `PROTOCOL_VERSION` 8
-- [ ] The bot's difficulty on its player row (migration), in world creation and `dev:multi --bot-difficulty`
-- [ ] The diff property with the new fields (U-4); `geo net` on today's default world still within targets
+- [x] The bot's difficulty on its player row (migration), in world creation and `dev:multi --bot-difficulty`
+- [x] The diff property with the new fields (U-4); `geo net` on today's default world still within targets
+
+### F5 record (2026-11-26)
+
+In the code:
+
+- `junction`: the `held` pace, `host.holds` (not serialized), `setHold` (changes the instance's pace at once, so
+  the battle clock follows before the next world tick) and `humanControls`.
+- `sim`: only the params `battle.hold.openingMs` (5,000) and `countdownMs` (3,000), which the sim never reads, and
+  `SIM_VERSION` 13. The fixed hashes change with the params and the version alone: without both, the old 6 h bot
+  world hash came back.
+- `protocol`: `battlePause` (client), `battleHold` (server), the reasons `notControlling` and `countingDown`,
+  `botDifficulty` in `createWorldRequest`, `PROTOCOL_VERSION` 8. The `follow` and `drop` orders and the hostile
+  intent's delta were already done in F2.
+- `server`: `holds.ts` (the state machine, one per hosted world, made by `Worlds`), `WorldHost.setHold`,
+  `controls`, `humanControlled`, `battleTeams` and `onScreens`; `PresenceTracker.isConnected`; the `difficulty`
+  column; `dev:multi --bot-difficulty`. The strategist call in `WorldHost.tick` is untouched (the threat pass is
+  F3's).
+- `client`: only the two new refusal texts. It ignores `battleHold` until F6.
+
+**Measured.** `geo net --seed 42 --days 3` on today's default world: 189 B/s per client (target <= 2,048), 149.0 us
+of view and diff per send for 2 teams (<= 250), battle frames 5,584 B/s in the worst battle (<= 16,384), 0
+divergences. The new diff property world (3 h, seed 42): 199 follow orders and 45 hostile intents sent, 48 drops,
+155 battle ticks held, 0 divergences (all measured after the rebase on F3). `npm run soak` (port 8081) is OK with the holds: its clients are connected
+humans, so 83 of the 94 ended battles lasted ~1,800 ticks (the 5 real seconds at ×360); 5 kills cut through open
+battles, every battle log replayed to its hash and to the world log. At ×360 a hold locks creeps for 30 world
+minutes: F7 should keep that in mind when reading its soak.
+
+**Interpretations to validate in the playtest** (details the plan leaves open, or where F5 departs from it):
+
+1. `SIM_VERSION` 13, which the plan does not name: a stored world of 12 lacks `battle.hold`, and `restore` would
+   throw at the server's boot instead of skipping the world.
+2. `battleHold` carries `remainingMs` (relative, real time), not the plan's `endsAt` in server time: the server's
+   clock is monotonic and a client's cannot be compared with it.
+3. The reject reasons are `notControlling` and `countingDown`, not the plan's `notInBattle` and `busy`, which are
+   already sim refusals with other texts.
+4. While a battle is held, only each participant's latest `intent` waits for the resume (a key released in the
+   pause does not stay down); `attackOnce`, `face`, `drop` and `pickup` pressed then are dropped.
+5. "Controls a participant" (P) is the dominated creep in the arena with its battle screen open, also before the
+   world tick that puts the battle in real time.
+6. The opening hold looks at the teams with a side when the opening tick ends, joiners of that tick included; "a
+   human connected" is a player of such a team with a socket open, whether or not it dominates anyone.
+7. A battle that ends during the pause countdown drops its hold.
+8. `botDifficulty` is an object by team id (`{"1": "easy"}`), refused for a team not in `botTeams`.
+9. `dev:multi --mult` now defaults to `world.multiplier` (R plan P1): 6 on today's default params, which until F4 are
+   the 72-hour world (12 real hours; it was ×36).
+
+**For F6.** `battleHold` goes to every socket of a team with a side in the battle, can arrive before the delta that
+brings the battle's stub, and is sent again to a socket that connects while it lasts. A hold that ended while the
+socket was down (or with a server restart) sends nothing, so the client drops its holds when the socket opens.
 
 ## F6 — Client
 

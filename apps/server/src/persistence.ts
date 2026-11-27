@@ -17,6 +17,7 @@ import Database from "better-sqlite3";
 import {
   eventsFor,
   type Command,
+  type Difficulty,
   type MetricsSample,
   type Params,
   type SimEvent,
@@ -49,6 +50,8 @@ export type PlayerRow = {
   team: number;
   name: string;
   bot: boolean;
+  /** A bot's difficulty (R spec D26); null for a human. */
+  difficulty: Difficulty | null;
 };
 
 export type Snapshot = { tick: number; stateJson: string; stateHash: string };
@@ -114,7 +117,8 @@ CREATE TABLE IF NOT EXISTS players (
   team_id    INTEGER NOT NULL,
   name       TEXT    NOT NULL,
   token_hash TEXT    UNIQUE,
-  bot        INTEGER NOT NULL DEFAULT 0
+  bot        INTEGER NOT NULL DEFAULT 0,
+  difficulty TEXT
 );
 CREATE TABLE IF NOT EXISTS commands (
   world_id     INTEGER NOT NULL REFERENCES worlds(id),
@@ -201,6 +205,7 @@ type PlayerRecord = {
   team_id: number;
   name: string;
   bot: number;
+  difficulty: Difficulty | null;
 };
 
 const toPlayer = (r: PlayerRecord): PlayerRow => ({
@@ -209,6 +214,7 @@ const toPlayer = (r: PlayerRecord): PlayerRow => ({
   team: r.team_id,
   name: r.name,
   bot: r.bot === 1,
+  difficulty: r.difficulty,
 });
 
 type BattleRecordRow = {
@@ -249,9 +255,16 @@ export class Store {
 
   /** Columns added after a table first shipped, for older files. */
   private migrate(): void {
-    const columns = this.db.pragma("table_info(worlds)") as { name: string }[];
-    if (!columns.some((c) => c.name === "battle_params_json")) {
-      this.db.exec("ALTER TABLE worlds ADD COLUMN battle_params_json TEXT");
+    this.addColumn("worlds", "battle_params_json", "TEXT");
+    this.addColumn("players", "difficulty", "TEXT");
+  }
+
+  private addColumn(table: string, column: string, type: string): void {
+    const columns = this.db.pragma(`table_info(${table})`) as {
+      name: string;
+    }[];
+    if (!columns.some((c) => c.name === column)) {
+      this.db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${type}`);
     }
   }
 
@@ -314,11 +327,12 @@ export class Store {
     name: string;
     tokenHash: string | null;
     bot: boolean;
+    difficulty?: Difficulty;
   }): number {
     const result = this.db
       .prepare(
-        `INSERT INTO players (world_id, team_id, name, token_hash, bot)
-         VALUES (?, ?, ?, ?, ?)`,
+        `INSERT INTO players (world_id, team_id, name, token_hash, bot, difficulty)
+         VALUES (?, ?, ?, ?, ?, ?)`,
       )
       .run(
         player.worldId,
@@ -326,6 +340,7 @@ export class Store {
         player.name,
         player.tokenHash,
         player.bot ? 1 : 0,
+        player.difficulty ?? null,
       );
     return Number(result.lastInsertRowid);
   }

@@ -9,7 +9,7 @@
 // spoils drop and stubs close, and the test asserts floors of each.
 
 import { parseBattleParams } from "@geometrix/battle";
-import { createHost, stepJunction } from "@geometrix/junction";
+import { createHost, setHold, stepJunction } from "@geometrix/junction";
 import {
   botCommands,
   botsFor,
@@ -17,6 +17,8 @@ import {
   parseParams,
   validate,
   view,
+  type Rule,
+  type WorldState,
 } from "@geometrix/sim";
 import { expect, test } from "vitest";
 import battleParams from "../../battle/test/params.json" with { type: "json" };
@@ -195,3 +197,129 @@ test.each([42])(
   },
   60_000,
 );
+
+// The vocabulary of the R slice (spec U-4): follow orders, drops, hostile
+// intents, held battles and the new rules. The bots do not use follow or drop
+// yet, so after every other strategist minute the test rewrites some creeps'
+// rules, as the bot that owns them: a follower of a teammate that helps
+// allies, a gatherer that drops its load and a hunter. Battles are held and
+// released on the junction host every half minute.
+test.each([42])(
+  "seed %i: 3 h with follows, drops, hostile intents and held battles",
+  (seed) => {
+    const withWanderers = JSON.parse(JSON.stringify(params)) as typeof params;
+    withWanderers.wanderers.cap = 4;
+    withWanderers.wanderers.firstSeconds = 600;
+    withWanderers.wanderers.intervalSeconds = { start: 600, end: 600 };
+    const state = createWorld(seed, parseParams(withWanderers));
+    const host = createHost(parseBattleParams(battleParams));
+    const ticks = (3 * 3600) / state.params.world.tickSeconds;
+    const bots = botsFor(["balanced", "balanced"]);
+    const teams = [0, 1];
+    const sent = teams.map(() => emptySent());
+    const cells = state.map.width * state.map.height;
+    const client = teams.map((team) => emptyView(team, cells));
+    let follows = 0;
+    let hostiles = 0;
+    let drops = 0;
+    let held = 0;
+    for (;;) {
+      for (const team of teams) {
+        const seen = view(state, team);
+        const delta = JSON.parse(
+          JSON.stringify(diffView(sent[team]!, seen)),
+        ) as Delta;
+        for (const creep of delta.creeps?.upsert ?? []) {
+          if ("order" in creep && creep.order?.type === "follow") follows++;
+          if (creep.hostile != null) hostiles++;
+        }
+        hostiles += (delta.wanderers?.upsert ?? []).filter(
+          (wanderer) => wanderer.hostile != null,
+        ).length;
+        client[team] = applyDelta(client[team]!, delta);
+        if (JSON.stringify(client[team]) !== JSON.stringify(seen)) {
+          expect(viewJson(client[team]!), `tick ${state.tick}`).toBe(
+            viewJson(seen),
+          );
+          expect.fail(`tick ${state.tick}, team ${team}: key order differs`);
+        }
+      }
+      if (state.tick >= ticks) break;
+      const commands = botCommands(state, bots);
+      // Just after the strategist's minute, so the rules last until its next.
+      if (state.tick % 120 === 1) commands.push(...vocabulary(state, bots));
+      const accepted = commands.filter(
+        ({ playerId, command }) => validate(state, command, playerId) === null,
+      );
+      const hold = Math.floor(state.tick / 30) % 2 === 1;
+      for (const instance of host.instances) {
+        setHold(state, host, instance.battleId, hold);
+        if (hold) held++;
+      }
+      const { events } = stepJunction(state, host, accepted);
+      drops += events.filter((e) => e.type === "dropped").length;
+    }
+    // 199 follow orders and 45 hostile intents sent, 48 loads dropped and 155
+    // battle ticks held in this seed.
+    expect(follows).toBeGreaterThan(0);
+    expect(hostiles).toBeGreaterThan(0);
+    expect(drops).toBeGreaterThan(0);
+    expect(held).toBeGreaterThan(0);
+  },
+  90_000,
+);
+
+/** New rules for each team's first creeps, as the team's bot player. */
+function vocabulary(state: WorldState, bots: ReturnType<typeof botsFor>) {
+  return bots.flatMap(({ playerId, team }) => {
+    const [leader, follower, dropper, hunter] = state.creeps.filter(
+      (c) => c.team === team,
+    );
+    const set = (creep: typeof leader, rules: Rule[]) =>
+      creep === undefined
+        ? []
+        : [
+            {
+              playerId,
+              command: {
+                type: "setRules" as const,
+                creepId: creep.id,
+                rules,
+              },
+            },
+          ];
+    return [
+      ...(leader === undefined
+        ? []
+        : set(follower, [
+            {
+              when: { type: "allyInBattle", radius: 12 },
+              then: { type: "joinBattle", minHpPermille: 200 },
+            },
+            {
+              when: { type: "always" },
+              then: { type: "follow", creepId: leader.id },
+            },
+          ])),
+      ...set(dropper, [
+        { when: { type: "cargoFull" }, then: { type: "drop" } },
+        {
+          when: { type: "always" },
+          then: { type: "gather", resource: "materia" },
+        },
+      ]),
+      ...set(hunter, [
+        {
+          when: { type: "always" },
+          then: {
+            type: "approach",
+            intent: "attack",
+            radius: 20,
+            minCargo: 0,
+          },
+        },
+        { when: { type: "always" }, then: { type: "explore" } },
+      ]),
+    ];
+  });
+}

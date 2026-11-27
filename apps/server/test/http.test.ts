@@ -48,6 +48,24 @@ describe("HTTP", () => {
     ]);
   });
 
+  test("takes a bot team's difficulty, only for a bot team", async () => {
+    const { post, store } = await setup();
+    const created = await post("/api/worlds", {
+      seed: 7,
+      botTeams: [1],
+      botDifficulty: { 1: "normal" },
+    });
+    expect(created.status).toBe(201);
+    expect(store.players(1).map((p) => p.difficulty)).toEqual(["normal"]);
+    for (const botDifficulty of [{ 0: "easy" }, { 1: "insane" }]) {
+      const refused = await post("/api/worlds", {
+        botTeams: [1],
+        botDifficulty,
+      });
+      expect(refused.status).toBe(400);
+    }
+  });
+
   test("join hands out a token whose hash is stored, and queues the join", async () => {
     const { post, store, app } = await setup();
     await post("/api/worlds", { seed: 1 });

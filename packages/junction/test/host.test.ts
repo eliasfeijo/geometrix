@@ -14,11 +14,13 @@ import { serializeBattle } from "@geometrix/battle";
 import {
   addInstances,
   createHost,
+  humanControls,
   instanceRecord,
   participantOf,
   rebuildInstance,
   restoreHost,
   serializeHost,
+  setHold,
   setScreen,
   stepJunction,
   stepRealtime,
@@ -118,6 +120,73 @@ describe("the battles a world tick stepped (the screen's frames, F4)", () => {
     dominate(w, 5, hunter.id);
     setScreen(host, hunter.id, true);
     expect(stepJunction(w, host, []).stepped).toEqual([]);
+  });
+});
+
+describe("a held battle (R plan P11, D6, D28)", () => {
+  /** The duel's battle, opened and stepped one world second. */
+  function open() {
+    const d = duel();
+    stepJunction(d.w, d.host, []);
+    stepJunction(d.w, d.host, []);
+    return { ...d, instance: d.host.instances[0]! };
+  }
+
+  test("does not advance on the world clock, while the world does", () => {
+    const { w, host, instance } = open();
+    setHold(w, host, instance.battleId, true);
+    expect(instance.pace).toBe("held");
+    const tick = instance.state.tick;
+    const worldTick = w.tick;
+    const logged = instance.log.commands.length;
+    for (let i = 0; i < 5; i++) {
+      expect(stepJunction(w, host, []).stepped).toEqual([]);
+    }
+    expect(instance.pace).toBe("held");
+    expect(instance.state.tick).toBe(tick);
+    expect(instance.log.commands).toHaveLength(logged);
+    expect(w.tick).toBe(worldTick + 5);
+    expect(w.battles).toHaveLength(1);
+    setHold(w, host, instance.battleId, false);
+    expect(instance.pace).toBe("world");
+    stepJunction(w, host, []);
+    expect(instance.state.tick).toBe(tick + 20);
+  });
+
+  test("released with a human on the screen, goes straight to real time", () => {
+    const { w, hunter, host, instance } = open();
+    join(w, 5, 0, false);
+    dominate(w, 5, hunter.id);
+    expect(humanControls(w, host, instance.battleId)).toBe(false);
+    setScreen(host, hunter.id, true);
+    expect(humanControls(w, host, instance.battleId)).toBe(true);
+    setHold(w, host, instance.battleId, true);
+    expect(instance.pace).toBe("held");
+    setHold(w, host, instance.battleId, false);
+    expect(instance.pace).toBe("real");
+  });
+
+  test("the hold ends as the battle ran without it", () => {
+    const straight = duel();
+    const ended = untilOver(straight.w, straight.host);
+    const { w, host, instance } = open();
+    setHold(w, host, instance.battleId, true);
+    for (let i = 0; i < 4; i++) stepJunction(w, host, []);
+    setHold(w, host, instance.battleId, false);
+    const { finished } = untilOver(w, host);
+    expect(finished[0]!.log.ticks).toBe(ended.finished[0]!.log.ticks);
+    expect(replayResults(w, finished[0]!)).toEqual(finished[0]!.results);
+    expect(host.holds).toEqual([]);
+  });
+
+  test("is not in a snapshot: restored, it goes on with the world clock (OC-6)", () => {
+    const { w, host, instance } = open();
+    setHold(w, host, instance.battleId, true);
+    const restored = restoreHost(serializeHost(host));
+    expect(restored.holds).toEqual([]);
+    expect(rebuildInstance(instanceRecord(instance), instance.log).pace).toBe(
+      "world",
+    );
   });
 });
 
