@@ -22,7 +22,7 @@ human, real gameplay to test). Siege and repair (the rest of E) come after P. Se
 | Slice specs (spec → plan → tasks) | `docs/specs/` |
 | Build order | `docs/ROADMAP.md` |
 | Playtest scripts | `docs/PLAYTEST.md` |
-| Workflow skills (commit, phase, ADR, GDD, slice) | `.claude/skills/` (implementing a phase: `implement-phase`) |
+| Workflow skills (commit, phase, ADR, GDD, slice, wave) | `.claude/skills/` (implementing a phase: `implement-phase`; managing a wave of phase sessions: `run-wave`) |
 | How we develop with AI agents | `docs/HARNESS.md` |
 
 ## Commands
