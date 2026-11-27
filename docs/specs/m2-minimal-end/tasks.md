@@ -199,7 +199,28 @@ for C1: whether the main events need more detail (5), and the tone (11).
 
 ## F5 — Soak and playtest
 
-- [ ] The soak checks the end against the export and reports when and how the world ended
-- [ ] The PLAYTEST E-min group (spec §8), with the `--set` overrides for short sessions
+- [x] The soak checks the end against the export and reports when and how the world ended
+- [x] The PLAYTEST E-min group (spec §8), with the `--set` overrides for short sessions
 - [ ] **Checkpoint C1:** the owner's sessions (against the bot until it concedes, a concession between two tabs, the
       clock's draw, the replay's marks), the hypothesis questions and the tone of the sentences
+
+### F5 record (2026-11-27)
+
+**What it does.** The soak checks the end: the lobby's result and every client's summary against the state the
+exported replay reaches, and its report says when and how the world ended. A planned interruption the end came before
+is listed, not failed (it fails only when the clock ran its whole time, which leaves room for all of them); a battle
+the end stopped open is replayed to its last stored tick (plan §5), and a battle a crash cut through must have gone on
+after the restart. PLAYTEST has the groups E1–E5 and the checkpoint questions.
+
+**Measured** (`npm run soak`, one run, alone on the machine, 2.8 min): OK. The world ended at tick 57,599 (120 real
+minutes at ×8) by the clock, a draw; the lobby and the 4 clients show the replay's end; 6/6 interruptions before the
+end, 5 kills through a battle; 46 battles, 45 ended and 1 stopped open by the end; loop speed median 100%, slowest
+95%; server memory up to 220 MB.
+
+**Interpretations** (the agent's):
+
+1. The bots' world only ends at the clock (F2), so the early end's paths of the soak (missed interruptions) are not
+   exercised by the run; `checkEnd` and `describeEnd` are tested.
+2. The PLAYTEST group's E1 puts the creep's cost out of reach (`creep.cost.materia=99999`), so the bot's concession
+   comes in one session; the default cost is not played there.
+

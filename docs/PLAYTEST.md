@@ -3,7 +3,7 @@
 How to run a geometrix playtest session. The earlier sessions (M1 readability, the M1.5 fog, the M2 encounter, the
 lab groups 1–6 and 8) are done; their scripts are summarized below, and their findings live in each slice's
 `tasks.md`. The junction groups J1–J5 were played freely at slice D's checkpoint C2 (2026-11-25; J6 left to P).
-**Pending:** lab group 7 (the movement options).
+**Pending:** the minimal end's groups E1–E5 (checkpoint C1) and lab group 7 (the movement options).
 **Next:** the friends' playtest (slice P, [ROADMAP](ROADMAP.md)), whose script is written in P's spec.
 
 The game's interface is in Portuguese; the labels below are quoted as they appear on screen, with a gloss.
@@ -196,6 +196,83 @@ them out one by one in the session).
 C2-1 The hypothesis (spec §1): does the battle pay off the risk, change the course of the world, without dominating
      the game? Is the world readable with battles in it?
 C2-2 The order of E (siege and repair) against P (the friends' playtest): E first, P first, or P with E's minimum?
+```
+
+## The minimal end (checkpoint C1) — pending
+
+Slice E-min's sessions ([spec §8](specs/m2-minimal-end/spec.md)): does the match end when it feels over, is the end
+readable, can the story be found again? Short worlds through `--set` (world params of the session only), at the
+default ×8. At this ×N: the minimum time before "Desistir" is 15 real minutes by default, a vote lasts 60 s, the wait
+after a rejected vote 3 min. One group at a time; stop the server (Ctrl+C) between groups.
+
+### Group E1: against the bot until it concedes (~15–25 min)
+
+```sh
+npm run dev:multi -- --clients 1 --bot --bot-difficulty easy --seed 42 --set creep.cost.materia=99999 --set end.concedeAfterSeconds=0
+```
+
+Nobody can produce (the creep's cost is out of reach), so a death is final.
+
+1. Dominate and hunt the Orange creeps ("Atacar") until the bot is left with one: it concedes on its next decision.
+2. On the end screen, read the result, how it ended, the table and "Momentos da partida" (the match's moments).
+3. **"Ver o mapa"**: the frozen world; try to command a creep. **"Ver o resultado"** brings the end screen back.
+4. **"Ver o replay"**: let the marks load, then hover and click a few.
+
+### Group E2: a concession between two tabs (~10 min)
+
+```sh
+npm run dev:multi -- --clients 2 --seed 42 --set end.concedeAfterSeconds=0
+```
+
+1. In the Orange tab, **"Desistir"**: read the dialog, then **"Cancelar"**.
+2. In the Blue tab, send a creep to attack an Orange one, so a battle screen is open there.
+3. While it runs, concede in the Orange tab, through the confirmation. Watch what the Blue tab shows.
+4. Leave to the lobby: the world lists its result.
+
+### Group E3: the team's vote (~10 min)
+
+```sh
+npm run dev:multi -- --clients 3 --seed 42 --set end.concedeAfterSeconds=0 --set end.concedeRetrySeconds=240
+```
+
+Tabs 1 and 3 are Blue, tab 2 is Orange.
+
+1. Tab 1: **"Desistir"**. Tab 3 sees the vote panel; answer **"Não"**. "Desistir" counts down the wait (30 real s).
+2. Tab 1: **"Desistir"** again. In tab 1, try **"Retirar o meu sim"** (take my yes back); wait the 30 s.
+3. Tab 1: **"Desistir"** once more and answer nothing in tab 3: at the deadline (60 s) the silence counts as yes.
+
+### Group E4: the clock (~6 min)
+
+```sh
+npm run dev:multi -- --clients 2 --seed 42 --set world.durationSeconds=2400
+```
+
+The world lasts 5 real minutes. "Desistir" counts down to a time the world never reaches. Play both sides a little
+and let the clock run out: the draw.
+
+### Group E5: the marks of a whole match (~10 min)
+
+```sh
+npm run geo -- sim --seed 42 --days 3
+npm run dev:multi -- --clients 1
+```
+
+Leave the world to the lobby and, under "Assistir replay (o replay.json de um geo sim)", open the `replay.json` of
+the run just made (`runs/<id>/`).
+
+1. Time from choosing the file to the marks being ready (target: 10 s).
+2. Find the match's turning point with the marks: toggle the kinds, hover for the sentence, click to jump.
+3. Drag to the last tick: the end screen opens.
+
+### The checkpoint questions
+
+```
+Q1 Did the match end when it felt over?
+Q2 Did the end screen tell you what happened? Are the moments' sentences enough, or should a battle say its size
+   and load?
+Q3 Is "Desistir" easy to find and hard to hit by accident? Is the vote clear?
+Q4 Did the marks lead you to the moments that mattered?
+Q5 The new sentences (the first blood, a team leaving, the vote, the world's end): is the tone right?
 ```
 
 ## The battle lab
