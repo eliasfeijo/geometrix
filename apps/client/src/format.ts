@@ -88,7 +88,7 @@ export const REJECT_TEXTS: Record<RejectReason | "disconnected", string> = {
   tooManyRules: "Regras demais para um creep.",
   invalidRule: "Regra inválida.",
   invalidPreset: "Preset inválido.",
-  invalidTarget: "Ponto inválido para esse preset.",
+  invalidTarget: "Alvo inválido.",
   busy: "O Núcleo já está produzindo.",
   populationCap: "O time chegou ao teto de população.",
   owned: "O time já tem esse upgrade.",
@@ -149,7 +149,18 @@ const dnaFilter = (dna: readonly Dna[] | undefined) =>
 const cargoFilter = (minCargo: number) =>
   minCargo > 0 ? `, com carga ≥ ${minCargo}` : "";
 
-export function actionText(a: Action): string {
+/** A creep's name by id, for the texts that point at one. */
+export type NameOf = (id: number) => string;
+
+const byId: NameOf = (id) => `o creep #${id}`;
+
+/** Names from the view's creeps; one it lost keeps its number. */
+export const namesOf =
+  (creeps: readonly { id: number; name: string }[]): NameOf =>
+  (id) =>
+    creeps.find((c) => c.id === id)?.name ?? byId(id);
+
+export function actionText(a: Action, nameOf: NameOf = byId): string {
   switch (a.type) {
     case "gather":
       return `coletar ${RESOURCE_NAMES[a.resource]}`;
@@ -176,7 +187,7 @@ export function actionText(a: Action): string {
     case "flee":
       return "fugir";
     case "follow":
-      return `seguir o creep #${a.creepId}`;
+      return `seguir ${nameOf(a.creepId)}`;
     case "drop":
       return "largar a carga";
     case "joinBattle":
@@ -184,11 +195,15 @@ export function actionText(a: Action): string {
   }
 }
 
-export const ruleText = (rule: Rule) =>
-  `${conditionText(rule.when)} → ${actionText(rule.then)}`;
+export const ruleText = (rule: Rule, nameOf: NameOf = byId) =>
+  `${conditionText(rule.when)} → ${actionText(rule.then, nameOf)}`;
 
 /** The creep's current order, as a sentence. */
-export function orderText(order: Order, deposits: readonly Deposit[]): string {
+export function orderText(
+  order: Order,
+  deposits: readonly Deposit[],
+  nameOf: NameOf = byId,
+): string {
   switch (order.type) {
     case "stop":
       return "nenhuma";
@@ -215,7 +230,7 @@ export function orderText(order: Order, deposits: readonly Deposit[]): string {
     case "flee":
       return "fugir para o Núcleo";
     case "follow":
-      return `seguir o creep #${order.targetId}`;
+      return `seguir ${nameOf(order.targetId)}`;
     case "drop":
       return "largar a carga";
   }

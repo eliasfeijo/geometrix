@@ -145,3 +145,17 @@ export function safeConductLeft(
     seconds: (safeConduct.untilTick - tick) * params.world.tickSeconds,
   };
 }
+
+/**
+ * Whether the dominated creep may drop its load now (R spec D24, DR-2): it
+ * carries something, is in no battle and not fleeing, and in an encounter
+ * only as the victim of an extortion, which dropping refuses (DR-3).
+ */
+export function canDrop(state: TeamView, creep: CreepView): boolean {
+  if (stockTotal(creep.cargo) === 0) return false;
+  if (creep.battle !== null || creep.order.type === "flee") return false;
+  if (creep.engagement === null) return true;
+  return state.encounters.some(
+    (e) => e.id === creep.engagement && e.victim === creep.id,
+  );
+}

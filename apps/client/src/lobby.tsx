@@ -2,9 +2,16 @@
 // joining a team with a guest name (spec section 4: no real login in M1) and
 // watching replays: of a server world, or of a replay.json from geo sim.
 
-import type { WorldSummary } from "@geometrix/protocol";
+import type { CreateWorldRequest, WorldSummary } from "@geometrix/protocol";
+import { DIFFICULTIES, type Difficulty } from "@geometrix/sim";
 import { useEffect, useState } from "preact/hooks";
-import { ApiError, createWorld, joinWorld, listWorlds } from "./api.ts";
+import {
+  ApiError,
+  createWorld,
+  joinWorld,
+  listWorlds,
+  serverConfig,
+} from "./api.ts";
 import { REJECT_TEXTS, teamName } from "./format.ts";
 import { loadName, loadSession, saveName, saveSession } from "./session.ts";
 
@@ -174,25 +181,61 @@ export function Lobby(props: Props) {
   );
 }
 
+const DIFFICULTY_NAMES: Record<Difficulty, string> = {
+  easy: "fácil",
+  normal: "normal",
+  hard: "difícil",
+};
+
+/** The request of the "Novo mundo" form; only bot teams have a difficulty. */
+export function worldRequest(form: {
+  seed: string;
+  multiplier: string;
+  bots: readonly boolean[];
+  difficulties: readonly Difficulty[];
+}): CreateWorldRequest {
+  const botTeams = TEAMS.filter((t) => form.bots[t]);
+  return {
+    ...(form.seed.trim() === "" ? {} : { seed: Number(form.seed) }),
+    multiplier: Number(form.multiplier),
+    botTeams,
+    botDifficulty: Object.fromEntries(
+      botTeams.map((t) => [String(t), form.difficulties[t]!]),
+    ),
+  };
+}
+
 function CreateWorld(props: {
   disabled: boolean;
   onCreated(id: number): void;
   onError(text: string): void;
 }) {
   const [seed, setSeed] = useState("");
-  const [multiplier, setMultiplier] = useState("36");
+  // Empty until the server says what its params are tuned for (R plan P1).
+  const [multiplier, setMultiplier] = useState("");
   const [bots, setBots] = useState<boolean[]>([false, true]);
+  const [difficulties, setDifficulties] = useState<Difficulty[]>([
+    "hard",
+    "hard",
+  ]);
+  useEffect(() => {
+    serverConfig()
+      .then((config) =>
+        setMultiplier((typed) =>
+          typed === "" ? String(config.multiplier) : typed,
+        ),
+      )
+      .catch((err) => props.onError(apiErrorText(err)));
+  }, []);
   const [busy, setBusy] = useState(false);
 
   const submit = async (e: Event) => {
     e.preventDefault();
     setBusy(true);
     try {
-      const { id } = await createWorld({
-        ...(seed.trim() === "" ? {} : { seed: Number(seed) }),
-        multiplier: Number(multiplier),
-        botTeams: TEAMS.filter((t) => bots[t]),
-      });
+      const { id } = await createWorld(
+        worldRequest({ seed, multiplier, bots, difficulties }),
+      );
       props.onCreated(id);
     } catch (err) {
       props.onError(apiErrorText(err));
@@ -236,9 +279,28 @@ function CreateWorld(props: {
               }}
             />
             Bot no {teamName(team)}
+            <select
+              aria-label={`Dificuldade do bot no ${teamName(team)}`}
+              value={difficulties[team]}
+              disabled={!bots[team]}
+              onChange={(e) => {
+                const next = [...difficulties];
+                next[team] = e.currentTarget.value as Difficulty;
+                setDifficulties(next);
+              }}
+            >
+              {DIFFICULTIES.map((d) => (
+                <option key={d} value={d}>
+                  {DIFFICULTY_NAMES[d]}
+                </option>
+              ))}
+            </select>
           </label>
         ))}
-        <button class="primary" disabled={busy || props.disabled}>
+        <button
+          class="primary"
+          disabled={busy || props.disabled || multiplier === ""}
+        >
           Criar
         </button>
       </div>

@@ -4,6 +4,7 @@ import type {
   CreateWorldRequest,
   JoinRequest,
   JoinResponse,
+  ServerConfigResponse,
   WorldSummary,
 } from "@geometrix/protocol";
 
@@ -49,6 +50,8 @@ async function request<T>(path: string, body?: unknown): Promise<T> {
 }
 
 export const listWorlds = () => request<WorldSummary[]>("/api/worlds");
+
+export const serverConfig = () => request<ServerConfigResponse>("/api/config");
 
 export const createWorld = (body: CreateWorldRequest) =>
   request<{ id: number }>("/api/worlds", body);

@@ -1,7 +1,8 @@
-// What a left click selects: the creep under the pointer, a stack of creeps
-// (to choose one from a list), else the deposit or core at that cell. A click
-// that hits several markers with none clearly lists all their creeps (fog
-// F6, E3).
+// What a click hits. A left click lists every inspectable actor in its area
+// (R spec D23, owner 2026-11-27): the creeps of any team, the wanderers, the
+// deposit, the core, a spoil and a battle; one alone is selected at once. The
+// area is the creeps' hit radius, which grows as the map zooms out. A right
+// click keeps the narrower pick of the creeps under it (fog F6, E3).
 
 import type {
   BattleStubView,
@@ -11,59 +12,113 @@ import type {
   Spoil,
 } from "@geometrix/sim";
 import { battleSign } from "./combat-marks.ts";
-import { HIT_RADIUS, markerAt, markersAt, type Marker } from "./layout.ts";
+import {
+  HIT_RADIUS,
+  MIN_HIT_PX,
+  markerAt,
+  markersAt,
+  type Marker,
+} from "./layout.ts";
 import { cellAt, type Point } from "./view.ts";
 
 export type Selection =
   | { kind: "creep"; id: number }
+  | { kind: "wanderer"; id: number }
   | { kind: "deposit"; id: number }
   | { kind: "core"; team: number }
+  | { kind: "spoil"; id: number }
   /** A battle, by its sign on the map (junction D16). */
   | { kind: "battle"; id: number };
-
-/** What a click hits: a selection, or a stack whose creeps to list. */
-export type Pick = Selection | { kind: "stack"; ids: number[] };
 
 /** Hit radius of a core around its cell center. */
 export const CORE_HIT_RADIUS = 1;
 
-export function pickAt(
-  point: Point,
-  markers: readonly Marker[],
-  deposits: readonly Deposit[],
+/** What a click can hit, as the view and the map's markers have it. */
+export type Scene = {
+  markers: readonly Marker[];
+  wanderers?: readonly (Cell & { id: number })[];
+  deposits?: readonly Deposit[];
+  spoils?: readonly Spoil[];
   /** By team; null for a core the team has not seen. */
-  cores: readonly (Cell | null)[],
-  /** Pixels per cell. */
+  cores?: readonly (Cell | null)[];
+  battles?: readonly BattleStubView[];
+};
+
+/** Whether the battle sign at `point`, if any (it sits on top of the map). */
+export function signAt(
+  point: Point,
+  battles: readonly BattleStubView[],
   viewScale: number,
-  /** The battles in the view: their signs come first (they sit on top). */
-  battles: readonly BattleStubView[] = [],
-): Pick | null {
-  const sign = battles.find((b) => {
+): BattleStubView | undefined {
+  return battles.find((b) => {
     const { x, y, r } = battleSign(b, viewScale);
     return Math.hypot(point.x - x, point.y - y) <= r;
   });
-  if (sign !== undefined) return { kind: "battle", id: sign.id };
-  const marker = markerAt(point, markers, viewScale);
-  if (marker?.kind === "creep") return { kind: "creep", id: marker.id };
-  if (marker?.kind === "stack") return { kind: "stack", ids: marker.ids };
-  const hits = markersAt(point, markers, viewScale);
-  if (hits.length > 0) {
-    const ids = hits.flatMap(({ marker: m }) =>
-      m.kind === "creep" ? [m.id] : m.ids,
-    );
-    return { kind: "stack", ids: ids.sort((a, b) => a - b) };
-  }
+}
+
+/**
+ * Every actor in the click's area (D23): the battle whose sign is hit, the
+ * creeps by id, the wanderers, the spoils, the deposits and the cores. A
+ * deposit or spoil counts when the click is on its cell or, zoomed out,
+ * within MIN_HIT_PX of its middle.
+ */
+export function actorsAt(
+  point: Point,
+  scene: Scene,
+  viewScale: number,
+): Selection[] {
+  const reach = MIN_HIT_PX / viewScale;
   const cell = cellAt(point);
-  const deposit = deposits.find((d) => d.x === cell.x && d.y === cell.y);
-  if (deposit !== undefined) return { kind: "deposit", id: deposit.id };
-  const team = cores.findIndex(
-    (core) =>
-      core !== null &&
-      Math.hypot(core.x + 0.5 - point.x, core.y + 0.5 - point.y) <=
-        CORE_HIT_RADIUS,
-  );
-  if (team >= 0) return { kind: "core", team };
-  return null;
+  const distance = (c: Cell) =>
+    Math.hypot(c.x + 0.5 - point.x, c.y + 0.5 - point.y);
+  const near = (c: Cell, radius: number) =>
+    distance(c) <= Math.max(radius, reach);
+  const onCell = (c: Cell) =>
+    (c.x === cell.x && c.y === cell.y) || distance(c) <= reach;
+  const byDistance = <T extends Cell & { id: number }>(list: readonly T[]) =>
+    [...list].sort((a, b) => distance(a) - distance(b) || a.id - b.id);
+
+  const actors: Selection[] = [];
+  const sign = signAt(point, scene.battles ?? [], viewScale);
+  if (sign !== undefined) actors.push({ kind: "battle", id: sign.id });
+  const creeps = markersAt(point, scene.markers, viewScale)
+    .flatMap(({ marker: m }) => (m.kind === "creep" ? [m.id] : m.ids))
+    .sort((a, b) => a - b);
+  for (const id of creeps) actors.push({ kind: "creep", id });
+  for (const w of byDistance(scene.wanderers ?? [])) {
+    if (near(w, HIT_RADIUS)) actors.push({ kind: "wanderer", id: w.id });
+  }
+  for (const s of byDistance(scene.spoils ?? [])) {
+    if (onCell(s)) actors.push({ kind: "spoil", id: s.id });
+  }
+  for (const d of byDistance(scene.deposits ?? [])) {
+    if (onCell(d)) actors.push({ kind: "deposit", id: d.id });
+  }
+  (scene.cores ?? []).forEach((core, team) => {
+    if (core !== null && near(core, CORE_HIT_RADIUS)) {
+      actors.push({ kind: "core", team });
+    }
+  });
+  return actors;
+}
+
+/**
+ * The creeps a right click or the cursor hits: the one it clearly lands on,
+ * else all those under it, by id.
+ */
+export function creepsUnder(
+  point: Point,
+  markers: readonly Marker[],
+  viewScale: number,
+): number[] {
+  const marker = markerAt(point, markers, viewScale);
+  const hits =
+    marker !== null
+      ? [marker]
+      : markersAt(point, markers, viewScale).map((h) => h.marker);
+  return hits
+    .flatMap((m) => (m.kind === "creep" ? [m.id] : m.ids))
+    .sort((a, b) => a - b);
 }
 
 /** Ids of the creeps on the same cell as creep `id`, itself included. */
@@ -95,22 +150,28 @@ export function wanderersAt(
     .map((w) => w.id);
 }
 
-/**
- * The enemy creeps a pick hits (M2 encontro C-6): the creep, or those of a
- * stack, of another team than `team`, by id. Empty for anything else.
- */
+/** Of the creeps under a click, those of another team (M2 encontro C-6). */
 export function enemiesIn(
-  pick: Pick | null,
+  ids: readonly number[],
   creeps: readonly { id: number; team: number }[],
   team: number,
 ): number[] {
-  if (pick === null) return [];
-  const ids =
-    pick.kind === "creep" ? [pick.id] : pick.kind === "stack" ? pick.ids : [];
   return ids.filter((id) => {
     const creep = creeps.find((c) => c.id === id);
     return creep !== undefined && creep.team !== team;
   });
+}
+
+/** Of the creeps under a click, the team's own other than `except` (D8). */
+export function alliesIn(
+  ids: readonly number[],
+  creeps: readonly { id: number; team: number }[],
+  team: number,
+  except: number,
+): number[] {
+  return ids.filter(
+    (id) => id !== except && creeps.some((c) => c.id === id && c.team === team),
+  );
 }
 
 export const sameSelection = (a: Selection | null, b: Selection | null) =>

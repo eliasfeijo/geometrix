@@ -1,6 +1,6 @@
 import { useEffect } from "preact/hooks";
 import { useGame } from "./context.ts";
-import { teamName, worldClock } from "./format.ts";
+import { durationWords, teamName, worldClock } from "./format.ts";
 import type { Session } from "./session.ts";
 import { NOTICE_MS } from "./store.ts";
 
@@ -34,7 +34,7 @@ export function TopBar({
           {worldClock(state.tick, params.world.tickSeconds)}
           <span class="muted">
             {" "}
-            / {Math.floor(params.world.durationSeconds / 86_400)} dias · ×
+            / {durationWords(params.world.durationSeconds)} · ×
             {info!.multiplier}
           </span>
         </span>

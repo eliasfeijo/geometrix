@@ -895,6 +895,7 @@ h3 {
 }
 
 .map.mode-pickCell,
+.map.mode-pickAlly,
 .map.mode-road {
   cursor: crosshair;
 }
@@ -1298,4 +1299,36 @@ button.danger {
 
 .engaged-action {
   margin-left: 8px;
+}
+
+/* M2 R F6: the cell's order under the allies of the right-click menu. */
+.approach-cell {
+  display: flex;
+  justify-content: flex-end;
+  border-top: 1px solid var(--line);
+  padding-top: 6px;
+}
+
+/* M2 R F6: the opening alert on the map (D6) and the holds' countdowns. */
+.battle-alerts {
+  position: absolute;
+  top: 56px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 5;
+  max-width: calc(100% - 32px);
+}
+
+.battle-alert {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: #3a2326;
+  border: 2px solid var(--danger);
+  border-radius: 6px;
+  box-shadow: 0 6px 24px rgb(0 0 0 / 0.5);
 }

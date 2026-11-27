@@ -22,6 +22,7 @@ export type BattleLink = {
     battleId: number,
     command: BattleInputCommand,
   ): Promise<CommandResult>;
+  battlePause(battleId: number): Promise<CommandResult>;
 };
 
 /** How much of a new round trip goes into the average (per mille). */
@@ -90,9 +91,25 @@ export class BattleControl {
     this.ask(id);
   }
 
-  /** A battle screen's opening or frame, for the battle shown. */
+  /**
+   * A battle's hold, of any of the team's battles, or the opening or a frame
+   * of the battle shown.
+   */
   receive(message: BattleMessage, now: number): void {
     const { store } = this;
+    if (message.type === "battleHold") {
+      const holds = new Map(store.holds.value);
+      if (message.state === null) holds.delete(message.battleId);
+      else {
+        holds.set(message.battleId, {
+          state: message.state,
+          endsAt:
+            message.remainingMs === null ? null : now + message.remainingMs,
+        });
+      }
+      store.holds.value = holds;
+      return;
+    }
     if (message.battleId !== store.shownBattle.value) return;
     if (message.type === "battleOpen") {
       store.battleScreen.value = openedScreen(message, now);
@@ -101,6 +118,24 @@ export class BattleControl {
     const screen = store.battleScreen.value;
     if (screen === null || screen.battleId !== message.battleId) return;
     store.battleScreen.value = framedScreen(screen, message, now);
+  }
+
+  /**
+   * The socket dropped: a hold that ends while it is down sends nothing, and
+   * the server tells a new socket the ones still on.
+   */
+  dropped(): void {
+    this.store.holds.value = new Map();
+  }
+
+  /** P (D28): pauses the battle shown, or resumes it, after a countdown. */
+  pause(): void {
+    const id = this.store.shownBattle.value;
+    if (id === null) return;
+    void this.link.battlePause(id).then((result) => {
+      if (result.ok || result.reason === "disconnected") return;
+      this.store.notify(REJECT_TEXTS[result.reason], this.now());
+    });
   }
 
   /**

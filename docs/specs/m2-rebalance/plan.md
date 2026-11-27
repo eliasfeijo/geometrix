@@ -323,6 +323,13 @@ apps/client/src/
 - **C2-3** A road segment costs 10 matéria (provisional), so that the opening happens between real minute 8 and 15.
 - **C2-4** The tick cost (65–103 µs per tick against ~75) is accepted.
 
+**At F6's opening** (owner, 2026-11-27):
+
+- **F6-1** A left click opens the actors' list whenever two or more actors are in the area, even on a click right on
+  one creep: the fog slice's direct selection of the nearest creep (E3) ends (D23, P15, read literally).
+- **F6-2** The right-click menu on an ally offers "Seguir" and also the order the click would give on that cell
+  (D8).
+
 ## 13. Implementation order
 
 | Phase | Content | Checkpoint |

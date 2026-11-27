@@ -121,6 +121,11 @@
   numbered 1 to 9** like the number keys, in an order the player changes (drag and drop, or Shift+↑/↓), the embodied
   creep always 1; the rest of the team below. Each line has actions: **select, dominate, center on the map**.
 
+- **A left click lists everything in its area** (owner, slice R's review of 2026-11-25 and R F6's opening,
+  2026-11-27; slice R): creeps of any team, wanderers, the deposit, the core, a spoil, a battle. **Any two or more
+  open the list**, even on a click right on one creep (this ends the fog slice's direct selection of the creep
+  clicked in its middle); one alone is selected at once.
+
 ## Proposal
 - **Slice G's control details** (agent, slice G's design round, 2026-11-25; to approve in
   [G's spec](../specs/m2-groups/spec.md)): the panel's line also shows the DNA, name, HP, load, current action, squad

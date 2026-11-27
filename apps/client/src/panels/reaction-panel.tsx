@@ -5,7 +5,7 @@
 // it opens the battle at once.
 
 import { useGame } from "../context.ts";
-import { reactionOf } from "../encounter-actions.ts";
+import { canDrop, reactionOf } from "../encounter-actions.ts";
 import { REPLY_TEXTS, stockText } from "../format.ts";
 import { DnaIcon } from "./dna-icon.tsx";
 
@@ -45,7 +45,7 @@ export function ReactionPanel() {
       </div>
       <p class="reaction-detail">
         {victim
-          ? `Exigência: ${stockText(encounter.demand)}. Pagar dá salvo-conduto contra o time dele; recusar abre a batalha.`
+          ? `Exigência: ${stockText(encounter.demand)}. Pagar dá salvo-conduto contra o time dele; recusar abre a batalha. Largar a carga também recusa.`
           : `Esperando a resposta de ${otherName}.`}
         {victim && seconds !== null && (
           <span class="muted"> Sem resposta, valem as regras do piloto.</span>
@@ -65,6 +65,19 @@ export function ReactionPanel() {
               {REPLY_TEXTS[choice]}
             </button>
           ))}
+          <button
+            disabled={!canAct || sent !== null || !canDrop(state, mine)}
+            title="Recusa a exigência: a carga fica no chão e a batalha abre com você vazio"
+            onClick={() =>
+              void send({
+                type: "order",
+                creepId: mine.id,
+                order: { type: "drop" },
+              })
+            }
+          >
+            Largar carga
+          </button>
         </div>
       )}
       {sent !== null && (

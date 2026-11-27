@@ -6,11 +6,13 @@ import {
   reactRefusal,
   step,
   updateVision,
+  type CreepView,
   type Wanderer,
 } from "@geometrix/sim";
 import { describe, expect, it } from "vitest";
 import {
   approachOptions,
+  canDrop,
   engagementText,
   reactionOf,
   safeConductLeft,
@@ -51,7 +53,12 @@ describe("the right-click menu over an enemy (spec C-6)", () => {
     const { store, enemy, sent, send } = facing();
     order(store, { x: enemy.x + 0.5, y: enemy.y + 0.5 }, send, 1, PX);
     expect(sent).toEqual([]);
-    expect(store.approach.value).toEqual({ ids: [enemy.id], at: PX });
+    expect(store.approach.value).toEqual({
+      ids: [enemy.id],
+      allies: [],
+      cell: null,
+      at: PX,
+    });
     const key = { key: "Escape", target: null } as unknown as KeyboardEvent;
     expect(handleKey(store, 0, key)).toBe(true);
     expect(store.approach.value).toBeNull();
@@ -129,7 +136,12 @@ describe("the right-click menu over a wanderer (junction W-4)", () => {
     const { world, store, mine, wanderer, sent, send } = withWanderer();
     order(store, { x: wanderer.x + 0.5, y: wanderer.y + 0.4 }, send, 3, PX);
     expect(sent).toEqual([]);
-    expect(store.approach.value).toEqual({ ids: [wanderer.id], at: PX });
+    expect(store.approach.value).toEqual({
+      ids: [wanderer.id],
+      allies: [],
+      cell: null,
+      at: PX,
+    });
     const options = approachOptions(
       store.current.value!.state,
       world.params,
@@ -268,5 +280,29 @@ describe("the inspector's encounter and safe conduct (spec C-7)", () => {
       safeConductLeft(conduct, conduct.untilTick, world.params),
     ).toBeNull();
     expect(safeConductLeft(null, 0, world.params)).toBeNull();
+  });
+});
+
+describe("canDrop (R spec D24)", () => {
+  it("needs a load, and in an encounter the victim of an extortion", () => {
+    const state = viewOf(testWorld());
+    const creep = structuredClone(state.creeps[0]!) as CreepView;
+    expect(canDrop(state, creep)).toBe(false);
+    creep.cargo = { materia: 3, cristal: 0 };
+    expect(canDrop(state, creep)).toBe(true);
+    creep.battle = 1;
+    expect(canDrop(state, creep)).toBe(false);
+    creep.battle = null;
+    creep.engagement = 5;
+    expect(canDrop(state, creep)).toBe(false);
+    state.encounters.push({
+      id: 5,
+      aggressor: 99,
+      victim: creep.id,
+      intent: "extort",
+      x: creep.x,
+      y: creep.y,
+    });
+    expect(canDrop(state, creep)).toBe(true);
   });
 });

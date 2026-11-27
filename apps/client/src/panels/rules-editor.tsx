@@ -14,7 +14,13 @@ import {
 import { useState } from "preact/hooks";
 import { useGame } from "../context.ts";
 import type { CreepView, PresetId } from "@geometrix/sim";
-import { DNA_NAMES, RESOURCE_NAMES, ruleText } from "../format.ts";
+import {
+  DNA_NAMES,
+  namesOf,
+  RESOURCE_NAMES,
+  ruleText,
+  type NameOf,
+} from "../format.ts";
 import { DnaIcon } from "./dna-icon.tsx";
 import {
   ACTION_LABELS,
@@ -34,6 +40,7 @@ import {
   replaceAt,
   sameRules,
   toggleDna,
+  withFollow,
   type RuleGroup,
 } from "../rules-draft.ts";
 
@@ -73,6 +80,27 @@ export function RulesEditor({ creep }: { creep: CreepView }) {
   const changedElsewhere =
     draft !== null && !sameRules(draft.base, creep.rules);
   const max = params.autopilot.maxRules;
+  const nameOf = namesOf(store.current.value?.state.creeps ?? []);
+
+  // "Seguir…" (R spec D9): an ally picked on the map, then the rule at once.
+  const follow = () => {
+    store.mode.value = {
+      type: "pickAlly",
+      prompt: `Clique no creep que ${creep.name} deve seguir.`,
+      exclude: creep.id,
+      pick: (creepId) => {
+        const now = store.current.value?.state.creeps.find(
+          (c): c is CreepView => c.id === creep.id && "rules" in c,
+        );
+        if (now === undefined) return;
+        void send({
+          type: "setRules",
+          creepId: creep.id,
+          rules: withFollow(now.rules, creepId),
+        });
+      },
+    };
+  };
 
   // Functional, so an edit that lands later (a cell picked on the map) applies
   // to the draft as it is then.
@@ -117,7 +145,7 @@ export function RulesEditor({ creep }: { creep: CreepView }) {
               {title !== null && <h4>{title}</h4>}
               <ol class="rules-readonly">
                 {list.map((rule, i) => (
-                  <li key={i}>{ruleText(rule)}</li>
+                  <li key={i}>{ruleText(rule, nameOf)}</li>
                 ))}
                 {list.length === 0 && <li class="muted">sem regras</li>}
               </ol>
@@ -159,6 +187,21 @@ export function RulesEditor({ creep }: { creep: CreepView }) {
         >
           Salteador
         </button>
+        {creep.dominatedBy === null && (
+          <button
+            disabled={!canAct || dirty || creep.rules.length >= max}
+            title={
+              dirty
+                ? "Aplique ou descarte as mudanças antes"
+                : creep.rules.length >= max
+                  ? `Máximo de ${max} regras`
+                  : "Segue um aliado e entra nas lutas dele"
+            }
+            onClick={follow}
+          >
+            Seguir…
+          </button>
+        )}
       </div>
 
       {GROUPS.map(({ group, title, empty, hint }) => {
@@ -186,6 +229,7 @@ export function RulesEditor({ creep }: { creep: CreepView }) {
                         value={rule.then}
                         options={GROUP_ACTIONS[group]}
                         core={core}
+                        nameOf={nameOf}
                         disabled={!canAct}
                         onChange={(then) =>
                           edit((r) => replaceAt(r, i, { ...r[i]!, then }))
@@ -481,6 +525,7 @@ function ActionField(props: {
   value: Action;
   options: readonly Action["type"][];
   core: Cell;
+  nameOf: NameOf;
   disabled: boolean;
   onChange(value: Action): void;
   onPick(apply: (cell: Cell) => void): void;
@@ -509,6 +554,12 @@ function ActionField(props: {
           </option>
         ))}
       </select>
+      {value.type === "follow" && (
+        <span class="small">{props.nameOf(value.creepId)}</span>
+      )}
+      {value.type === "buildRoad" && value.x === undefined && (
+        <span class="small muted">a jazida mais perto sem estrada</span>
+      )}
       {value.type === "gather" && (
         <ResourceSelect
           value={value.resource}

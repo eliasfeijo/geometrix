@@ -26,6 +26,14 @@ async function setup(config = {}, params = testParams()) {
 }
 
 describe("HTTP", () => {
+  test("tells the lobby the params' multiplier", async () => {
+    const base = testParams();
+    const params = { ...base, world: { ...base.world, multiplier: 8 } };
+    const { get } = await setup({}, params);
+    const res = await get("/api/config");
+    expect(await res.res.json()).toEqual({ multiplier: 8 });
+  });
+
   test("creates a world with bots and lists it, without the seed while it runs", async () => {
     const { post, get } = await setup();
     const created = await post("/api/worlds", {

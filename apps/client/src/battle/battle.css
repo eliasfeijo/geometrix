@@ -156,3 +156,11 @@
   stroke-width: 0.2px;
   pointer-events: none;
 }
+
+/* A held battle (R spec D6, D28): its countdown over the arena. */
+.battle-hold {
+  margin: 0;
+  text-align: center;
+  font-weight: 700;
+  font-size: 18px;
+}

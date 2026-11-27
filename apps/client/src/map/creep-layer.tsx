@@ -6,7 +6,6 @@
 import {
   isOwnCreep,
   type Cell,
-  type CreepView,
   type ForeignTeam,
   type Params,
   type Team,
@@ -20,14 +19,16 @@ import { creepStatus, viewCapacity, type Creep } from "../creep-status.ts";
 import type { GameStore } from "../store.ts";
 import { COLORS, teamColor, teamTextColor } from "./colors.ts";
 import { DnaShape } from "./creep-shape.tsx";
+import { DestinationLayer } from "./destination-layer.tsx";
 import { BattleBubbles, BattleSigns, InBattleMark } from "./battle-layer.tsx";
 import { EncounterLayer } from "./encounter-layer.tsx";
+import { HostileLayer } from "./hostile-layer.tsx";
 import { creepPositions, glideProgress } from "./interpolate.ts";
 import { nameFontSize } from "./labels.ts";
 import { layoutCreeps, markerOf, type Marker } from "./layout.ts";
 import { hpBand, hpShare } from "./combat-marks.ts";
 import { arcDash } from "./shapes.ts";
-import type { Point } from "./view.ts";
+import { markerScale, type Point } from "./view.ts";
 
 const SHAPE_RADIUS = 0.3;
 const CARGO_RADIUS = 0.43;
@@ -118,15 +119,21 @@ export function CreepLayer() {
   const selectedMarker =
     selected === undefined ? undefined : markerOf(markers, selected.id);
   const hovered = store.hovered.value;
+  const viewScale = store.view.value?.scale ?? 1;
   const hoveredMarker =
-    hovered === null ? undefined : markerOf(markers, hovered);
+    hovered === null
+      ? undefined
+      : (markerOf(markers, hovered) ?? wandererRing(state, hovered, viewScale));
+  const selectedWanderer =
+    selection?.kind === "wanderer"
+      ? wandererRing(state, selection.id, viewScale)
+      : undefined;
   // Creeps per cell, for the room their names have.
   const inCell = new Map<string, number>();
   for (const c of state.creeps) {
     const key = `${c.x},${c.y}`;
     inCell.set(key, (inCell.get(key) ?? 0) + 1);
   }
-  const viewScale = store.view.value?.scale ?? 1;
   const named = (creep: Creep, center: Point & { scale: number }) => (
     <CreepName
       creep={creep}
@@ -162,7 +169,11 @@ export function CreepLayer() {
       {selected !== undefined &&
         isOwnCreep(selected) &&
         selectedMarker !== undefined && (
-          <OrderLine creep={selected} from={selectedMarker} state={state} />
+          <DestinationLayer
+            creep={selected}
+            from={selectedMarker}
+            state={state}
+          />
         )}
       {markers.map((m) =>
         m.kind === "creep" ? (
@@ -185,6 +196,7 @@ export function CreepLayer() {
           ) : null,
         )}
       </g>
+      <HostileLayer state={state} markers={markers} viewScale={viewScale} />
       <BattleSigns
         battles={state.battles}
         viewScale={viewScale}
@@ -194,22 +206,37 @@ export function CreepLayer() {
       {selectedMarker !== undefined && (
         <SelectionRing center={selectedMarker} />
       )}
+      {selectedWanderer !== undefined && (
+        <SelectionRing center={selectedWanderer} />
+      )}
       {store.ping.value !== null && (
         <Ping key={store.ping.value.id} cell={store.ping.value.cell} />
       )}
       {selection !== null &&
-        (selection.kind === "core" || selection.kind === "deposit") && (
+        (selection.kind === "core" ||
+          selection.kind === "deposit" ||
+          selection.kind === "spoil") && (
           <CellSelection
             cell={
               selection.kind === "core"
                 ? (state.teams[selection.team]?.core ?? undefined)
-                : state.deposits.find((d) => d.id === selection.id)
+                : selection.kind === "deposit"
+                  ? state.deposits.find((d) => d.id === selection.id)
+                  : state.spoils.find((s) => s.id === selection.id)
             }
             size={selection.kind === "core" ? 2.6 : 1.1}
           />
         )}
     </g>
   );
+}
+
+/** Where the rings go around a wanderer, which has no marker. */
+function wandererRing(state: TeamView, id: number, viewScale: number) {
+  const w = state.wanderers.find((w) => w.id === id);
+  return w === undefined
+    ? undefined
+    : { x: w.x + 0.5, y: w.y + 0.5, scale: markerScale(viewScale) };
 }
 
 /** Several creeps of a cell: copies behind the lead, and how many there are. */
@@ -316,54 +343,6 @@ function CellSelection({ cell, size }: { cell?: Cell; size: number }) {
       stroke-width="0.08"
       stroke-dasharray="0.25 0.12"
     />
-  );
-}
-
-/** The cell an order heads to, or null for stop. */
-export function orderTarget(creep: CreepView, state: TeamView): Cell | null {
-  const { order } = creep;
-  switch (order.type) {
-    case "stop":
-      return null;
-    case "moveTo":
-    case "explore":
-    case "buildRoad":
-      return { x: order.x, y: order.y };
-    case "gather":
-      return state.deposits.find((d) => d.id === order.depositId) ?? null;
-    case "deliver":
-    case "flee":
-      return state.teams[creep.team]?.core ?? null;
-    case "approach":
-    case "follow":
-      return state.creeps.find((c) => c.id === order.targetId) ?? null;
-    case "pickup":
-    case "drop":
-      return null;
-  }
-}
-
-/** Dashed line from the selected creep to where its order takes it. */
-function OrderLine(props: { creep: CreepView; from: Point; state: TeamView }) {
-  const target = orderTarget(props.creep, props.state);
-  if (target === null) return null;
-  const x2 = target.x + 0.5;
-  const y2 = target.y + 0.5;
-  if (Math.hypot(x2 - props.from.x, y2 - props.from.y) < 0.5) return null;
-  return (
-    <g class="order-line">
-      <line
-        x1={props.from.x}
-        y1={props.from.y}
-        x2={x2}
-        y2={y2}
-        stroke={COLORS.selection}
-        stroke-opacity="0.8"
-        stroke-width="0.06"
-        stroke-dasharray="0.2 0.15"
-      />
-      <circle cx={x2} cy={y2} r="0.12" fill={COLORS.selection} />
-    </g>
   );
 }
 

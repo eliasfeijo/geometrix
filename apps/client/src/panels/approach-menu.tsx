@@ -3,7 +3,7 @@
 // Opens at the click; one row per enemy hit (a stack can have several). A
 // wanderer can only be attacked (junction W-4).
 
-import { stockTotal } from "@geometrix/sim";
+import { stockTotal, type Cell, type OrderInput } from "@geometrix/sim";
 import { useGame } from "../context.ts";
 import { approachOptions } from "../encounter-actions.ts";
 import { DNA_NAMES, stockText, teamName } from "../format.ts";
@@ -11,6 +11,20 @@ import { hpPoints } from "../map/combat-marks.ts";
 import { DnaIcon } from "./dna-icon.tsx";
 
 const WIDTH = 300;
+
+/** The button for the order a right click gives on the cell. */
+export function cellOrderText(order: OrderInput): string {
+  switch (order.type) {
+    case "gather":
+      return "Coletar aqui";
+    case "pickup":
+      return "Catar aqui";
+    case "deliver":
+      return "Entregar no Núcleo";
+    default:
+      return "Ir até aqui";
+  }
+}
 
 export function ApproachMenu() {
   const { store, send } = useGame();
@@ -24,11 +38,17 @@ export function ApproachMenu() {
   const close = () => (store.approach.value = null);
   if (mine === null) return null;
   const options = approachOptions(state, params, mine, menu.ids);
-  if (options.length === 0) return null;
+  const allies = state.creeps.filter((c) => menu.allies.includes(c.id));
+  if (options.length === 0 && allies.length === 0) return null;
   const size = store.mapSize.value;
   const left = Math.max(8, Math.min(menu.at.x + 12, size.width - WIDTH - 8));
   const top = Math.max(8, Math.min(menu.at.y - 12, size.height - 180));
   const canAct = store.canAct.value;
+  const give = (order: OrderInput, ping: Cell | null) => {
+    close();
+    store.ping.value = ping === null ? null : { cell: ping, id: Date.now() };
+    void send({ type: "order", creepId: mine.id, order });
+  };
   const approach = (targetId: number, intent: "attack" | "extort") => {
     close();
     store.ping.value = null;
@@ -43,10 +63,12 @@ export function ApproachMenu() {
       class="approach-menu panel"
       style={{ left: `${left}px`, top: `${top}px`, width: `${WIDTH}px` }}
       role="menu"
-      aria-label="Abordar"
+      aria-label="Ordens sobre creeps"
     >
       <div class="stack-head">
-        <strong>Abordar com {mine.name}</strong>
+        <strong>
+          {allies.length === 0 ? "Abordar" : "Ordens"} com {mine.name}
+        </strong>
         <button class="ghost" title="Fechar (Esc)" onClick={close}>
           ×
         </button>
@@ -129,7 +151,42 @@ export function ApproachMenu() {
             </li>
           );
         })}
+        {allies.map((ally) => (
+          <li key={ally.id} class={`approach-row team-${ally.team}`}>
+            <div class="approach-target">
+              <DnaIcon dna={ally.dna} team={ally.team} size={16} />
+              <strong>{ally.name}</strong>
+              <span class="muted small">
+                {DNA_NAMES[ally.dna]} · HP {hpPoints(ally.hp)}
+              </span>
+            </div>
+            <div class="approach-buttons">
+              <button
+                class="primary"
+                role="menuitem"
+                disabled={!canAct}
+                title="Andar junto e entrar nas lutas dele"
+                onClick={() =>
+                  give({ type: "follow", targetId: ally.id }, null)
+                }
+              >
+                Seguir
+              </button>
+            </div>
+          </li>
+        ))}
       </ul>
+      {menu.cell !== null && (
+        <div class="approach-cell">
+          <button
+            role="menuitem"
+            disabled={!canAct}
+            onClick={() => give(menu.cell!.order, menu.cell!.cell)}
+          >
+            {cellOrderText(menu.cell.order)}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

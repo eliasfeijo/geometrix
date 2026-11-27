@@ -5,6 +5,7 @@
 import { effect, useComputed } from "@preact/signals";
 import type { ComponentChildren } from "preact";
 import { useEffect } from "preact/hooks";
+import { BattleAlert } from "./battle-alert.tsx";
 import { BattleReturn, BattleScreen } from "./battle-screen.tsx";
 import { GameContext, type Game } from "./context.ts";
 import {
@@ -19,14 +20,17 @@ import { ChroniclePanel } from "./chronicle/chronicle-panel.tsx";
 import { CreepLayer } from "./map/creep-layer.tsx";
 import { MapView } from "./map/map-view.tsx";
 import { RoadJobTimeLayer } from "./map/road-job-time-layer.tsx";
-import { RoadPreviewLayer } from "./map/road-preview-layer.tsx";
+import {
+  BuilderPlanLayer,
+  RoadPreviewLayer,
+} from "./map/road-preview-layer.tsx";
 import { StockFloatLayer } from "./map/stock-float-layer.tsx";
 import { ModeBanner } from "./mode-banner.tsx";
 import { ApproachMenu } from "./panels/approach-menu.tsx";
 import { CoreDock } from "./panels/core-panel.tsx";
 import { Inspector } from "./panels/inspector.tsx";
 import { ReactionPanel } from "./panels/reaction-panel.tsx";
-import { StackList } from "./panels/stack-list.tsx";
+import { ActorList } from "./panels/actor-list.tsx";
 import { Notices } from "./top-bar.tsx";
 
 type Props = {
@@ -86,6 +90,7 @@ export function GameLayout({ game, header, orders }: Props) {
                 : undefined
             }
           >
+            <BuilderPlanLayer />
             <CreepLayer />
             <RoadJobTimeLayer />
             <StockFloatLayer />
@@ -97,10 +102,11 @@ export function GameLayout({ game, header, orders }: Props) {
             <ChroniclePanel />
           </div>
           <ModeBanner />
-          <StackList />
+          <ActorList />
           {orders && <ApproachMenu />}
           {orders && <ReactionPanel />}
           {orders && <BattleReturn />}
+          {orders && <BattleAlert />}
           {store.shownBattle.value !== null && game.battles !== undefined && (
             <BattleScreen key={store.shownBattle.value} />
           )}

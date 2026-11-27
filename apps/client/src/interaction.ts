@@ -5,10 +5,20 @@
 import { markersNow } from "./map/creep-layer.tsx";
 import type { ClientCommand } from "@geometrix/protocol";
 import { CURSORS, cursorKind, type CursorKind } from "./map/cursor.ts";
-import { enemiesIn, orderAt, pickAt, wanderersAt } from "./map/pick.ts";
+import {
+  actorsAt,
+  alliesIn,
+  creepsUnder,
+  enemiesIn,
+  orderAt,
+  signAt,
+  wanderersAt,
+  type Scene,
+  type Selection,
+} from "./map/pick.ts";
 import { roadPreview } from "./map/road-plan.ts";
 import { cellAt, centerOn, type Point } from "./map/view.ts";
-import type { GameStore } from "./store.ts";
+import type { GameStore, Mode } from "./store.ts";
 
 export function select(
   store: GameStore,
@@ -24,22 +34,70 @@ export function select(
   }
   const state = store.current.value?.state;
   if (state === undefined) return;
-  const pick = pickAt(
+  const actors = actorsAt(
     point,
-    markersNow(store, now),
-    state.deposits,
-    store.cores.value,
+    sceneNow(store, now),
     store.view.value?.scale ?? 1,
-    state.battles,
   );
-  if (pick?.kind === "stack") {
-    store.stack.value = { ids: pick.ids, at: px };
+  if (mode.type === "pickAlly") {
+    pickAlly(store, mode, actors, px, now);
     return;
   }
-  store.stack.value = null;
   store.approach.value = null;
   store.hovered.value = null;
-  store.selection.value = pick;
+  if (actors.length > 1) {
+    store.list.value = { actors, at: px };
+    return;
+  }
+  store.list.value = null;
+  store.selection.value = actors[0] ?? null;
+}
+
+/**
+ * "Seguir…" (R spec D9): the click picks a creep of the team; with several
+ * in reach, the list asks which.
+ */
+function pickAlly(
+  store: GameStore,
+  mode: Extract<Mode, { type: "pickAlly" }>,
+  actors: readonly Selection[],
+  px: Point,
+  now: number,
+): void {
+  const team = store.info.value?.team;
+  const creeps = store.current.value?.state.creeps ?? [];
+  const allies = actors.filter(
+    (a) =>
+      a.kind === "creep" &&
+      a.id !== mode.exclude &&
+      creeps.some((c) => c.id === a.id && c.team === team),
+  );
+  const choose = (actor: Selection) => {
+    if (actor.kind !== "creep") return;
+    store.mode.value = { type: "select" };
+    mode.pick(actor.id);
+  };
+  store.list.value = null;
+  if (allies.length === 0) {
+    store.notify("Clique num outro creep do seu time.", now);
+  } else if (allies.length === 1) {
+    choose(allies[0]!);
+  } else {
+    store.list.value = { actors: allies, at: px, pick: choose };
+  }
+}
+
+/** What the map shows now, as the click's pick reads it. */
+export function sceneNow(store: GameStore, now: number): Scene {
+  const state = store.current.value?.state;
+  return {
+    markers: markersNow(store, now),
+    wanderers: state?.wanderers ?? [],
+    deposits: state?.deposits ?? [],
+    spoils: state?.spoils ?? [],
+    cores: store.cores.value,
+    battles: state?.battles ?? [],
+  };
 }
 
 /**
@@ -70,26 +128,25 @@ export function cursorAt(
   const point = store.pointer.value;
   const state = store.current.value?.state;
   if (point === null || state === undefined) return "default";
-  const pick = pickAt(
-    point,
-    markersNow(store, now),
-    state.deposits,
-    store.cores.value,
-    store.view.value?.scale ?? 1,
-    state.battles,
-  );
+  const scale = store.view.value?.scale ?? 1;
+  const actors = actorsAt(point, sceneNow(store, now), scale);
   const core = state.teams[team]?.core;
   const dominated = orders && store.myCreep.value !== null;
   const enemy =
-    enemiesIn(pick, state.creeps, team).length > 0 ||
-    (pick?.kind !== "battle" && wanderersAt(point, state.wanderers).length > 0);
+    signAt(point, state.battles, scale) === undefined &&
+    (enemiesIn(
+      creepsUnder(point, markersNow(store, now), scale),
+      state.creeps,
+      team,
+    ).length > 0 ||
+      wanderersAt(point, state.wanderers).length > 0);
   return cursorKind({
     mode: store.mode.value.type,
     pick: enemy
       ? "enemy"
-      : pick === null
+      : actors.length === 0
         ? null
-        : pick.kind === "creep" || pick.kind === "stack"
+        : actors.some((a) => a.kind === "creep")
           ? "creep"
           : "other",
     order:
@@ -127,21 +184,29 @@ export function order(
   const roadMode = store.mode.value.type === "road";
   store.approach.value = null;
   if (!roadMode) {
-    const pick = pickAt(
+    const ids = creepsUnder(
       point,
       markersNow(store, now),
-      state.deposits,
-      store.cores.value,
       store.view.value?.scale ?? 1,
     );
     // Another team's creeps, then the wanderers under the click (W-4).
     const enemies = [
-      ...enemiesIn(pick, state.creeps, me.team),
+      ...enemiesIn(ids, state.creeps, me.team),
       ...wanderersAt(point, state.wanderers),
     ];
-    if (enemies.length > 0) {
-      store.stack.value = null;
-      store.approach.value = { ids: enemies, at: px };
+    const allies = alliesIn(ids, state.creeps, me.team, creep.id);
+    if (enemies.length > 0 || allies.length > 0) {
+      const core = state.teams[me.team]?.core;
+      // An ally hides no order: the menu also offers the cell's (D8).
+      const cell =
+        allies.length > 0 && core !== undefined && core !== null
+          ? {
+              cell: cellAt(point),
+              order: orderAt(point, state.deposits, state.spoils, core, false),
+            }
+          : null;
+      store.list.value = null;
+      store.approach.value = { ids: enemies, allies, cell, at: px };
       return;
     }
   }
@@ -173,6 +238,12 @@ function focusCell(store: GameStore, team: number) {
       return state.deposits.find((d) => d.id === selection.id) ?? null;
     case "core":
       return state.teams[selection.team]?.core ?? null;
+    case "wanderer":
+      return state.wanderers.find((w) => w.id === selection.id) ?? null;
+    case "spoil":
+      return state.spoils.find((s) => s.id === selection.id) ?? null;
+    case "battle":
+      return state.battles.find((b) => b.id === selection.id) ?? null;
     default:
       return state.teams[team]?.core ?? null;
   }
@@ -191,8 +262,8 @@ export function handleKey(
     case "Escape":
       if (store.approach.value !== null) {
         store.approach.value = null;
-      } else if (store.stack.value !== null) {
-        store.stack.value = null;
+      } else if (store.list.value !== null) {
+        store.list.value = null;
         store.hovered.value = null;
       } else if (store.mode.value.type !== "select") {
         store.mode.value = { type: "select" };

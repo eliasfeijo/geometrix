@@ -44,6 +44,7 @@ export function Game({ session, onLeave, onInvalid }: Props) {
           status: (s) => {
             const was = store.connection.value;
             store.connection.value = s;
+            if (s === "reconnecting") battles.control?.dropped();
             if (s === "open" && was === "reconnecting") {
               battles.control?.reconnected();
             }

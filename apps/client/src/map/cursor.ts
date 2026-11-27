@@ -22,7 +22,7 @@ export type CursorKind =
   | "pickup";
 
 export type CursorInput = {
-  mode: "select" | "pickCell" | "road";
+  mode: "select" | "pickCell" | "pickAlly" | "road";
   /**
    * What a left click there picks: a creep (or a list of them), an enemy
    * creep in sight among them, else.
@@ -35,7 +35,7 @@ export type CursorInput = {
 };
 
 export function cursorKind(input: CursorInput): CursorKind {
-  if (input.mode === "pickCell") return "pick";
+  if (input.mode === "pickCell" || input.mode === "pickAlly") return "pick";
   if (input.mode === "road") return input.roadShort ? "roadShort" : "road";
   if (input.pick === "enemy") {
     return input.order === null ? "select" : "approach";

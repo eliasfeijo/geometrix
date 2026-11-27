@@ -205,7 +205,8 @@ describe("the screen opens by itself (N-1)", () => {
 
 type Call =
   | { kind: "screen"; battleId: number | null }
-  | { kind: "input"; battleId: number; command: BattleInputCommand };
+  | { kind: "input"; battleId: number; command: BattleInputCommand }
+  | { kind: "pause"; battleId: number };
 
 /** A link whose answers the test hands out. */
 class FakeLink implements BattleLink {
@@ -222,6 +223,11 @@ class FakeLink implements BattleLink {
     command: BattleInputCommand,
   ): Promise<CommandResult> {
     this.calls.push({ kind: "input", battleId, command });
+    return new Promise((resolve) => this.answers.push(resolve));
+  }
+
+  battlePause(battleId: number): Promise<CommandResult> {
+    this.calls.push({ kind: "pause", battleId });
     return new Promise((resolve) => this.answers.push(resolve));
   }
 

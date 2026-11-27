@@ -4,7 +4,11 @@
 // (selection, notices).
 
 import { computed, signal } from "@preact/signals";
-import type { WelcomeMessage, WorldStatus } from "@geometrix/protocol";
+import type {
+  BattleHoldState,
+  WelcomeMessage,
+  WorldStatus,
+} from "@geometrix/protocol";
 import { applyDelta } from "@geometrix/protocol/stream";
 import type {
   ConnectionStatus,
@@ -15,6 +19,7 @@ import {
   isOwnCreep,
   type Cell,
   type CreepView,
+  type OrderInput,
   type TeamEvent,
   type TeamView,
 } from "@geometrix/sim";
@@ -33,6 +38,13 @@ import type { Point, Size, View } from "./map/view.ts";
 export type Mode =
   | { type: "select" }
   | { type: "pickCell"; prompt: string; pick(cell: Cell): void }
+  /** Picking a creep of the team other than `exclude` ("Seguir…", D9). */
+  | {
+      type: "pickAlly";
+      prompt: string;
+      exclude: number;
+      pick(creepId: number): void;
+    }
   | { type: "road" };
 
 /** A view of the team and when it arrived (performance.now(), ms). */
@@ -43,6 +55,8 @@ export type WorldInfo = Omit<
   WelcomeMessage,
   "type" | "protocol" | "stream" | "seq" | "view" | "status" | "chronicle"
 >;
+
+export type Hold = { state: BattleHoldState; endsAt: number | null };
 
 export type Notice = { id: number; text: string; at: number };
 
@@ -72,14 +86,27 @@ export class GameStore {
   readonly view = signal<View | null>(null);
   readonly mapSize = signal<Size>({ width: 0, height: 0 });
   readonly selection = signal<Selection | null>(null);
-  /** The list of a clicked stack, opened at a pixel of the map. */
-  readonly stack = signal<{ ids: number[]; at: Point } | null>(null);
   /**
-   * The right-click menu over enemies in sight (M2 encontro C-6): their ids,
-   * opened at a pixel of the map.
+   * The list of the actors under a click (R spec D23), opened at a pixel of
+   * the map. With `pick`, choosing a line calls it instead of selecting.
    */
-  readonly approach = signal<{ ids: number[]; at: Point } | null>(null);
-  /** Creep under the pointer in the stack list, highlighted on the map. */
+  readonly list = signal<{
+    actors: Selection[];
+    at: Point;
+    pick?(actor: Selection): void;
+  } | null>(null);
+  /**
+   * The right-click menu over creeps: the enemies in sight to attack or
+   * extort (M2 encontro C-6) and the allies to follow, with the order the
+   * click would give on that cell (R spec D8), opened at a pixel of the map.
+   */
+  readonly approach = signal<{
+    ids: number[];
+    allies: number[];
+    cell: { cell: Cell; order: OrderInput } | null;
+    at: Point;
+  } | null>(null);
+  /** Creep or wanderer under the pointer in the list, ringed on the map. */
   readonly hovered = signal<number | null>(null);
   readonly mode = signal<Mode>({ type: "select" });
   /** Cell under the pointer, while it is over the map and not dragging. */
@@ -95,6 +122,12 @@ export class GameStore {
   readonly shownBattle = signal<number | null>(null);
   /** That battle as its opening and frames built it, once they came. */
   readonly battleScreen = signal<BattleScreen | null>(null);
+  /**
+   * What holds the team's battles now (R spec D6, D28), by battle id: the
+   * opening pause, a human's pause and their countdowns. `endsAt` is in
+   * performance.now() ms, null while paused.
+   */
+  readonly holds = signal<ReadonlyMap<number, Hold>>(new Map());
   /** How the battle screen draws the creeps moving (junction D19). */
   readonly motion = signal<MotionMode>("tick");
 

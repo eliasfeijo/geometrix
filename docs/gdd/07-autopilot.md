@@ -47,7 +47,9 @@
 - **"Follow" an allied creep** (owner, checkpoint C2 and the R and E-min design round, 2026-11-25; slice R): a creep
   follows another to walk in a group, and the follower joins the fight by itself when its target attacks or is
   attacked. A right click on an ally gives "Seguir" (a dominated ally too); when the target dies, the follower goes back
-  to its next rules. The bots' strategist uses it to escort and to attack in a group.
+  to its next rules. The bots' strategist uses it to escort and to attack in a group. The menu of that right click
+  also offers the order the same click would give on that cell (gather, pick up, deliver, go there), so an ally
+  standing on a deposit or the core hides no order (owner, R F6's opening, 2026-11-27).
 - **Helping an ally in battle** (owner, R and E-min design round, 2026-11-25; slice R): a new condition, **an ally in
   battle in sight**, with the action to join it, with a radius and a posture per DNA, in the presets by default, for
   the creeps of human teams and of the bot alike, and editable like any rule. Why: at checkpoint C2 no creep on
