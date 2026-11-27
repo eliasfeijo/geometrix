@@ -36,6 +36,7 @@ import {
   type StrategistId,
   type TeamEvent,
   type TeamView,
+  type WorldResult,
 } from "@geometrix/sim";
 import {
   battleView,
@@ -92,8 +93,10 @@ export type NetResult = {
   windowSeconds: number;
   finalHash: string;
   wallSeconds: number;
-  /** Sends measured: one per tick after tick 0. */
+  /** Sends measured: one per tick after tick 0, up to the world's end. */
   sends: number;
+  /** How the world ended before the asked ticks ran out, or at their end. */
+  ended: WorldResult["how"] | null;
   maxCreeps: number;
   /** Delta message of one team, in bytes. */
   bytes: Spread;
@@ -293,7 +296,10 @@ export function measureNet(
     first: null,
   };
 
-  for (let i = 0; i < ticks; i++) {
+  // An ended world is frozen: the measurement stops on its end tick.
+  let ran = 0;
+  for (let i = 0; i < ticks && state.result === null; i++) {
+    ran = i + 1;
     const done = stepWithBots(state, host, bots, log);
     const tickEvents = done.events;
     battles.push(...done.finished);
@@ -369,11 +375,13 @@ export function measureNet(
   }
 
   const maxCreeps = creepsAt.reduce((a, b) => Math.max(a, b), 0);
-  const window = windowSeconds(ticks * params.world.tickSeconds);
+  const sentBytes = bytes.subarray(0, ran * teams.length);
+  const sentCpu = cpu.subarray(0, ran);
+  const window = windowSeconds(ran * params.world.tickSeconds);
   const windows: NetWindow[] = [];
-  for (let from = 0; from < ticks * params.world.tickSeconds; from += window) {
+  for (let from = 0; from < ran * params.world.tickSeconds; from += window) {
     const inWindow: number[] = [];
-    for (let i = 0; i < ticks; i++) {
+    for (let i = 0; i < ran; i++) {
       const seconds = tickAt[i]! * params.world.tickSeconds;
       if (seconds > from && seconds <= from + window) inWindow.push(i);
     }
@@ -402,24 +410,25 @@ export function measureNet(
     windowSeconds: window,
     finalHash: stateHash(state),
     wallSeconds: (clock() - started) / 1000,
-    sends: ticks,
+    sends: ran,
+    ended: state.result?.how ?? null,
     maxCreeps,
-    bytes: spread(bytes),
-    cpuMicros: spread(cpu),
+    bytes: spread(sentBytes),
+    cpuMicros: spread(sentCpu),
     cpuAtMaxCreeps: spread(
-      Array.from(cpu).filter((_, i) => creepsAt[i] === maxCreeps),
+      Array.from(sentCpu).filter((_, i) => creepsAt[i] === maxCreeps),
     ),
     parts: {
-      view: spread(viewTimes).median,
-      diff: spread(diffTimes).median,
-      events: spread(eventTimes).median,
-      stringify: spread(stringifyTimes).median,
+      view: spread(viewTimes.subarray(0, ran)).median,
+      diff: spread(diffTimes.subarray(0, ran)).median,
+      events: spread(eventTimes.subarray(0, ran)).median,
+      stringify: spread(stringifyTimes.subarray(0, ran)).median,
     },
     events,
     hash: {
       count: hashes,
       meanMicros: hashes === 0 ? 0 : hashMicros / hashes,
-      amortizedMicros: ticks === 0 ? 0 : hashMicros / ticks,
+      amortizedMicros: ran === 0 ? 0 : hashMicros / ran,
     },
     welcomeBytes: Buffer.byteLength(viewJson(view(state, 0))),
     chronicleBytes: Buffer.byteLength(JSON.stringify(chronicle.slice(-100))),
@@ -443,6 +452,12 @@ export function netVerdicts(result: NetResult) {
   };
 }
 
+const ENDINGS: Record<WorldResult["how"], string> = {
+  lastTeam: "um time de pé",
+  noTeam: "nenhum time",
+  clock: "no relógio",
+};
+
 const micros = (value: number) => `${number(value, 1)} µs`;
 const ok = (pass: boolean) => (pass ? "✓" : "✗");
 
@@ -451,14 +466,16 @@ export function renderNet(result: NetResult): string {
   const verdicts = netVerdicts(result);
   const cpuWithHash = result.cpuMicros.median + result.hash.amortizedMicros;
   const { property } = result;
-  const worldSeconds = options.ticks * options.tickSeconds;
+  const worldSeconds = result.sends * options.tickSeconds;
+  const ending =
+    result.ended === null ? "" : ` · o mundo acabou (${ENDINGS[result.ended]})`;
   const lines = [
     `# geo net — ${options.id}`,
     "",
-    `Seed ${options.seed} · ${number(options.ticks)} ticks (${number(
+    `Seed ${options.seed} · ${number(result.sends)} ticks (${number(
       worldSeconds / HOUR,
       1,
-    )} h de mundo) · ${options.strategists.join(" × ")} · parâmetros ${options.paramsSource} · hash da visão a cada ${options.hashEveryTicks} ticks`,
+    )} h de mundo) · ${options.strategists.join(" × ")} · parâmetros ${options.paramsSource} · hash da visão a cada ${options.hashEveryTicks} ticks${ending}`,
     "",
     "Um envio por tick, como no servidor a ×1: visão e delta de cada time, serializados. Bytes por delta = bytes por segundo de um cliente a ×1. CPU de um envio = os 2 times; o hash da visão entra amortizado.",
     "",

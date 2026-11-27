@@ -115,9 +115,9 @@ time and the team's vote with a deadline (L-5 to L-7, P14). `SIM_VERSION` 15.
       team's vote in the delta, its events
 - [x] `WorldHost` ends from `state.result`; no strategist for a team out; the real-time clock skips an ended world
 - [x] The lobby's result; an ended world restarts ended, without its battle instances (N-1; P8)
-- [ ] The export of an ended world reaches the same result, summary and hash (N-2); the diff property green (N-3);
+- [x] The export of an ended world reaches the same result, summary and hash (N-2); the diff property green (N-3);
       `geo net` within the targets
-- [ ] `dev:multi --set path=value` (P11)
+- [x] `dev:multi --set path=value` (P11)
 
 ## F4 — Client
 
