@@ -16,7 +16,11 @@ import { etaOf, etaText, viewMap } from "../map/destination.ts";
 import { inSight } from "../map/fog.ts";
 import { cellmates } from "../map/pick.ts";
 import { creepStatus, STATUS_TEXTS, viewCapacity } from "../creep-status.ts";
-import { engagementText, safeConductLeft } from "../encounter-actions.ts";
+import {
+  canDrop,
+  engagementText,
+  safeConductLeft,
+} from "../encounter-actions.ts";
 import { hpBand, hpPoints } from "../map/combat-marks.ts";
 import {
   DNA_NAMES,
@@ -213,6 +217,19 @@ function CreepInspector({ id }: { id: number }) {
                 }
               >
                 Entregar
+              </button>
+              <button
+                disabled={!canAct || !canDrop(state, creep)}
+                title="A carga vira despojo nesta célula"
+                onClick={() =>
+                  void send({
+                    type: "order",
+                    creepId: creep.id,
+                    order: { type: "drop" },
+                  })
+                }
+              >
+                Largar carga
               </button>
               <button
                 class={roadMode ? "active" : undefined}

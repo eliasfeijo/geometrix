@@ -6,11 +6,13 @@ import {
   reactRefusal,
   step,
   updateVision,
+  type CreepView,
   type Wanderer,
 } from "@geometrix/sim";
 import { describe, expect, it } from "vitest";
 import {
   approachOptions,
+  canDrop,
   engagementText,
   reactionOf,
   safeConductLeft,
@@ -278,5 +280,29 @@ describe("the inspector's encounter and safe conduct (spec C-7)", () => {
       safeConductLeft(conduct, conduct.untilTick, world.params),
     ).toBeNull();
     expect(safeConductLeft(null, 0, world.params)).toBeNull();
+  });
+});
+
+describe("canDrop (R spec D24)", () => {
+  it("needs a load, and in an encounter the victim of an extortion", () => {
+    const state = viewOf(testWorld());
+    const creep = structuredClone(state.creeps[0]!) as CreepView;
+    expect(canDrop(state, creep)).toBe(false);
+    creep.cargo = { materia: 3, cristal: 0 };
+    expect(canDrop(state, creep)).toBe(true);
+    creep.battle = 1;
+    expect(canDrop(state, creep)).toBe(false);
+    creep.battle = null;
+    creep.engagement = 5;
+    expect(canDrop(state, creep)).toBe(false);
+    state.encounters.push({
+      id: 5,
+      aggressor: 99,
+      victim: creep.id,
+      intent: "extort",
+      x: creep.x,
+      y: creep.y,
+    });
+    expect(canDrop(state, creep)).toBe(true);
   });
 });
