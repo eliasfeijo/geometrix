@@ -5,6 +5,7 @@ export * from "./commands.ts";
 export * from "./domination.ts";
 export * from "./economy.ts";
 export * from "./encounter.ts";
+export * from "./end.ts";
 export * from "./events.ts";
 export * from "./hp.ts";
 export * from "./known.ts";

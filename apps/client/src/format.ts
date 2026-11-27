@@ -92,6 +92,7 @@ export const REJECT_TEXTS: Record<RejectReason | "disconnected", string> = {
   busy: "O Núcleo já está produzindo.",
   populationCap: "O time chegou ao teto de população.",
   owned: "O time já tem esse upgrade.",
+  teamOut: "Seu time saiu da partida.",
   unknownCommand: "Comando desconhecido.",
   invalidDna: "DNA inválido.",
   invalidUpgrade: "Upgrade inválido.",
