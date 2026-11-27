@@ -1,6 +1,6 @@
 # M2 tasks — Rebalance and pace
 
-**Status:** F0, F1 and F2 done (2026-11-25), F3 and F5 done (2026-11-26), F4 done (2026-11-27); next F6, then F7 (see "Running the phases"). Branches `m2/rebalance-f<n>-<slug>` (skill `commit`).
+**Status:** F0, F1 and F2 done (2026-11-25), F3 and F5 done (2026-11-26), F4 and F6 done (2026-11-27); next F7, after E-min's F4, (see "Running the phases"). Branches `m2/rebalance-f<n>-<slug>` (skill `commit`).
 **Spec:** [spec.md](spec.md) · **Plan:** [plan.md](plan.md)
 
 ## Running the phases: waves, lanes and models
@@ -491,6 +491,56 @@ socket was down (or with a server restart) sends nothing, so the client drops it
 - [x] The road builder without a cell and its plan with the cost line (D12, D13, RB-3)
 - [x] The battle alert with "Entrar" (D6, D7, OC-3); P on the battle screen and the countdowns (D28)
 - [x] The lobby: the default ×N and the bot's difficulty
+
+### F6 record (2026-11-27)
+
+Closed with `npm run check` green (3061 tests). In the client:
+
+- **The actors' list** (`map/pick.ts` `actorsAt`, `panels/actor-list.tsx`, replacing the stack list): creeps,
+  wanderers, spoils, deposits, cores and a battle's sign; a wanderer and a spoil have an inspector. The right click
+  and the cursor keep the narrower pick (`creepsUnder`).
+- **The hostile layer** (`map/hostile-layer.tsx`, `hostileMarks`); **the destination and the estimate**
+  (`map/destination.ts`: `routeOf`, `etaOf`; the layer and the inspector's "Previsão").
+- **"Seguir"** in the right-click menu with the cell's order, and **"Seguir…"** in the rules editor (a `pickAlly`
+  mode); follows read by name. **"Largar carga"** in the panel and the extortion's reply (`canDrop`).
+- **The road builder's plan** (`builderPlan` in `road-plan.ts`, "Plano" in the inspector).
+- **The holds** (`store.holds`, `battle-alert.tsx` with "Entrar", `entrarCreep`; P and the countdowns on the battle
+  screen). **The lobby:** the ×N from the new `GET /api/config`, the difficulty per bot team.
+- Also: the top bar read "/ 0 dias" on the 16-hour world and now reads the duration ("16 h"); `invalidTarget` reads
+  "Alvo inválido." (a follow cycle is refused with it); the capture tool picks a line of the list.
+
+No `sim`, `battle` or `junction` change and no version bump; the protocol gains only the HTTP type of
+`/api/config`.
+
+**Smoke test** (headless Chromium, a private server): the list on two creeps over a deposit; the destination and the
+estimate; the road builder's plan; "Seguir…"'s banner; the "Seguir" menu with "Coletar aqui" and a follow order
+given; the hostile sign and line; the alert, "Entrar", P to "Pausando" and "Pausada"; the lobby's ×8; no page
+errors. Not seen in the browser: "Largar carga" given, the resume countdown, a wanderer's inspector, "Entrar" on a
+battle whose creeps others dominate (the last has a unit test).
+
+**The owner's decisions at the opening** (2026-11-27; plan §12, F6-1, F6-2; GDD 02 and 07):
+
+1. A left click opens the list whenever two or more actors are in its area, even on a click right on one creep.
+2. The right-click menu on an ally also offers the cell's order.
+
+**Interpretations to validate in the playtest:**
+
+1. The list's area: the creeps' hit radius (at least 20 px) for every actor; a deposit or spoil also on its own cell;
+   a battle only by its sign.
+2. The right-click menu shows the cell's order only when an ally is under the click; in road mode there is no menu.
+3. "Seguir…" applies at once (no draft, disabled while one is open) and adds a `sempre → seguir` rule after the
+   reactions, above the help rule; an older follow rule stays below it.
+4. The destination of a creep whose target is in a battle is the battle; a loaded follower's is the core when that
+   path is cheaper (H-4). A follow's path stops `followCells` short, a join's at the battle's window.
+5. The estimate is rounded to the second, ignores the movement points already gathered and a deposit running dry on
+   the way to full, and is absent while waiting at a drained deposit and in a replay.
+6. The road plan's totals count every cell of the path that holds or can take a road; "paid" is the built cells and
+   the paid jobs. A dominated builder shows no plan.
+7. The alert shows on the map only (not over another battle's screen), only during the opening hold, one per battle.
+8. P does nothing for a watcher (nothing is sent); there is no pause button.
+
+**For F7's playtest to watch:** zoomed out, the list opens on most clicks near a core or a deposit (decision 1 read
+with the 20 px area); the red sword of the hostile sign and the red "in battle" mark are close in look.
 
 ## F7 — Soak and playtest
 
