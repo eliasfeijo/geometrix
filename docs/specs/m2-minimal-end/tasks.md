@@ -150,13 +150,13 @@ result, summary and hash, and the restart keeps it.
 
 ## F4 — Client
 
-- [ ] "Desistir" and its confirmation (D3, S-5), the countdown to the minimum time, the vote panel (who said yes,
+- [x] "Desistir" and its confirmation (D3, S-5), the countdown to the minimum time, the vote panel (who said yes,
       "yes" and "no", the time left; L-5 to L-7), the vote's chronicle sentences
-- [ ] The end screen over the map and the battle screen; "Ver o mapa", "Ver o replay"; entering an ended world
+- [x] The end screen over the map and the battle screen; "Ver o mapa", "Ver o replay"; entering an ended world
       (D9, S-1, S-2; P9)
-- [ ] The spectator of a team out (D7)
-- [ ] The chronicle sentences: a team leaving, the world's end, the first blood (D8, D15)
-- [ ] The result in the lobby (S-4)
+- [x] The spectator of a team out (D7)
+- [x] The chronicle sentences: a team leaving, the world's end, the first blood (D8, D15)
+- [x] The result in the lobby (S-4)
 - [ ] The replay markers: the scan pass, the marks, the toggles, the hover, the jump; the end screen at the last tick
       (D11, S-3; P10)
 

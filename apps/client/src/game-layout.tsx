@@ -18,6 +18,8 @@ import {
 } from "./interaction.ts";
 import { ChroniclePanel } from "./chronicle/chronicle-panel.tsx";
 import { CreepLayer } from "./map/creep-layer.tsx";
+import { ConcedeVotePanel } from "./concede.tsx";
+import { EndOverlay } from "./end-screen.tsx";
 import { MapView } from "./map/map-view.tsx";
 import { RoadJobTimeLayer } from "./map/road-job-time-layer.tsx";
 import {
@@ -39,9 +41,11 @@ type Props = {
   header: ComponentChildren;
   /** Whether a right click gives orders (false in a replay). */
   orders: boolean;
+  /** "Ver o replay" on the end screen; none in a replay. */
+  onReplay?: () => void;
 };
 
-export function GameLayout({ game, header, orders }: Props) {
+export function GameLayout({ game, header, orders, onReplay }: Props) {
   const { store } = game;
   // Road mode ends with the domination it needs.
   useEffect(
@@ -53,8 +57,18 @@ export function GameLayout({ game, header, orders }: Props) {
       }),
     [],
   );
+  // A replay seeking back leaves the end: the next one opens again.
+  useEffect(
+    () =>
+      effect(() => {
+        if (store.result.value === null) store.endHidden.value = false;
+      }),
+    [],
+  );
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      // The end screen covers the map.
+      if (store.result.value !== null && !store.endHidden.value) return;
       // The battle screen has the keyboard while it is shown.
       if (store.shownBattle.value !== null) return;
       if (handleKey(store, game.viewer.team, e)) e.preventDefault();
@@ -73,6 +87,9 @@ export function GameLayout({ game, header, orders }: Props) {
     ),
   );
 
+  // An ended world, or a team out, is read-only (E-min D6, D7).
+  const live = orders && store.result.value === null && !store.teamOut.value;
+
   return (
     <GameContext.Provider value={game}>
       <div class="game">
@@ -84,7 +101,7 @@ export function GameLayout({ game, header, orders }: Props) {
               select(store, point, px, performance.now())
             }
             onOrder={
-              orders
+              live
                 ? (point, px) =>
                     order(store, point, game.send, performance.now(), px)
                 : undefined
@@ -103,13 +120,15 @@ export function GameLayout({ game, header, orders }: Props) {
           </div>
           <ModeBanner />
           <ActorList />
-          {orders && <ApproachMenu />}
-          {orders && <ReactionPanel />}
-          {orders && <BattleReturn />}
-          {orders && <BattleAlert />}
+          {live && <ApproachMenu />}
+          {live && <ReactionPanel />}
+          {live && <BattleReturn />}
+          {live && <BattleAlert />}
+          {live && <ConcedeVotePanel />}
           {store.shownBattle.value !== null && game.battles !== undefined && (
             <BattleScreen key={store.shownBattle.value} />
           )}
+          <EndOverlay onReplay={onReplay} />
         </div>
         <Notices />
       </div>

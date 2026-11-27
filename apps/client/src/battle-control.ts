@@ -53,6 +53,11 @@ export class BattleControl {
    */
   open(battleId: number): void {
     const { store } = this;
+    // The world froze: its battles stopped and have no screen (E-min D6).
+    if (store.result.value !== null) {
+      store.notify(REJECT_TEXTS.worldEnded, this.now());
+      return;
+    }
     if (store.shownBattle.value === battleId) return;
     store.shownBattle.value = battleId;
     store.battleScreen.value = null;
@@ -76,9 +81,16 @@ export class BattleControl {
    * it enters one, or when the player dominates a creep already in one.
    */
   follow(mine: { id: number; battle: number | null } | null): void {
+    if (this.store.result.value !== null) return;
     const { lock, open } = autoOpen(this.lock, mine);
     this.lock = lock;
     if (open !== null) this.open(open);
+  }
+
+  /** The world ended: the battle screens close and the holds go (D6). */
+  worldEnded(): void {
+    this.close();
+    this.store.holds.value = new Map();
   }
 
   /**

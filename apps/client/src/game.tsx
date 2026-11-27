@@ -23,11 +23,13 @@ const RELOAD_MS = 1500;
 type Props = {
   session: Session;
   onLeave(): void;
+  /** "Ver o replay" of the end screen (E-min S-2). */
+  onReplay(): void;
   /** The token was refused or the world is gone: back to the lobby. */
   onInvalid(text: string): void;
 };
 
-export function Game({ session, onLeave, onInvalid }: Props) {
+export function Game({ session, onLeave, onReplay, onInvalid }: Props) {
   const store = useMemo(() => new GameStore(), []);
   // The connection is made after it, so its messages find it.
   const battles = useMemo<{ control: BattleControl | null }>(
@@ -71,6 +73,14 @@ export function Game({ session, onLeave, onInvalid }: Props) {
   useEffect(() => {
     store.hashMismatch = () => connection.resync("hashMismatch");
   }, []);
+  // E-min D6: a world that ended has no battle screen left.
+  useEffect(
+    () =>
+      effect(() => {
+        if (store.result.value !== null) control.worldEnded();
+      }),
+    [],
+  );
   // N-1: the dominated creep's battle opens its screen by itself.
   useEffect(
     () =>
@@ -104,6 +114,7 @@ export function Game({ session, onLeave, onInvalid }: Props) {
       <GameLayout
         game={game}
         header={<TopBar session={session} onLeave={onLeave} />}
+        onReplay={onReplay}
         orders
       />
       {showNetPanel(window.location) && (

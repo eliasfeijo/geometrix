@@ -131,6 +131,12 @@ export class GameStore {
   /** How the battle screen draws the creeps moving (junction D19). */
   readonly motion = signal<MotionMode>("tick");
 
+  /** The world's result once it ended (E-min D9), else null. */
+  readonly result = computed(() => this.current.value?.state.result ?? null);
+
+  /** "Ver o mapa" hides the end screen over the frozen world (S-2). */
+  readonly endHidden = signal(false);
+
   /**
    * The view's known array: computed only so that `map` changes when the
    * team explores, not on every delta (applyDelta keeps the array otherwise).
@@ -161,12 +167,27 @@ export class GameStore {
     return state.players.find((p) => p.id === info.playerId) ?? null;
   });
 
-  /** Whether commands can go out: joined, connected and the world running. */
+  /**
+   * Whether this player's team left the match: a spectator of its own team
+   * (E-min D7).
+   */
+  readonly teamOut = computed(() => {
+    const team = this.me.value?.team;
+    if (team === undefined) return false;
+    return this.current.value?.state.teams[team]?.out != null;
+  });
+
+  /**
+   * Whether commands can go out: joined, connected, the world running and the
+   * team still in the match.
+   */
   readonly canAct = computed(
     () =>
       this.me.value !== null &&
       this.connection.value === "open" &&
-      this.status.value === "running",
+      this.status.value === "running" &&
+      this.result.value === null &&
+      !this.teamOut.value,
   );
 
   /** Network counters (spec D8): the connection's, plus the hash checks. */

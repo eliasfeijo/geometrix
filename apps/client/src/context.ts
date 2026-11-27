@@ -17,6 +17,11 @@ export type Game = {
   send(command: ClientCommand): Promise<boolean>;
   /** The battle screen (junction D11); none in a replay. */
   battles?: BattleControl;
+  /**
+   * The world's real ×N where the welcome does not tell it (a replay): the
+   * end screen's real duration (E-min P9).
+   */
+  multiplier?: number;
 };
 
 export const GameContext = createContext<Game | null>(null);
