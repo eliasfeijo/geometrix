@@ -34,7 +34,8 @@ import {
 
 const HOURS = 6;
 
-test.each([1, 42, 649])(
+// The three 6 h worlds are the suite's slow part: the full check and CI run them, GEO_FAST=1 (check:fast) skips them.
+test.skipIf(process.env.GEO_FAST === "1").each([1, 42, 649])(
   "seed %i: 6 h of deltas rebuild each team's view in every tick",
   (seed) => {
     const state = createWorld(seed, parseParams(params));
