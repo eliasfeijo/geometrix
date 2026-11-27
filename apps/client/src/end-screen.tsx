@@ -88,7 +88,7 @@ function EndScreen(props: {
         </table>
         {highlights.length > 0 && (
           <>
-            <h3>Momentos da partida</h3>
+            <h3>Melhores momentos</h3>
             <ul class="end-highlights">
               {highlights.map((event) => (
                 <li key={`${event.tick}.${event.index}`}>
