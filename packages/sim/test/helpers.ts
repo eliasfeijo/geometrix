@@ -236,6 +236,8 @@ export function addTeam(world: WorldState, core: Cell): Team {
     production: null,
     repeat: null,
     out: null,
+    vote: null,
+    voteRejectedTick: null,
   };
   world.teams.push(team);
   for (const dna of DNAS) {

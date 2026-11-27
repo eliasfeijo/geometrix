@@ -36,9 +36,11 @@ import { nameAt } from "./names.ts";
  * the hostile intent and the bot's difficulty (M2 R F2). 13: the params hold
  * the battle pause times, so a stored world of 12 has not enough params (M2 R
  * F5). 14: the world's end (concede, elimination, the clock, the result),
- * first blood, the match's counters and main events (M2 E-min F1).
+ * first blood, the match's counters and main events (M2 E-min F1). 15: no
+ * concession before end.concedeAfterSeconds, and a team's humans vote on it
+ * (M2 E-min F2).
  */
-export const SIM_VERSION = 14;
+export const SIM_VERSION = 15;
 
 export type Stock = Record<Resource, number>;
 
@@ -61,6 +63,20 @@ export type Team = {
    * plan P2). A team out never comes back.
    */
   out: TeamOut | null;
+  /**
+   * The open concession vote of a team with two or more humans, or null
+   * (E-min plan P14). Replaced whole, never mutated: the delta compares it by
+   * reference.
+   */
+  vote: ConcedeVote | null;
+  /** The tick its last rejected vote closed on, for the retry wait. */
+  voteRejectedTick: number | null;
+};
+
+export type ConcedeVote = {
+  openedTick: number;
+  /** The humans who said yes, by id. A "no" ends the vote, so none is kept. */
+  yes: number[];
 };
 
 export type TeamOut = {
@@ -324,6 +340,8 @@ export function createWorld(seed: number, params: Params): WorldState {
     production: null,
     repeat: null,
     out: null,
+    vote: null,
+    voteRejectedTick: null,
   }));
 
   const creeps: Creep[] = [];

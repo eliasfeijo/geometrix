@@ -67,7 +67,7 @@ A whole `geo sim --seed 42` match: 5.0 s. The end's stage with 60 creeps and an 
 - [x] `runBots` stops at the end; the End section in `geo sim`; the ends table in `geo sweep`
 - [x] `--concede team@minute` in `geo sim` and `geo verify` (P12); `geo verify` with an end by concession and at the
       clock on its three paths
-- [ ] The minimum time and the team's vote (L-5 to L-7, P14; owner, 2026-11-27): the three `end.concede*Seconds`
+- [x] The minimum time and the team's vote (L-5 to L-7, P14; owner, 2026-11-27): the three `end.concede*Seconds`
       params, `tooEarly`, `rejectConcede` and its refusals, the vote in the team and its events, the deadline in
       `checkEnd`, the strategist waiting; `SIM_VERSION`, the fixed hashes
 - [ ] The bot × bot ends: `geo sim` 3 days (seed 42) and `geo sweep` (seeds 1–20), recorded here

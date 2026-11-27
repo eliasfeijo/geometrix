@@ -758,6 +758,17 @@ describe("concession (E-min D4, B-1, B-2)", () => {
     expect(decide(lost(1, { bot: true }), 1)).toEqual([{ type: "concede" }]);
   });
 
+  test("not before the minimum match time; it plays on until then", () => {
+    const world = lost(1);
+    world.params = {
+      ...world.params,
+      end: { ...world.params.end, concedeAfterSeconds: world.tick + 2 },
+    };
+    expect(decide(world, 1)).not.toContainEqual({ type: "concede" });
+    step(world, []);
+    expect(decide(world, 1)).toEqual([{ type: "concede" }]);
+  });
+
   test("the C2 case ends the world with the other team winning; then silence", () => {
     const world = lost(1);
     step(

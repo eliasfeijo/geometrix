@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import {
   DIFFICULTIES,
+  mayConcede,
   parseParams,
   STRATEGISTS,
   type Difficulty,
@@ -22,7 +23,7 @@ import {
   writeMatrix,
 } from "./junction-matrix.ts";
 import { END_KIND_LABELS, endKind, resultText } from "./ending.ts";
-import type { Concession } from "./harness.ts";
+import { concessionTick, type Concession } from "./harness.ts";
 import { measureNet, NET_FILES, netVerdicts, writeNet } from "./net.ts";
 import { renderReport } from "./report.ts";
 import { readRun, RUN_FILES, runId, simulate, writeRun } from "./sim.ts";
@@ -55,7 +56,8 @@ commands:
                                  creeps (highest HP first) at real minute m;
                                  the run is not replayable (no replay.json)
            --concede <t@m>       team t's bot concedes at world minute m, a
-                                 command in the log (replayable)
+                                 command in the log (replayable); not before
+                                 end.concedeAfterSeconds
            --strategist <a[,b]>  per team: ${STRATEGISTS.join(" | ")}, the
                                  bot's difficulty after a colon
                                  (${DIFFICULTIES.join(" | ")}; default hard), e.g.
@@ -227,6 +229,7 @@ function parseShockOption(raw: string | undefined): Shock | null {
 function parseConcede(
   raw: string | undefined,
   { strategists }: BotOptions,
+  params: Params,
 ): Concession | null {
   if (raw === undefined) return null;
   const match = /^(\d+)@([1-9]\d*)$/.exec(raw);
@@ -237,7 +240,13 @@ function parseConcede(
   if (strategists[team] === "none") {
     throw new UsageError(`--concede needs a bot on team ${team}`);
   }
-  return { team, minute: Number(match[2]) };
+  const concede = { team, minute: Number(match[2]) };
+  if (!mayConcede(concessionTick(concede, params), params)) {
+    throw new UsageError(
+      `--concede ${raw} is before end.concedeAfterSeconds (${params.end.concedeAfterSeconds} world s)`,
+    );
+  }
+  return concede;
 }
 
 /** Two teams in M1 (spec D6). */
@@ -267,7 +276,7 @@ function runSim(args: string[], out: Output): number {
   const multiplier = parseMultiplier(values.mult) ?? params.world.multiplier;
   const shock = parseShockOption(values.shock);
   const bots = parseStrategists(values.strategist, TEAMS);
-  const concede = parseConcede(values.concede, bots);
+  const concede = parseConcede(values.concede, bots, params);
   const maxSeconds =
     values["max-seconds"] === undefined
       ? null
@@ -408,7 +417,7 @@ function runVerify(args: string[], out: Output): number {
     params,
     bots.strategists,
     bots.difficulties,
-    parseConcede(values.concede, bots),
+    parseConcede(values.concede, bots, params),
   );
   out.log(`geo verify --seed ${seed} --ticks ${ticks}`);
   for (const run of result.runs) {

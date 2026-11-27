@@ -11,6 +11,7 @@
 
 import { isReaction, type Rule } from "./autopilot.ts";
 import { canAfford } from "./economy.ts";
+import { mayConcede } from "./end.ts";
 import type { Command, CommandInput } from "./commands.ts";
 import type { Difficulty, Player } from "./domination.ts";
 import { nearestUnseen } from "./known.ts";
@@ -98,7 +99,7 @@ export const BALANCED = {
   /**
    * With no human in its team, at most this many creeps, nothing in
    * production and a stock below a creep's cost, the bot concedes, at every
-   * difficulty (E-min D4).
+   * difficulty (E-min D4), from end.concedeAfterSeconds of match on.
    */
   concedeAtCreeps: 1,
 } as const;
@@ -226,11 +227,13 @@ export function strategistCommands(
 /**
  * Whether the match is lost for a team of bots alone (E-min D4): from the
  * view, and only the core's stock counts, not what the last creep carries.
- * Where a human plays, they decide.
+ * Where a human plays, they decide. Never before the time a concession is
+ * accepted (L-5): until then the bot plays on.
  */
 function givesUp(seen: TeamView, params: Params): boolean {
   const team = ownTeam(seen);
   return (
+    mayConcede(seen.tick, params) &&
     !seen.players.some((p) => p.team === seen.team && !p.bot) &&
     team.production === null &&
     !canAfford(team.stock, params.creep.cost) &&

@@ -115,6 +115,18 @@ function template(event: TeamEvent): {
         creeps: {},
         values: { team: teamName(event.team) },
       };
+    case "concedeVoteOpened":
+      return {
+        text: "Votação para desistir aberta.",
+        creeps: {},
+        values: {},
+      };
+    case "concedeVoteClosed":
+      return {
+        text: "Votação para desistir encerrada.",
+        creeps: {},
+        values: {},
+      };
     case "worldEnded":
       return { text: "A partida acabou.", creeps: {}, values: {} };
     case "pickedUp":

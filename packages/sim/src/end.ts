@@ -1,7 +1,9 @@
 // The end of the world (E-min spec, plan section 3): a team leaving the match,
-// by concession or elimination, and the result. Teams in id order; nothing
+// by concession (voted when it has two or more humans) or elimination, and the
+// result. Teams in id order; nothing
 // here assumes how many there are.
 
+import type { Player } from "./domination.ts";
 import { canAfford } from "./economy.ts";
 import {
   emit,
@@ -10,24 +12,140 @@ import {
   type TeamEvent,
 } from "./events.ts";
 import type { Cell } from "./map.ts";
+import type { Params } from "./params.ts";
 import type { Stock, Team, TeamOut, WorldResult, WorldState } from "./world.ts";
 
 /**
- * Why a concession is refused (spec F-4, plan P3): the team already left, or
- * at most one team is still in the match, so the world ends on this tick.
+ * Why a concession or a vote is refused (spec F-4, L-5..L-7, plan P3, P14):
+ * the team already left; at most one team is still in the match, so the world
+ * ends on this tick; the match has not run `end.concedeAfterSeconds` yet; the
+ * team's last vote was rejected too recently; the player already said yes; or
+ * there is no vote to reject.
  */
-export type EndRefusal = "teamOut" | "worldEnded";
+export type EndRefusal =
+  | "teamOut"
+  | "worldEnded"
+  | "tooEarly"
+  | "voteCooldown"
+  | "alreadyVoted"
+  | "noVote";
+
+/**
+ * Whether the match has run long enough for a concession on `tick`, which
+ * counts whole, as the clock reads it.
+ */
+export function mayConcede(tick: number, { world, end }: Params): boolean {
+  return (tick + 1) * world.tickSeconds >= end.concedeAfterSeconds;
+}
 
 export function teamsInMatch(state: WorldState): Team[] {
   return state.teams.filter((team) => team.out === null);
 }
 
+const humansOf = (state: WorldState, team: number): Player[] =>
+  state.players.filter((p) => p.team === team && !p.bot);
+
 export function concedeRefusal(
   state: WorldState,
-  team: Team,
+  player: Player,
 ): EndRefusal | null {
+  const team = state.teams[player.team]!;
   if (team.out !== null) return "teamOut";
-  return teamsInMatch(state).length <= 1 ? "worldEnded" : null;
+  if (teamsInMatch(state).length <= 1) return "worldEnded";
+  if (!mayConcede(state.tick, state.params)) return "tooEarly";
+  if (player.bot) return null;
+  if (team.vote !== null) {
+    return team.vote.yes.includes(player.id) ? "alreadyVoted" : null;
+  }
+  const { world, end } = state.params;
+  const waiting =
+    team.voteRejectedTick !== null &&
+    (state.tick - team.voteRejectedTick) * world.tickSeconds <
+      end.concedeRetrySeconds;
+  return waiting && humansOf(state, team.id).length > 1 ? "voteCooldown" : null;
+}
+
+export function rejectRefusal(
+  state: WorldState,
+  player: Player,
+): EndRefusal | null {
+  const team = state.teams[player.team]!;
+  return team.vote === null || player.bot ? "noVote" : null;
+}
+
+/** The tick whose end closes a vote opened on `openedTick`. */
+export function voteDeadline(openedTick: number, { world, end }: Params) {
+  const { tickSeconds } = world;
+  return (
+    openedTick +
+    Math.floor((end.concedeVoteSeconds + tickSeconds - 1) / tickSeconds)
+  );
+}
+
+function closeVote(
+  log: EventLog,
+  team: Team,
+  outcome: "passed" | "rejected" | "dropped",
+): void {
+  if (team.vote === null) return;
+  team.vote = null;
+  emit(log, {
+    type: "concedeVoteClosed",
+    team: team.id,
+    outcome,
+    ...team.core,
+  });
+}
+
+/** The team leaves the match by its concession. */
+function giveUp(
+  state: WorldState,
+  log: EventLog,
+  team: Team,
+  bot: boolean,
+): void {
+  closeVote(log, team, "passed");
+  leaveMatch(state, log, team, "conceded", bot);
+}
+
+/**
+ * A player's `concede` (D3, P14). A bot, and the only human of a team, leave
+ * at once; with two or more humans it opens the team's vote or says yes, and
+ * the team leaves when all of them have (or at the deadline, in checkEnd).
+ */
+export function concede(
+  state: WorldState,
+  log: EventLog,
+  player: Player,
+): void {
+  const team = state.teams[player.team]!;
+  const humans = humansOf(state, team.id);
+  if (!player.bot && humans.length > 1) {
+    const openedTick = team.vote?.openedTick ?? state.tick;
+    if (team.vote === null) {
+      emit(log, {
+        type: "concedeVoteOpened",
+        team: team.id,
+        deadlineTick: voteDeadline(openedTick, state.params),
+        ...team.core,
+      });
+    }
+    const yes = [...(team.vote?.yes ?? []), player.id].sort((a, b) => a - b);
+    team.vote = { openedTick, yes };
+    if (!humans.every((h) => yes.includes(h.id))) return;
+  }
+  giveUp(state, log, team, player.bot);
+}
+
+/** A "no" ends the team's vote at once, failed. */
+export function rejectConcede(
+  state: WorldState,
+  log: EventLog,
+  player: Player,
+): void {
+  const team = state.teams[player.team]!;
+  team.voteRejectedTick = state.tick;
+  closeVote(log, team, "rejected");
 }
 
 /**
@@ -47,6 +165,7 @@ export function leaveMatch(
     if (creep.team === team.id) creep.dominatedBy = null;
   }
   team.repeat = null;
+  closeVote(log, team, "dropped");
   emit(log, { type: "teamOut", team: team.id, how, bot, ...team.core });
 }
 
@@ -92,10 +211,21 @@ function endCell(state: WorldState, result: WorldResult): Cell {
 }
 
 /**
- * The end's stage of the tick (plan P1): eliminations, in team id order, then
- * the result. Setting it ends the world: this is its last tick.
+ * The end's stage of the tick (plan P1): the votes whose deadline passed,
+ * then the eliminations, each in team id order, then the result. Setting it ends the world: this is its last tick.
  */
 export function checkEnd(state: WorldState, log: EventLog): void {
+  for (const team of teamsInMatch(state)) {
+    const { vote } = team;
+    // The last team in the match wins instead (F-4).
+    if (
+      vote !== null &&
+      state.tick >= voteDeadline(vote.openedTick, state.params) &&
+      teamsInMatch(state).length > 1
+    ) {
+      giveUp(state, log, team, false);
+    }
+  }
   for (const team of teamsInMatch(state)) {
     if (cannotComeBack(state, team)) {
       leaveMatch(state, log, team, "eliminated", false);
@@ -104,6 +234,7 @@ export function checkEnd(state: WorldState, log: EventLog): void {
   const result = resultOf(state);
   if (result === null) return;
   state.result = result;
+  for (const team of state.teams) closeVote(log, team, "dropped");
   emit(log, {
     type: "worldEnded",
     result: { ...result, teams: [...result.teams] },
