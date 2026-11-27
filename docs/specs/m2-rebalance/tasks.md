@@ -1,6 +1,6 @@
 # M2 tasks — Rebalance and pace
 
-**Status:** F0, F1 and F2 done (2026-11-25), F3 and F5 done (2026-11-26); next wave 3, F4 then F6 (see "Running the phases"). Branches `m2/rebalance-f<n>-<slug>` (skill `commit`).
+**Status:** F0, F1 and F2 done (2026-11-25), F3 and F5 done (2026-11-26), F4 done (2026-11-27); next F6, then F7 (see "Running the phases"). Branches `m2/rebalance-f<n>-<slug>` (skill `commit`).
 **Spec:** [spec.md](spec.md) · **Plan:** [plan.md](plan.md)
 
 ## Running the phases: waves, lanes and models
