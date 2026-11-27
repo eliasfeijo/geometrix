@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import type { SimEvent } from "../src/events.ts";
 import { Terrain, type Cell, type GameMap } from "../src/map.ts";
 import {
+  DNAS,
   parseParams,
   type Dna,
   type Params,
@@ -12,8 +13,10 @@ import { step } from "../src/step.ts";
 import { createMemory, updateVision } from "../src/vision.ts";
 import {
   createWorld,
+  newCreep,
   type Creep,
   type Deposit,
+  type Team,
   type Wanderer,
   type WorldState,
 } from "../src/world.ts";
@@ -217,4 +220,37 @@ export function revealWorld(world: WorldState): void {
       .filter((t) => t.id !== memory.team)
       .map((t) => ({ team: t.id, ...t.core }));
   }
+}
+
+/**
+ * Adds one more team to a text world, with its core on `core`: a creep of
+ * each DNA there, stopped and with no rules, empty stock. Maps are generated
+ * for two teams, so a third is built by hand.
+ */
+export function addTeam(world: WorldState, core: Cell): Team {
+  const team: Team = {
+    id: world.teams.length,
+    core,
+    stock: { materia: 0, cristal: 0 },
+    upgrades: { capacity: false },
+    production: null,
+    repeat: null,
+    out: null,
+  };
+  world.teams.push(team);
+  for (const dna of DNAS) {
+    const creep = newCreep(
+      world.nextId++,
+      world.births++,
+      team,
+      dna,
+      world.params,
+    );
+    creep.rules = [];
+    world.creeps.push(creep);
+  }
+  world.stats.teams.push(createStats([team], []).teams[0]!);
+  world.memory = createMemory(world.teams, world.map);
+  updateVision(world);
+  return team;
 }

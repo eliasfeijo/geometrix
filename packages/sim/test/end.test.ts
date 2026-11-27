@@ -11,7 +11,13 @@ import type { Dna } from "../src/params.ts";
 import { fullView, view } from "../src/view.ts";
 import { updateVision } from "../src/vision.ts";
 import type { Creep, Stock, WorldState } from "../src/world.ts";
-import { addWanderer, creepOf, paramsWith, textWorld } from "./helpers.ts";
+import {
+  addTeam,
+  addWanderer,
+  creepOf,
+  paramsWith,
+  textWorld,
+} from "./helpers.ts";
 
 // 30 × 7, the cores in opposite corners.
 const MAP = [
@@ -564,5 +570,73 @@ describe("the view of the end (E-min K-3)", () => {
       core: null,
       out: w.teams[0]!.out,
     });
+  });
+});
+
+describe("three teams (E-min D7, D12, K-2)", () => {
+  /** Players 1, 2 and 3 on teams 0, 1 and 2; team 2's core mid-map. */
+  function three() {
+    const w = textWorld(MAP);
+    addTeam(w, { x: 15, y: 0 });
+    for (const team of w.teams) {
+      team.stock = { materia: 10_000, cristal: 10_000 };
+      join(w, team.id + 1, team.id, false);
+    }
+    return w;
+  }
+
+  test("one concedes and the world goes on; then it ends with a winner", () => {
+    const w = three();
+    const mine = creepOf(w, 0, "square");
+    dominate(w, 1, mine.id);
+    mine.rules = [{ when: { type: "always" }, then: { type: "explore" } }];
+    const rules = mine.rules;
+
+    const events = step(w, [{ playerId: 1, command: concede }]);
+    expect(w.result).toBeNull();
+    expect(events).toMatchObject([
+      { type: "teamOut", team: 0, teams: [0, 1, 2] },
+    ]);
+    expect(mine.dominatedBy).toBeNull();
+
+    const produce = { type: "produce", dna: "circle", repeat: false } as const;
+    step(w, [{ playerId: 1, command: produce }]);
+    expect(w.teams[0]!.production).toBeNull();
+    expect(w.stats.teams[0]!.commands.produce).toBe(0);
+    expect(validate(w, produce, 1)).toBe("teamOut");
+    // Its creeps stay on the map, with the rules they had.
+    expect(mine.rules).toBe(rules);
+    expect(mine.order.type).toBe("explore");
+    for (let i = 0; i < 20; i++) step(w, []);
+    expect(w.result).toBeNull();
+    expect(w.teams[0]!.out).toMatchObject({ tick: 0, how: "conceded" });
+
+    // Nothing about the team out reaches the others but that it left.
+    const seen = view(w, 2);
+    expect(Object.keys(seen.teams[0]!).sort()).toEqual(["core", "id", "out"]);
+    expect(seen.result).toBeNull();
+    expect(JSON.stringify(seen)).not.toContain('"rules":[{"when"');
+
+    const restored = restore(serialize(w));
+    for (const world of [w, restored]) {
+      step(world, [{ playerId: 2, command: concede }]);
+    }
+    expect(w.result).toMatchObject({ how: "lastTeam", winner: 2, teams: [2] });
+    expect(serialize(restored)).toBe(serialize(w));
+    expect(endSummary(w)!.teams.map((t) => t.out?.tick ?? null)).toEqual([
+      0,
+      22,
+      null,
+    ]);
+    expect(w.highlights.map((e) => e.type)).toEqual(["teamOut", "teamOut"]);
+  });
+
+  test("the last two leave on one tick: a draw between them alone", () => {
+    const w = three();
+    step(w, [{ playerId: 1, command: concede }]);
+    w.creeps = w.creeps.filter((c) => c.team === 0);
+    for (const team of w.teams) team.stock = { materia: 0, cristal: 0 };
+    step(w, []);
+    expect(w.result).toMatchObject({ how: "noTeam", teams: [1, 2] });
   });
 });
