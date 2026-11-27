@@ -108,7 +108,7 @@ Format: *When [trigger], the system shall [response].*
   add their yes to the open one. The team shall leave the match when all its humans have said yes, or at the end of the
   tick `end.concedeVoteSeconds` after the opening, who has not voted counting as yes (owner, 2026-11-27). A bot's
   `concede`, and that of a team's only human, shall apply at once.
-- **L-7** Agent proposals, open to the owner's change: a `rejectConcede` shall end the open vote at once, rejected (a
+- **L-7** The agent's details, approved by the owner (2026-11-27): a `rejectConcede` shall end the open vote at once, rejected (a
   yes may be taken back this way); for `end.concedeRetrySeconds` after it, a `concede` that would open a new vote
   shall be refused with `voteCooldown`; a second yes is refused with `alreadyVoted`, a `rejectConcede` with no vote
   open with `noVote`; an open vote is dropped when the team leaves otherwise or the world ends; only the team receives
@@ -182,9 +182,9 @@ flowchart TD
 | Item | Guess | Where |
 |---|---|---|
 | The bot's concession threshold (D4) | at most 1 creep alive | the strategist's settings |
-| Minimum time of match before a concession (L-5) | 7200 world seconds (15 real minutes at ×8) | `sim` params (`end.concedeAfterSeconds`) |
-| Time to vote on a concession (L-6) | 480 world seconds (60 real seconds at ×8) | `sim` params (`end.concedeVoteSeconds`) |
-| Wait after a rejected vote (L-7) | 1440 world seconds (3 real minutes at ×8) | `sim` params (`end.concedeRetrySeconds`) |
+| Minimum time of match before a concession (L-5) | 15 real minutes at any ×N (owner, 2026-11-27): 7200 world seconds at ×8, 5400 at ×6, 10800 at ×12 | `sim` params (`end.concedeAfterSeconds`) |
+| Time to vote on a concession (L-6) | 60 real seconds at any ×N: 480 world seconds at ×8, 360 at ×6, 720 at ×12 | `sim` params (`end.concedeVoteSeconds`) |
+| Wait after a rejected vote (L-7) | 3 real minutes at any ×N: 1440 world seconds at ×8, 1080 at ×6, 2160 at ×12 | `sim` params (`end.concedeRetrySeconds`) |
 | Elimination (D2) | 0 creeps; the stock compared with `creep.cost` (no new number) | the rule |
 | Main events in the summary (D10) | 5 | `sim` params |
 | The ranking of main events (D10) | first, a team leaving the match; then the first blood (D15); then battles ended, by participants (joins included), then by the load collected or left as spoils, then the earliest. Every other event is a mark in the replay, not a main event | the `sim`; the owner reviews at the checkpoint |

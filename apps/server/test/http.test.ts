@@ -51,6 +51,7 @@ describe("HTTP", () => {
         status: "running",
         tick: 0,
         durationTicks: 259_200,
+        result: null,
         players: [{ id: 1, team: 1, name: "bot", bot: true }],
       },
     ]);

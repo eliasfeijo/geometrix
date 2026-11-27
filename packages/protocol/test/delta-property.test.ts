@@ -270,6 +270,57 @@ test.each([42])(
   90_000,
 );
 
+// The end of the world (E-min N-3): the views, result and summary included,
+// are rebuilt on the end tick too, ended by a concession or by the clock.
+test.each([
+  { name: "a concession", concedeAt: 900, durationSeconds: 7200 },
+  { name: "the clock", concedeAt: null, durationSeconds: 1800 },
+])(
+  "the world ends by $name: the deltas rebuild each team's view",
+  ({ concedeAt, durationSeconds }) => {
+    const ending = JSON.parse(JSON.stringify(params)) as typeof params;
+    ending.world.durationSeconds = durationSeconds;
+    const state = createWorld(42, parseParams(ending));
+    const host = createHost(parseBattleParams(battleParams));
+    const bots = botsFor(["balanced", "balanced"]);
+    const teams = [0, 1];
+    const sent = teams.map(() => emptySent());
+    const cells = state.map.width * state.map.height;
+    const client = teams.map((team) => emptyView(team, cells));
+    let results = 0;
+    for (;;) {
+      for (const team of teams) {
+        const seen = view(state, team);
+        const delta = JSON.parse(
+          JSON.stringify(diffView(sent[team]!, seen)),
+        ) as Delta;
+        if (delta.result !== undefined) results++;
+        client[team] = applyDelta(client[team]!, delta);
+        expect(viewJson(client[team]!), `tick ${state.tick}`).toBe(
+          viewJson(seen),
+        );
+      }
+      if (state.result !== null) break;
+      const commands = botCommands(state, bots);
+      if (state.tick === concedeAt) {
+        const loser = bots.find((b) => b.team === 1)!;
+        commands.push({
+          playerId: loser.playerId,
+          command: { type: "concede" },
+        });
+      }
+      const accepted = commands.filter(
+        ({ playerId, command }) => validate(state, command, playerId) === null,
+      );
+      stepJunction(state, host, accepted);
+    }
+    expect(results).toBe(teams.length);
+    expect(state.result!.how).toBe(concedeAt === null ? "clock" : "lastTeam");
+    expect(client[0]!.summary!.teams.map((t) => t.team)).toEqual(teams);
+  },
+  60_000,
+);
+
 /** New rules for each team's first creeps, as the team's bot player. */
 function vocabulary(state: WorldState, bots: ReturnType<typeof botsFor>) {
   return bots.flatMap(({ playerId, team }) => {

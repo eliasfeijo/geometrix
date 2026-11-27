@@ -45,6 +45,27 @@ describe("GameStore", () => {
     expect(store.previous.value).toBeNull();
   });
 
+  it("takes the world's result and summary from the end tick's delta", () => {
+    const world = testWorld();
+    step(world, [
+      { playerId: 1, command: { type: "join", team: 0, bot: false } },
+      { playerId: 2, command: { type: "join", team: 1, bot: true } },
+    ]);
+    const store = new GameStore();
+    const sent = emptySent();
+    diffView(sent, view(world, 0));
+    store.receive(welcomeOf(world), 0);
+    expect(store.current.value!.state.result).toBeNull();
+    step(world, [{ playerId: 2, command: { type: "concede" } }]);
+    const delta = JSON.parse(JSON.stringify(diffView(sent, view(world, 0))));
+    store.receive({ type: "delta", seq: 1, delta, status: "ended" }, 1);
+    const seen = store.current.value!.state;
+    expect(seen.result).toMatchObject({ how: "lastTeam", winner: 0 });
+    expect(seen.summary?.teams).toHaveLength(2);
+    expect(viewJson(seen)).toBe(viewJson(view(world, 0)));
+    expect(store.canAct.value).toBe(false);
+  });
+
   it("checks the view hash of a delta and reports a mismatch", async () => {
     const world = testWorld();
     const store = new GameStore();

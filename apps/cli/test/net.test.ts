@@ -137,6 +137,25 @@ describe("measureNet", () => {
   });
 });
 
+describe("a world that ends before the asked ticks (E-min)", () => {
+  const short = {
+    ...params,
+    world: { ...params.world, durationSeconds: 600 },
+  };
+  const result = measureNet({ ...options, params: short });
+
+  test("stops on the end tick, the property holding on it", () => {
+    expect(result.sends).toBe(600);
+    expect(result.ended).toBe("clock");
+    expect(result.property).toEqual({
+      checks: 2 * 600,
+      mismatches: 0,
+      first: null,
+    });
+    expect(renderNet(result)).toContain("o mundo acabou (no relógio)");
+  });
+});
+
 describe("a battle watcher (junction F4)", () => {
   // Seed 42 of the test params: the first battles open near tick 8,540.
   const watched = measureNet({ ...options, seed: 42, ticks: 9_000 });
