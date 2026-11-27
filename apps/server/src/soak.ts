@@ -5,13 +5,15 @@
 import { parseArgs } from "node:util";
 import { replayLog, type BattleLog, type LoggedTick } from "@geometrix/battle";
 import { replayResults } from "@geometrix/junction";
-import type { LoggedCommand, Replay } from "@geometrix/protocol";
+import type { LoggedCommand, Replay, WorldSummary } from "@geometrix/protocol";
 import {
   canonicalJson,
   createWorld,
+  endSummary,
   step,
   type Command,
   type CommandInput,
+  type EndSummary,
   type SimEvent,
   type WorldState,
 } from "@geometrix/sim";
@@ -26,12 +28,16 @@ restarts it, stops it once cleanly (SIGTERM), and at the end rebuilds the
 exported replay in Node: its hash must match the server's. Each ended battle's
 stored log must replay to its final hash and to the results the world log
 applied, and the battles a kill cut through must have ended (M2 junction).
+The world may end before its clock; the lobby's result and each
+client's summary must match the replay's, the report says when and how it
+ended, and an interruption the end came before is reported, not failed
+(M2 minimal end).
 Headless clients follow their team streams the whole time, dropping their own
 connection now and then; each must end with the server's view and no hash
 mismatch (M1.5), and with the server's chronicle (M2). Samples memory,
 database size and loop speed into runs/soak-<id>/.
 
-  --mult <n>      time multiplier (default 360: 3 world days in ~12 min)
+  --mult <n>      time multiplier (default 360: the 2-hour world in ~3 min)
   --kills <n>     kill -9 + restart count (default 5)
   --seed <n>      world seed and kill schedule seed (default 42)
   --port <n>      server port (default 8089)
@@ -169,7 +175,10 @@ export function rebuild(
 export type BattleCheck = {
   battles: number;
   ended: number;
-  /** Still open when the world ended: not checked. */
+  /**
+   * Still open when the world ended (stopped by it, E-min X-1): replayed to
+   * their last stored tick, their sent commands checked.
+   */
   open: number[];
   /** Ended battles whose stored log replays to another final hash. */
   hashMismatches: number[];
@@ -219,11 +228,6 @@ export function checkBattles(
   const same = (a: unknown, b: unknown) =>
     canonicalJson(a) === canonicalJson(b);
   for (const row of rows) {
-    if (row.endedTick === null) {
-      check.open.push(row.battleId);
-      continue;
-    }
-    check.ended += 1;
     const battleLog: BattleLog = {
       battleVersion: row.battleVersion,
       setup: row.setup,
@@ -232,10 +236,20 @@ export function checkBattles(
       commands: ticksOf(row.battleId),
       finalHash: null,
     };
+    const worldSide = applied.get(row.battleId) ?? [];
+    if (row.endedTick === null) {
+      // No final hash to compare: the log must replay (it throws if not).
+      check.open.push(row.battleId);
+      replayLog(battleLog);
+      if (!same(row.record.sent, worldSide)) {
+        check.resultMismatches.push(row.battleId);
+      }
+      continue;
+    }
+    check.ended += 1;
     if (battleHash(replayLog(battleLog)) !== row.finalHash) {
       check.hashMismatches.push(row.battleId);
     }
-    const worldSide = applied.get(row.battleId) ?? [];
     let agree = same(row.record.sent, worldSide);
     if (row.record.pending.length > 0) {
       check.lateJoins.push(row.battleId);
@@ -251,6 +265,77 @@ export function checkBattles(
     if (!agree) check.resultMismatches.push(row.battleId);
   }
   return check;
+}
+
+/** The end the server shows against the one the replay reaches. */
+export type EndCheck = {
+  /** The rebuilt replay's summary; null: the replay never reaches an end. */
+  end: EndSummary | null;
+  /** The lobby lists the replay's result. */
+  lobbyOk: boolean;
+  /** Every client's summary is the replay's. */
+  clientsOk: boolean;
+  ok: boolean;
+};
+
+/**
+ * `listed` is the lobby's result and `seen` each client's last summary, both
+ * as the server sent them; `final` is the state the exported replay reaches.
+ */
+export function checkEnd(
+  final: WorldState,
+  listed: WorldSummary["result"],
+  seen: readonly (EndSummary | null)[],
+): EndCheck {
+  const end = endSummary(final);
+  const lobbyOk =
+    end !== null &&
+    canonicalJson(listed) ===
+      canonicalJson({
+        how: end.result.how,
+        winner: end.result.winner,
+        teams: end.result.teams,
+      });
+  const clientsOk =
+    end !== null &&
+    seen.every((s) => s !== null && canonicalJson(s) === canonicalJson(end));
+  return { end, lobbyOk, clientsOk, ok: lobbyOk && clientsOk };
+}
+
+/**
+ * When and how the world ended, in one sentence. Real minutes are at the
+ * params' ×N (`multiplier`), not the soak's own.
+ */
+export function describeEnd(end: EndSummary, multiplier: number): string {
+  const { result } = end;
+  const worldMinutes = Math.floor(end.durationSeconds / 60);
+  const how =
+    result.how === "clock"
+      ? "the clock ran out"
+      : end.teams
+          .flatMap(({ team, out }) =>
+            out === null
+              ? []
+              : [
+                  `team ${team} ${
+                    out.how === "eliminated"
+                      ? "was eliminated"
+                      : out.bot
+                        ? "conceded (its bot)"
+                        : "conceded"
+                  } at tick ${out.tick}`,
+                ],
+          )
+          .join(", ");
+  const outcome =
+    result.winner !== null
+      ? `team ${result.winner} won`
+      : `a draw between teams ${result.teams.join(" and ")}`;
+  return (
+    `tick ${result.tick} (world ${Math.floor(worldMinutes / 60)} h ` +
+    `${worldMinutes % 60} min, ${(end.durationSeconds / multiplier / 60).toFixed(1)} ` +
+    `real min at ×${multiplier}): ${how}; ${outcome}`
+  );
 }
 
 /** One reading taken while the world runs. */
