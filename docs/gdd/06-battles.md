@@ -204,5 +204,11 @@ sequenceDiagram
   None before the junction (C9).
 
 ## Open questions
+- **Battles without a human at ×N, and what the opening hold is for** (owner, R F4 playtest, 2026-11-27): on the world
+  clock a battle runs ×N faster than real time (junction T-1), so the automatic battles end in a few real seconds,
+  even with R's 5 s hold (D6). The owner sees the hold as time for humans to react to a battle that opens, also one
+  their team is not in (joining as an opportunist), and asks whether longer battles (as in Mount & Blade) would do
+  that without the hold. Today the hold and its alert reach only the teams with a side in the battle. For a design
+  round with the rebalance; R's D6 stays as it is meanwhile.
 - How movement is drawn in the game (the four lab options). After PLAYTEST group 7.
 - **Critical hits?** (owner, 2026-11-18): a hit that sometimes deals more damage. With stats and skills; not in M2.

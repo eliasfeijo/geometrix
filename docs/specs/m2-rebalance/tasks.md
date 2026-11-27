@@ -38,7 +38,7 @@ balance runs, the soak) on **Sonnet 5.5**. Haiku is not used: every phase needs 
 | 1 | **R F2** — the world vocabulary | — (nothing in R runs without F2; K F1 fits here only with room in `/usage`, see below) | now |
 | 2 | **R F3** — the strategist, then C1 | **R F5** — pauses, network, server | F2 in `main` |
 | 3 | free for E-min or K's deep phases | **R F4** — the balance pass, then C2; **R F6** — client, after F4 or in its waits | F3 in `main` (F4), F5 in `main` (F6) |
-| 4 | — | **R F7** — soak and playtest, then C3 | F4, F5, F6 in `main` |
+| 4 | **E-min F1, F2** — the end in the world, the bot and the harness | **E-min F3, F4** — network, server, client; then **R F7** — soak and playtest, then C3 (owner, 2026-11-27: C3 plays with the end) | F6 in `main` (E-min F1); E-min F4 in `main` (R F7) |
 | 5 | — | **R F8** — the final balance pass, then C4 | K in `main`, C3 done |
 
 **Why each model.** F2 and F3 are the hardest phases of R: new orders and actions on the deterministic pipeline, an
@@ -402,6 +402,26 @@ taking the world down (2 of 216 sweep runs). Pre-existing since slice D; no resu
 2. Roads are almost free (10 matéria a segment): their cost is now the builder's time. At 30 a segment, with a creep
    cost and regen that keep the population in range, the first extra creep came at real minute 17–55 (900 + 4/60).
 3. The lobby's default ×N is F6's; until then it offers its old default, while the params say ×8.
+
+### Quick playtest after C2 (2026-11-27)
+
+The owner played the ×8 default (`dev:multi --bot --bot-difficulty normal`, one human on Blue, the F4 branch before
+F6's client) for about 17 real minutes, then stopped: without the minimal end, several dominated creeps or "follow",
+a match has little to play for yet. Times are the world clock, ÷ 8 for real minutes.
+
+- **The pace feels right.**
+- **Roads too cheap:** a segment at 10 matéria could be **50** (the owner's suggestion); the builder felt a little
+  slow, but it was a square. Judged at C3 (owner): at 30 the first extra creep came at real minute 17–55, so 50 needs
+  the creep cost or the regen to make up for it.
+- **First extra creep affordable** at world 02:18 (~17 real min; target 8–15, the bot's sweep 7.6–17.6).
+- **First wanderer seen** at world 01:05 (~8 real min; it is born at ~5), far, at the river's lower-left ford, a
+  circle exploring with no load; it did not attack.
+- **Battles without a human end very fast,** even with the 5 s opening hold: on the world clock a battle advances one
+  world second per world tick (junction T-1), so at ×8 it runs 8 times faster than real time. The owner sees the hold
+  as a way for humans to react to a battle that opens, also one their team is not in (to join it as an opportunist),
+  and wonders whether longer battles (as in Mount & Blade) would do that job without the hold. An open question in
+  GDD 06; R's D6 stays as it is for F6.
+- The crossing was not timed.
 
 ## F5 — The pauses, network and server
 
